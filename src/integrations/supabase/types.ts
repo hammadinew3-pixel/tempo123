@@ -25,7 +25,7 @@ export type Database = {
           id: string
           montant_facture: number | null
           num_dossier: string
-          tenant_id: string
+          type: Database["public"]["Enums"]["assistance_type"]
           updated_at: string
           vehicle_id: string | null
         }
@@ -39,7 +39,7 @@ export type Database = {
           id?: string
           montant_facture?: number | null
           num_dossier: string
-          tenant_id: string
+          type: Database["public"]["Enums"]["assistance_type"]
           updated_at?: string
           vehicle_id?: string | null
         }
@@ -53,7 +53,7 @@ export type Database = {
           id?: string
           montant_facture?: number | null
           num_dossier?: string
-          tenant_id?: string
+          type?: Database["public"]["Enums"]["assistance_type"]
           updated_at?: string
           vehicle_id?: string | null
         }
@@ -63,13 +63,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assistance_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
@@ -94,7 +87,6 @@ export type Database = {
           permis_url: string | null
           prenom: string | null
           telephone: string
-          tenant_id: string
           type: Database["public"]["Enums"]["client_type"]
           updated_at: string
         }
@@ -110,7 +102,6 @@ export type Database = {
           permis_url?: string | null
           prenom?: string | null
           telephone: string
-          tenant_id: string
           type?: Database["public"]["Enums"]["client_type"]
           updated_at?: string
         }
@@ -126,19 +117,10 @@ export type Database = {
           permis_url?: string | null
           prenom?: string | null
           telephone?: string
-          tenant_id?: string
           type?: Database["public"]["Enums"]["client_type"]
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "clients_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       contracts: {
         Row: {
@@ -152,7 +134,6 @@ export type Database = {
           numero_contrat: string
           pdf_url: string | null
           statut: Database["public"]["Enums"]["contract_status"]
-          tenant_id: string
           updated_at: string
           vehicle_id: string
         }
@@ -167,7 +148,6 @@ export type Database = {
           numero_contrat: string
           pdf_url?: string | null
           statut?: Database["public"]["Enums"]["contract_status"]
-          tenant_id: string
           updated_at?: string
           vehicle_id: string
         }
@@ -182,7 +162,6 @@ export type Database = {
           numero_contrat?: string
           pdf_url?: string | null
           statut?: Database["public"]["Enums"]["contract_status"]
-          tenant_id?: string
           updated_at?: string
           vehicle_id?: string
         }
@@ -192,13 +171,6 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "contracts_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
           {
@@ -219,7 +191,6 @@ export type Database = {
           id: string
           justificatif_url: string | null
           montant: number
-          tenant_id: string
           updated_at: string
           vehicle_id: string | null
         }
@@ -231,7 +202,6 @@ export type Database = {
           id?: string
           justificatif_url?: string | null
           montant: number
-          tenant_id: string
           updated_at?: string
           vehicle_id?: string | null
         }
@@ -243,18 +213,10 @@ export type Database = {
           id?: string
           justificatif_url?: string | null
           montant?: number
-          tenant_id?: string
           updated_at?: string
           vehicle_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "expenses_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "expenses_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -275,7 +237,6 @@ export type Database = {
           numero_facture: string
           payee: boolean
           taux_tva: number
-          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -288,7 +249,6 @@ export type Database = {
           numero_facture: string
           payee?: boolean
           taux_tva?: number
-          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -301,7 +261,6 @@ export type Database = {
           numero_facture?: string
           payee?: boolean
           taux_tva?: number
-          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -312,13 +271,6 @@ export type Database = {
             referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "invoices_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
         ]
       }
       notifications: {
@@ -327,7 +279,6 @@ export type Database = {
           id: string
           lu: boolean
           message: string
-          tenant_id: string
           type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
@@ -336,7 +287,6 @@ export type Database = {
           id?: string
           lu?: boolean
           message: string
-          tenant_id: string
           type: Database["public"]["Enums"]["notification_type"]
           user_id: string
         }
@@ -345,19 +295,10 @@ export type Database = {
           id?: string
           lu?: boolean
           message?: string
-          tenant_id?: string
           type?: Database["public"]["Enums"]["notification_type"]
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       payments: {
         Row: {
@@ -367,7 +308,6 @@ export type Database = {
           invoice_id: string
           methode: Database["public"]["Enums"]["payment_method"]
           montant: number
-          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -377,7 +317,6 @@ export type Database = {
           invoice_id: string
           methode: Database["public"]["Enums"]["payment_method"]
           montant: number
-          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -387,7 +326,6 @@ export type Database = {
           invoice_id?: string
           methode?: Database["public"]["Enums"]["payment_method"]
           montant?: number
-          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -396,13 +334,6 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -414,7 +345,6 @@ export type Database = {
           email: string
           id: string
           nom: string
-          tenant_id: string | null
           updated_at: string
         }
         Insert: {
@@ -423,7 +353,6 @@ export type Database = {
           email: string
           id: string
           nom: string
-          tenant_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -432,66 +361,6 @@ export type Database = {
           email?: string
           id?: string
           nom?: string
-          tenant_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tenants: {
-        Row: {
-          actif: boolean
-          adresse: string | null
-          created_at: string
-          date_inscription: string
-          email_contact: string
-          id: string
-          justificatif_virement_url: string | null
-          logo_url: string | null
-          nom_agence: string
-          paiement_valide: boolean
-          plan: Database["public"]["Enums"]["plan_type"]
-          slug: string
-          telephone: string | null
-          updated_at: string
-        }
-        Insert: {
-          actif?: boolean
-          adresse?: string | null
-          created_at?: string
-          date_inscription?: string
-          email_contact: string
-          id?: string
-          justificatif_virement_url?: string | null
-          logo_url?: string | null
-          nom_agence: string
-          paiement_valide?: boolean
-          plan?: Database["public"]["Enums"]["plan_type"]
-          slug: string
-          telephone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          actif?: boolean
-          adresse?: string | null
-          created_at?: string
-          date_inscription?: string
-          email_contact?: string
-          id?: string
-          justificatif_virement_url?: string | null
-          logo_url?: string | null
-          nom_agence?: string
-          paiement_valide?: boolean
-          plan?: Database["public"]["Enums"]["plan_type"]
-          slug?: string
-          telephone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -527,9 +396,9 @@ export type Database = {
           kilometrage: number
           marque: string
           modele: string
+          photo_url: string | null
           statut: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier: number
-          tenant_id: string
           updated_at: string
           valeur_achat: number | null
           vignette_expire_le: string | null
@@ -544,9 +413,9 @@ export type Database = {
           kilometrage?: number
           marque: string
           modele: string
+          photo_url?: string | null
           statut?: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier: number
-          tenant_id: string
           updated_at?: string
           valeur_achat?: number | null
           vignette_expire_le?: string | null
@@ -561,51 +430,39 @@ export type Database = {
           kilometrage?: number
           marque?: string
           modele?: string
+          photo_url?: string | null
           statut?: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier?: number
-          tenant_id?: string
           updated_at?: string
           valeur_achat?: number | null
           vignette_expire_le?: string | null
           visite_technique_expire_le?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "vehicles_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_user_tenant_id: {
-        Args: { _user_id: string }
-        Returns: string
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "superadmin" | "admin" | "agent" | "comptable"
+      app_role: "admin" | "agent" | "comptable"
       assistance_status: "ouvert" | "cloture"
+      assistance_type: "remplacement" | "prolongation"
       caution_status: "bloquee" | "utilisee" | "remboursee"
       client_type: "particulier" | "entreprise"
       contract_status: "brouillon" | "actif" | "termine" | "annule"
-      expense_category: "entretien" | "assurance" | "salaires" | "autres"
+      expense_category:
+        | "entretien"
+        | "assurance"
+        | "loyer"
+        | "marketing"
+        | "salaires"
+        | "autres"
       notification_type: "expiration" | "contrat" | "paiement" | "autre"
       payment_method: "especes" | "virement" | "carte" | "cheque"
-      plan_type: "essentiel" | "standard" | "premium"
       vehicle_status: "disponible" | "reserve" | "loue" | "en_panne"
     }
     CompositeTypes: {
@@ -734,15 +591,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["superadmin", "admin", "agent", "comptable"],
+      app_role: ["admin", "agent", "comptable"],
       assistance_status: ["ouvert", "cloture"],
+      assistance_type: ["remplacement", "prolongation"],
       caution_status: ["bloquee", "utilisee", "remboursee"],
       client_type: ["particulier", "entreprise"],
       contract_status: ["brouillon", "actif", "termine", "annule"],
-      expense_category: ["entretien", "assurance", "salaires", "autres"],
+      expense_category: [
+        "entretien",
+        "assurance",
+        "loyer",
+        "marketing",
+        "salaires",
+        "autres",
+      ],
       notification_type: ["expiration", "contrat", "paiement", "autre"],
       payment_method: ["especes", "virement", "carte", "cheque"],
-      plan_type: ["essentiel", "standard", "premium"],
       vehicle_status: ["disponible", "reserve", "loue", "en_panne"],
     },
   },

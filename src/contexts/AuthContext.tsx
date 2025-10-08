@@ -8,7 +8,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, nom: string, tenantId: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, nom: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -30,7 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -51,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, nom: string, tenantId: string) => {
+  const signUp = async (email: string, password: string, nom: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -59,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           nom,
-          tenant_id: tenantId,
         },
       },
     });
