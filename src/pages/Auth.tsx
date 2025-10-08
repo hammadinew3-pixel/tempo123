@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,25 +52,50 @@ export default function Auth() {
     if (!tenantId) {
       toast({
         title: 'Erreur',
-        description: 'Veuillez entrer l\'ID de votre agence',
+        description: 'Veuillez entrer le slug de votre agence',
         variant: 'destructive',
       });
       setLoading(false);
       return;
     }
 
-    const { error } = await signUp(signUpEmail, signUpPassword, nom, tenantId);
+    try {
+      // First, find the tenant by slug
+      const { data: tenantData, error: tenantError } = await supabase
+        .from('tenants')
+        .select('id')
+        .eq('slug', tenantId.toLowerCase())
+        .single();
 
-    if (error) {
+      if (tenantError || !tenantData) {
+        toast({
+          title: 'Erreur',
+          description: 'Agence introuvable. Vérifiez le slug de votre agence.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await signUp(signUpEmail, signUpPassword, nom, tenantData.id);
+
+      if (error) {
+        toast({
+          title: 'Erreur d\'inscription',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Inscription réussie',
+          description: 'Votre compte a été créé!',
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: 'Erreur d\'inscription',
+        title: 'Erreur',
         description: error.message,
         variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Inscription réussie',
-        description: 'Votre compte a été créé!',
       });
     }
 
@@ -154,15 +180,18 @@ export default function Auth() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tenant-id">ID Agence</Label>
+                  <Label htmlFor="tenant-id">Slug Agence</Label>
                   <Input
                     id="tenant-id"
                     type="text"
-                    placeholder="ID de votre agence"
+                    placeholder="Ex: seacar"
                     value={tenantId}
                     onChange={(e) => setTenantId(e.target.value)}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Entrez le slug de votre agence (ex: seacar pour SeaCar)
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Inscription...' : 'S\'inscrire'}
