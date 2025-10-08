@@ -16,8 +16,10 @@ import {
   HelpCircle,
   User,
   ChevronDown,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface NavItem {
   title: string;
@@ -50,6 +52,7 @@ const adminNavItems: NavItem[] = [
 
 export const Sidebar = () => {
   const location = useLocation();
+  const { isSuperAdmin } = useTenant();
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -93,6 +96,22 @@ export const Sidebar = () => {
         <div className="mt-8 pt-4 border-t border-sidebar-border">
           <p className="text-sm text-sidebar-foreground opacity-60 mb-4 px-3">Menu Administration</p>
           <ul className="space-y-1">
+            {isSuperAdmin && (
+              <li>
+                <Link
+                  to="/admin"
+                  className={cn(
+                    "flex items-center space-x-3 p-3 rounded-lg transition-colors",
+                    isActive("/admin")
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  )}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Plateforme</span>
+                </Link>
+              </li>
+            )}
             {adminNavItems.map((item) => (
               <li key={item.href}>
                 <Link
