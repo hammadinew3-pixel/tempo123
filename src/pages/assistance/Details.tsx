@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, FileText, Download, Edit, DollarSign, Car, User, Calendar, MapPin, Key, AlertCircle, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Download, Edit, DollarSign, Car, User, Calendar, MapPin, Key, AlertCircle, Check, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +25,23 @@ export default function AssistanceDetails() {
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFranchiseDialog, setShowFranchiseDialog] = useState(false);
+  const [showFranchiseStatusDialog, setShowFranchiseStatusDialog] = useState(false);
+  const [showClotureLocationDialog, setShowClotureLocationDialog] = useState(false);
+  const [showPaiementDialog, setShowPaiementDialog] = useState(false);
   
   const [franchiseData, setFranchiseData] = useState({
     franchise_montant: '',
+  });
+  
+  const [franchiseStatusData, setFranchiseStatusData] = useState({
+    franchise_statut: '',
+    franchise_notes: '',
+  });
+  
+  const [paiementData, setPaiementData] = useState({
+    montant_paye: '',
+    date_paiement_assurance: '',
+    etat_paiement: 'paye' as 'paye' | 'partiellement_paye',
   });
 
   const [openSections, setOpenSections] = useState({
@@ -75,6 +89,17 @@ export default function AssistanceDetails() {
       
       setFranchiseData({
         franchise_montant: assistance.franchise_montant?.toString() || '0',
+      });
+      
+      setFranchiseStatusData({
+        franchise_statut: assistance.franchise_statut || 'bloquee',
+        franchise_notes: assistance.franchise_notes || '',
+      });
+      
+      setPaiementData({
+        montant_paye: assistance.montant_paye?.toString() || '0',
+        date_paiement_assurance: assistance.date_paiement_assurance || '',
+        etat_paiement: assistance.etat_paiement === 'partiellement_paye' ? 'partiellement_paye' : 'paye',
       });
 
       if (assistance.kilometrage_depart) {
@@ -275,6 +300,135 @@ export default function AssistanceDetails() {
     }
   };
 
+  const handleUpdateFranchiseStatus = async () => {
+    try {
+      const { error } = await supabase
+        .from("assistance")
+        .update({
+          franchise_statut: franchiseStatusData.franchise_statut,
+          franchise_notes: franchiseStatusData.franchise_notes || null,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Statut de la franchise mis à jour",
+      });
+
+      setShowFranchiseStatusDialog(false);
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleClotureLocation = async () => {
+    try {
+      // Clôture de la location (véhicule rendu) mais dossier reste ouvert pour paiement
+      const { error } = await supabase
+        .from("assistance")
+        .update({
+          etat: 'retour_effectue', // Location clôturée
+          etat_paiement: 'en_attente', // Paiement en attente
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Location clôturée",
+        description: "La location est clôturée. Le dossier reste ouvert en attente du paiement de l'assurance.",
+      });
+
+      setShowClotureLocationDialog(false);
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleEnregistrerPaiement = async () => {
+    try {
+      const montantPaye = parseFloat(paiementData.montant_paye) || 0;
+      const montantTotal = assistance.montant_facture || assistance.montant_total || 0;
+      
+      let nouveauEtatPaiement: 'paye' | 'partiellement_paye' | 'en_attente' = 'en_attente';
+      if (montantPaye >= montantTotal) {
+        nouveauEtatPaiement = 'paye';
+      } else if (montantPaye > 0) {
+        nouveauEtatPaiement = 'partiellement_paye';
+      }
+      
+      const updateData: any = {
+        montant_paye: montantPaye,
+        date_paiement_assurance: paiementData.date_paiement_assurance || null,
+        etat_paiement: nouveauEtatPaiement,
+      };
+      
+      // Si paiement complet, clôturer le dossier complètement
+      if (nouveauEtatPaiement === 'paye') {
+        updateData.etat = 'cloture';
+      }
+
+      const { error } = await supabase
+        .from("assistance")
+        .update(updateData)
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Paiement enregistré",
+        description: nouveauEtatPaiement === 'paye' 
+          ? "Le paiement est complet. Le dossier est maintenant clôturé."
+          : "Le paiement partiel a été enregistré.",
+      });
+
+      setShowPaiementDialog(false);
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleValiderContrat = async () => {
+    try {
+      const { error } = await supabase
+        .from("assistance")
+        .update({ etat: 'contrat_valide' })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Contrat validé",
+        description: "Le contrat d'assistance a été validé",
+      });
+
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
@@ -375,7 +529,27 @@ export default function AssistanceDetails() {
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-blue-600" />
               <div>
-                <p className="font-medium text-blue-900">Dossier en attente de livraison</p>
+                <p className="font-medium text-blue-900">Réservation en attente</p>
+                <p className="text-sm text-blue-700">
+                  Le contrat doit être validé avant la livraison
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleValiderContrat}>
+              <Check className="w-4 h-4 mr-2" />
+              Valider le contrat
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {assistance.etat === 'contrat_valide' && (
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="font-medium text-blue-900">En attente de livraison</p>
                 <p className="text-sm text-blue-700">
                   Le véhicule de remplacement doit être livré au client
                 </p>
@@ -410,21 +584,70 @@ export default function AssistanceDetails() {
       )}
 
       {assistance.etat === 'retour_effectue' && (
-        <Card className="p-4 bg-amber-50 border-amber-200">
+        <>
+          <Card className="p-4 bg-purple-50 border-purple-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Key className="w-5 h-5 text-purple-600" />
+                <div>
+                  <p className="font-medium text-purple-900">Gérer la franchise</p>
+                  <p className="text-sm text-purple-700">
+                    La franchise est actuellement: {assistance.franchise_statut === 'bloquee' ? 'Bloquée' : assistance.franchise_statut === 'remboursee' ? 'Remboursée' : 'Utilisée'}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setFranchiseStatusData({
+                    franchise_statut: assistance.franchise_statut || 'bloquee',
+                    franchise_notes: assistance.franchise_notes || '',
+                  });
+                  setShowFranchiseStatusDialog(true);
+                }}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Modifier la franchise
+              </Button>
+            </div>
+          </Card>
+
+          {(!assistance.etat_paiement || assistance.etat_paiement === 'en_attente' || assistance.etat_paiement === 'partiellement_paye') && (
+            <Card className="p-4 bg-orange-50 border-orange-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <DollarSign className="w-5 h-5 text-orange-600" />
+                  <div>
+                    <p className="font-medium text-orange-900">En attente du paiement de l'assurance</p>
+                    <p className="text-sm text-orange-700">
+                      {assistance.etat_paiement === 'partiellement_paye' 
+                        ? `Payé: ${(assistance.montant_paye || 0).toFixed(2)} DH / ${totalAmount.toFixed(2)} DH`
+                        : `Montant dû: ${totalAmount.toFixed(2)} DH`}
+                    </p>
+                  </div>
+                </div>
+                <Button onClick={() => setShowPaiementDialog(true)}>
+                  <Check className="w-4 h-4 mr-2" />
+                  Enregistrer le paiement
+                </Button>
+              </div>
+            </Card>
+          )}
+        </>
+      )}
+
+      {assistance.etat === 'cloture' && (
+        <Card className="p-4 bg-indigo-50 border-indigo-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600" />
+              <CheckCircle2 className="w-5 h-5 text-indigo-600" />
               <div>
-                <p className="font-medium text-amber-900">Retour effectué</p>
-                <p className="text-sm text-amber-700">
-                  Le dossier peut être clôturé
+                <p className="font-medium text-indigo-900">Dossier clôturé</p>
+                <p className="text-sm text-indigo-700">
+                  Le dossier est complètement clôturé. Paiement reçu le {assistance.date_paiement_assurance ? format(new Date(assistance.date_paiement_assurance), 'dd/MM/yyyy', { locale: fr }) : 'N/A'}
                 </p>
               </div>
             </div>
-            <Button onClick={handleCloseAssistance}>
-              <Check className="w-4 h-4 mr-2" />
-              Clôturer le dossier
-            </Button>
           </div>
         </Card>
       )}
@@ -460,7 +683,8 @@ export default function AssistanceDetails() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFranchiseDialog(true)}
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0 hover:bg-primary/10"
+                title="Modifier le montant"
               >
                 <Edit className="w-4 h-4" />
               </Button>
@@ -469,6 +693,16 @@ export default function AssistanceDetails() {
               {assistance.franchise_montant ? assistance.franchise_montant.toFixed(2) : '0.00'}
               <span className="text-lg ml-1">DH</span>
             </div>
+            <Badge variant="outline" className={
+              assistance.franchise_statut === 'remboursee' ? 'bg-green-100 text-green-800 border-green-200' :
+              assistance.franchise_statut === 'utilisee' ? 'bg-red-100 text-red-800 border-red-200' :
+              'bg-orange-100 text-orange-800 border-orange-200'
+            }>
+              {assistance.franchise_statut === 'bloquee' && 'Bloquée'}
+              {assistance.franchise_statut === 'remboursee' && 'Remboursée'}
+              {assistance.franchise_statut === 'utilisee' && 'Utilisée'}
+              {!assistance.franchise_statut && 'Bloquée'}
+            </Badge>
           </CardContent>
         </Card>
 
@@ -1030,6 +1264,129 @@ export default function AssistanceDetails() {
                 Annuler
               </Button>
               <Button onClick={handleUpdateFranchise}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Modifier le statut de la franchise */}
+      <Dialog open={showFranchiseStatusDialog} onOpenChange={setShowFranchiseStatusDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Statut de la franchise</DialogTitle>
+            <DialogDescription>
+              Gérer le statut de la franchise
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Statut de la franchise *</Label>
+              <Select 
+                value={franchiseStatusData.franchise_statut} 
+                onValueChange={(v) => setFranchiseStatusData({...franchiseStatusData, franchise_statut: v})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bloquee">Bloquée</SelectItem>
+                  <SelectItem value="remboursee">Remboursée</SelectItem>
+                  <SelectItem value="utilisee">Utilisée</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea
+                value={franchiseStatusData.franchise_notes}
+                onChange={(e) => setFranchiseStatusData({...franchiseStatusData, franchise_notes: e.target.value})}
+                placeholder="Notes sur la franchise..."
+                rows={3}
+              />
+            </div>
+            {franchiseStatusData.franchise_statut === 'utilisee' && (
+              <div className="bg-destructive/10 border border-destructive/20 p-3 rounded-md flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">
+                  La franchise sera déduite du montant à payer par l'assurance.
+                </p>
+              </div>
+            )}
+            {franchiseStatusData.franchise_statut === 'remboursee' && (
+              <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-md flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-green-700">
+                  La franchise sera remboursée au client.
+                </p>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowFranchiseStatusDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateFranchiseStatus}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Enregistrer paiement assurance */}
+      <Dialog open={showPaiementDialog} onOpenChange={setShowPaiementDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enregistrer le paiement de l'assurance</DialogTitle>
+            <DialogDescription>
+              Montant total: {totalAmount.toFixed(2)} DH
+              {assistance.montant_paye > 0 && ` | Déjà payé: ${assistance.montant_paye.toFixed(2)} DH`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Montant payé par l'assurance (DH) *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={paiementData.montant_paye}
+                onChange={(e) => setPaiementData({...paiementData, montant_paye: e.target.value})}
+                placeholder="0.00"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Entrez le montant total payé (cumul si paiements multiples)
+              </p>
+            </div>
+            <div>
+              <Label>Date du paiement *</Label>
+              <Input
+                type="date"
+                value={paiementData.date_paiement_assurance}
+                onChange={(e) => setPaiementData({...paiementData, date_paiement_assurance: e.target.value})}
+              />
+            </div>
+            {parseFloat(paiementData.montant_paye || '0') >= totalAmount && (
+              <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-md flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-green-700">
+                  Le paiement est complet. Le dossier sera automatiquement clôturé.
+                </p>
+              </div>
+            )}
+            {parseFloat(paiementData.montant_paye || '0') > 0 && parseFloat(paiementData.montant_paye || '0') < totalAmount && (
+              <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-md flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-orange-700">
+                  Paiement partiel. Reste à payer: {(totalAmount - parseFloat(paiementData.montant_paye || '0')).toFixed(2)} DH
+                </p>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowPaiementDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleEnregistrerPaiement}>
                 Enregistrer
               </Button>
             </div>

@@ -22,15 +22,20 @@ export type Database = {
           created_at: string
           date_debut: string
           date_fin: string | null
+          date_paiement_assurance: string | null
           date_retour_effective: string | null
           etat: Database["public"]["Enums"]["assistance_status"]
+          etat_paiement: string | null
           etat_vehicule_depart: string | null
           etat_vehicule_retour: string | null
           franchise_montant: number | null
+          franchise_notes: string | null
+          franchise_statut: string | null
           id: string
           kilometrage_depart: number | null
           kilometrage_retour: number | null
           montant_facture: number | null
+          montant_paye: number | null
           montant_total: number | null
           niveau_carburant_depart: string | null
           niveau_carburant_retour: string | null
@@ -48,15 +53,20 @@ export type Database = {
           created_at?: string
           date_debut: string
           date_fin?: string | null
+          date_paiement_assurance?: string | null
           date_retour_effective?: string | null
           etat?: Database["public"]["Enums"]["assistance_status"]
+          etat_paiement?: string | null
           etat_vehicule_depart?: string | null
           etat_vehicule_retour?: string | null
           franchise_montant?: number | null
+          franchise_notes?: string | null
+          franchise_statut?: string | null
           id?: string
           kilometrage_depart?: number | null
           kilometrage_retour?: number | null
           montant_facture?: number | null
+          montant_paye?: number | null
           montant_total?: number | null
           niveau_carburant_depart?: string | null
           niveau_carburant_retour?: string | null
@@ -74,15 +84,20 @@ export type Database = {
           created_at?: string
           date_debut?: string
           date_fin?: string | null
+          date_paiement_assurance?: string | null
           date_retour_effective?: string | null
           etat?: Database["public"]["Enums"]["assistance_status"]
+          etat_paiement?: string | null
           etat_vehicule_depart?: string | null
           etat_vehicule_retour?: string | null
           franchise_montant?: number | null
+          franchise_notes?: string | null
+          franchise_statut?: string | null
           id?: string
           kilometrage_depart?: number | null
           kilometrage_retour?: number | null
           montant_facture?: number | null
+          montant_paye?: number | null
           montant_total?: number | null
           niveau_carburant_depart?: string | null
           niveau_carburant_retour?: string | null
