@@ -131,6 +131,48 @@ export default function AssistanceDossierTemplate() {
         </table>
       </div>
 
+      {/* Prolongations */}
+      {assistance.prolongations && assistance.prolongations.length > 0 && (
+        <div className="mb-6 bg-yellow-50 border-2 border-yellow-300 rounded p-4">
+          <h3 className="font-bold text-lg mb-3 bg-yellow-100 p-2">⚠️ HISTORIQUE DES PROLONGATIONS</h3>
+          <div className="space-y-4">
+            {assistance.prolongations.map((prolongation: any, index: number) => (
+              <div key={index} className="bg-white border border-gray-300 rounded p-3">
+                <p className="font-semibold text-sm mb-2 text-blue-700">Prolongation #{index + 1}</p>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-1 font-semibold w-1/3">Date :</td>
+                      <td className="py-1">
+                        {format(new Date(prolongation.date), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                      </td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1 font-semibold">Ancienne date de fin :</td>
+                      <td className="py-1">
+                        {format(new Date(prolongation.ancienne_date_fin), 'dd MMMM yyyy', { locale: fr })}
+                      </td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1 font-semibold">Nouvelle date de fin :</td>
+                      <td className="py-1 text-blue-600 font-bold">
+                        {format(new Date(prolongation.nouvelle_date_fin), 'dd MMMM yyyy', { locale: fr })}
+                      </td>
+                    </tr>
+                    {prolongation.raison && (
+                      <tr>
+                        <td className="py-1 font-semibold align-top">Raison :</td>
+                        <td className="py-1">{prolongation.raison}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Compagnie d'assurance */}
       <div className="mb-6">
         <h3 className="font-bold text-lg mb-3 bg-gray-100 p-2">COMPAGNIE D'ASSURANCE</h3>

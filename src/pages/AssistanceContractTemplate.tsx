@@ -168,6 +168,51 @@ export default function AssistanceContractTemplate() {
         </table>
       </div>
 
+      {/* Prolongations */}
+      {assistance.prolongations && assistance.prolongations.length > 0 && (
+        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded p-4">
+          <h3 className="font-bold text-lg mb-3 border-b border-yellow-300 pb-1">⚠️ PROLONGATIONS DE CONTRAT</h3>
+          <div className="space-y-3">
+            {assistance.prolongations.map((prolongation: any, index: number) => (
+              <div key={index} className="bg-white border border-yellow-200 rounded p-3">
+                <p className="font-semibold text-sm mb-2">Prolongation #{index + 1}</p>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-1 font-semibold w-1/3">Date de prolongation :</td>
+                      <td className="py-1">
+                        {format(new Date(prolongation.date), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                      </td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1 font-semibold">Ancienne date de fin :</td>
+                      <td className="py-1">
+                        {format(new Date(prolongation.ancienne_date_fin), 'dd MMMM yyyy', { locale: fr })}
+                      </td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1 font-semibold">Nouvelle date de fin :</td>
+                      <td className="py-1 text-blue-600 font-bold">
+                        {format(new Date(prolongation.nouvelle_date_fin), 'dd MMMM yyyy', { locale: fr })}
+                      </td>
+                    </tr>
+                    {prolongation.raison && (
+                      <tr>
+                        <td className="py-1 font-semibold">Raison :</td>
+                        <td className="py-1">{prolongation.raison}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-600 mt-3 italic">
+            Note : Le montant total ci-dessous a été recalculé en fonction des prolongations effectuées.
+          </p>
+        </div>
+      )}
+
       {/* Conditions financières */}
       <div className="mb-6">
         <h3 className="font-bold text-lg mb-3 border-b border-gray-300 pb-1">CONDITIONS FINANCIÈRES</h3>

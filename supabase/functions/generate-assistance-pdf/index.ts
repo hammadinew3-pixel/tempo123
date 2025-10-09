@@ -393,6 +393,51 @@ serve(async (req) => {
     ` : ''}
   </div>
 
+  ${assistance.prolongations && assistance.prolongations.length > 0 ? `
+  <div class="section">
+    <h2>Historique des Prolongations</h2>
+    ${assistance.prolongations.map((p: any, i: number) => `
+      <div style="margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-left: 3px solid #333;">
+        <div style="font-weight: bold; margin-bottom: 5px;">Prolongation #${i + 1}</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Date:</div>
+            <div class="info-value">${new Date(p.date).toLocaleDateString('fr-FR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Ancienne date de fin:</div>
+            <div class="info-value">${new Date(p.ancienne_date_fin).toLocaleDateString('fr-FR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric'
+            })}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Nouvelle date de fin:</div>
+            <div class="info-value" style="font-weight: bold; color: #0066cc;">${new Date(p.nouvelle_date_fin).toLocaleDateString('fr-FR', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric'
+            })}</div>
+          </div>
+          ${p.raison ? `
+          <div class="info-item full-width">
+            <div class="info-label">Raison:</div>
+            <div class="info-value">${p.raison}</div>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    `).join('')}
+  </div>
+  ` : ''}
+
   ${assistance.remarques ? `
   <div class="section">
     <h2>Remarques</h2>
