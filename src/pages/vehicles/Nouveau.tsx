@@ -331,16 +331,6 @@ export default function NouveauVehicule() {
           </div>
         </div>
 
-        {/* File Upload */}
-        <Card className="border-dashed border-2">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Upload className="w-12 h-12 text-primary mb-4" />
-            <p className="text-sm text-muted-foreground">
-              Glisser-déposer, ou <button type="button" className="text-primary hover:underline">explorer</button> votre fichiers.
-            </p>
-          </CardContent>
-        </Card>
-
         {/* Collapsible Additional Fields */}
         <Collapsible open={showMoreFields} onOpenChange={setShowMoreFields}>
           <CollapsibleTrigger asChild>
@@ -349,10 +339,20 @@ export default function NouveauVehicule() {
               {showMoreFields ? 'AFFICHER MOINS DE CHAMPS' : 'AFFICHER PLUS DE CHAMPS'}
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-4">
-            <p className="text-sm text-muted-foreground text-center mb-6">
+          <CollapsibleContent className="mt-4 space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
               Pièces jointes, Concessionaire, Couleur, Puissance fiscale, Options, ...
             </p>
+            
+            {/* File Upload */}
+            <Card className="border-dashed border-2">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Upload className="w-12 h-12 text-primary mb-4" />
+                <p className="text-sm text-muted-foreground">
+                  Glisser-déposer, ou <button type="button" className="text-primary hover:underline">explorer</button> votre fichiers.
+                </p>
+              </CardContent>
+            </Card>
           </CollapsibleContent>
         </Collapsible>
 
