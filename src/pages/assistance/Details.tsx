@@ -717,6 +717,12 @@ export default function AssistanceDetails() {
 
   const totalAmount = assistance.montant_facture || assistance.montant_total || 0;
   const duration = calculateDuration(assistance.date_debut, assistance.date_fin);
+  
+  console.log('État assistance:', {
+    etat: assistance.etat,
+    etat_paiement: assistance.etat_paiement,
+    shouldShowButton: assistance.etat === 'retour_effectue' && !assistance.etat_paiement
+  });
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
