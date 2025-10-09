@@ -51,9 +51,17 @@ export default function Locations() {
     try {
       console.log('🔄 Chargement des données...');
       
-      const [contractsRes, vehiclesRes, clientsRes] = await Promise.all([
+      const [contractsRes, assistancesRes, vehiclesRes, clientsRes] = await Promise.all([
         supabase
           .from('contracts')
+          .select(`
+            *,
+            clients (nom, prenom, telephone),
+            vehicles (immatriculation, marque, modele, tarif_journalier)
+          `)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('assistance')
           .select(`
             *,
             clients (nom, prenom, telephone),
@@ -73,6 +81,10 @@ export default function Locations() {
         console.error('❌ Erreur contrats:', contractsRes.error);
         throw contractsRes.error;
       }
+      if (assistancesRes.error) {
+        console.error('❌ Erreur assistances:', assistancesRes.error);
+        throw assistancesRes.error;
+      }
       if (vehiclesRes.error) {
         console.error('❌ Erreur véhicules:', vehiclesRes.error);
         throw vehiclesRes.error;
@@ -83,10 +95,32 @@ export default function Locations() {
       }
 
       console.log('✅ Contrats chargés:', contractsRes.data?.length || 0);
+      console.log('✅ Assistances chargées:', assistancesRes.data?.length || 0);
       console.log('✅ Véhicules chargés:', vehiclesRes.data?.length || 0);
       console.log('✅ Clients chargés:', clientsRes.data?.length || 0);
 
-      setContracts(contractsRes.data || []);
+      // Fusionner les contrats et assistances avec un indicateur de type
+      const normalizedContracts = (contractsRes.data || []).map(c => ({
+        ...c,
+        type_contrat: 'location' as const,
+        statut: c.statut || 'brouillon',
+      }));
+
+      const normalizedAssistances = (assistancesRes.data || []).map(a => ({
+        ...a,
+        type_contrat: 'assistance' as const,
+        numero_contrat: a.num_dossier,
+        statut: a.etat,
+        date_debut: a.date_debut,
+        date_fin: a.date_fin,
+        total_amount: a.montant_facture || a.montant_total,
+      }));
+
+      const allContracts = [...normalizedContracts, ...normalizedAssistances].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setContracts(allContracts);
       setVehicles(vehiclesRes.data || []);
       setClients(clientsRes.data || []);
     } catch (error: any) {
@@ -236,19 +270,23 @@ export default function Locations() {
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       brouillon: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100',
+      ouvert: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100',
       contrat_valide: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
       livre: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
       retour_effectue: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100',
       termine: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100',
+      cloture: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100',
       annule: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
     };
 
     const labels: Record<string, string> = {
       brouillon: 'Réservation',
+      ouvert: 'Réservation',
       contrat_valide: 'Contrat validé',
       livre: 'En cours',
       retour_effectue: 'Retour effectué',
       termine: 'Clôturé',
+      cloture: 'Clôturé',
       annule: 'Annulé',
     };
 
@@ -564,6 +602,7 @@ export default function Locations() {
                 <thead>
                   <tr className="text-left text-sm text-muted-foreground border-b">
                     <th className="pb-3 pl-4 font-medium">Actions</th>
+                    <th className="pb-3 font-medium">Type</th>
                     <th className="pb-3 font-medium">N° Contrat</th>
                     <th className="pb-3 font-medium">Véhicule</th>
                     <th className="pb-3 font-medium">Client</th>
@@ -575,89 +614,108 @@ export default function Locations() {
                   </tr>
                 </thead>
                 <tbody>
-                  {contracts.map((contract) => (
-                     <tr 
+                  {contracts.map((contract) => {
+                    const isAssistance = contract.type_contrat === 'assistance';
+                    const detailsUrl = isAssistance ? `/assistance/${contract.id}` : `/locations/${contract.id}`;
+                    
+                    return (
+                      <tr 
                         key={contract.id} 
                         className="border-b last:border-0 hover:bg-muted/50 cursor-pointer"
-                        onClick={() => navigate(`/locations/${contract.id}`)}
+                        onClick={() => navigate(detailsUrl)}
                       >
-                      <td className="py-4 pl-4">
-                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/locations/${contract.id}`)}
-                            title="Voir le contrat"
+                        <td className="py-4 pl-4">
+                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(detailsUrl)}
+                              title="Voir le contrat"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/vehicules/${contract.vehicle_id}`)}
+                              title="Voir le véhicule"
+                            >
+                              <Car className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(`/clients/${contract.client_id}`)}
+                              title="Voir le client"
+                            >
+                              <User className="w-4 h-4" />
+                            </Button>
+                            {!isAssistance && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => openEditDialog(contract)}
+                                  title="Modifier"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleGeneratePDF(contract.id)}
+                                  disabled={loading}
+                                  title="Générer PDF"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(contract.id)}
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4">
+                          <Badge 
+                            variant="outline" 
+                            className={isAssistance ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' : 'bg-blue-500/10 text-blue-600 border-blue-500/20'}
                           >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/vehicules/${contract.vehicle_id}`)}
-                            title="Voir le véhicule"
-                          >
-                            <Car className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/clients/${contract.client_id}`)}
-                            title="Voir le client"
-                          >
-                            <User className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(contract)}
-                            title="Modifier"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleGeneratePDF(contract.id)}
-                            disabled={loading}
-                            title="Générer PDF"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(contract.id)}
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                      <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
-                      <td className="py-4 text-foreground">
-                        {contract.vehicles?.marque} {contract.vehicles?.modele}
-                      </td>
-                      <td className="py-4 text-foreground">
-                        {contract.clients?.nom} {contract.clients?.prenom}
-                      </td>
-                      <td className="py-4 text-foreground text-sm">
-                        {new Date(contract.date_debut).toLocaleDateString('fr-FR')} - {new Date(contract.date_fin).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="py-4 text-foreground">{contract.duration || calculateDuration(contract.date_debut, contract.date_fin)} jours</td>
-                      <td className="py-4 text-foreground">{contract.total_amount?.toFixed(2) || '0.00'} MAD</td>
-                      <td className="py-4">{getStatusBadge(contract.statut)}</td>
-                      <td className="py-4 text-foreground text-sm">
-                        {new Date(contract.created_at).toLocaleString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </td>
-                    </tr>
-                  ))}
+                            {isAssistance ? 'Assistance' : 'Location'}
+                          </Badge>
+                        </td>
+                        <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
+                        <td className="py-4 text-foreground">
+                          {contract.vehicles?.marque} {contract.vehicles?.modele}
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {contract.clients?.nom} {contract.clients?.prenom}
+                        </td>
+                        <td className="py-4 text-foreground text-sm">
+                          {new Date(contract.date_debut).toLocaleDateString('fr-FR')} - {contract.date_fin ? new Date(contract.date_fin).toLocaleDateString('fr-FR') : 'En cours'}
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {contract.date_fin ? (contract.duration || calculateDuration(contract.date_debut, contract.date_fin)) + ' jours' : '-'}
+                        </td>
+                        <td className="py-4 text-foreground">{contract.total_amount?.toFixed(2) || '0.00'} MAD</td>
+                        <td className="py-4">{getStatusBadge(contract.statut)}</td>
+                        <td className="py-4 text-foreground text-sm">
+                          {new Date(contract.created_at).toLocaleString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
