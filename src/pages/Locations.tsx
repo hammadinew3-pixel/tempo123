@@ -233,10 +233,10 @@ export default function Locations() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      brouillon: 'bg-gray-500',
-      actif: 'bg-blue-500',
-      termine: 'bg-green-500',
-      annule: 'bg-red-500',
+      brouillon: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100',
+      actif: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+      termine: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
+      annule: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
     };
 
     const labels: Record<string, string> = {
@@ -247,7 +247,7 @@ export default function Locations() {
     };
 
     return (
-      <Badge className={`${styles[status]} text-white`}>
+      <Badge variant="outline" className={`${styles[status]} border-0`}>
         {labels[status]}
       </Badge>
     );
@@ -305,16 +305,23 @@ export default function Locations() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Locations / Contrats</h1>
+          <h1 className="text-2xl font-bold text-foreground">Liste des locations</h1>
           <p className="text-sm text-muted-foreground">Gérez vos contrats de location</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Filter className="w-4 h-4 mr-2" />
+            FILTRER
+          </Button>
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
-            Exporter
+            IMPORTER
+          </Button>
+          <Button variant="outline" size="sm">
+            CHECK DISPONIBILITÉ
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
@@ -526,27 +533,20 @@ export default function Locations() {
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Contrats ({contracts.length})</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher..."
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filtres
-              </Button>
-            </div>
+        <CardHeader className="space-y-4">
+          <div className="flex items-center gap-4 text-sm font-medium">
+            <button className="text-primary border-b-2 border-primary pb-2">
+              TOUS ({contracts.length})
+            </button>
+            <button className="text-muted-foreground hover:text-foreground pb-2">
+              ACTIF ({contracts.filter(c => c.statut === 'actif').length})
+            </button>
+            <button className="text-muted-foreground hover:text-foreground pb-2">
+              TERMINÉ ({contracts.filter(c => c.statut === 'termine').length})
+            </button>
           </div>
         </CardHeader>
-        <CardContent>
-          {loading ? (
+        <CardContent>{loading ? (
             <p className="text-center text-muted-foreground py-8">Chargement...</p>
           ) : contracts.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
@@ -557,47 +557,22 @@ export default function Locations() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-sm text-muted-foreground border-b">
+                    <th className="pb-3 pl-4 font-medium">Actions</th>
                     <th className="pb-3 font-medium">N° Contrat</th>
                     <th className="pb-3 font-medium">Véhicule</th>
                     <th className="pb-3 font-medium">Client</th>
                     <th className="pb-3 font-medium">Période</th>
+                    <th className="pb-3 font-medium">Durée</th>
                     <th className="pb-3 font-medium">Montant</th>
-                    <th className="pb-3 font-medium">Reste</th>
                     <th className="pb-3 font-medium">Statut</th>
-                    <th className="pb-3 font-medium">Actions</th>
+                    <th className="pb-3 font-medium">Créé le</th>
                   </tr>
                 </thead>
                 <tbody>
                   {contracts.map((contract) => (
                     <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
-                      <td className="py-4 text-foreground">
-                        {contract.vehicles?.marque} {contract.vehicles?.modele}
-                      </td>
-                      <td className="py-4 text-foreground">
-                        {contract.clients?.nom} {contract.clients?.prenom}
-                      </td>
-                      <td className="py-4 text-foreground">
-                        <div className="text-sm">
-                          <div>{new Date(contract.date_debut).toLocaleDateString('fr-FR')}</div>
-                          <div className="text-muted-foreground">au {new Date(contract.date_fin).toLocaleDateString('fr-FR')}</div>
-                          <div className="text-xs">({contract.duration || calculateDuration(contract.date_debut, contract.date_fin)} jours)</div>
-                        </div>
-                      </td>
-                      <td className="py-4 text-foreground">
-                        <div className="font-semibold">{contract.total_amount?.toFixed(2) || '0.00'} MAD</div>
-                        <div className="text-xs text-muted-foreground">
-                          Acompte: {contract.advance_payment?.toFixed(2) || '0.00'} MAD
-                        </div>
-                      </td>
-                      <td className="py-4 text-foreground">
-                        <span className="font-medium text-orange-600">
-                          {contract.remaining_amount?.toFixed(2) || '0.00'} MAD
-                        </span>
-                      </td>
-                      <td className="py-4">{getStatusBadge(contract.statut)}</td>
-                      <td className="py-4">
-                        <div className="flex space-x-1">
+                      <td className="py-4 pl-4">
+                        <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -624,6 +599,28 @@ export default function Locations() {
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
+                      </td>
+                      <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
+                      <td className="py-4 text-foreground">
+                        {contract.vehicles?.marque} {contract.vehicles?.modele}
+                      </td>
+                      <td className="py-4 text-foreground">
+                        {contract.clients?.nom} {contract.clients?.prenom}
+                      </td>
+                      <td className="py-4 text-foreground text-sm">
+                        {new Date(contract.date_debut).toLocaleDateString('fr-FR')} - {new Date(contract.date_fin).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="py-4 text-foreground">{contract.duration || calculateDuration(contract.date_debut, contract.date_fin)} jours</td>
+                      <td className="py-4 text-foreground">{contract.total_amount?.toFixed(2) || '0.00'} MAD</td>
+                      <td className="py-4">{getStatusBadge(contract.statut)}</td>
+                      <td className="py-4 text-foreground text-sm">
+                        {new Date(contract.created_at).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </td>
                     </tr>
                   ))}

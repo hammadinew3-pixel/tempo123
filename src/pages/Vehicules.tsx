@@ -149,37 +149,41 @@ export default function Vehicules() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      disponible: 'bg-green-500',
-      loue: 'bg-blue-500',
-      reserve: 'bg-yellow-500',
-      en_panne: 'bg-red-500',
+      disponible: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+      loue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
+      reserve: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100',
+      en_panne: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
     };
 
     const labels: Record<string, string> = {
-      disponible: 'Disponible',
-      loue: 'Loué',
+      disponible: 'Libre',
+      loue: 'En circulation',
       reserve: 'Réservé',
       en_panne: 'En panne',
     };
 
     return (
-      <Badge className={`${styles[status]} text-white`}>
+      <Badge variant="outline" className={`${styles[status]} border-0`}>
         {labels[status]}
       </Badge>
     );
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Liste des véhicules</h1>
           <p className="text-sm text-muted-foreground">Gérez votre flotte de véhicules</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">
+            <Filter className="w-4 h-4 mr-2" />
+            FILTRER
+          </Button>
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
-            Exporter
+            IMPORTER
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
@@ -327,23 +331,17 @@ export default function Vehicules() {
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Véhicules ({vehicles.length})</CardTitle>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher..."
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filtres
-              </Button>
-            </div>
+        <CardHeader className="space-y-4">
+          <div className="flex items-center gap-4 text-sm font-medium">
+            <button className="text-primary border-b-2 border-primary pb-2">
+              TOUS ({vehicles.length})
+            </button>
+            <button className="text-muted-foreground hover:text-foreground pb-2">
+              HORS SERVICE (0)
+            </button>
+            <button className="text-muted-foreground hover:text-foreground pb-2">
+              SOUS LOCATION (0)
+            </button>
           </div>
         </CardHeader>
         <CardContent>
@@ -358,28 +356,21 @@ export default function Vehicules() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="pb-3 font-medium">Immatriculation</th>
-                    <th className="pb-3 font-medium">Marque</th>
-                    <th className="pb-3 font-medium">Modèle</th>
-                    <th className="pb-3 font-medium">Année</th>
-                    <th className="pb-3 font-medium">Kilométrage</th>
-                    <th className="pb-3 font-medium">Tarif/jour</th>
-                    <th className="pb-3 font-medium">Statut</th>
-                    <th className="pb-3 font-medium">Actions</th>
+                    <th className="pb-3 pl-4 font-medium">Actions</th>
+                    <th className="pb-3 font-medium">Marque/Modèle - Catégorie</th>
+                    <th className="pb-3 font-medium">Matricule</th>
+                    <th className="pb-3 font-medium">État</th>
+                    <th className="pb-3 font-medium">kilométrage</th>
+                    <th className="pb-3 font-medium">Prix location</th>
+                    <th className="pb-3 font-medium">Carburant</th>
+                    <th className="pb-3 font-medium">Créé le</th>
                   </tr>
                 </thead>
                 <tbody>
                   {vehicles.map((vehicle) => (
                     <tr key={vehicle.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="py-4 font-medium text-foreground">{vehicle.immatriculation}</td>
-                      <td className="py-4 text-foreground">{vehicle.marque}</td>
-                      <td className="py-4 text-foreground">{vehicle.modele}</td>
-                      <td className="py-4 text-foreground">{vehicle.annee}</td>
-                      <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()} km</td>
-                      <td className="py-4 text-foreground">{vehicle.tarif_journalier} MAD</td>
-                      <td className="py-4">{getStatusBadge(vehicle.statut)}</td>
-                      <td className="py-4">
-                        <div className="flex space-x-2">
+                      <td className="py-4 pl-4">
+                        <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -395,6 +386,31 @@ export default function Vehicules() {
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
+                      </td>
+                      <td className="py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                            <span className="text-xs font-medium">{vehicle.marque.charAt(0)}</span>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Cat. Mixte</div>
+                            <div className="font-medium text-foreground">{vehicle.marque} - {vehicle.modele}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 font-medium text-foreground">{vehicle.immatriculation}</td>
+                      <td className="py-4">{getStatusBadge(vehicle.statut)}</td>
+                      <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()}</td>
+                      <td className="py-4 text-foreground">{vehicle.tarif_journalier.toFixed(2)}</td>
+                      <td className="py-4 text-foreground">Diesel</td>
+                      <td className="py-4 text-foreground text-sm">
+                        {new Date(vehicle.created_at).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </td>
                     </tr>
                   ))}
