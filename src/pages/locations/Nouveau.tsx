@@ -112,7 +112,7 @@ export default function NouveauLocation() {
       if (error) throw error;
       setBaremes(data || []);
       setSelectedCategorie("");
-      setFormData({ ...formData, vehicle_id: "" });
+      setFormData((prev) => ({ ...prev, vehicle_id: "" }));
       setVehicles(allVehicles);
     } catch (error) {
       console.error("Erreur chargement barèmes:", error);
@@ -129,7 +129,7 @@ export default function NouveauLocation() {
     // Filtrer les véhicules par catégorie
     const filteredVehicles = allVehicles.filter((v) => v.categorie === categorie);
     setVehicles(filteredVehicles);
-    setFormData({ ...formData, vehicle_id: "" });
+    setFormData((prev) => ({ ...prev, vehicle_id: "" }));
   };
 
   const calculateAmounts = () => {
