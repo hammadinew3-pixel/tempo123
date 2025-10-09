@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2 } from "lucide-react";
+import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -21,6 +23,10 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const { toast } = useToast();
 
+  const [showAllFields, setShowAllFields] = useState(false);
+  const [sexe, setSexe] = useState<'homme' | 'femme'>('homme');
+  const [clientFiable, setClientFiable] = useState<'nouveau' | 'oui' | 'non'>('nouveau');
+  
   const [formData, setFormData] = useState<Partial<ClientInsert>>({
     type: 'particulier',
     nom: '',
@@ -138,6 +144,9 @@ export default function Clients() {
       adresse: '',
     });
     setEditingClient(null);
+    setSexe('homme');
+    setClientFiable('nouveau');
+    setShowAllFields(false);
   };
 
   const openEditDialog = (client: Client) => {
@@ -169,116 +178,283 @@ export default function Clients() {
                 Nouveau client
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingClient ? 'Modifier' : 'Ajouter'} un client</DialogTitle>
-                <DialogDescription>
-                  Remplissez les informations du client
-                </DialogDescription>
+                <DialogTitle className="text-2xl font-semibold">
+                  {editingClient ? 'Modifier client' : 'Créer client'}
+                </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="type">Type *</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value) => setFormData({ ...formData, type: value as any })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="particulier">Particulier</SelectItem>
-                      <SelectItem value="entreprise">Entreprise</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Type client et Sexe */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="text-sm text-muted-foreground">Type client</Label>
+                    <RadioGroup
+                      value={formData.type}
+                      onValueChange={(value) => setFormData({ ...formData, type: value as any })}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="particulier" id="particulier" />
+                        <Label htmlFor="particulier" className="font-normal cursor-pointer">Particulier</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="entreprise" id="entreprise" />
+                        <Label htmlFor="entreprise" className="font-normal cursor-pointer">Entreprise</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {formData.type === 'particulier' && (
+                    <div className="space-y-3">
+                      <Label className="text-sm text-muted-foreground">Sexe</Label>
+                      <RadioGroup
+                        value={sexe}
+                        onValueChange={(value: any) => setSexe(value)}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="homme" id="homme" />
+                          <Label htmlFor="homme" className="font-normal cursor-pointer">Homme</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="femme" id="femme" />
+                          <Label htmlFor="femme" className="font-normal cursor-pointer">Femme</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
                 </div>
 
+                {/* Prénom et Nom */}
                 <div className="grid grid-cols-2 gap-4">
+                  {formData.type === 'particulier' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="prenom">
+                        Prénom <span className="text-primary">*</span>
+                      </Label>
+                      <Input
+                        id="prenom"
+                        value={formData.prenom || ''}
+                        onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+                        placeholder="Prénom"
+                        className="border-input focus:border-primary transition-colors"
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
-                    <Label htmlFor="nom">Nom {formData.type === 'entreprise' ? '(Raison sociale)' : ''} *</Label>
+                    <Label htmlFor="nom">
+                      {formData.type === 'entreprise' ? 'Raison sociale' : 'Nom'} <span className="text-primary">*</span>
+                    </Label>
                     <Input
                       id="nom"
                       value={formData.nom}
                       onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
                       placeholder={formData.type === 'entreprise' ? 'Nom de l\'entreprise' : 'Nom'}
                       required
+                      className="border-input focus:border-primary transition-colors"
                     />
                   </div>
-                  
+                </div>
+
+                {/* Permis et Téléphone */}
+                <div className="grid grid-cols-2 gap-4">
                   {formData.type === 'particulier' && (
                     <div className="space-y-2">
-                      <Label htmlFor="prenom">Prénom</Label>
+                      <Label htmlFor="permis">N° permis</Label>
                       <Input
-                        id="prenom"
-                        value={formData.prenom || ''}
-                        onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
-                        placeholder="Prénom"
+                        id="permis"
+                        value={formData.permis_conduire || ''}
+                        onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
+                        placeholder="N° permis"
+                        className="border-input focus:border-primary transition-colors"
                       />
+                      <p className="text-xs text-muted-foreground">10/8 chiffres de format xx/xxxxxxxx, exemple: 01/123456</p>
                     </div>
                   )}
-
-                  {formData.type === 'particulier' && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="cin">CIN</Label>
-                        <Input
-                          id="cin"
-                          value={formData.cin || ''}
-                          onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
-                          placeholder="BE123456"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="permis">Permis de conduire</Label>
-                        <Input
-                          id="permis"
-                          value={formData.permis_conduire || ''}
-                          onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
-                          placeholder="P123456"
-                        />
-                      </div>
-                    </>
-                  )}
-
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email || ''}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="email@exemple.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="telephone">Téléphone *</Label>
+                    <Label htmlFor="telephone">
+                      N° Tél <span className="text-primary">*</span>
+                    </Label>
                     <Input
                       id="telephone"
                       value={formData.telephone}
                       onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                      placeholder="+212 6 12 34 56 78"
+                      placeholder="N° Tél"
                       required
+                      className="border-input focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="adresse">Adresse</Label>
-                  <Input
-                    id="adresse"
-                    value={formData.adresse || ''}
-                    onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-                    placeholder="Adresse complète"
-                  />
+                {/* CIN et Client fiable */}
+                <div className="grid grid-cols-2 gap-4">
+                  {formData.type === 'particulier' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="cin">N° CIN</Label>
+                      <Input
+                        id="cin"
+                        value={formData.cin || ''}
+                        onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
+                        placeholder="N° CIN"
+                        className="border-input focus:border-primary transition-colors"
+                      />
+                      <p className="text-xs text-muted-foreground">Exemple: AB123456</p>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    <Label className="text-sm text-muted-foreground">Client fiable</Label>
+                    <RadioGroup
+                      value={clientFiable}
+                      onValueChange={(value: any) => setClientFiable(value)}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="nouveau" id="nouveau" />
+                        <Label htmlFor="nouveau" className="font-normal cursor-pointer">Nouveau</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="oui" id="oui" />
+                        <Label htmlFor="oui" className="font-normal cursor-pointer">Oui</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="non" id="non" />
+                        <Label htmlFor="non" className="font-normal cursor-pointer">Non</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
                 </div>
 
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => { setIsDialogOpen(false); resetForm(); }}>
+                {/* Dates permis */}
+                {formData.type === 'particulier' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="date-delivrance">Date délivrance permis</Label>
+                      <div className="relative">
+                        <Input
+                          id="date-delivrance"
+                          type="date"
+                          className="border-input focus:border-primary transition-colors"
+                        />
+                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="date-expiration">Date expiration permis</Label>
+                      <div className="relative">
+                        <Input
+                          id="date-expiration"
+                          type="date"
+                          className="border-input focus:border-primary transition-colors"
+                        />
+                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Collapsible pour champs additionnels */}
+                <Collapsible open={showAllFields} onOpenChange={setShowAllFields}>
+                  <CollapsibleTrigger className="flex items-center justify-center w-full py-2 text-primary hover:text-primary/80 transition-colors">
+                    <span className="text-sm font-medium uppercase tracking-wide">
+                      {showAllFields ? 'Afficher moins de champs' : 'Afficher tous les champs'}
+                    </span>
+                    <ChevronDown className={`ml-2 w-4 h-4 transition-transform ${showAllFields ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-4 space-y-4">
+                    <p className="text-xs text-muted-foreground text-center -mt-2">
+                      Pièces jointes, N° passport, Email, Identifiant Fiscal, ...
+                    </p>
+
+                    {/* Passport et Date de naissance */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="passport">N° Passport</Label>
+                        <Input
+                          id="passport"
+                          placeholder="N° Passport"
+                          className="border-input focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="date-naissance">Date de naissance</Label>
+                        <div className="relative">
+                          <Input
+                            id="date-naissance"
+                            type="date"
+                            className="border-input focus:border-primary transition-colors"
+                          />
+                          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Email et Adresse */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">E-mail</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email || ''}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="E-mail"
+                          className="border-input focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="adresse">Adresse</Label>
+                        <Input
+                          id="adresse"
+                          value={formData.adresse || ''}
+                          onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+                          placeholder="Adresse"
+                          className="border-input focus:border-primary transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Remarques */}
+                    <div className="space-y-2">
+                      <Label htmlFor="remarques">Diverses remarques personnelles</Label>
+                      <Textarea
+                        id="remarques"
+                        placeholder="Diverses remarques personnelles"
+                        className="border-input focus:border-primary transition-colors min-h-[80px]"
+                      />
+                    </div>
+
+                    {/* File upload area */}
+                    <div className="space-y-2">
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Upload className="w-6 h-6 text-primary" />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Glisser-déposer, ou <span className="text-primary">explorer</span> votre fichiers.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={() => { setIsDialogOpen(false); resetForm(); }}
+                    className="uppercase text-primary hover:text-primary/80 hover:bg-primary/10"
+                  >
                     Annuler
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? 'Enregistrement...' : 'Enregistrer'}
+                  <Button 
+                    type="submit" 
+                    disabled={loading}
+                    className="uppercase"
+                  >
+                    {loading ? 'Enregistrement...' : 'Ajouter'}
                   </Button>
                 </div>
               </form>
@@ -355,7 +531,7 @@ export default function Clients() {
                         </div>
                       </td>
                       <td className="py-4">
-                        <Badge variant="outline" className={client.type === 'particulier' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-0' : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 border-0'}>
+                        <Badge variant="outline" className={client.type === 'particulier' ? 'bg-primary/10 text-primary border-0' : 'bg-secondary/10 text-secondary border-0'}>
                           {client.type === 'particulier' ? 'Particulier' : 'Entreprise'}
                         </Badge>
                       </td>
