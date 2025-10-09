@@ -464,6 +464,32 @@ export default function AssistanceDetails() {
     }
   };
 
+  const handlePasserEnAttentePaiement = async () => {
+    try {
+      const { error } = await supabase
+        .from("assistance")
+        .update({ 
+          etat_paiement: 'en_attente',
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Statut mis à jour",
+        description: "Le dossier est maintenant en attente de paiement de l'assurance",
+      });
+
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
   const handleGeneratePDF = async () => {
     try {
       toast({
@@ -778,7 +804,27 @@ export default function AssistanceDetails() {
         </Card>
       )}
 
-      {assistance.etat === 'retour_effectue' && (
+      {assistance.etat === 'retour_effectue' && !assistance.etat_paiement && (
+        <Card className="p-4 bg-amber-50 border-amber-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600" />
+              <div>
+                <p className="font-medium text-amber-900">Retour effectué</p>
+                <p className="text-sm text-amber-700">
+                  Le véhicule a été retourné. Confirmez pour passer en attente de paiement.
+                </p>
+              </div>
+            </div>
+            <Button onClick={handlePasserEnAttentePaiement}>
+              <Check className="w-4 h-4 mr-2" />
+              Passer en attente de paiement
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {assistance.etat === 'retour_effectue' && assistance.etat_paiement && (
         <>
           <Card className="p-4 bg-purple-50 border-purple-200">
             <div className="flex items-center justify-between">
@@ -807,7 +853,7 @@ export default function AssistanceDetails() {
             </div>
           </Card>
 
-          {(!assistance.etat_paiement || assistance.etat_paiement === 'en_attente' || assistance.etat_paiement === 'partiellement_paye') && (
+          {(assistance.etat_paiement === 'en_attente' || assistance.etat_paiement === 'partiellement_paye') && (
             <Card className="p-4 bg-orange-50 border-orange-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
