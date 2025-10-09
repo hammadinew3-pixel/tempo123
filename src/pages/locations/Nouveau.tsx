@@ -455,9 +455,15 @@ export default function NouveauLocation() {
                   <Calendar
                     mode="single"
                     selected={formData.date_debut}
-                    onSelect={(date) =>
-                      date && setFormData({ ...formData, date_debut: date })
-                    }
+                    onSelect={(date) => {
+                      if (date) {
+                        setFormData({ 
+                          ...formData, 
+                          date_debut: date,
+                          date_fin: date // Automatically set return date to same as departure date
+                        });
+                      }
+                    }}
                     disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus
                     className="pointer-events-auto"
