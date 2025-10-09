@@ -62,6 +62,7 @@ export default function LocationDetails() {
     new_vehicle_id: '',
     reason: '',
     notes: '',
+    new_daily_rate: '',
   });
 
   const [deliveryData, setDeliveryData] = useState({
@@ -403,7 +404,22 @@ export default function LocationDetails() {
       return;
     }
 
+    if (!changeVehicleData.new_daily_rate || parseFloat(changeVehicleData.new_daily_rate) <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez saisir un tarif journalier valide",
+      });
+      return;
+    }
+
     try {
+      const newDailyRate = parseFloat(changeVehicleData.new_daily_rate);
+      const duration = contract.duration || 1;
+      const newTotalAmount = duration * newDailyRate;
+      const advancePayment = contract.advance_payment || 0;
+      const newRemainingAmount = newTotalAmount - advancePayment;
+
       // 1. Enregistrer le changement dans l'historique
       const { error: changeError } = await supabase
         .from("vehicle_changes")
@@ -417,10 +433,15 @@ export default function LocationDetails() {
 
       if (changeError) throw changeError;
 
-      // 2. Mettre à jour le contrat avec le nouveau véhicule
+      // 2. Mettre à jour le contrat avec le nouveau véhicule et les nouveaux montants
       const { error: contractError } = await supabase
         .from("contracts")
-        .update({ vehicle_id: changeVehicleData.new_vehicle_id })
+        .update({ 
+          vehicle_id: changeVehicleData.new_vehicle_id,
+          daily_rate: newDailyRate,
+          total_amount: newTotalAmount,
+          remaining_amount: newRemainingAmount,
+        })
         .eq("id", id);
 
       if (contractError) throw contractError;
@@ -451,6 +472,7 @@ export default function LocationDetails() {
         new_vehicle_id: '',
         reason: '',
         notes: '',
+        new_daily_rate: '',
       });
       loadContractData();
     } catch (error: any) {
@@ -1730,7 +1752,14 @@ export default function LocationDetails() {
               <Label>Nouveau véhicule *</Label>
               <Select 
                 value={changeVehicleData.new_vehicle_id} 
-                onValueChange={(v) => setChangeVehicleData({...changeVehicleData, new_vehicle_id: v})}
+                onValueChange={(v) => {
+                  const selectedVehicle = availableVehicles.find(vehicle => vehicle.id === v);
+                  setChangeVehicleData({
+                    ...changeVehicleData, 
+                    new_vehicle_id: v,
+                    new_daily_rate: selectedVehicle?.tarif_journalier?.toString() || '',
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un véhicule" />
@@ -1738,11 +1767,30 @@ export default function LocationDetails() {
                 <SelectContent>
                   {availableVehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation} ({vehicle.tarif_journalier} DH/jour)
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div>
+              <Label>Nouveau tarif journalier *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={changeVehicleData.new_daily_rate}
+                onChange={(e) => setChangeVehicleData({...changeVehicleData, new_daily_rate: e.target.value})}
+                placeholder="Ex: 300.00"
+              />
+              {changeVehicleData.new_daily_rate && contract.duration && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Nouveau montant total: {(parseFloat(changeVehicleData.new_daily_rate) * contract.duration).toFixed(2)} DH
+                  {contract.advance_payment > 0 && (
+                    <> (Reste à payer: {(parseFloat(changeVehicleData.new_daily_rate) * contract.duration - contract.advance_payment).toFixed(2)} DH)</>
+                  )}
+                </p>
+              )}
             </div>
             
             <div>
