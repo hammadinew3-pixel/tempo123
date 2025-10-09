@@ -124,46 +124,100 @@ export type Database = {
       }
       contracts: {
         Row: {
+          advance_payment: number | null
+          branch_id: number | null
           caution_montant: number
           caution_statut: Database["public"]["Enums"]["caution_status"]
           client_id: string
+          client_signature: string | null
           created_at: string
+          created_by: string | null
+          daily_rate: number | null
           date_debut: string
           date_fin: string
+          dropoff_branch_id: number | null
+          duration: number | null
+          end_location: string | null
+          end_time: string | null
           id: string
+          notes: string | null
           numero_contrat: string
+          payment_method: string | null
           pdf_url: string | null
+          pickup_branch_id: number | null
+          remaining_amount: number | null
+          signed_at: string | null
+          start_location: string | null
+          start_time: string | null
           statut: Database["public"]["Enums"]["contract_status"]
+          total_amount: number | null
           updated_at: string
           vehicle_id: string
+          witness_signature: string | null
         }
         Insert: {
+          advance_payment?: number | null
+          branch_id?: number | null
           caution_montant?: number
           caution_statut?: Database["public"]["Enums"]["caution_status"]
           client_id: string
+          client_signature?: string | null
           created_at?: string
+          created_by?: string | null
+          daily_rate?: number | null
           date_debut: string
           date_fin: string
+          dropoff_branch_id?: number | null
+          duration?: number | null
+          end_location?: string | null
+          end_time?: string | null
           id?: string
+          notes?: string | null
           numero_contrat: string
+          payment_method?: string | null
           pdf_url?: string | null
+          pickup_branch_id?: number | null
+          remaining_amount?: number | null
+          signed_at?: string | null
+          start_location?: string | null
+          start_time?: string | null
           statut?: Database["public"]["Enums"]["contract_status"]
+          total_amount?: number | null
           updated_at?: string
           vehicle_id: string
+          witness_signature?: string | null
         }
         Update: {
+          advance_payment?: number | null
+          branch_id?: number | null
           caution_montant?: number
           caution_statut?: Database["public"]["Enums"]["caution_status"]
           client_id?: string
+          client_signature?: string | null
           created_at?: string
+          created_by?: string | null
+          daily_rate?: number | null
           date_debut?: string
           date_fin?: string
+          dropoff_branch_id?: number | null
+          duration?: number | null
+          end_location?: string | null
+          end_time?: string | null
           id?: string
+          notes?: string | null
           numero_contrat?: string
+          payment_method?: string | null
           pdf_url?: string | null
+          pickup_branch_id?: number | null
+          remaining_amount?: number | null
+          signed_at?: string | null
+          start_location?: string | null
+          start_time?: string | null
           statut?: Database["public"]["Enums"]["contract_status"]
+          total_amount?: number | null
           updated_at?: string
           vehicle_id?: string
+          witness_signature?: string | null
         }
         Relationships: [
           {

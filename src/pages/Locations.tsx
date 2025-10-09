@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, Download, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, Filter, Download, Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +32,13 @@ export default function Locations() {
     statut: 'brouillon',
     caution_montant: 0,
     caution_statut: 'bloquee',
+    advance_payment: 0,
+    payment_method: 'especes',
+    start_location: '',
+    end_location: '',
+    start_time: '',
+    end_time: '',
+    notes: '',
   });
 
   useEffect(() => {
@@ -156,6 +163,13 @@ export default function Locations() {
       statut: 'brouillon',
       caution_montant: 0,
       caution_statut: 'bloquee',
+      advance_payment: 0,
+      payment_method: 'especes',
+      start_location: '',
+      end_location: '',
+      start_time: '',
+      end_time: '',
+      notes: '',
     });
     setEditingContract(null);
   };
@@ -171,6 +185,13 @@ export default function Locations() {
       statut: contract.statut,
       caution_montant: contract.caution_montant,
       caution_statut: contract.caution_statut,
+      advance_payment: contract.advance_payment || 0,
+      payment_method: contract.payment_method || 'especes',
+      start_location: contract.start_location || '',
+      end_location: contract.end_location || '',
+      start_time: contract.start_time || '',
+      end_time: contract.end_time || '',
+      notes: contract.notes || '',
     });
     setIsDialogOpen(true);
   };
@@ -202,6 +223,33 @@ export default function Locations() {
     const endDate = new Date(end);
     const diff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     return diff;
+  };
+
+  const handleGeneratePDF = async (contractId: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.functions.invoke('generate-contract-pdf', {
+        body: { contractId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Succès',
+        description: 'PDF généré avec succès',
+      });
+
+      // Reload to get updated pdf_url
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -330,6 +378,85 @@ export default function Locations() {
                       onChange={(e) => setFormData({ ...formData, caution_montant: parseFloat(e.target.value) })}
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="advance">Acompte (MAD)</Label>
+                    <Input
+                      id="advance"
+                      type="number"
+                      step="0.01"
+                      value={formData.advance_payment}
+                      onChange={(e) => setFormData({ ...formData, advance_payment: parseFloat(e.target.value) })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_method">Mode de paiement</Label>
+                    <Select
+                      value={formData.payment_method}
+                      onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="especes">Espèces</SelectItem>
+                        <SelectItem value="carte">Carte bancaire</SelectItem>
+                        <SelectItem value="virement">Virement</SelectItem>
+                        <SelectItem value="cheque">Chèque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="start_location">Lieu de départ</Label>
+                    <Input
+                      id="start_location"
+                      value={formData.start_location}
+                      onChange={(e) => setFormData({ ...formData, start_location: e.target.value })}
+                      placeholder="Ex: Casablanca"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="end_location">Lieu de retour</Label>
+                    <Input
+                      id="end_location"
+                      value={formData.end_location}
+                      onChange={(e) => setFormData({ ...formData, end_location: e.target.value })}
+                      placeholder="Ex: Casablanca"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="start_time">Heure de départ</Label>
+                    <Input
+                      id="start_time"
+                      type="time"
+                      value={formData.start_time}
+                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="end_time">Heure de retour</Label>
+                    <Input
+                      id="end_time"
+                      type="time"
+                      value={formData.end_time}
+                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="notes">Notes / Remarques</Label>
+                    <Input
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      placeholder="Remarques diverses..."
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-2">
@@ -381,10 +508,9 @@ export default function Locations() {
                     <th className="pb-3 font-medium">N° Contrat</th>
                     <th className="pb-3 font-medium">Véhicule</th>
                     <th className="pb-3 font-medium">Client</th>
-                    <th className="pb-3 font-medium">Début</th>
-                    <th className="pb-3 font-medium">Fin</th>
-                    <th className="pb-3 font-medium">Durée</th>
-                    <th className="pb-3 font-medium">Caution</th>
+                    <th className="pb-3 font-medium">Période</th>
+                    <th className="pb-3 font-medium">Montant</th>
+                    <th className="pb-3 font-medium">Reste</th>
                     <th className="pb-3 font-medium">Statut</th>
                     <th className="pb-3 font-medium">Actions</th>
                   </tr>
@@ -400,29 +526,48 @@ export default function Locations() {
                         {contract.clients?.nom} {contract.clients?.prenom}
                       </td>
                       <td className="py-4 text-foreground">
-                        {new Date(contract.date_debut).toLocaleDateString('fr-FR')}
+                        <div className="text-sm">
+                          <div>{new Date(contract.date_debut).toLocaleDateString('fr-FR')}</div>
+                          <div className="text-muted-foreground">au {new Date(contract.date_fin).toLocaleDateString('fr-FR')}</div>
+                          <div className="text-xs">({contract.duration || calculateDuration(contract.date_debut, contract.date_fin)} jours)</div>
+                        </div>
                       </td>
                       <td className="py-4 text-foreground">
-                        {new Date(contract.date_fin).toLocaleDateString('fr-FR')}
+                        <div className="font-semibold">{contract.total_amount?.toFixed(2) || '0.00'} MAD</div>
+                        <div className="text-xs text-muted-foreground">
+                          Acompte: {contract.advance_payment?.toFixed(2) || '0.00'} MAD
+                        </div>
                       </td>
                       <td className="py-4 text-foreground">
-                        {calculateDuration(contract.date_debut, contract.date_fin)} jours
+                        <span className="font-medium text-orange-600">
+                          {contract.remaining_amount?.toFixed(2) || '0.00'} MAD
+                        </span>
                       </td>
-                      <td className="py-4 text-foreground">{contract.caution_montant} MAD</td>
                       <td className="py-4">{getStatusBadge(contract.statut)}</td>
                       <td className="py-4">
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(contract)}
+                            title="Modifier"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleGeneratePDF(contract.id)}
+                            disabled={loading}
+                            title="Générer PDF"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDelete(contract.id)}
+                            title="Supprimer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

@@ -1,1 +1,4 @@
 project_id = "llheuupdeifycjkeqzeb"
+
+[functions.generate-contract-pdf]
+verify_jwt = true

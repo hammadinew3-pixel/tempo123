@@ -13,6 +13,7 @@ import Factures from "./pages/Factures";
 import Calendrier from "./pages/Calendrier";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import ContractTemplate from "./pages/ContractTemplate";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Factures /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contract-template"
+              element={
+                <ProtectedRoute>
+                  <ContractTemplate />
                 </ProtectedRoute>
               }
             />
