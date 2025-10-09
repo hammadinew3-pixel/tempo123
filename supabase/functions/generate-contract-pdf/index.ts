@@ -39,9 +39,13 @@ serve(async (req) => {
     // Generate HTML for the PDF
     const html = generateContractHTML(contract);
 
-    // In a real implementation, you would use a service like Puppeteer or a PDF generation API
-    // For now, we'll update the contract with a placeholder URL
-    const pdfUrl = `${supabaseUrl}/contract-template?id=${contractId}`;
+    // Get the origin from the request headers
+    const origin = req.headers.get('origin') || 'https://66e40113-c245-4ca2-bcfb-093ee69d0d09.lovableproject.com';
+    
+    // Create URL pointing to the contract template page on the app domain
+    const pdfUrl = `${origin}/contract-template?id=${contractId}`;
+
+    console.log('📄 Generated PDF URL:', pdfUrl);
 
     // Update contract with PDF URL and signed timestamp
     const { error: updateError } = await supabase
@@ -52,7 +56,12 @@ serve(async (req) => {
       })
       .eq('id', contractId);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error('❌ Error updating contract:', updateError);
+      throw updateError;
+    }
+
+    console.log('✅ Contract updated with PDF URL');
 
     return new Response(
       JSON.stringify({ 
