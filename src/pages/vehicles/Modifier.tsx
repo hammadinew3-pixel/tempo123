@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronRight, ChevronDown, ChevronUp, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,9 @@ export default function ModifierVehicule() {
     visite_technique_expire_le: '',
     vignette_expire_le: ''
   });
+
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const [isInService, setIsInService] = useState(true);
   const [isSousLocation, setIsSousLocation] = useState(false);
@@ -122,6 +125,41 @@ export default function ModifierVehicule() {
       modele: '' // Reset model when brand changes
     });
     setAvailableModels(MARQUES_MODELES[marque] || []);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+      setUploadedFile(file);
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Veuillez déposer une image ou un PDF",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const removeFile = () => {
+    setUploadedFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -230,6 +268,25 @@ export default function ModifierVehicule() {
               </Select>
             </div>
 
+            {/* Modèle */}
+            <div>
+              <Label htmlFor="modele">Modèle</Label>
+              <Select 
+                value={formData.modele} 
+                onValueChange={(value) => setFormData({...formData, modele: value})}
+                disabled={!formData.marque || availableModels.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={formData.marque ? "Sélectionner un modèle" : "Sélectionnez d'abord une marque"} />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {availableModels.map((modele) => (
+                    <SelectItem key={modele} value={modele}>{modele}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Catégorie */}
             <div>
               <Label htmlFor="categorie">Catégorie *</Label>
@@ -279,25 +336,6 @@ export default function ModifierVehicule() {
               </p>
             </div>
 
-            {/* Modèle */}
-            <div>
-              <Label htmlFor="modele">Modèle</Label>
-              <Select 
-                value={formData.modele} 
-                onValueChange={(value) => setFormData({...formData, modele: value})}
-                disabled={!formData.marque || availableModels.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={formData.marque ? "Sélectionner un modèle" : "Sélectionnez d'abord une marque"} />
-                </SelectTrigger>
-                <SelectContent className="bg-background">
-                  {availableModels.map((modele) => (
-                    <SelectItem key={modele} value={modele}>{modele}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Prix location */}
             <div>
               <Label htmlFor="tarif_journalier">Prix location *</Label>
@@ -323,6 +361,58 @@ export default function ModifierVehicule() {
                 onChange={(e) => setFormData({...formData, annee: parseInt(e.target.value) || new Date().getFullYear()})}
                 placeholder="YYYY"
               />
+            </div>
+
+            {/* Photo Upload */}
+            <div className="md:col-span-2">
+              <Label>Photo du véhicule</Label>
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`mt-2 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+                }`}
+              >
+                {uploadedFile ? (
+                  <div className="flex items-center justify-between bg-muted p-4 rounded">
+                    <div className="flex items-center gap-3">
+                      <Upload className="w-5 h-5 text-primary" />
+                      <span className="text-sm font-medium">{uploadedFile.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({(uploadedFile.size / 1024).toFixed(2)} KB)
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeFile}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
+                    <div className="text-sm text-muted-foreground">
+                      Glissez-déposez une image ou un PDF ici
+                    </div>
+                    <div className="text-xs text-muted-foreground">ou</div>
+                    <label className="inline-block">
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <Button type="button" variant="outline" size="sm" onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}>
+                        Sélectionner un fichier
+                      </Button>
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -357,15 +447,6 @@ export default function ModifierVehicule() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="photo_url">URL de la photo</Label>
-                <Input
-                  id="photo_url"
-                  value={formData.photo_url}
-                  onChange={(e) => setFormData({...formData, photo_url: e.target.value})}
-                  placeholder="https://..."
-                />
-              </div>
 
               <div>
                 <Label htmlFor="assurance_expire_le">Date d'expiration assurance</Label>
