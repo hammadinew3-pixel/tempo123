@@ -30,6 +30,9 @@ export default function NouveauLocation() {
   const [contractType, setContractType] = useState<"standard" | "assistance">("standard");
   const [selectedCategorie, setSelectedCategorie] = useState<string>("");
 
+  const [dateDebutOpen, setDateDebutOpen] = useState(false);
+  const [dateFinOpen, setDateFinOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     vehicle_id: "",
     client_id: "",
@@ -434,7 +437,7 @@ export default function NouveauLocation() {
               <Label>
                 Date de départ <span className="text-destructive">*</span>
               </Label>
-              <Popover>
+              <Popover open={dateDebutOpen} onOpenChange={setDateDebutOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -455,9 +458,12 @@ export default function NouveauLocation() {
                   <Calendar
                     mode="single"
                     selected={formData.date_debut}
-                    onSelect={(date) =>
-                      date && setFormData({ ...formData, date_debut: date })
-                    }
+                    onSelect={(date) => {
+                      if (date) {
+                        setFormData({ ...formData, date_debut: date, date_fin: date });
+                        setDateDebutOpen(false);
+                      }
+                    }}
                     disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus
                     className="pointer-events-auto"
@@ -489,7 +495,7 @@ export default function NouveauLocation() {
               <Label>
                 Date de retour <span className="text-destructive">*</span>
               </Label>
-              <Popover>
+              <Popover open={dateFinOpen} onOpenChange={setDateFinOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -510,9 +516,12 @@ export default function NouveauLocation() {
                   <Calendar
                     mode="single"
                     selected={formData.date_fin}
-                    onSelect={(date) =>
-                      date && setFormData({ ...formData, date_fin: date })
-                    }
+                    onSelect={(date) => {
+                      if (date) {
+                        setFormData({ ...formData, date_fin: date });
+                        setDateFinOpen(false);
+                      }
+                    }}
                     disabled={(date) => {
                       const today = new Date(new Date().setHours(0, 0, 0, 0));
                       return date < today || (formData.date_debut && date < formData.date_debut);
