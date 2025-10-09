@@ -15,6 +15,10 @@ import NouveauVehicule from "./pages/vehicles/Nouveau";
 import WorkflowWrapper from "./pages/vehicles/WorkflowWrapper";
 import Clients from "./pages/Clients";
 import ClientDetails from "./pages/clients/Details";
+import Assistance from "./pages/Assistance";
+import NouveauAssistance from "./pages/assistance/Nouveau";
+import AssistanceDetails from "./pages/assistance/Details";
+import Assurances from "./pages/Assurances";
 import Factures from "./pages/Factures";
 import Calendrier from "./pages/Calendrier";
 import Auth from "./pages/Auth";
@@ -135,6 +139,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><ClientDetails /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistance"
+              element={
+                <ProtectedRoute>
+                  <Layout><Assistance /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistance/nouveau"
+              element={
+                <ProtectedRoute>
+                  <Layout><NouveauAssistance /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistance/:id"
+              element={
+                <ProtectedRoute>
+                  <Layout><AssistanceDetails /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assurances"
+              element={
+                <ProtectedRoute>
+                  <Layout><Assurances /></Layout>
                 </ProtectedRoute>
               }
             />

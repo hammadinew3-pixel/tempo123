@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       assistance: {
         Row: {
+          assureur_id: string | null
           assureur_nom: string
           client_id: string | null
           created_at: string
@@ -30,6 +31,7 @@ export type Database = {
           vehicle_id: string | null
         }
         Insert: {
+          assureur_id?: string | null
           assureur_nom: string
           client_id?: string | null
           created_at?: string
@@ -44,6 +46,7 @@ export type Database = {
           vehicle_id?: string | null
         }
         Update: {
+          assureur_id?: string | null
           assureur_nom?: string
           client_id?: string | null
           created_at?: string
@@ -59,6 +62,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "assistance_assureur_id_fkey"
+            columns: ["assureur_id"]
+            isOneToOne: false
+            referencedRelation: "assurances"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "assistance_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -73,6 +83,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      assurances: {
+        Row: {
+          actif: boolean
+          adresse: string | null
+          conditions_paiement: string | null
+          contact_email: string | null
+          contact_nom: string | null
+          contact_telephone: string | null
+          created_at: string
+          delai_paiement_jours: number | null
+          id: string
+          nom: string
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          adresse?: string | null
+          conditions_paiement?: string | null
+          contact_email?: string | null
+          contact_nom?: string | null
+          contact_telephone?: string | null
+          created_at?: string
+          delai_paiement_jours?: number | null
+          id?: string
+          nom: string
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          adresse?: string | null
+          conditions_paiement?: string | null
+          contact_email?: string | null
+          contact_nom?: string | null
+          contact_telephone?: string | null
+          created_at?: string
+          delai_paiement_jours?: number | null
+          id?: string
+          nom?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       clients: {
         Row: {

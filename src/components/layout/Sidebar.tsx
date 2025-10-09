@@ -19,6 +19,8 @@ import {
   Plus,
   List,
   ChevronRight,
+  LifeBuoy,
+  Building2,
 } from "lucide-react";
 import {
   Sidebar as SidebarUI,
@@ -53,6 +55,15 @@ const mainNavItems: NavItem[] = [
     submenu: [
       { title: "Liste des locations", href: "/locations", icon: List },
       { title: "Ajouter location", href: "/locations/nouveau", icon: Plus },
+    ]
+  },
+  { 
+    title: "Assistance", 
+    icon: LifeBuoy,
+    submenu: [
+      { title: "Dossiers d'assistance", href: "/assistance", icon: List },
+      { title: "Nouveau dossier", href: "/assistance/nouveau", icon: Plus },
+      { title: "Liste des assurances", href: "/assurances", icon: Building2 },
     ]
   },
   { 
