@@ -36,8 +36,25 @@ serve(async (req) => {
     if (contractError) throw contractError;
     if (!contract) throw new Error('Contract not found');
 
+    // Get vehicle changes history for this contract
+    const { data: vehicleChanges, error: changesError } = await supabase
+      .from('vehicle_changes')
+      .select(`
+        *,
+        old_vehicle:vehicles!vehicle_changes_old_vehicle_id_fkey(marque, modele, immatriculation),
+        new_vehicle:vehicles!vehicle_changes_new_vehicle_id_fkey(marque, modele, immatriculation)
+      `)
+      .eq('contract_id', contractId)
+      .order('change_date', { ascending: true });
+
+    if (changesError) {
+      console.error('Error fetching vehicle changes:', changesError);
+    }
+
+    console.log('📋 Vehicle changes found:', vehicleChanges?.length || 0);
+
     // Generate HTML for the PDF
-    const html = generateContractHTML(contract);
+    const html = generateContractHTML(contract, vehicleChanges || []);
 
     // Get the origin from the request headers
     const origin = req.headers.get('origin') || 'https://66e40113-c245-4ca2-bcfb-093ee69d0d09.lovableproject.com';
@@ -86,9 +103,31 @@ serve(async (req) => {
   }
 });
 
-function generateContractHTML(contract: any): string {
+function generateContractHTML(contract: any, vehicleChanges: any[]): string {
   const client = contract.clients;
   const vehicle = contract.vehicles;
+
+  // Generate vehicle changes section if any exist
+  let vehicleChangesHTML = '';
+  if (vehicleChanges && vehicleChanges.length > 0) {
+    vehicleChangesHTML = `
+    <div class="section" style="background-color: #fff8e6; border-color: #ffcc00;">
+      <h2 style="color: #ff6600;">⚠️ CHANGEMENT(S) DE VÉHICULE</h2>
+      ${vehicleChanges.map((change: any, index: number) => `
+        <div style="margin-bottom: 15px; padding: 10px; border-left: 3px solid #ff6600;">
+          <p style="font-weight: bold; color: #ff6600;">Changement #${index + 1} - ${new Date(change.change_date).toLocaleDateString('fr-FR')}</p>
+          <p><span class="label">Ancien véhicule :</span><span class="value">${change.old_vehicle?.marque} ${change.old_vehicle?.modele} (${change.old_vehicle?.immatriculation})</span></p>
+          <p><span class="label">Nouveau véhicule :</span><span class="value">${change.new_vehicle?.marque} ${change.new_vehicle?.modele} (${change.new_vehicle?.immatriculation})</span></p>
+          <p><span class="label">Raison :</span><span class="value">${formatReason(change.reason)}</span></p>
+          ${change.notes ? `<p><span class="label">Détails :</span><span class="value" style="font-size: 0.9em;">${change.notes}</span></p>` : ''}
+        </div>
+      `).join('')}
+      <p style="margin-top: 15px; padding: 10px; background-color: #e6f7ff; border-radius: 4px;">
+        <strong>Note :</strong> Le montant total ci-dessous inclut le calcul au prorata des changements de véhicule effectués.
+      </p>
+    </div>
+    `;
+  }
 
   return `
 <!DOCTYPE html>
@@ -112,13 +151,13 @@ function generateContractHTML(contract: any): string {
   
   <div class="section">
     <h2>CLIENT</h2>
-    <p><span class="label">Nom :</span><span class="value">${client?.nom} ${client?.prenom}</span></p>
+    <p><span class="label">Nom :</span><span class="value">${client?.nom} ${client?.prenom || ''}</span></p>
     <p><span class="label">Téléphone :</span><span class="value">${client?.telephone}</span></p>
     ${client?.email ? `<p><span class="label">Email :</span><span class="value">${client?.email}</span></p>` : ''}
   </div>
 
   <div class="section">
-    <h2>VÉHICULE</h2>
+    <h2>VÉHICULE ${vehicleChanges.length > 0 ? '(ACTUEL)' : ''}</h2>
     <p><span class="label">Marque/Modèle :</span><span class="value">${vehicle?.marque} ${vehicle?.modele}</span></p>
     <p><span class="label">Immatriculation :</span><span class="value">${vehicle?.immatriculation}</span></p>
   </div>
@@ -132,12 +171,15 @@ function generateContractHTML(contract: any): string {
     <p><span class="label">Durée :</span><span class="value">${contract.duration} jour(s)</span></p>
   </div>
 
+  ${vehicleChangesHTML}
+
   <div class="section">
     <h2>DÉTAILS FINANCIERS</h2>
-    <p><span class="label">Tarif journalier :</span><span class="value">${contract.daily_rate?.toFixed(2)} MAD</span></p>
+    <p><span class="label">Tarif journalier (actuel) :</span><span class="value">${contract.daily_rate?.toFixed(2)} MAD</span></p>
     <p><span class="label">Montant total :</span><span class="value">${contract.total_amount?.toFixed(2)} MAD</span></p>
     <p><span class="label">Acompte :</span><span class="value">${contract.advance_payment?.toFixed(2)} MAD</span></p>
     <p style="font-size: 1.2em;"><span class="label">Reste à payer :</span><span class="value" style="color: #ff6600;">${contract.remaining_amount?.toFixed(2)} MAD</span></p>
+    ${contract.caution_montant ? `<p><span class="label">Caution :</span><span class="value">${contract.caution_montant?.toFixed(2)} MAD</span></p>` : ''}
   </div>
 
   ${contract.start_location ? `
@@ -162,4 +204,15 @@ function generateContractHTML(contract: any): string {
 </body>
 </html>
   `;
+}
+
+function formatReason(reason: string): string {
+  const reasons: Record<string, string> = {
+    'panne': 'Panne technique',
+    'accident': 'Accident',
+    'demande_client': 'Demande du client',
+    'maintenance': 'Maintenance urgente',
+    'autre': 'Autre'
+  };
+  return reasons[reason] || reason;
 }
