@@ -949,6 +949,8 @@ export type Database = {
           assurance_expire_le: string | null
           categorie: Database["public"]["Enums"]["vehicle_category"] | null
           created_at: string
+          date_derniere_vidange: string | null
+          dernier_kilometrage_vidange: number | null
           id: string
           immatriculation: string
           kilometrage: number
@@ -967,6 +969,8 @@ export type Database = {
           assurance_expire_le?: string | null
           categorie?: Database["public"]["Enums"]["vehicle_category"] | null
           created_at?: string
+          date_derniere_vidange?: string | null
+          dernier_kilometrage_vidange?: number | null
           id?: string
           immatriculation: string
           kilometrage?: number
@@ -985,6 +989,8 @@ export type Database = {
           assurance_expire_le?: string | null
           categorie?: Database["public"]["Enums"]["vehicle_category"] | null
           created_at?: string
+          date_derniere_vidange?: string | null
+          dernier_kilometrage_vidange?: number | null
           id?: string
           immatriculation?: string
           kilometrage?: number
@@ -999,6 +1005,50 @@ export type Database = {
           visite_technique_expire_le?: string | null
         }
         Relationships: []
+      }
+      vidanges: {
+        Row: {
+          created_at: string
+          date_vidange: string
+          id: string
+          kilometrage: number
+          montant: number | null
+          remarques: string | null
+          type: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_vidange?: string
+          id?: string
+          kilometrage: number
+          montant?: number | null
+          remarques?: string | null
+          type?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          date_vidange?: string
+          id?: string
+          kilometrage?: number
+          montant?: number | null
+          remarques?: string | null
+          type?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vidanges_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

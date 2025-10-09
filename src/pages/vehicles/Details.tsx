@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, Edit, Calendar, TrendingUp, TrendingDown, AlertCircle, FileText, Settings, Eye } from "lucide-react";
+import { ChevronRight, Edit, Calendar, TrendingUp, TrendingDown, AlertCircle, FileText, Settings, Eye, Gauge, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,8 @@ export default function VehiculeDetails() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("info");
   const [showContractsList, setShowContractsList] = useState(false);
+  const [vidanges, setVidanges] = useState<any[]>([]);
+  const [showVidangeDialog, setShowVidangeDialog] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -38,14 +40,15 @@ export default function VehiculeDetails() {
 
   const loadVehicle = async () => {
     try {
-      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes] = await Promise.all([
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, vidangesRes] = await Promise.all([
         supabase.from('vehicles').select('*').eq('id', id).single(),
         supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }),
         supabase.from('assistance').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }),
         supabase.from('expenses').select('*').eq('vehicle_id', id).order('date_depense', { ascending: false }),
         supabase.from('vehicle_insurance').select('*').eq('vehicle_id', id).order('date_debut', { ascending: false }),
         supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', id).order('date_visite', { ascending: false }),
-        supabase.from('vehicle_vignette').select('*').eq('vehicle_id', id).order('annee', { ascending: false })
+        supabase.from('vehicle_vignette').select('*').eq('vehicle_id', id).order('annee', { ascending: false }),
+        supabase.from('vidanges').select('*').eq('vehicle_id', id).order('date_vidange', { ascending: false })
       ]);
 
       if (vehicleRes.error) throw vehicleRes.error;
@@ -57,6 +60,7 @@ export default function VehiculeDetails() {
       setInsurances(insurancesRes.data || []);
       setTechnicalInspections(inspectionsRes.data || []);
       setVignettes(vignettesRes.data || []);
+      setVidanges(vidangesRes.data || []);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -81,6 +85,66 @@ export default function VehiculeDetails() {
 
   const getTotalReservations = () => {
     return contracts.length + assistances.length;
+  };
+
+  const calculateKmDepuisVidange = () => {
+    if (!vehicle) return 0;
+    return vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
+  };
+
+  const needsOilChange = () => {
+    const kmDepuis = calculateKmDepuisVidange();
+    return kmDepuis > 8000;
+  };
+
+  const getOilChangeAlertLevel = () => {
+    const kmDepuis = calculateKmDepuisVidange();
+    if (kmDepuis > 10000) return 'critical'; // Rouge
+    if (kmDepuis > 8000) return 'warning'; // Orange
+    return 'ok'; // Vert
+  };
+
+  const handleMarkOilChangeDone = async () => {
+    if (!vehicle || !confirm('Confirmer que la vidange a été effectuée ?')) return;
+
+    try {
+      // Créer un enregistrement dans la table vidanges
+      const { error: vidangeError } = await supabase
+        .from('vidanges')
+        .insert({
+          vehicle_id: vehicle.id,
+          kilometrage: vehicle.kilometrage,
+          date_vidange: new Date().toISOString().split('T')[0],
+          type: 'Vidange complète',
+        });
+
+      if (vidangeError) throw vidangeError;
+
+      // Mettre à jour le véhicule
+      const { error: updateError } = await supabase
+        .from('vehicles')
+        .update({
+          dernier_kilometrage_vidange: vehicle.kilometrage,
+          date_derniere_vidange: new Date().toISOString().split('T')[0],
+        })
+        .eq('id', vehicle.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Succès",
+        description: "Vidange enregistrée avec succès",
+      });
+
+      setShowVidangeDialog(false);
+      loadVehicle();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const getAlerts = () => {
@@ -135,6 +199,22 @@ export default function VehiculeDetails() {
       } else if (daysUntilExpiration <= 30) {
         alerts.push({ message: `Vignette expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules" });
       }
+    }
+
+    // Check oil change
+    const kmDepuis = vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
+    if (kmDepuis > 10000) {
+      alerts.push({ 
+        message: `Vidange urgente ! ${kmDepuis.toLocaleString()} km depuis la dernière vidange.`, 
+        action: "EFFECTUER VIDANGE", 
+        link: `/vehicules/${vehicle.id}` 
+      });
+    } else if (kmDepuis > 8000) {
+      alerts.push({ 
+        message: `Vidange à prévoir - ${kmDepuis.toLocaleString()} km depuis la dernière vidange.`, 
+        action: "PLANIFIER", 
+        link: `/vehicules/${vehicle.id}` 
+      });
     }
 
     return alerts;
@@ -194,6 +274,95 @@ export default function VehiculeDetails() {
           </Button>
         </div>
       </div>
+
+      {/* Kilométrage Card - Mise en avant */}
+      <Card className={`mb-4 md:mb-6 ${
+        getOilChangeAlertLevel() === 'critical' ? 'border-red-500 bg-red-50/50 dark:bg-red-950/20' :
+        getOilChangeAlertLevel() === 'warning' ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20' :
+        'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20'
+      }`}>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1">
+              <div className={`p-3 rounded-full ${
+                getOilChangeAlertLevel() === 'critical' ? 'bg-red-500/20' :
+                getOilChangeAlertLevel() === 'warning' ? 'bg-orange-500/20' :
+                'bg-blue-500/20'
+              }`}>
+                <Gauge className={`w-8 h-8 ${
+                  getOilChangeAlertLevel() === 'critical' ? 'text-red-600' :
+                  getOilChangeAlertLevel() === 'warning' ? 'text-orange-600' :
+                  'text-blue-600'
+                }`} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Kilométrage actuel</p>
+                <p className="text-3xl md:text-4xl font-bold">
+                  {vehicle.kilometrage.toLocaleString()} km
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Dernière mise à jour : {format(new Date(vehicle.updated_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                </p>
+                
+                {vehicle.dernier_kilometrage_vidange > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm text-muted-foreground">
+                      Kilométrage depuis dernière vidange : 
+                      <span className={`font-semibold ml-1 ${
+                        getOilChangeAlertLevel() === 'critical' ? 'text-red-600' :
+                        getOilChangeAlertLevel() === 'warning' ? 'text-orange-600' :
+                        'text-green-600'
+                      }`}>
+                        {calculateKmDepuisVidange().toLocaleString()} km
+                      </span>
+                    </p>
+                    {vehicle.date_derniere_vidange && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Dernière vidange le {format(new Date(vehicle.date_derniere_vidange), 'dd/MM/yyyy', { locale: fr })} 
+                        à {vehicle.dernier_kilometrage_vidange.toLocaleString()} km
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 w-full md:w-auto">
+              {needsOilChange() && (
+                <div className={`p-3 rounded-lg ${
+                  getOilChangeAlertLevel() === 'critical' ? 'bg-red-100 dark:bg-red-950' :
+                  'bg-orange-100 dark:bg-orange-950'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className={`w-5 h-5 ${
+                      getOilChangeAlertLevel() === 'critical' ? 'text-red-600' : 'text-orange-600'
+                    }`} />
+                    <p className={`text-sm font-semibold ${
+                      getOilChangeAlertLevel() === 'critical' ? 'text-red-900 dark:text-red-100' : 'text-orange-900 dark:text-orange-100'
+                    }`}>
+                      {getOilChangeAlertLevel() === 'critical' ? 'Vidange urgente !' : 'Vidange à prévoir'}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {vehicle.dernier_kilometrage_vidange > 0
+                      ? `Dernière vidange à ${vehicle.dernier_kilometrage_vidange.toLocaleString()} km`
+                      : 'Aucune vidange enregistrée'}
+                  </p>
+                </div>
+              )}
+              
+              <Button
+                onClick={() => setShowVidangeDialog(true)}
+                variant={needsOilChange() ? "default" : "outline"}
+                className="w-full"
+              >
+                <Wrench className="w-4 h-4 mr-2" />
+                Marquer vidange effectuée
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
@@ -281,9 +450,10 @@ export default function VehiculeDetails() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto">
+            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 h-auto">
               <TabsTrigger value="info" className="text-xs md:text-sm">Infos</TabsTrigger>
               <TabsTrigger value="interventions" className="text-xs md:text-sm">Interventions</TabsTrigger>
+              <TabsTrigger value="vidanges" className="text-xs md:text-sm">Vidanges</TabsTrigger>
               <TabsTrigger value="locations" className="text-xs md:text-sm">Locations</TabsTrigger>
               <TabsTrigger value="expenses" className="text-xs md:text-sm">Dépenses</TabsTrigger>
             </TabsList>
@@ -480,6 +650,83 @@ export default function VehiculeDetails() {
               </div>
             </TabsContent>
 
+            <TabsContent value="vidanges" className="mt-4 md:mt-6">
+              <div className="space-y-4">
+                <div className="p-4 bg-muted/30 rounded-lg space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Kilométrage actuel</span>
+                    <span className="text-lg font-bold">{vehicle.kilometrage.toLocaleString()} km</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Dernier kilométrage vidange</span>
+                    <span className="text-lg font-bold">
+                      {vehicle.dernier_kilometrage_vidange > 0 
+                        ? `${vehicle.dernier_kilometrage_vidange.toLocaleString()} km` 
+                        : 'Aucune'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t">
+                    <span className="text-sm text-muted-foreground">Kilométrage depuis dernière vidange</span>
+                    <span className={`text-lg font-bold ${
+                      getOilChangeAlertLevel() === 'critical' ? 'text-red-600' :
+                      getOilChangeAlertLevel() === 'warning' ? 'text-orange-600' :
+                      'text-green-600'
+                    }`}>
+                      {calculateKmDepuisVidange().toLocaleString()} km
+                    </span>
+                  </div>
+                </div>
+
+                <h3 className="text-sm md:text-base font-semibold mb-3 flex items-center gap-2">
+                  <Wrench className="w-4 h-4" />
+                  Historique des vidanges ({vidanges.length})
+                </h3>
+
+                {vidanges.length > 0 ? (
+                  <div className="overflow-x-auto -mx-4 md:mx-0">
+                    <div className="inline-block min-w-full align-middle">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs md:text-sm">Date</TableHead>
+                            <TableHead className="text-xs md:text-sm">Kilométrage</TableHead>
+                            <TableHead className="text-xs md:text-sm">Type</TableHead>
+                            <TableHead className="text-xs md:text-sm">Montant</TableHead>
+                            <TableHead className="text-xs md:text-sm">Remarques</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {vidanges.map((vidange) => (
+                            <TableRow key={vidange.id}>
+                              <TableCell className="text-xs md:text-sm">
+                                {format(new Date(vidange.date_vidange), 'dd/MM/yyyy', { locale: fr })}
+                              </TableCell>
+                              <TableCell className="text-xs md:text-sm font-semibold">
+                                {vidange.kilometrage.toLocaleString()} km
+                              </TableCell>
+                              <TableCell className="text-xs md:text-sm">
+                                {vidange.type || '—'}
+                              </TableCell>
+                              <TableCell className="text-xs md:text-sm">
+                                {vidange.montant ? `${vidange.montant.toFixed(2)} DH` : '—'}
+                              </TableCell>
+                              <TableCell className="text-xs md:text-sm">
+                                {vidange.remarques || '—'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs md:text-sm text-muted-foreground py-4 text-center">
+                    Aucune vidange enregistrée
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+
             <TabsContent value="locations" className="mt-4 md:mt-6">
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -633,6 +880,60 @@ export default function VehiculeDetails() {
                 </div>
               </div>
             ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmation de vidange */}
+      <Dialog open={showVidangeDialog} onOpenChange={setShowVidangeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la vidange</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Véhicule</span>
+                <span className="text-sm font-semibold">{vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Kilométrage actuel</span>
+                <span className="text-sm font-semibold">{vehicle.kilometrage.toLocaleString()} km</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Dernière vidange</span>
+                <span className="text-sm font-semibold">
+                  {vehicle.dernier_kilometrage_vidange > 0
+                    ? `${vehicle.dernier_kilometrage_vidange.toLocaleString()} km`
+                    : 'Aucune'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Km depuis dernière vidange</span>
+                <span className={`text-sm font-bold ${
+                  getOilChangeAlertLevel() === 'critical' ? 'text-red-600' :
+                  getOilChangeAlertLevel() === 'warning' ? 'text-orange-600' :
+                  'text-green-600'
+                }`}>
+                  {calculateKmDepuisVidange().toLocaleString()} km
+                </span>
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Cette action enregistrera une vidange effectuée au kilométrage actuel ({vehicle.kilometrage.toLocaleString()} km) 
+              à la date d'aujourd'hui.
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowVidangeDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleMarkOilChangeDone}>
+                <Wrench className="w-4 h-4 mr-2" />
+                Confirmer la vidange
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

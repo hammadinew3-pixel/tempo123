@@ -220,6 +220,18 @@ export default function Vehicules() {
     );
   };
 
+  const needsOilChange = (vehicle: Vehicle) => {
+    const kmDepuis = vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
+    return kmDepuis > 8000;
+  };
+
+  const getOilChangeAlertLevel = (vehicle: Vehicle) => {
+    const kmDepuis = vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
+    if (kmDepuis > 10000) return 'critical';
+    if (kmDepuis > 8000) return 'warning';
+    return 'ok';
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 p-3 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -446,7 +458,18 @@ export default function Vehicules() {
                             <div className="text-xs text-muted-foreground">{vehicle.immatriculation}</div>
                           </div>
                         </div>
-                        {getStatusBadge(vehicle.statut)}
+                        <div className="flex flex-col gap-1">
+                          {getStatusBadge(vehicle.statut)}
+                          {needsOilChange(vehicle) && (
+                            <Badge variant="outline" className={`${
+                              getOilChangeAlertLevel(vehicle) === 'critical' 
+                                ? 'bg-red-500/10 text-red-600 border-red-500/20' 
+                                : 'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                            } text-xs`}>
+                              🛠️ Vidange
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 text-xs mb-3">
@@ -587,7 +610,20 @@ export default function Vehicules() {
                           </div>
                         </td>
                         <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation}</td>
-                        <td className="py-4">{getStatusBadge(vehicle.statut)}</td>
+                        <td className="py-4">
+                          <div className="flex flex-col gap-1">
+                            {getStatusBadge(vehicle.statut)}
+                            {needsOilChange(vehicle) && (
+                              <Badge variant="outline" className={`${
+                                getOilChangeAlertLevel(vehicle) === 'critical' 
+                                  ? 'bg-red-500/10 text-red-600 border-red-500/20' 
+                                  : 'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                              } text-xs`}>
+                                🛠️ Vidange à faire
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
                         <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()} km</td>
                         <td className="py-4 font-medium text-foreground">{vehicle.tarif_journalier.toFixed(2)} MAD</td>
                         <td className="py-4 text-muted-foreground text-xs">
