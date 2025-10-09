@@ -151,10 +151,10 @@ export default function Vehicules() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      disponible: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
-      loue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
-      reserve: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100',
-      en_panne: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
+      disponible: 'bg-success/10 text-success',
+      loue: 'bg-primary/10 text-primary',
+      reserve: 'bg-warning/10 text-warning',
+      en_panne: 'bg-destructive/10 text-destructive',
     };
 
     const labels: Record<string, string> = {
@@ -333,16 +333,16 @@ export default function Vehicules() {
         </div>
       </div>
 
-      <Card>
+      <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="space-y-4">
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <button className="text-primary border-b-2 border-primary pb-2">
+          <div className="flex items-center gap-6 text-sm font-medium">
+            <button className="text-primary border-b-2 border-primary pb-2 transition-colors">
               TOUS ({vehicles.length})
             </button>
-            <button className="text-muted-foreground hover:text-foreground pb-2">
+            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors">
               HORS SERVICE (0)
             </button>
-            <button className="text-muted-foreground hover:text-foreground pb-2">
+            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors">
               SOUS LOCATION (0)
             </button>
           </div>
@@ -373,11 +373,11 @@ export default function Vehicules() {
                   {vehicles.map((vehicle) => (
                     <tr 
                       key={vehicle.id} 
-                      className="border-b last:border-0 hover:bg-muted/50 cursor-pointer"
+                      className="border-b last:border-0 hover:bg-accent/50 cursor-pointer transition-colors group"
                       onClick={() => navigate(`/vehicules/${vehicle.id}`)}
                     >
                       <td className="py-4 pl-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -385,6 +385,7 @@ export default function Vehicules() {
                               e.stopPropagation();
                               openEditDialog(vehicle);
                             }}
+                            className="hover:text-primary transition-colors"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -395,6 +396,7 @@ export default function Vehicules() {
                               e.stopPropagation();
                               handleDelete(vehicle.id);
                             }}
+                            className="hover:text-destructive transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -402,27 +404,25 @@ export default function Vehicules() {
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                            <span className="text-xs font-medium">{vehicle.marque.charAt(0)}</span>
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <span className="text-xs font-medium text-primary">{vehicle.marque.charAt(0)}</span>
                           </div>
                           <div>
-                            <div className="text-sm text-muted-foreground">Cat. Mixte</div>
-                            <div className="font-medium text-foreground">{vehicle.marque} - {vehicle.modele}</div>
+                            <div className="text-xs text-muted-foreground">Cat. Mixte</div>
+                            <div className="font-medium text-foreground group-hover:text-primary transition-colors">{vehicle.marque} {vehicle.modele}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 font-medium text-foreground">{vehicle.immatriculation}</td>
+                      <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation}</td>
                       <td className="py-4">{getStatusBadge(vehicle.statut)}</td>
-                      <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()}</td>
-                      <td className="py-4 text-foreground">{vehicle.tarif_journalier.toFixed(2)}</td>
-                      <td className="py-4 text-foreground">Diesel</td>
-                      <td className="py-4 text-foreground text-sm">
-                        {new Date(vehicle.created_at).toLocaleString('fr-FR', {
+                      <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()} km</td>
+                      <td className="py-4 font-medium text-foreground">{vehicle.tarif_journalier.toFixed(2)} MAD</td>
+                      <td className="py-4 text-muted-foreground">Diesel</td>
+                      <td className="py-4 text-muted-foreground text-xs">
+                        {new Date(vehicle.created_at).toLocaleDateString('fr-FR', {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
                         })}
                       </td>
                     </tr>
