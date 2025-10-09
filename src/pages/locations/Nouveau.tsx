@@ -23,10 +23,12 @@ export default function NouveauLocation() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [allVehicles, setAllVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [assurances, setAssurances] = useState<any[]>([]);
   const [baremes, setBaremes] = useState<Bareme[]>([]);
   const [contractType, setContractType] = useState<"standard" | "assistance">("standard");
+  const [selectedCategorie, setSelectedCategorie] = useState<string>("");
 
   const [formData, setFormData] = useState({
     vehicle_id: "",
@@ -34,8 +36,8 @@ export default function NouveauLocation() {
     assurance_id: "",
     date_debut: new Date(),
     date_fin: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // +1 jour
-    start_time: "09:00",
-    end_time: "09:00",
+    start_time: "",
+    end_time: "",
     numero_contrat: `CTR-${Date.now()}`,
     num_dossier: `DOS-${Date.now()}`,
     surcharge: 0,
@@ -70,6 +72,7 @@ export default function NouveauLocation() {
     formData.assurance_id,
     contractType,
     baremes,
+    selectedCategorie,
   ]);
 
   const loadData = async () => {
@@ -84,7 +87,9 @@ export default function NouveauLocation() {
       if (clientsRes.error) throw clientsRes.error;
       if (assurancesRes.error) throw assurancesRes.error;
 
-      setVehicles(vehiclesRes.data || []);
+      const vehiclesData = vehiclesRes.data || [];
+      setAllVehicles(vehiclesData);
+      setVehicles(vehiclesData);
       setClients(clientsRes.data || []);
       setAssurances(assurancesRes.data || []);
     } catch (error) {
@@ -106,6 +111,9 @@ export default function NouveauLocation() {
 
       if (error) throw error;
       setBaremes(data || []);
+      setSelectedCategorie("");
+      setFormData({ ...formData, vehicle_id: "" });
+      setVehicles(allVehicles);
     } catch (error) {
       console.error("Erreur chargement barèmes:", error);
       toast({
@@ -116,16 +124,24 @@ export default function NouveauLocation() {
     }
   };
 
+  const handleCategorieSelect = (categorie: string) => {
+    setSelectedCategorie(categorie);
+    // Filtrer les véhicules par catégorie
+    const filteredVehicles = allVehicles.filter((v) => v.categorie === categorie);
+    setVehicles(filteredVehicles);
+    setFormData({ ...formData, vehicle_id: "" });
+  };
+
   const calculateAmounts = () => {
-    const selectedVehicle = vehicles.find((v) => v.id === formData.vehicle_id);
     let daily_rate = 0;
 
-    if (contractType === "assistance" && selectedVehicle?.categorie && formData.assurance_id) {
-      // Pour un contrat d'assistance, utiliser le barème de l'assurance
-      const bareme = baremes.find((b) => b.categorie === selectedVehicle.categorie);
+    if (contractType === "assistance" && selectedCategorie) {
+      // Pour un contrat d'assistance, utiliser le barème de l'assurance basé sur la catégorie sélectionnée
+      const bareme = baremes.find((b) => b.categorie === selectedCategorie);
       daily_rate = bareme?.tarif_journalier || 0;
     } else {
       // Pour un contrat standard, utiliser le tarif du véhicule
+      const selectedVehicle = vehicles.find((v) => v.id === formData.vehicle_id);
       daily_rate = selectedVehicle?.tarif_journalier || 0;
     }
 
@@ -159,13 +175,23 @@ export default function NouveauLocation() {
       return;
     }
 
-    if (contractType === "assistance" && !formData.assurance_id) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Veuillez sélectionner une assurance pour un contrat d'assistance",
-      });
-      return;
+    if (contractType === "assistance") {
+      if (!formData.assurance_id) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Veuillez sélectionner une assurance",
+        });
+        return;
+      }
+      if (!selectedCategorie) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Veuillez sélectionner une catégorie du barème",
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -396,16 +422,22 @@ export default function NouveauLocation() {
 
             {baremes.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Barème de l'assurance :</Label>
+                <Label className="text-sm font-semibold">
+                  Sélectionner une catégorie <span className="text-destructive">*</span>
+                </Label>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {baremes.map((bareme) => (
-                    <div
+                    <Button
                       key={bareme.id}
-                      className="p-3 border rounded-md bg-card text-center"
+                      type="button"
+                      variant={selectedCategorie === bareme.categorie ? "default" : "outline"}
+                      onClick={() => handleCategorieSelect(bareme.categorie)}
+                      className="p-4 h-auto flex flex-col items-center"
                     >
-                      <p className="text-xs text-muted-foreground mb-1">Cat. {bareme.categorie}</p>
-                      <p className="text-sm font-bold">{bareme.tarif_journalier} DH/j</p>
-                    </div>
+                      <p className="text-xs mb-1">Catégorie {bareme.categorie}</p>
+                      <p className="text-lg font-bold">{bareme.tarif_journalier} DH</p>
+                      <p className="text-xs">par jour</p>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -454,7 +486,7 @@ export default function NouveauLocation() {
           {/* Heure départ */}
           <div className="space-y-2">
             <Label>
-              Heure de départ <span className="text-destructive">*</span>
+              Heure de départ {contractType === "standard" && <span className="text-destructive">*</span>}
             </Label>
             <div className="relative">
               <Input
@@ -509,7 +541,7 @@ export default function NouveauLocation() {
           {/* Heure retour */}
           <div className="space-y-2">
             <Label>
-              Heure de retour <span className="text-destructive">*</span>
+              Heure de retour {contractType === "standard" && <span className="text-destructive">*</span>}
             </Label>
             <div className="relative">
               <Input
