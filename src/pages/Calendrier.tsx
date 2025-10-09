@@ -317,7 +317,7 @@ export default function Calendrier() {
                 <div className="absolute top-[44px] left-0 right-0 pointer-events-none">
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {contractBars.map((bar, idx) => {
-                      const rowOffset = bar.row * 28; // 28px per row
+                      const rowOffset = bar.row * 26; // 26px per row
                       const colIndex = bar.startCol % 7;
                       const weekRow = Math.floor(bar.startCol / 7);
                       
@@ -333,12 +333,9 @@ export default function Calendrier() {
                           }}
                           onClick={() => navigate(`/locations/${bar.contract.id}`)}
                         >
-                          <div className="bg-primary/90 text-primary-foreground rounded px-2 py-1 text-[10px] md:text-xs font-medium shadow-sm hover:bg-primary transition-colors truncate">
+                          <div className="bg-blue-100 text-blue-700 rounded px-2 py-1 text-[10px] md:text-xs font-medium border border-blue-200 hover:bg-blue-200 transition-colors">
                             <div className="truncate">
-                              {bar.contract.vehicles?.immatriculation} • {bar.contract.clients?.nom} {bar.contract.clients?.prenom}
-                            </div>
-                            <div className="truncate text-[9px] md:text-[10px] opacity-90">
-                              {bar.contract.vehicles?.marque} {bar.contract.vehicles?.modele}
+                              {bar.contract.vehicles?.immatriculation} - Rés. {bar.contract.numero_contrat} - {bar.contract.clients?.nom} {bar.contract.clients?.prenom} - {bar.contract.vehicles?.marque} {bar.contract.vehicles?.modele}
                             </div>
                           </div>
                         </div>
