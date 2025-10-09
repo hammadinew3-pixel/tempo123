@@ -13,6 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import type { Database } from "@/integrations/supabase/types";
+
+type Bareme = Database["public"]["Tables"]["assurance_bareme"]["Row"];
 
 export default function NouveauLocation() {
   const navigate = useNavigate();
@@ -20,15 +24,20 @@ export default function NouveauLocation() {
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
+  const [assurances, setAssurances] = useState<any[]>([]);
+  const [baremes, setBaremes] = useState<Bareme[]>([]);
+  const [contractType, setContractType] = useState<"standard" | "assistance">("standard");
 
   const [formData, setFormData] = useState({
     vehicle_id: "",
     client_id: "",
+    assurance_id: "",
     date_debut: new Date(),
     date_fin: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // +1 jour
     start_time: "09:00",
     end_time: "09:00",
     numero_contrat: `CTR-${Date.now()}`,
+    num_dossier: `DOS-${Date.now()}`,
     surcharge: 0,
     remise: 0,
     start_location: "",
@@ -58,20 +67,26 @@ export default function NouveauLocation() {
     formData.date_fin,
     formData.surcharge,
     formData.remise,
+    formData.assurance_id,
+    contractType,
+    baremes,
   ]);
 
   const loadData = async () => {
     try {
-      const [vehiclesRes, clientsRes] = await Promise.all([
+      const [vehiclesRes, clientsRes, assurancesRes] = await Promise.all([
         supabase.from("vehicles").select("*").eq("statut", "disponible"),
         supabase.from("clients").select("*"),
+        supabase.from("assurances").select("*").eq("actif", true),
       ]);
 
       if (vehiclesRes.error) throw vehiclesRes.error;
       if (clientsRes.error) throw clientsRes.error;
+      if (assurancesRes.error) throw assurancesRes.error;
 
       setVehicles(vehiclesRes.data || []);
       setClients(clientsRes.data || []);
+      setAssurances(assurancesRes.data || []);
     } catch (error) {
       console.error("Erreur chargement:", error);
       toast({
@@ -82,9 +97,37 @@ export default function NouveauLocation() {
     }
   };
 
+  const loadBaremes = async (assuranceId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("assurance_bareme")
+        .select("*")
+        .eq("assurance_id", assuranceId);
+
+      if (error) throw error;
+      setBaremes(data || []);
+    } catch (error) {
+      console.error("Erreur chargement barèmes:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger les barèmes de l'assurance",
+      });
+    }
+  };
+
   const calculateAmounts = () => {
     const selectedVehicle = vehicles.find((v) => v.id === formData.vehicle_id);
-    const daily_rate = selectedVehicle?.tarif_journalier || 0;
+    let daily_rate = 0;
+
+    if (contractType === "assistance" && selectedVehicle?.categorie && formData.assurance_id) {
+      // Pour un contrat d'assistance, utiliser le barème de l'assurance
+      const bareme = baremes.find((b) => b.categorie === selectedVehicle.categorie);
+      daily_rate = bareme?.tarif_journalier || 0;
+    } else {
+      // Pour un contrat standard, utiliser le tarif du véhicule
+      daily_rate = selectedVehicle?.tarif_journalier || 0;
+    }
 
     const start = new Date(formData.date_debut);
     const end = new Date(formData.date_fin);
@@ -116,43 +159,83 @@ export default function NouveauLocation() {
       return;
     }
 
+    if (contractType === "assistance" && !formData.assurance_id) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez sélectionner une assurance pour un contrat d'assistance",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("contracts").insert([
-        {
-          numero_contrat: formData.numero_contrat,
-          client_id: formData.client_id,
-          vehicle_id: formData.vehicle_id,
-          date_debut: format(formData.date_debut, "yyyy-MM-dd"),
-          date_fin: format(formData.date_fin, "yyyy-MM-dd"),
-          start_time: formData.start_time || null,
-          end_time: formData.end_time || null,
-          statut: "brouillon",
-          caution_montant: formData.caution_montant,
-          caution_statut: "bloquee",
-          advance_payment: formData.advance_payment,
-          payment_method: formData.payment_method,
-          start_location: formData.start_location || null,
-          end_location: formData.end_location || null,
-          notes: formData.notes || null,
-        },
-      ]);
+      if (contractType === "standard") {
+        // Créer un contrat standard
+        const { error } = await supabase.from("contracts").insert([
+          {
+            numero_contrat: formData.numero_contrat,
+            client_id: formData.client_id,
+            vehicle_id: formData.vehicle_id,
+            date_debut: format(formData.date_debut, "yyyy-MM-dd"),
+            date_fin: format(formData.date_fin, "yyyy-MM-dd"),
+            start_time: formData.start_time || null,
+            end_time: formData.end_time || null,
+            statut: "brouillon",
+            caution_montant: formData.caution_montant,
+            caution_statut: "bloquee",
+            advance_payment: formData.advance_payment,
+            payment_method: formData.payment_method,
+            start_location: formData.start_location || null,
+            end_location: formData.end_location || null,
+            notes: formData.notes || null,
+          },
+        ]);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Succès",
-        description: "Location créée avec succès",
-      });
+        toast({
+          title: "Succès",
+          description: "Location créée avec succès",
+        });
 
-      navigate("/locations");
+        navigate("/locations");
+      } else {
+        // Créer un dossier d'assistance
+        const selectedAssurance = assurances.find((a) => a.id === formData.assurance_id);
+        const { error } = await supabase.from("assistance").insert([
+          {
+            num_dossier: formData.num_dossier,
+            client_id: formData.client_id,
+            vehicle_id: formData.vehicle_id,
+            assureur_id: formData.assurance_id,
+            assureur_nom: selectedAssurance?.nom || "",
+            date_debut: format(formData.date_debut, "yyyy-MM-dd"),
+            date_fin: format(formData.date_fin, "yyyy-MM-dd"),
+            type: "remplacement",
+            etat: "ouvert",
+            tarif_journalier: calculatedValues.daily_rate,
+            montant_total: calculatedValues.total,
+            remarques: formData.notes || null,
+          },
+        ]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Succès",
+          description: "Dossier d'assistance créé avec succès",
+        });
+
+        navigate("/assistance");
+      }
     } catch (error: any) {
       console.error("Erreur création:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: error.message || "Impossible de créer la location",
+        description: error.message || "Impossible de créer le dossier",
       });
     } finally {
       setLoading(false);
@@ -174,6 +257,33 @@ export default function NouveauLocation() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Type de contrat */}
+        <div className="space-y-3 p-4 border rounded-lg bg-card">
+          <Label className="text-base font-semibold">Type de contrat</Label>
+          <RadioGroup
+            value={contractType}
+            onValueChange={(value: "standard" | "assistance") => {
+              setContractType(value);
+              setFormData({ ...formData, assurance_id: "" });
+              setBaremes([]);
+            }}
+            className="flex gap-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="standard" id="standard" />
+              <Label htmlFor="standard" className="cursor-pointer font-normal">
+                Contrat standard
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="assistance" id="assistance" />
+              <Label htmlFor="assistance" className="cursor-pointer font-normal">
+                Contrat assistance
+              </Label>
+            </div>
+          </RadioGroup>
+        </div>
+
         {/* Vehicle & Client Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Vehicle */}
@@ -198,6 +308,11 @@ export default function NouveauLocation() {
                         <Car className="w-4 h-4" />
                         <span>
                           {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                          {vehicle.categorie && contractType === "assistance" && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              (Cat. {vehicle.categorie})
+                            </span>
+                          )}
                         </span>
                       </div>
                     </SelectItem>
@@ -251,6 +366,52 @@ export default function NouveauLocation() {
             </div>
           </div>
         </div>
+
+        {/* Assurance Selection (only for assistance) */}
+        {contractType === "assistance" && (
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            <div className="space-y-2">
+              <Label htmlFor="assurance">
+                Sélectionner une assurance <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.assurance_id}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, assurance_id: value });
+                  loadBaremes(value);
+                }}
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Sélectionner une assurance" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assurances.map((assurance) => (
+                    <SelectItem key={assurance.id} value={assurance.id}>
+                      {assurance.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {baremes.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Barème de l'assurance :</Label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {baremes.map((bareme) => (
+                    <div
+                      key={bareme.id}
+                      className="p-3 border rounded-md bg-card text-center"
+                    >
+                      <p className="text-xs text-muted-foreground mb-1">Cat. {bareme.categorie}</p>
+                      <p className="text-sm font-bold">{bareme.tarif_journalier} DH/j</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Dates & Times */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
