@@ -45,7 +45,6 @@ export default function NouveauLocation() {
     start_location: "",
     end_location: "",
     notes: "",
-    caution_montant: 0,
     franchise_montant: 0,
     advance_payment: 0,
     payment_method: "especes",
@@ -210,7 +209,7 @@ export default function NouveauLocation() {
             start_time: formData.start_time || null,
             end_time: formData.end_time || null,
             statut: "brouillon",
-            caution_montant: formData.caution_montant,
+            caution_montant: formData.franchise_montant,
             franchise_montant: formData.franchise_montant,
             caution_statut: "bloquee",
             advance_payment: formData.advance_payment,
@@ -702,30 +701,11 @@ export default function NouveauLocation() {
           </div>
         </div>
 
-        {/* Caution & Franchise Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/30">
-          {/* Montant caution */}
+        {/* Caution & Mode de paiement */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg bg-muted/30">
+          {/* Montant de la caution */}
           <div className="space-y-2">
-            <Label>Montant caution</Label>
-            <div className="relative">
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.caution_montant}
-                onChange={(e) =>
-                  setFormData({ ...formData, caution_montant: parseFloat(e.target.value) || 0 })
-                }
-                className="h-12"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                DH
-              </span>
-            </div>
-          </div>
-
-          {/* Montant franchise */}
-          <div className="space-y-2">
-            <Label>Montant franchise</Label>
+            <Label>Montant de la caution</Label>
             <div className="relative">
               <Input
                 type="number"
