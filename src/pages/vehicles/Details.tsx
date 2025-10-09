@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, ArrowDownToLine, ArrowUpFromLine, Calendar, Edit, MoreVertical, AlertCircle } from "lucide-react";
+import { ChevronRight, ArrowDownToLine, ArrowUpFromLine, Calendar, Edit, MoreVertical, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 
@@ -18,9 +21,13 @@ export default function VehiculeDetails() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [assistances, setAssistances] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("resume");
   const [activeInterventionTab, setActiveInterventionTab] = useState("assurance");
+  const [showContractsList, setShowContractsList] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -30,14 +37,44 @@ export default function VehiculeDetails() {
 
   const loadVehicle = async () => {
     try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes] = await Promise.all([
+        supabase
+          .from('vehicles')
+          .select('*')
+          .eq('id', id)
+          .single(),
+        supabase
+          .from('contracts')
+          .select(`
+            *,
+            clients (nom, prenom, telephone)
+          `)
+          .eq('vehicle_id', id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('assistance')
+          .select(`
+            *,
+            clients (nom, prenom, telephone)
+          `)
+          .eq('vehicle_id', id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('expenses')
+          .select('*')
+          .eq('vehicle_id', id)
+          .order('date_depense', { ascending: false })
+      ]);
 
-      if (error) throw error;
-      setVehicle(data);
+      if (vehicleRes.error) throw vehicleRes.error;
+      if (contractsRes.error) throw contractsRes.error;
+      if (assistancesRes.error) throw assistancesRes.error;
+      if (expensesRes.error) throw expensesRes.error;
+
+      setVehicle(vehicleRes.data);
+      setContracts(contractsRes.data || []);
+      setAssistances(assistancesRes.data || []);
+      setExpenses(expensesRes.data || []);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -48,6 +85,26 @@ export default function VehiculeDetails() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateTotalRevenue = () => {
+    const contractRevenue = contracts.reduce((sum, contract) => {
+      return sum + (contract.total_amount || 0);
+    }, 0);
+    
+    const assistanceRevenue = assistances.reduce((sum, assistance) => {
+      return sum + (assistance.montant_facture || assistance.montant_total || 0);
+    }, 0);
+    
+    return contractRevenue + assistanceRevenue;
+  };
+
+  const calculateTotalExpenses = () => {
+    return expenses.reduce((sum, expense) => sum + (expense.montant || 0), 0);
+  };
+
+  const getTotalReservations = () => {
+    return contracts.length + assistances.length;
   };
 
   const getAlerts = () => {
@@ -114,7 +171,10 @@ export default function VehiculeDetails() {
   }
 
   const alerts = getAlerts();
-  const statusBadge = vehicle.statut === 'disponible' ? 'Libre' : 
+  const totalRevenue = calculateTotalRevenue();
+  const totalExpenses = calculateTotalExpenses();
+  const totalReservations = getTotalReservations();
+  const statusBadge = vehicle.statut === 'disponible' ? 'Libre' :
                      vehicle.statut === 'loue' ? 'Loué' : 
                      vehicle.statut === 'reserve' ? 'Réservé' : 'En panne';
   const statusColor = vehicle.statut === 'disponible' ? 'bg-green-100 text-green-800' : 
@@ -143,12 +203,18 @@ export default function VehiculeDetails() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-green-50 border-green-100">
+        <Card 
+          className="bg-green-50 border-green-100 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => setShowContractsList(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-green-700 font-medium">REVENU TOTAL</p>
-                <p className="text-3xl font-bold text-green-900">0,00<span className="text-lg">DH</span></p>
+                <p className="text-3xl font-bold text-green-900">
+                  {totalRevenue.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span className="text-lg">DH</span>
+                </p>
               </div>
               <div className="bg-green-200 p-3 rounded-lg">
                 <ArrowDownToLine className="w-6 h-6 text-green-700" />
@@ -165,7 +231,10 @@ export default function VehiculeDetails() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-red-700 font-medium">DÉPENSE TOTALE</p>
-                <p className="text-3xl font-bold text-red-900">0,00<span className="text-lg">DH</span></p>
+                <p className="text-3xl font-bold text-red-900">
+                  {totalExpenses.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span className="text-lg">DH</span>
+                </p>
               </div>
               <div className="bg-red-200 p-3 rounded-lg">
                 <ArrowUpFromLine className="w-6 h-6 text-red-700" />
@@ -177,12 +246,17 @@ export default function VehiculeDetails() {
           </CardContent>
         </Card>
 
-        <Card className="bg-blue-50 border-blue-100">
+        <Card 
+          className="bg-blue-50 border-blue-100 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => setShowContractsList(true)}
+        >
           <CardContent className="pt-6">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-blue-700 font-medium">RÉSERVATIONS</p>
-                <p className="text-3xl font-bold text-blue-900">00</p>
+                <p className="text-3xl font-bold text-blue-900">
+                  {totalReservations.toString().padStart(2, '0')}
+                </p>
               </div>
               <div className="bg-blue-200 p-3 rounded-lg">
                 <Calendar className="w-6 h-6 text-blue-700" />
@@ -437,56 +511,243 @@ export default function VehiculeDetails() {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell>Courte durée</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
+                    <TableCell>Locations</TableCell>
+                    <TableCell className="text-center">
+                      {contracts.filter(c => c.statut === 'brouillon').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {contracts.filter(c => c.statut === 'livre' || c.statut === 'contrat_valide').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {contracts.filter(c => c.statut === 'retour_effectue' || c.statut === 'termine').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {contracts.filter(c => c.statut === 'annule').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {contracts.length.toString().padStart(2, '0')}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>Longue durée</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
-                    <TableCell className="text-center">00</TableCell>
+                    <TableCell>Assistances</TableCell>
+                    <TableCell className="text-center">
+                      {assistances.filter(a => a.etat === 'ouvert').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {assistances.filter(a => a.etat === 'livre' || a.etat === 'contrat_valide').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {assistances.filter(a => a.etat === 'retour_effectue' || a.etat === 'cloture').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {assistances.filter(a => a.etat === 'annule').length.toString().padStart(2, '0')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {assistances.length.toString().padStart(2, '0')}
+                    </TableCell>
                   </TableRow>
                   <TableRow className="font-semibold">
                     <TableCell>Total</TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">00</Badge>
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                        {(contracts.filter(c => c.statut === 'brouillon').length + 
+                          assistances.filter(a => a.etat === 'ouvert').length).toString().padStart(2, '0')}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">00</Badge>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        {(contracts.filter(c => c.statut === 'livre' || c.statut === 'contrat_valide').length + 
+                          assistances.filter(a => a.etat === 'livre' || a.etat === 'contrat_valide').length).toString().padStart(2, '0')}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">00</Badge>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        {(contracts.filter(c => c.statut === 'retour_effectue' || c.statut === 'termine').length + 
+                          assistances.filter(a => a.etat === 'retour_effectue' || a.etat === 'cloture').length).toString().padStart(2, '0')}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary" className="bg-red-100 text-red-800">00</Badge>
+                      <Badge variant="secondary" className="bg-red-100 text-red-800">
+                        {(contracts.filter(c => c.statut === 'annule').length + 
+                          assistances.filter(a => a.etat === 'annule').length).toString().padStart(2, '0')}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary">00</Badge>
+                      <Badge variant="secondary">
+                        {totalReservations.toString().padStart(2, '0')}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
               
               <div className="mt-4 space-y-2">
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5" />
-                  <p>Cliquez ici pour consulter toutes les locations courtes durées de ce véhicule.</p>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5" />
-                  <p>Cliquez ici pour consulter toutes les locations longues durées de ce véhicule.</p>
-                </div>
+                <Button
+                  variant="link"
+                  className="text-primary p-0 h-auto"
+                  onClick={() => setShowContractsList(true)}
+                >
+                  → Voir l'historique complet des locations
+                </Button>
               </div>
             </CardContent>
           </CollapsibleContent>
         </Card>
       </Collapsible>
+
+      {/* Dialog - Historique des locations */}
+      <Dialog open={showContractsList} onOpenChange={setShowContractsList}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Historique des locations - {vehicle.immatriculation}</span>
+              <Badge variant="secondary">{totalReservations} réservations</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3 mt-4">
+            {contracts.length === 0 && assistances.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Calendar className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                <p>Aucune réservation pour ce véhicule</p>
+              </div>
+            ) : (
+              <>
+                {contracts.map((contract) => (
+                  <div
+                    key={contract.id}
+                    className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      setShowContractsList(false);
+                      navigate(`/locations/${contract.id}`);
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">Location</Badge>
+                        <Badge variant="outline" className={
+                          contract.statut === 'livre' || contract.statut === 'contrat_valide' 
+                            ? 'bg-green-100 text-green-800 border-green-200' 
+                            : contract.statut === 'termine' || contract.statut === 'retour_effectue'
+                            ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
+                            : contract.statut === 'annule'
+                            ? 'bg-red-100 text-red-800 border-red-200'
+                            : 'bg-gray-100 text-gray-800 border-gray-200'
+                        }>
+                          {contract.statut === 'brouillon' ? 'Réservation' :
+                           contract.statut === 'contrat_valide' ? 'Validé' :
+                           contract.statut === 'livre' ? 'En cours' :
+                           contract.statut === 'retour_effectue' ? 'Retourné' :
+                           contract.statut === 'termine' ? 'Clôturé' :
+                           contract.statut === 'annule' ? 'Annulé' : contract.statut}
+                        </Badge>
+                        <span className="text-sm font-mono text-muted-foreground">{contract.numero_contrat}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-lg">{contract.total_amount?.toFixed(2) || '0.00'} DH</div>
+                        <div className="text-xs text-muted-foreground">{contract.duration || 0} jours</div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Client: </span>
+                        <span className="font-medium">
+                          {contract.clients?.nom} {contract.clients?.prenom || ''}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Tél: </span>
+                        <span className="font-medium">{contract.clients?.telephone}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Début: </span>
+                        <span className="font-medium">
+                          {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Fin: </span>
+                        <span className="font-medium">
+                          {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {assistances.map((assistance) => (
+                  <div
+                    key={assistance.id}
+                    className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      setShowContractsList(false);
+                      navigate(`/assistance/${assistance.id}`);
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <Badge className="bg-orange-100 text-orange-800 border-orange-200">Assistance</Badge>
+                        <Badge variant="outline" className={
+                          assistance.etat === 'livre' || assistance.etat === 'contrat_valide' 
+                            ? 'bg-green-100 text-green-800 border-green-200' 
+                            : assistance.etat === 'cloture' || assistance.etat === 'retour_effectue'
+                            ? 'bg-indigo-100 text-indigo-800 border-indigo-200'
+                            : assistance.etat === 'annule'
+                            ? 'bg-red-100 text-red-800 border-red-200'
+                            : 'bg-gray-100 text-gray-800 border-gray-200'
+                        }>
+                          {assistance.etat === 'ouvert' ? 'En attente' :
+                           assistance.etat === 'contrat_valide' ? 'Validé' :
+                           assistance.etat === 'livre' ? 'En cours' :
+                           assistance.etat === 'retour_effectue' ? 'Retourné' :
+                           assistance.etat === 'cloture' ? 'Clôturé' :
+                           assistance.etat === 'annule' ? 'Annulé' : assistance.etat}
+                        </Badge>
+                        <span className="text-sm font-mono text-muted-foreground">{assistance.num_dossier}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-lg">
+                          {(assistance.montant_facture || assistance.montant_total || 0).toFixed(2)} DH
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {assistance.date_debut && assistance.date_fin ? 
+                            Math.ceil((new Date(assistance.date_fin).getTime() - new Date(assistance.date_debut).getTime()) / (1000 * 60 * 60 * 24)) : 0} jours
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Client: </span>
+                        <span className="font-medium">
+                          {assistance.clients?.nom} {assistance.clients?.prenom || ''}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Tél: </span>
+                        <span className="font-medium">{assistance.clients?.telephone}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Début: </span>
+                        <span className="font-medium">
+                          {assistance.date_debut ? format(new Date(assistance.date_debut), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Fin: </span>
+                        <span className="font-medium">
+                          {assistance.date_fin ? format(new Date(assistance.date_fin), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Button */}
       <div>

@@ -378,6 +378,87 @@ export default function ClientDetails() {
         </Card>
       </Collapsible>
 
+      {/* Historique des locations */}
+      <Card>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              <h2 className="text-lg font-semibold">Historique des locations</h2>
+            </div>
+            <Badge variant="secondary">{contracts.length} réservations</Badge>
+          </div>
+          
+          {contracts.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Calendar className="w-16 h-16 mx-auto mb-4 opacity-20" />
+              <p>Aucune réservation pour ce client</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {contracts.map((contract) => (
+                <div
+                  key={contract.id}
+                  className="border rounded-lg p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/locations/${contract.id}`)}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline" className={
+                        contract.statut === 'livre' || contract.statut === 'contrat_valide' 
+                          ? 'bg-green-100 text-green-800 border-green-200' 
+                          : contract.statut === 'termine' || contract.statut === 'retour_effectue'
+                          ? 'bg-blue-100 text-blue-800 border-blue-200'
+                          : contract.statut === 'annule'
+                          ? 'bg-red-100 text-red-800 border-red-200'
+                          : 'bg-gray-100 text-gray-800 border-gray-200'
+                      }>
+                        {contract.statut === 'brouillon' ? 'Réservation' :
+                         contract.statut === 'contrat_valide' ? 'Validé' :
+                         contract.statut === 'livre' ? 'En cours' :
+                         contract.statut === 'retour_effectue' ? 'Retourné' :
+                         contract.statut === 'termine' ? 'Clôturé' :
+                         contract.statut === 'annule' ? 'Annulé' : contract.statut}
+                      </Badge>
+                      <span className="text-sm font-mono text-muted-foreground">{contract.numero_contrat}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-lg">{contract.total_amount?.toFixed(2) || '0.00'} DH</div>
+                      <div className="text-xs text-muted-foreground">{contract.duration || 0} jours</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Véhicule: </span>
+                      <span className="font-medium">
+                        {contract.vehicles?.marque} {contract.vehicles?.modele}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Immat: </span>
+                      <span className="font-medium">{contract.vehicles?.immatriculation}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Début: </span>
+                      <span className="font-medium">
+                        {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Fin: </span>
+                      <span className="font-medium">
+                        {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
       {/* Statistiques des réservations */}
       <Collapsible open={statsOpen} onOpenChange={setStatsOpen}>
         <Card>
