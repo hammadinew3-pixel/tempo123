@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, FileText, Plus, Check, X, Download, CheckCircle2, AlertCircle, Clock, Edit, DollarSign } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Plus, Check, X, Download, CheckCircle2, AlertCircle, Clock, Edit, DollarSign, Car, User, Calendar, MapPin, Key, RotateCcw, Users, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -725,33 +725,41 @@ export default function LocationDetails() {
       )}
 
       {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Total à payer */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0">
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
-            <div className="text-sm text-muted-foreground mb-2">TOTAL À PAYER</div>
-            <div className="text-4xl font-bold mb-1">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+              <DollarSign className="w-4 h-4 text-primary" />
+              <span>TOTAL À PAYER</span>
+            </div>
+            <div className="text-3xl font-bold text-foreground mb-2">
               {totalAmount.toFixed(2)}
               <span className="text-lg ml-1">DH</span>
             </div>
-            <div className="text-sm mb-2">
-              Payé: {paidAmount.toFixed(2)} DH
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Payé:</span>
+              <span className="font-medium">{paidAmount.toFixed(2)} DH</span>
             </div>
-            <div className="text-sm font-semibold">
-              Reste: {remainingAmount.toFixed(2)} DH
+            <div className="flex justify-between text-sm font-semibold text-primary mt-1">
+              <span>Reste:</span>
+              <span>{remainingAmount.toFixed(2)} DH</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Caution */}
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-0 relative">
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow relative">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-muted-foreground">CAUTION</div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Key className="w-4 h-4 text-primary" />
+                <span>CAUTION</span>
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-6 w-6 p-0"
+                className="h-7 w-7 p-0 hover:bg-primary/10"
                 onClick={() => {
                   setCautionData({ 
                     caution_statut: contract.caution_statut,
@@ -760,44 +768,54 @@ export default function LocationDetails() {
                   setShowCautionDialog(true);
                 }}
               >
-                <Edit className="w-3 h-3" />
+                <Edit className="w-3 h-3 text-primary" />
               </Button>
             </div>
-            <div className="text-3xl font-bold mb-2">
+            <div className="text-3xl font-bold text-foreground mb-2">
               {contract.caution_montant?.toFixed(2)}
               <span className="text-lg ml-1">DH</span>
             </div>
             <Badge variant="outline" className={
-              contract.caution_statut === 'remboursee' ? 'bg-green-100 text-green-800 border-0' :
-              contract.caution_statut === 'utilisee' ? 'bg-red-100 text-red-800 border-0' :
-              'bg-yellow-100 text-yellow-800 border-0'
+              contract.caution_statut === 'remboursee' ? 'bg-success/10 text-success border-success/20' :
+              contract.caution_statut === 'utilisee' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+              'bg-warning/10 text-warning border-warning/20'
             }>
-              {contract.caution_statut === 'bloquee' && '🔒 Bloquée'}
-              {contract.caution_statut === 'remboursee' && '✅ Remboursée'}
-              {contract.caution_statut === 'utilisee' && '❌ Utilisée'}
+              {contract.caution_statut === 'bloquee' && 'Bloquée'}
+              {contract.caution_statut === 'remboursee' && 'Remboursée'}
+              {contract.caution_statut === 'utilisee' && 'Utilisée'}
             </Badge>
           </CardContent>
         </Card>
 
         {/* Client */}
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-0">
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
-            <div className="text-sm text-muted-foreground mb-2">CLIENT</div>
-            <div className="text-2xl font-bold mb-2">{clientName}</div>
-            <div className="text-sm">{contract.clients?.telephone}</div>
-            <div className="text-sm">{contract.clients?.email}</div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+              <User className="w-4 h-4 text-primary" />
+              <span>CLIENT</span>
+            </div>
+            <div className="text-xl font-bold text-foreground mb-2">{clientName}</div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <div>{contract.clients?.telephone}</div>
+              <div className="truncate">{contract.clients?.email}</div>
+            </div>
           </CardContent>
         </Card>
 
         {/* Véhicule */}
-        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-0">
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
-            <div className="text-sm text-muted-foreground mb-2">VÉHICULE</div>
-            <div className="text-2xl font-bold mb-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+              <Car className="w-4 h-4 text-primary" />
+              <span>VÉHICULE</span>
+            </div>
+            <div className="text-xl font-bold text-foreground mb-2">
               {contract.vehicles?.marque} {contract.vehicles?.modele}
             </div>
-            <div className="text-sm">{contract.vehicles?.immatriculation}</div>
-            <div className="text-sm">KM: {contract.vehicles?.kilometrage}</div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <div>{contract.vehicles?.immatriculation}</div>
+              <div>KM: {contract.vehicles?.kilometrage}</div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -810,7 +828,8 @@ export default function LocationDetails() {
             <CollapsibleTrigger className="w-full">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm font-medium">
-                  <span>📋 Info de réservation</span>
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <span>Info de réservation</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -868,7 +887,8 @@ export default function LocationDetails() {
             <CollapsibleTrigger className="w-full">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm font-medium">
-                  <span>🔑 Info de livraison</span>
+                  <Key className="w-4 h-4 text-primary" />
+                  <span>Info de livraison</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {contract.delivery_date && (
@@ -936,7 +956,8 @@ export default function LocationDetails() {
             <CollapsibleTrigger className="w-full">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm font-medium">
-                  <span>👥 Conducteurs</span>
+                  <Users className="w-4 h-4 text-primary" />
+                  <span>Conducteurs</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -990,7 +1011,8 @@ export default function LocationDetails() {
             <CollapsibleTrigger className="w-full">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm font-medium">
-                  <span>🔙 Info de retour</span>
+                  <RotateCcw className="w-4 h-4 text-primary" />
+                  <span>Info de retour</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {contract.return_date && (
@@ -1065,7 +1087,8 @@ export default function LocationDetails() {
           <CollapsibleTrigger className="w-full">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center space-x-2 text-sm font-medium">
-                <span>💰 Paiements</span>
+                <CreditCard className="w-4 h-4 text-primary" />
+                <span>Paiements</span>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -1525,9 +1548,9 @@ export default function LocationDetails() {
                   <SelectValue placeholder="Choisir..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bloquee">🔒 Bloquée</SelectItem>
-                  <SelectItem value="remboursee">✅ Remboursée</SelectItem>
-                  <SelectItem value="utilisee">❌ Utilisée (retenue)</SelectItem>
+                  <SelectItem value="bloquee">Bloquée</SelectItem>
+                  <SelectItem value="remboursee">Remboursée</SelectItem>
+                  <SelectItem value="utilisee">Utilisée (retenue)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1541,16 +1564,18 @@ export default function LocationDetails() {
               />
             </div>
             {cautionData.caution_statut === 'utilisee' && (
-              <div className="bg-red-50 p-3 rounded-md">
-                <p className="text-sm text-red-800">
-                  ⚠️ Attention: La caution sera marquée comme utilisée et ne pourra pas être remboursée automatiquement.
+              <div className="bg-destructive/10 border border-destructive/20 p-3 rounded-md flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">
+                  Attention: La caution sera marquée comme utilisée et ne pourra pas être remboursée automatiquement.
                 </p>
               </div>
             )}
             {cautionData.caution_statut === 'remboursee' && (
-              <div className="bg-green-50 p-3 rounded-md">
-                <p className="text-sm text-green-800">
-                  ✅ La caution sera marquée comme remboursée au client.
+              <div className="bg-success/10 border border-success/20 p-3 rounded-md flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-success">
+                  La caution sera marquée comme remboursée au client.
                 </p>
               </div>
             )}
