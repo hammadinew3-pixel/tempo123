@@ -657,55 +657,28 @@ export default function Locations() {
                               variant="ghost"
                               size="sm"
                               onClick={() => navigate(detailsUrl)}
-                              title="Voir le contrat"
+                              title="Voir"
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/vehicules/${contract.vehicle_id}`)}
-                              title="Voir le véhicule"
-                            >
-                              <Car className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/clients/${contract.client_id}`)}
-                              title="Voir le client"
-                            >
-                              <User className="w-4 h-4" />
-                            </Button>
                             {!isAssistance && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openEditDialog(contract)}
-                                  title="Modifier"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleGeneratePDF(contract.id)}
-                                  disabled={loading}
-                                  title="Générer PDF"
-                                >
-                                  <FileText className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDelete(contract.id)}
-                                  title="Supprimer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditDialog(contract)}
+                                title="Modifier"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
                             )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(contract.id)}
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </td>
                         <td className="py-4">
