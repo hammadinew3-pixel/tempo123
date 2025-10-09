@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,6 +26,7 @@ export default function Locations() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<any>(null);
   const [filterType, setFilterType] = useState<'all' | 'location' | 'assistance'>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<Partial<ContractInsert>>({
@@ -226,6 +228,75 @@ export default function Locations() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.size} élément(s) ?`)) return;
+
+    try {
+      const locationIds = Array.from(selectedIds).filter(id => 
+        contracts.find(c => c.id === id && c.type_contrat === 'location')
+      );
+      
+      const assistanceIds = Array.from(selectedIds).filter(id => 
+        contracts.find(c => c.id === id && c.type_contrat === 'assistance')
+      );
+
+      if (locationIds.length > 0) {
+        const { error } = await supabase
+          .from('contracts')
+          .delete()
+          .in('id', locationIds);
+        if (error) throw error;
+      }
+
+      if (assistanceIds.length > 0) {
+        const { error } = await supabase
+          .from('assistance')
+          .delete()
+          .in('id', assistanceIds);
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Succès',
+        description: `${selectedIds.size} élément(s) supprimé(s)`,
+      });
+
+      setSelectedIds(new Set());
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    const filtered = contracts.filter(contract => {
+      if (filterType === 'all') return true;
+      return contract.type_contrat === filterType;
+    });
+    
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(c => c.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
   const resetForm = () => {
     setFormData({
       numero_contrat: `CTR-${Date.now()}`,
@@ -379,37 +450,49 @@ export default function Locations() {
 
       <Card>
         <CardHeader className="space-y-4">
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <button 
-              onClick={() => setFilterType('all')}
-              className={`pb-2 transition-colors ${
-                filterType === 'all' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              TOUS ({contracts.length})
-            </button>
-            <button 
-              onClick={() => setFilterType('location')}
-              className={`pb-2 transition-colors ${
-                filterType === 'location' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              LOCATIONS ({contracts.filter(c => c.type_contrat === 'location').length})
-            </button>
-            <button 
-              onClick={() => setFilterType('assistance')}
-              className={`pb-2 transition-colors ${
-                filterType === 'assistance' 
-                  ? 'text-primary border-b-2 border-primary' 
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              ASSISTANCES ({contracts.filter(c => c.type_contrat === 'assistance').length})
-            </button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm font-medium">
+              <button 
+                onClick={() => setFilterType('all')}
+                className={`pb-2 transition-colors ${
+                  filterType === 'all' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                TOUS ({contracts.length})
+              </button>
+              <button 
+                onClick={() => setFilterType('location')}
+                className={`pb-2 transition-colors ${
+                  filterType === 'location' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                LOCATIONS ({contracts.filter(c => c.type_contrat === 'location').length})
+              </button>
+              <button 
+                onClick={() => setFilterType('assistance')}
+                className={`pb-2 transition-colors ${
+                  filterType === 'assistance' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                ASSISTANCES ({contracts.filter(c => c.type_contrat === 'assistance').length})
+              </button>
+            </div>
+            {selectedIds.size > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer ({selectedIds.size})
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>{loading ? (
@@ -423,7 +506,16 @@ export default function Locations() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="pb-3 pl-4 font-medium">Actions</th>
+                    <th className="pb-3 pl-4 font-medium w-12">
+                      <Checkbox 
+                        checked={selectedIds.size > 0 && selectedIds.size === contracts.filter(contract => {
+                          if (filterType === 'all') return true;
+                          return contract.type_contrat === filterType;
+                        }).length}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th className="pb-3 font-medium">Actions</th>
                     <th className="pb-3 font-medium">Type</th>
                     <th className="pb-3 font-medium">N° Contrat</th>
                     <th className="pb-3 font-medium">Véhicule</th>
@@ -451,7 +543,13 @@ export default function Locations() {
                         className="border-b last:border-0 hover:bg-muted/50 cursor-pointer"
                         onClick={() => navigate(detailsUrl)}
                       >
-                        <td className="py-4 pl-4">
+                        <td className="py-4 pl-4" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox 
+                            checked={selectedIds.has(contract.id)}
+                            onCheckedChange={() => toggleSelect(contract.id)}
+                          />
+                        </td>
+                        <td className="py-4">
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost"

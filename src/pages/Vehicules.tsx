@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +22,7 @@ export default function Vehicules() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Form state
@@ -127,6 +129,53 @@ export default function Vehicules() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.size} véhicule(s) ?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('vehicles')
+        .delete()
+        .in('id', Array.from(selectedIds));
+
+      if (error) throw error;
+
+      toast({
+        title: 'Succès',
+        description: `${selectedIds.size} véhicule(s) supprimé(s)`,
+      });
+
+      setSelectedIds(new Set());
+      loadVehicles();
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === vehicles.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(vehicles.map(v => v.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
   };
 
   const resetForm = () => {
@@ -339,16 +388,28 @@ export default function Vehicules() {
 
       <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="space-y-4 p-4 md:p-6">
-          <div className="flex items-center gap-3 md:gap-6 text-xs md:text-sm font-medium overflow-x-auto">
-            <button className="text-primary border-b-2 border-primary pb-2 transition-colors whitespace-nowrap">
-              TOUS ({vehicles.length})
-            </button>
-            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
-              HORS SERVICE (0)
-            </button>
-            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
-              SOUS LOCATION (0)
-            </button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 md:gap-6 text-xs md:text-sm font-medium overflow-x-auto">
+              <button className="text-primary border-b-2 border-primary pb-2 transition-colors whitespace-nowrap">
+                TOUS ({vehicles.length})
+              </button>
+              <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
+                HORS SERVICE (0)
+              </button>
+              <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
+                SOUS LOCATION (0)
+              </button>
+            </div>
+            {selectedIds.size > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer ({selectedIds.size})
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0 md:p-6">
@@ -371,6 +432,12 @@ export default function Vehicules() {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3 flex-1">
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Checkbox 
+                              checked={selectedIds.has(vehicle.id)}
+                              onCheckedChange={() => toggleSelect(vehicle.id)}
+                            />
+                          </div>
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-primary">{vehicle.marque.charAt(0)}</span>
                           </div>
@@ -440,7 +507,13 @@ export default function Vehicules() {
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-sm text-muted-foreground border-b">
-                      <th className="pb-3 pl-4 font-medium">Actions</th>
+                      <th className="pb-3 pl-4 font-medium w-12">
+                        <Checkbox 
+                          checked={selectedIds.size > 0 && selectedIds.size === vehicles.length}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </th>
+                      <th className="pb-3 font-medium">Actions</th>
                       <th className="pb-3 font-medium">Marque/Modèle</th>
                       <th className="pb-3 font-medium">Matricule</th>
                       <th className="pb-3 font-medium">État</th>
@@ -456,8 +529,14 @@ export default function Vehicules() {
                         className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
                         onClick={() => navigate(`/vehicules/${vehicle.id}`)}
                       >
-                        <td className="py-4 pl-4">
-                          <div className="flex gap-1">
+                        <td className="py-4 pl-4" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox 
+                            checked={selectedIds.has(vehicle.id)}
+                            onCheckedChange={() => toggleSelect(vehicle.id)}
+                          />
+                        </td>
+                        <td className="py-4">
+                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             <Button
                               variant="ghost"
                               size="sm"

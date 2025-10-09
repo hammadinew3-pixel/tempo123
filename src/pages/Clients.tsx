@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -24,6 +25,7 @@ export default function Clients() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const [showAllFields, setShowAllFields] = useState(false);
@@ -133,6 +135,53 @@ export default function Clients() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.size} client(s) ?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .in('id', Array.from(selectedIds));
+
+      if (error) throw error;
+
+      toast({
+        title: 'Succès',
+        description: `${selectedIds.size} client(s) supprimé(s)`,
+      });
+
+      setSelectedIds(new Set());
+      loadClients();
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === clients.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(clients.map(c => c.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
   };
 
   const resetForm = () => {
@@ -468,16 +517,28 @@ export default function Clients() {
 
       <Card>
         <CardHeader className="space-y-4">
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <button className="text-primary border-b-2 border-primary pb-2">
-              TOUS ({clients.length})
-            </button>
-            <button className="text-muted-foreground hover:text-foreground pb-2">
-              PARTICULIERS ({clients.filter(c => c.type === 'particulier').length})
-            </button>
-            <button className="text-muted-foreground hover:text-foreground pb-2">
-              ENTREPRISES ({clients.filter(c => c.type === 'entreprise').length})
-            </button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm font-medium">
+              <button className="text-primary border-b-2 border-primary pb-2">
+                TOUS ({clients.length})
+              </button>
+              <button className="text-muted-foreground hover:text-foreground pb-2">
+                PARTICULIERS ({clients.filter(c => c.type === 'particulier').length})
+              </button>
+              <button className="text-muted-foreground hover:text-foreground pb-2">
+                ENTREPRISES ({clients.filter(c => c.type === 'entreprise').length})
+              </button>
+            </div>
+            {selectedIds.size > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Supprimer ({selectedIds.size})
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -492,7 +553,13 @@ export default function Clients() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="pb-3 pl-4 font-medium">Actions</th>
+                    <th className="pb-3 pl-4 font-medium w-12">
+                      <Checkbox 
+                        checked={selectedIds.size > 0 && selectedIds.size === clients.length}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th className="pb-3 font-medium">Actions</th>
                     <th className="pb-3 font-medium">Nom / Entreprise</th>
                     <th className="pb-3 font-medium">Type</th>
                     <th className="pb-3 font-medium">CIN / Permis</th>
@@ -506,6 +573,12 @@ export default function Clients() {
                   {clients.map((client) => (
                     <tr key={client.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="py-4 pl-4">
+                        <Checkbox 
+                          checked={selectedIds.has(client.id)}
+                          onCheckedChange={() => toggleSelect(client.id)}
+                        />
+                      </td>
+                      <td className="py-4">
                         <div className="flex gap-2">
                           <Button
                             variant="ghost"
