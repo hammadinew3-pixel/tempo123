@@ -163,6 +163,28 @@ export default function AssistanceDetails() {
     }
   }, [assistance]);
 
+  const openDeliveryDialog = () => {
+    // Pré-remplir le kilométrage de départ avec le kilométrage actuel du véhicule
+    if (assistance?.vehicles?.kilometrage && !deliveryData.kilometrage_depart) {
+      setDeliveryData(prev => ({
+        ...prev,
+        kilometrage_depart: assistance.vehicles.kilometrage.toString(),
+      }));
+    }
+    setShowDeliveryDialog(true);
+  };
+
+  const openReturnDialog = () => {
+    // Pré-remplir le kilométrage de retour avec le kilométrage de départ si disponible
+    if (assistance?.kilometrage_depart && !returnData.kilometrage_retour) {
+      setReturnData(prev => ({
+        ...prev,
+        kilometrage_retour: assistance.kilometrage_depart.toString(),
+      }));
+    }
+    setShowReturnDialog(true);
+  };
+
   const loadAssistance = async () => {
     try {
       const { data, error } = await supabase
@@ -903,7 +925,7 @@ export default function AssistanceDetails() {
                 </p>
               </div>
             </div>
-            <Button onClick={() => setShowDeliveryDialog(true)}>
+            <Button onClick={openDeliveryDialog}>
               <Check className="w-4 h-4 mr-2" />
               Marquer comme livré
             </Button>
@@ -938,7 +960,7 @@ export default function AssistanceDetails() {
                   <Calendar className="w-4 h-4 mr-2" />
                   Prolonger
                 </Button>
-                <Button onClick={() => setShowReturnDialog(true)}>
+                <Button onClick={openReturnDialog}>
                   <Check className="w-4 h-4 mr-2" />
                   Marquer le retour
                 </Button>
@@ -1427,7 +1449,7 @@ export default function AssistanceDetails() {
                     <Button
                       size="sm"
                       className="mt-2"
-                      onClick={() => setShowDeliveryDialog(true)}
+                      onClick={openDeliveryDialog}
                     >
                       Marquer comme livré
                     </Button>
@@ -1494,7 +1516,7 @@ export default function AssistanceDetails() {
                       <Button
                         size="sm"
                         className="mt-2"
-                        onClick={() => setShowReturnDialog(true)}
+                        onClick={openReturnDialog}
                       >
                         Marquer le retour
                       </Button>

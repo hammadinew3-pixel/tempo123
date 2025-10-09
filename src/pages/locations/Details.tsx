@@ -730,13 +730,35 @@ export default function LocationDetails() {
     }
   };
 
+  const openDeliveryDialog = () => {
+    // Pré-remplir le kilométrage de départ avec le kilométrage actuel du véhicule
+    if (contract?.vehicles?.kilometrage && !deliveryData.delivery_km) {
+      setDeliveryData(prev => ({
+        ...prev,
+        delivery_km: contract.vehicles.kilometrage.toString(),
+      }));
+    }
+    setShowDeliveryDialog(true);
+  };
+
+  const openReturnDialog = () => {
+    // Pré-remplir le kilométrage de retour avec le kilométrage de départ si disponible
+    if (contract?.delivery_km && !returnData.return_km) {
+      setReturnData(prev => ({
+        ...prev,
+        return_km: contract.delivery_km.toString(),
+      }));
+    }
+    setShowReturnDialog(true);
+  };
+
   const handleWorkflowAction = async (step: string) => {
     if (step === 'contrat_valide') {
       await handleValidateContract();
     } else if (step === 'livre') {
-      setShowDeliveryDialog(true);
+      openDeliveryDialog();
     } else if (step === 'retour_effectue') {
-      setShowReturnDialog(true);
+      openReturnDialog();
     } else if (step === 'termine') {
       // Clôturer le contrat
       try {
@@ -1040,7 +1062,7 @@ export default function LocationDetails() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowDeliveryDialog(true);
+                        openDeliveryDialog();
                       }}
                     >
                       <Edit className="w-4 h-4" />
@@ -1084,7 +1106,7 @@ export default function LocationDetails() {
                 ) : (
                   <div className="text-center py-4">
                     <p className="text-muted-foreground mb-4">En attente de livraison</p>
-                    <Button size="sm" onClick={() => setShowDeliveryDialog(true)}>
+                    <Button size="sm" onClick={openDeliveryDialog}>
                       <Check className="w-4 h-4 mr-2" />
                       Marquer comme livré
                     </Button>
@@ -1164,7 +1186,7 @@ export default function LocationDetails() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowReturnDialog(true);
+                        openReturnDialog();
                       }}
                     >
                       <Edit className="w-4 h-4" />
@@ -1211,7 +1233,7 @@ export default function LocationDetails() {
                       {contract.statut === 'actif' ? 'Véhicule en circulation' : 'En attente de retour'}
                     </p>
                     {contract.statut === 'actif' && (
-                      <Button size="sm" onClick={() => setShowReturnDialog(true)}>
+                      <Button size="sm" onClick={openReturnDialog}>
                         <Check className="w-4 h-4 mr-2" />
                         Marquer comme retourné
                       </Button>
