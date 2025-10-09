@@ -8,6 +8,7 @@ import { Layout } from "./components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import Locations from "./pages/Locations";
 import NouveauLocation from "./pages/locations/Nouveau";
+import LocationDetails from "./pages/locations/Details";
 import Vehicules from "./pages/Vehicules";
 import Clients from "./pages/Clients";
 import Factures from "./pages/Factures";
@@ -74,6 +75,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><NouveauLocation /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/locations/:id"
+              element={
+                <ProtectedRoute>
+                  <Layout><LocationDetails /></Layout>
                 </ProtectedRoute>
               }
             />

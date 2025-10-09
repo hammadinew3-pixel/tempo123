@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Search, Filter, Download, Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ type Contract = Database['public']['Tables']['contracts']['Row'];
 type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
 
 export default function Locations() {
+  const navigate = useNavigate();
   const [contracts, setContracts] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -570,9 +572,13 @@ export default function Locations() {
                 </thead>
                 <tbody>
                   {contracts.map((contract) => (
-                    <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
+                     <tr 
+                        key={contract.id} 
+                        className="border-b last:border-0 hover:bg-muted/50 cursor-pointer"
+                        onClick={() => navigate(`/locations/${contract.id}`)}
+                      >
                       <td className="py-4 pl-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
