@@ -153,10 +153,10 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Alerts Section */}
+        {/* Alerts and Fleet Status in one row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Alerts Section */}
+          <div className="lg:col-span-2">
             <Card className="bg-orange-50 border-orange-200">
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-4">
@@ -190,210 +190,9 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Departures - Returns Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Départs - Récupérations</CardTitle>
-                <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
-                <div className="flex space-x-8 mt-4">
-                  <button className="text-primary border-b-2 border-primary pb-2">
-                    <span className="text-sm font-medium">00 Départs</span>
-                  </button>
-                  <button className="text-muted-foreground pb-2 hover:text-foreground">
-                    <span className="text-sm font-medium">00 Récupérations</span>
-                  </button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left text-sm text-muted-foreground border-b">
-                        <th className="pb-3 font-medium">Rés. N°</th>
-                        <th className="pb-3 font-medium">Véhicule</th>
-                        <th className="pb-3 font-medium">Locataire</th>
-                        <th className="pb-3 font-medium">Heure de dé...</th>
-                        <th className="pb-3 font-medium">Date retour</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td colSpan={5} className="text-center py-12">
-                          <div className="flex flex-col items-center">
-                            <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
-                              <Calendar className="w-8 h-8 text-muted-foreground" />
-                            </div>
-                            <p className="text-muted-foreground">Aucun résultat</p>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Volume de transactions */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Volume de transactions</CardTitle>
-                    <CardDescription>Basé sur l'année sélectionnée</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" className="text-primary border-b-2 border-primary">
-                      2025
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground">
-                      2024
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="revenus"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      name="Revenus"
-                      dot={{ fill: '#10b981', r: 4 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="charges"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      name="Charges"
-                      dot={{ fill: '#ef4444', r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-                <div className="text-center mt-4">
-                  <Link to="/statistiques" className="text-primary hover:underline text-sm">
-                    Page de statistiques →
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Reservations */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Les dernières réservations</CardTitle>
-                    <CardDescription>Basé sur le type sélectionné</CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" className="text-primary">
-                      Courtes
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground">
-                      Longues
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-muted-foreground border-b">
-                        <th className="pb-3 font-medium">Rés. N°</th>
-                        <th className="pb-3 font-medium">État</th>
-                        <th className="pb-3 font-medium">Véhicule</th>
-                        <th className="pb-3 font-medium">Locataire</th>
-                        <th className="pb-3 font-medium">Durée</th>
-                        <th className="pb-3 font-medium">Date départ</th>
-                        <th className="pb-3 font-medium">Date retour</th>
-                        <th className="pb-3 font-medium">Total</th>
-                        <th className="pb-3 font-medium">Solde</th>
-                        <th className="pb-3 font-medium">Prix/Jr</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentReservations.length === 0 ? (
-                        <tr>
-                          <td colSpan={10} className="text-center py-8 text-muted-foreground">
-                            Aucune réservation
-                          </td>
-                        </tr>
-                      ) : (
-                        recentReservations.map((reservation) => (
-                          <tr key={reservation.id} className="border-b hover:bg-muted/50">
-                            <td className="py-4">{reservation.numero_contrat}</td>
-                            <td className="py-4">
-                              <Badge
-                                variant="secondary"
-                                className={
-                                  reservation.statut === 'actif'
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : reservation.statut === 'termine'
-                                    ? 'bg-gray-100 text-gray-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }
-                              >
-                                {reservation.statut === 'actif' ? 'Livrée' : reservation.statut}
-                              </Badge>
-                            </td>
-                            <td className="py-4">
-                              <div className="flex items-center gap-2">
-                                <Car className="w-4 h-4 text-muted-foreground" />
-                                <span>
-                                  {reservation.vehicles?.marque} - {reservation.vehicles?.modele}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="py-4">
-                              {reservation.clients?.nom} {reservation.clients?.prenom}
-                            </td>
-                            <td className="py-4">{reservation.duration || 0} Jrs</td>
-                            <td className="py-4">
-                              {new Date(reservation.date_debut).toLocaleDateString('fr-FR')}
-                            </td>
-                            <td className="py-4">
-                              {new Date(reservation.date_fin).toLocaleDateString('fr-FR')}
-                            </td>
-                            <td className="py-4">{reservation.total_amount?.toFixed(2)} DH</td>
-                            <td className="py-4">
-                              <span
-                                className={
-                                  (reservation.remaining_amount || 0) > 0
-                                    ? 'text-red-600'
-                                    : 'text-green-600'
-                                }
-                              >
-                                {(reservation.remaining_amount || 0) > 0 ? '-' : '+'}
-                                {Math.abs(reservation.remaining_amount || 0).toFixed(2)} DH
-                              </span>
-                            </td>
-                            <td className="py-4">{reservation.daily_rate?.toFixed(2)} DH</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="text-center mt-4">
-                  <Link to="/locations" className="text-primary hover:underline text-sm">
-                    Afficher toutes les réservations →
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
-          {/* Right Column - Fleet Status */}
+          {/* Fleet Status */}
           <Card>
             <CardHeader>
               <CardTitle>État du parc</CardTitle>
@@ -465,6 +264,207 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Departures - Returns Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Départs - Récupérations</CardTitle>
+            <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
+            <div className="flex space-x-8 mt-4">
+              <button className="text-primary border-b-2 border-primary pb-2">
+                <span className="text-sm font-medium">00 Départs</span>
+              </button>
+              <button className="text-muted-foreground pb-2 hover:text-foreground">
+                <span className="text-sm font-medium">00 Récupérations</span>
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-muted-foreground border-b">
+                    <th className="pb-3 font-medium">Rés. N°</th>
+                    <th className="pb-3 font-medium">Véhicule</th>
+                    <th className="pb-3 font-medium">Locataire</th>
+                    <th className="pb-3 font-medium">Heure de dé...</th>
+                    <th className="pb-3 font-medium">Date retour</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colSpan={5} className="text-center py-12">
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
+                          <Calendar className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <p className="text-muted-foreground">Aucun résultat</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Volume de transactions - Full Width */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Volume de transactions</CardTitle>
+                <CardDescription>Basé sur l'année sélectionnée</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="text-primary border-b-2 border-primary">
+                  2025
+                </Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  2024
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="revenus"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  name="Revenus"
+                  dot={{ fill: '#10b981', r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="charges"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  name="Charges"
+                  dot={{ fill: '#ef4444', r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <div className="text-center mt-4">
+              <Link to="/statistiques" className="text-primary hover:underline text-sm">
+                Page de statistiques →
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Reservations - Full Width */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Les dernières réservations</CardTitle>
+                <CardDescription>Basé sur le type sélectionné</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="text-primary">
+                  Courtes
+                </Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  Longues
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-muted-foreground border-b">
+                    <th className="pb-3 font-medium">Rés. N°</th>
+                    <th className="pb-3 font-medium">État</th>
+                    <th className="pb-3 font-medium">Véhicule</th>
+                    <th className="pb-3 font-medium">Locataire</th>
+                    <th className="pb-3 font-medium">Durée</th>
+                    <th className="pb-3 font-medium">Date départ</th>
+                    <th className="pb-3 font-medium">Date retour</th>
+                    <th className="pb-3 font-medium">Total</th>
+                    <th className="pb-3 font-medium">Solde</th>
+                    <th className="pb-3 font-medium">Prix/Jr</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentReservations.length === 0 ? (
+                    <tr>
+                      <td colSpan={10} className="text-center py-8 text-muted-foreground">
+                        Aucune réservation
+                      </td>
+                    </tr>
+                  ) : (
+                    recentReservations.map((reservation) => (
+                      <tr key={reservation.id} className="border-b hover:bg-muted/50">
+                        <td className="py-4">{reservation.numero_contrat}</td>
+                        <td className="py-4">
+                          <Badge
+                            variant="secondary"
+                            className={
+                              reservation.statut === 'actif'
+                                ? 'bg-blue-100 text-blue-800'
+                                : reservation.statut === 'termine'
+                                ? 'bg-gray-100 text-gray-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }
+                          >
+                            {reservation.statut === 'actif' ? 'Livrée' : reservation.statut}
+                          </Badge>
+                        </td>
+                        <td className="py-4">
+                          <div className="flex items-center gap-2">
+                            <Car className="w-4 h-4 text-muted-foreground" />
+                            <span>
+                              {reservation.vehicles?.marque} - {reservation.vehicles?.modele}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-4">
+                          {reservation.clients?.nom} {reservation.clients?.prenom}
+                        </td>
+                        <td className="py-4">{reservation.duration || 0} Jrs</td>
+                        <td className="py-4">
+                          {new Date(reservation.date_debut).toLocaleDateString('fr-FR')}
+                        </td>
+                        <td className="py-4">
+                          {new Date(reservation.date_fin).toLocaleDateString('fr-FR')}
+                        </td>
+                        <td className="py-4">{reservation.total_amount?.toFixed(2)} DH</td>
+                        <td className="py-4">
+                          <span
+                            className={
+                              (reservation.remaining_amount || 0) > 0
+                                ? 'text-red-600'
+                                : 'text-green-600'
+                            }
+                          >
+                            {(reservation.remaining_amount || 0) > 0 ? '-' : '+'}
+                            {Math.abs(reservation.remaining_amount || 0).toFixed(2)} DH
+                          </span>
+                        </td>
+                        <td className="py-4">{reservation.daily_rate?.toFixed(2)} DH</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="text-center mt-4">
+              <Link to="/locations" className="text-primary hover:underline text-sm">
+                Afficher toutes les réservations →
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
