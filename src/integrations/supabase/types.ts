@@ -26,6 +26,7 @@ export type Database = {
           etat: Database["public"]["Enums"]["assistance_status"]
           etat_vehicule_depart: string | null
           etat_vehicule_retour: string | null
+          franchise_montant: number | null
           id: string
           kilometrage_depart: number | null
           kilometrage_retour: number | null
@@ -51,6 +52,7 @@ export type Database = {
           etat?: Database["public"]["Enums"]["assistance_status"]
           etat_vehicule_depart?: string | null
           etat_vehicule_retour?: string | null
+          franchise_montant?: number | null
           id?: string
           kilometrage_depart?: number | null
           kilometrage_retour?: number | null
@@ -76,6 +78,7 @@ export type Database = {
           etat?: Database["public"]["Enums"]["assistance_status"]
           etat_vehicule_depart?: string | null
           etat_vehicule_retour?: string | null
+          franchise_montant?: number | null
           id?: string
           kilometrage_depart?: number | null
           kilometrage_retour?: number | null
@@ -308,6 +311,7 @@ export type Database = {
           duration: number | null
           end_location: string | null
           end_time: string | null
+          franchise_montant: number | null
           id: string
           notes: string | null
           numero_contrat: string
@@ -350,6 +354,7 @@ export type Database = {
           duration?: number | null
           end_location?: string | null
           end_time?: string | null
+          franchise_montant?: number | null
           id?: string
           notes?: string | null
           numero_contrat: string
@@ -392,6 +397,7 @@ export type Database = {
           duration?: number | null
           end_location?: string | null
           end_time?: string | null
+          franchise_montant?: number | null
           id?: string
           notes?: string | null
           numero_contrat?: string

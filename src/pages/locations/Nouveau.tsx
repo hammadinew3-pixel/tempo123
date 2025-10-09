@@ -46,6 +46,7 @@ export default function NouveauLocation() {
     end_location: "",
     notes: "",
     caution_montant: 0,
+    franchise_montant: 0,
     advance_payment: 0,
     payment_method: "especes",
   });
@@ -210,6 +211,7 @@ export default function NouveauLocation() {
             end_time: formData.end_time || null,
             statut: "brouillon",
             caution_montant: formData.caution_montant,
+            franchise_montant: formData.franchise_montant,
             caution_statut: "bloquee",
             advance_payment: formData.advance_payment,
             payment_method: formData.payment_method,
@@ -243,6 +245,7 @@ export default function NouveauLocation() {
             etat: "ouvert",
             tarif_journalier: calculatedValues.daily_rate,
             montant_total: calculatedValues.total,
+            franchise_montant: formData.franchise_montant,
             remarques: formData.notes || null,
           },
         ]).select();
@@ -696,6 +699,68 @@ export default function NouveauLocation() {
               placeholder="Ex: Casablanca"
               className="h-12"
             />
+          </div>
+        </div>
+
+        {/* Caution & Franchise Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/30">
+          {/* Montant caution */}
+          <div className="space-y-2">
+            <Label>Montant caution</Label>
+            <div className="relative">
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.caution_montant}
+                onChange={(e) =>
+                  setFormData({ ...formData, caution_montant: parseFloat(e.target.value) || 0 })
+                }
+                className="h-12"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                DH
+              </span>
+            </div>
+          </div>
+
+          {/* Montant franchise */}
+          <div className="space-y-2">
+            <Label>Montant franchise</Label>
+            <div className="relative">
+              <Input
+                type="number"
+                step="0.01"
+                value={formData.franchise_montant}
+                onChange={(e) =>
+                  setFormData({ ...formData, franchise_montant: parseFloat(e.target.value) || 0 })
+                }
+                className="h-12"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                DH
+              </span>
+            </div>
+          </div>
+
+          {/* Mode de paiement */}
+          <div className="space-y-2">
+            <Label>Mode de paiement</Label>
+            <Select
+              value={formData.payment_method}
+              onValueChange={(value) =>
+                setFormData({ ...formData, payment_method: value })
+              }
+            >
+              <SelectTrigger className="h-12">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="especes">Espèces</SelectItem>
+                <SelectItem value="cheque">Chèque</SelectItem>
+                <SelectItem value="carte">Carte bancaire</SelectItem>
+                <SelectItem value="virement">Virement</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
