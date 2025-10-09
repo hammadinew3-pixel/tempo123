@@ -24,6 +24,9 @@ import Calendrier from "./pages/Calendrier";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
+import AssistanceContractTemplate from "./pages/AssistanceContractTemplate";
+import AssistanceDossierTemplate from "./pages/AssistanceDossierTemplate";
+import AssistanceFactureTemplate from "./pages/AssistanceFactureTemplate";
 
 const queryClient = new QueryClient();
 
@@ -187,6 +190,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ContractTemplate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistance-contract-template"
+              element={
+                <ProtectedRoute>
+                  <AssistanceContractTemplate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistance-dossier-template"
+              element={
+                <ProtectedRoute>
+                  <AssistanceDossierTemplate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistance-facture-template"
+              element={
+                <ProtectedRoute>
+                  <AssistanceFactureTemplate />
                 </ProtectedRoute>
               }
             />

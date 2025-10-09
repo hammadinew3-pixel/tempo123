@@ -490,42 +490,76 @@ export default function AssistanceDetails() {
     }
   };
 
-  const handleGeneratePDF = async () => {
+  const handleGenerateContractPDF = async () => {
     try {
       toast({
-        title: "Génération en cours",
+        title: "Génération du contrat",
         description: "Veuillez patienter...",
       });
 
-      const { data, error } = await supabase.functions.invoke('generate-assistance-pdf', {
-        body: { assistanceId: id }
+      // Open contract template in new tab
+      const contractUrl = `/assistance-contract-template?id=${id}`;
+      window.open(contractUrl, '_blank');
+
+      toast({
+        title: 'Contrat généré',
+        description: 'Le contrat a été ouvert dans un nouvel onglet',
       });
-
-      if (error) throw error;
-
-      if (data?.pdf) {
-        // Convert base64 to blob and download
-        const byteCharacters = atob(data.pdf);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        
-        window.open(url, '_blank');
-        
-        toast({
-          title: 'PDF généré',
-          description: 'Le dossier a été ouvert dans un nouvel onglet',
-        });
-      }
     } catch (error: any) {
-      console.error('Erreur génération PDF:', error);
+      console.error('Erreur génération contrat:', error);
       toast({
         title: 'Erreur de génération',
-        description: error.message || 'Impossible de générer le PDF',
+        description: error.message || 'Impossible de générer le contrat',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleGenerateDossierPDF = async () => {
+    try {
+      toast({
+        title: "Génération du dossier",
+        description: "Veuillez patienter...",
+      });
+
+      // Open dossier template in new tab
+      const dossierUrl = `/assistance-dossier-template?id=${id}`;
+      window.open(dossierUrl, '_blank');
+
+      toast({
+        title: 'Dossier généré',
+        description: 'Le dossier a été ouvert dans un nouvel onglet',
+      });
+    } catch (error: any) {
+      console.error('Erreur génération dossier:', error);
+      toast({
+        title: 'Erreur de génération',
+        description: error.message || 'Impossible de générer le dossier',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleGenerateFacturePDF = async () => {
+    try {
+      toast({
+        title: "Génération de la facture",
+        description: "Veuillez patienter...",
+      });
+
+      // Open facture template in new tab
+      const factureUrl = `/assistance-facture-template?id=${id}`;
+      window.open(factureUrl, '_blank');
+
+      toast({
+        title: 'Facture générée',
+        description: 'La facture a été ouverte dans un nouvel onglet',
+      });
+    } catch (error: any) {
+      console.error('Erreur génération facture:', error);
+      toast({
+        title: 'Erreur de génération',
+        description: error.message || 'Impossible de générer la facture',
         variant: 'destructive',
       });
     }
@@ -743,11 +777,19 @@ export default function AssistanceDetails() {
             <span className="text-foreground">N° {assistance.num_dossier}</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           {getStatusBadge(assistance.etat, assistance.etat_paiement)}
-          <Button variant="outline" size="sm" onClick={handleGeneratePDF}>
+          <Button variant="outline" size="sm" onClick={() => handleGenerateContractPDF()}>
             <FileText className="w-4 h-4 mr-2" />
-            Générer PDF
+            Contrat de location
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleGenerateDossierPDF()}>
+            <FileText className="w-4 h-4 mr-2" />
+            Info dossier
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => handleGenerateFacturePDF()}>
+            <FileText className="w-4 h-4 mr-2" />
+            Facture
           </Button>
         </div>
       </div>
