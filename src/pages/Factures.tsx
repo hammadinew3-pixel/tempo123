@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-export default function Factures() {
+export default function FacturesAssurance() {
   const [assistances, setAssistances] = useState<any[]>([]);
   const [filteredAssistances, setFilteredAssistances] = useState<any[]>([]);
   const [assurances, setAssurances] = useState<any[]>([]);
@@ -184,8 +184,8 @@ export default function Factures() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Liste des factures</h1>
-          <p className="text-sm text-muted-foreground">Gérez vos factures et paiements</p>
+          <h1 className="text-2xl font-bold text-foreground">Factures Assurance</h1>
+          <p className="text-sm text-muted-foreground">Gérez vos factures et paiements d'assurance</p>
         </div>
         <div className="flex items-center space-x-2">
           {selectedDossiers.length > 0 && (

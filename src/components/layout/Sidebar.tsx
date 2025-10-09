@@ -64,6 +64,7 @@ const mainNavItems: NavItem[] = [
       { title: "Dossiers d'assistance", href: "/assistance", icon: List },
       { title: "Nouveau dossier", href: "/assistance/nouveau", icon: Plus },
       { title: "Liste des assurances", href: "/assurances", icon: Building2 },
+      { title: "Factures Assurance", href: "/factures", icon: FileText },
     ]
   },
   { 
@@ -83,7 +84,6 @@ const mainNavItems: NavItem[] = [
       { title: "Ajouter client", action: "open-client-dialog", icon: Plus },
     ]
   },
-  { title: "Factures", href: "/factures", icon: FileText },
   { title: "Chèques", href: "/cheques", icon: CreditCard },
   { title: "Longue durée", href: "/longue-duree", icon: Clock },
   { title: "Revenus", href: "/revenus", icon: TrendingUp },
@@ -112,6 +112,7 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
     locations: true,
     vehicules: true,
     clients: true,
+    assistance: true,
   });
 
   const isActive = (href?: string) => {
