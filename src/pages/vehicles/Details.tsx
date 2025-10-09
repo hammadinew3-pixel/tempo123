@@ -24,6 +24,9 @@ export default function VehiculeDetails() {
   const [contracts, setContracts] = useState<any[]>([]);
   const [assistances, setAssistances] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [insurances, setInsurances] = useState<any[]>([]);
+  const [technicalInspections, setTechnicalInspections] = useState<any[]>([]);
+  const [vignettes, setVignettes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("resume");
   const [activeInterventionTab, setActiveInterventionTab] = useState("assurance");
@@ -37,7 +40,7 @@ export default function VehiculeDetails() {
 
   const loadVehicle = async () => {
     try {
-      const [vehicleRes, contractsRes, assistancesRes, expensesRes] = await Promise.all([
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes] = await Promise.all([
         supabase
           .from('vehicles')
           .select('*')
@@ -63,18 +66,39 @@ export default function VehiculeDetails() {
           .from('expenses')
           .select('*')
           .eq('vehicle_id', id)
-          .order('date_depense', { ascending: false })
+          .order('date_depense', { ascending: false }),
+        supabase
+          .from('vehicle_insurance')
+          .select('*')
+          .eq('vehicle_id', id)
+          .order('date_debut', { ascending: false }),
+        supabase
+          .from('vehicle_technical_inspection')
+          .select('*')
+          .eq('vehicle_id', id)
+          .order('date_visite', { ascending: false }),
+        supabase
+          .from('vehicle_vignette')
+          .select('*')
+          .eq('vehicle_id', id)
+          .order('annee', { ascending: false })
       ]);
 
       if (vehicleRes.error) throw vehicleRes.error;
       if (contractsRes.error) throw contractsRes.error;
       if (assistancesRes.error) throw assistancesRes.error;
       if (expensesRes.error) throw expensesRes.error;
+      if (insurancesRes.error) throw insurancesRes.error;
+      if (inspectionsRes.error) throw inspectionsRes.error;
+      if (vignettesRes.error) throw vignettesRes.error;
 
       setVehicle(vehicleRes.data);
       setContracts(contractsRes.data || []);
       setAssistances(assistancesRes.data || []);
       setExpenses(expensesRes.data || []);
+      setInsurances(insurancesRes.data || []);
+      setTechnicalInspections(inspectionsRes.data || []);
+      setVignettes(vignettesRes.data || []);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -107,52 +131,149 @@ export default function VehiculeDetails() {
     return contracts.length + assistances.length;
   };
 
+  const getDaysRemaining = (expirationDate: string | null) => {
+    if (!expirationDate) return null;
+    const today = new Date();
+    const expDate = new Date(expirationDate);
+    const diffTime = expDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const renderInterventionTable = () => {
+    let data: any[] = [];
+    let columns = [];
+
+    if (activeInterventionTab === 'assurance') {
+      data = insurances;
+      columns = ['N° d\'ordre', 'Assureur', 'Date début', 'Date d\'expiration', 'Jours restant', 'Montant', 'Date création'];
+    } else if (activeInterventionTab === 'visite') {
+      data = technicalInspections;
+      columns = ['N° d\'ordre', 'Centre contrôle', 'Date visite', 'Date d\'expiration', 'Jours restant', 'Montant', 'Date création'];
+    } else if (activeInterventionTab === 'vignette') {
+      data = vignettes;
+      columns = ['N° d\'ordre', 'Année', '', 'Date d\'expiration', 'Jours restant', 'Montant', 'Date création'];
+    }
+
+    if (data.length === 0) {
+      return (
+        <TableBody>
+          <TableRow>
+            <TableCell colSpan={8}>
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <div className="w-16 h-16 bg-muted rounded-lg mb-4" />
+                <p>Aucun résultat</p>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      );
+    }
+
+    return (
+      <TableBody>
+        {data.map((item) => {
+          const daysRemaining = getDaysRemaining(
+            activeInterventionTab === 'assurance' ? item.date_expiration :
+            activeInterventionTab === 'visite' ? item.date_expiration :
+            item.date_expiration
+          );
+
+          return (
+            <TableRow key={item.id}>
+              <TableCell>
+                <Button variant="ghost" size="sm">
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </TableCell>
+              <TableCell>{item.numero_ordre}</TableCell>
+              <TableCell>
+                {activeInterventionTab === 'assurance' ? item.assureur :
+                 activeInterventionTab === 'visite' ? item.centre_controle :
+                 item.annee}
+              </TableCell>
+              <TableCell>
+                {activeInterventionTab === 'assurance' ? 
+                  (item.date_debut ? format(new Date(item.date_debut), 'dd/MM/yyyy', { locale: fr }) : '—') :
+                 activeInterventionTab === 'visite' ? 
+                  (item.date_visite ? format(new Date(item.date_visite), 'dd/MM/yyyy', { locale: fr }) : '—') :
+                  '—'}
+              </TableCell>
+              <TableCell>
+                {item.date_expiration ? format(new Date(item.date_expiration), 'dd/MM/yyyy', { locale: fr }) : '—'}
+              </TableCell>
+              <TableCell>
+                {daysRemaining !== null ? (
+                  <Badge variant={daysRemaining < 0 ? 'destructive' : daysRemaining < 30 ? 'outline' : 'secondary'}>
+                    {daysRemaining < 0 ? `Expiré depuis ${Math.abs(daysRemaining)} jours` : `${daysRemaining} jours`}
+                  </Badge>
+                ) : '—'}
+              </TableCell>
+              <TableCell>{item.montant ? `${item.montant.toFixed(2)} DH` : '—'}</TableCell>
+              <TableCell>
+                {item.created_at ? format(new Date(item.created_at), 'dd/MM/yyyy', { locale: fr }) : '—'}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    );
+  };
+
   const getAlerts = () => {
     const alerts = [];
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare dates only
     
+    // Alert only if insurance doesn't exist OR is expired
     if (!vehicle?.assurance_expire_le) {
       alerts.push({
         message: "Véhicule sans assurance ajoutée.",
         action: "CRÉER ASSURANCE"
       });
-    } else if (new Date(vehicle.assurance_expire_le) < today) {
-      alerts.push({
-        message: "Assurance expirée.",
-        action: "CRÉER ASSURANCE"
-      });
+    } else {
+      const expirationDate = new Date(vehicle.assurance_expire_le);
+      expirationDate.setHours(0, 0, 0, 0);
+      if (expirationDate < today) {
+        alerts.push({
+          message: "Assurance expirée.",
+          action: "CRÉER ASSURANCE"
+        });
+      }
     }
 
+    // Alert only if technical inspection doesn't exist OR is expired
     if (!vehicle?.visite_technique_expire_le) {
       alerts.push({
         message: "Véhicule sans visite technique ajoutée.",
         action: "CRÉER VISITE"
       });
-    } else if (new Date(vehicle.visite_technique_expire_le) < today) {
-      alerts.push({
-        message: "Visite technique expirée.",
-        action: "CRÉER VISITE"
-      });
+    } else {
+      const expirationDate = new Date(vehicle.visite_technique_expire_le);
+      expirationDate.setHours(0, 0, 0, 0);
+      if (expirationDate < today) {
+        alerts.push({
+          message: "Visite technique expirée.",
+          action: "CRÉER VISITE"
+        });
+      }
     }
 
+    // Alert only if vignette doesn't exist OR is expired
     if (!vehicle?.vignette_expire_le) {
       alerts.push({
         message: "Véhicule sans autorisation ajoutée.",
         action: "CRÉER AUTORISATION"
       });
-    } else if (new Date(vehicle.vignette_expire_le) < today) {
-      alerts.push({
-        message: "Autorisation expirée.",
-        action: "CRÉER AUTORISATION"
-      });
-    }
-
-    // Check for vidange (oil change) - we can use kilometrage
-    if (vehicle && vehicle.kilometrage > 10000) {
-      alerts.push({
-        message: "Véhicule sans vidange ajoutée.",
-        action: "CRÉER VIDANGE"
-      });
+    } else {
+      const expirationDate = new Date(vehicle.vignette_expire_le);
+      expirationDate.setHours(0, 0, 0, 0);
+      if (expirationDate < today) {
+        alerts.push({
+          message: "Autorisation expirée.",
+          action: "CRÉER AUTORISATION"
+        });
+      }
     }
 
     return alerts;
@@ -195,7 +316,10 @@ export default function VehiculeDetails() {
             <span className="text-foreground">Véhicule Mat. {vehicle.immatriculation}</span>
           </div>
         </div>
-        <Button className="bg-primary">
+        <Button 
+          className="bg-primary"
+          onClick={() => navigate(`/vehicules/${id}/workflow`)}
+        >
           <Edit className="w-4 h-4 mr-2" />
           MODIFIER LE VÉHICULE
         </Button>
@@ -439,29 +563,30 @@ export default function VehiculeDetails() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Actions</TableHead>
-                        <TableHead>N° d'order</TableHead>
-                        <TableHead>Assureur</TableHead>
-                        <TableHead>Date début</TableHead>
+                        <TableHead>N° d'ordre</TableHead>
+                        <TableHead>
+                          {activeInterventionTab === 'assurance' ? 'Assureur' :
+                           activeInterventionTab === 'visite' ? 'Centre contrôle' :
+                           activeInterventionTab === 'vignette' ? 'Année' : 'Info'}
+                        </TableHead>
+                        <TableHead>
+                          {activeInterventionTab === 'assurance' ? 'Date début' :
+                           activeInterventionTab === 'visite' ? 'Date visite' : ''}
+                        </TableHead>
                         <TableHead>Date d'expiration</TableHead>
                         <TableHead>Jours restant</TableHead>
                         <TableHead>Montant</TableHead>
                         <TableHead>Date création</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={8}>
-                          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                            <div className="w-16 h-16 bg-muted rounded-lg mb-4" />
-                            <p>Aucun résultat</p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
+                    {renderInterventionTable()}
                   </Table>
                   
                   <Button variant="link" className="text-primary mt-4">
-                    ⊕ AJOUTER ASSURANCE
+                    ⊕ AJOUTER {activeInterventionTab === 'assurance' ? 'ASSURANCE' :
+                              activeInterventionTab === 'visite' ? 'VISITE TECHNIQUE' :
+                              activeInterventionTab === 'vignette' ? 'VIGNETTE' :
+                              activeInterventionTab.toUpperCase()}
                   </Button>
                 </TabsContent>
               </Tabs>
