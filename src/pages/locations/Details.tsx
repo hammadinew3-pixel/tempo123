@@ -62,8 +62,7 @@ export default function LocationDetails() {
     new_vehicle_id: '',
     reason: '',
     notes: '',
-    new_daily_rate: '',
-    change_day: '',
+    change_date: '',
   });
 
   const [deliveryData, setDeliveryData] = useState({
@@ -405,33 +404,53 @@ export default function LocationDetails() {
       return;
     }
 
-    if (!changeVehicleData.new_daily_rate || parseFloat(changeVehicleData.new_daily_rate) <= 0) {
+    if (!changeVehicleData.change_date) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Veuillez saisir un tarif journalier valide",
-      });
-      return;
-    }
-
-    if (!changeVehicleData.change_day || parseInt(changeVehicleData.change_day) <= 0 || parseInt(changeVehicleData.change_day) > contract.duration) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: `Le jour du changement doit être entre 1 et ${contract.duration}`,
+        description: "Veuillez indiquer la date du changement",
       });
       return;
     }
 
     try {
+      // Récupérer le tarif du nouveau véhicule
+      const selectedVehicle = availableVehicles.find(v => v.id === changeVehicleData.new_vehicle_id);
+      if (!selectedVehicle?.tarif_journalier) {
+        throw new Error("Tarif journalier du véhicule non disponible");
+      }
+
       const oldDailyRate = contract.daily_rate || 0;
-      const newDailyRate = parseFloat(changeVehicleData.new_daily_rate);
+      const newDailyRate = selectedVehicle.tarif_journalier;
       const totalDuration = contract.duration || 1;
-      const changeDay = parseInt(changeVehicleData.change_day);
       
-      // Calcul au prorata
-      const daysWithOldVehicle = changeDay - 1; // Jours déjà effectués avec l'ancien véhicule
-      const daysWithNewVehicle = totalDuration - daysWithOldVehicle; // Jours restants avec le nouveau véhicule
+      // Calculer le jour du changement basé sur les dates
+      const startDate = new Date(contract.date_debut);
+      const changeDate = new Date(changeVehicleData.change_date);
+      const endDate = new Date(contract.date_fin);
+      
+      // Validation de la date de changement
+      if (changeDate < startDate || changeDate > endDate) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "La date de changement doit être entre la date de début et la date de fin de la location",
+        });
+        return;
+      }
+      
+      // Calculer le nombre de jours entre le début et le changement
+      const daysWithOldVehicle = Math.ceil((changeDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const daysWithNewVehicle = totalDuration - daysWithOldVehicle;
+      
+      if (daysWithNewVehicle <= 0) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "La date de changement ne laisse pas de jours restants pour le nouveau véhicule",
+        });
+        return;
+      }
       
       // Montant pour les jours avec l'ancien véhicule
       const amountOldVehicle = daysWithOldVehicle * oldDailyRate;
@@ -447,7 +466,7 @@ export default function LocationDetails() {
       const newRemainingAmount = newTotalAmount - advancePayment;
 
       // Note détaillée du calcul
-      const calculationNote = `Changement au jour ${changeDay}/${totalDuration}. ` +
+      const calculationNote = `Changement le ${format(changeDate, 'dd/MM/yyyy', { locale: fr })} (jour ${daysWithOldVehicle + 1}/${totalDuration}). ` +
         `Ancien véhicule: ${daysWithOldVehicle} jours × ${oldDailyRate} DH = ${amountOldVehicle.toFixed(2)} DH. ` +
         `Nouveau véhicule: ${daysWithNewVehicle} jours × ${newDailyRate} DH = ${amountNewVehicle.toFixed(2)} DH. ` +
         `Montant total: ${newTotalAmount.toFixed(2)} DH. ` +
@@ -505,8 +524,7 @@ export default function LocationDetails() {
         new_vehicle_id: '',
         reason: '',
         notes: '',
-        new_daily_rate: '',
-        change_day: '',
+        change_date: '',
       });
       loadContractData();
     } catch (error: any) {
@@ -1787,11 +1805,9 @@ export default function LocationDetails() {
               <Select 
                 value={changeVehicleData.new_vehicle_id} 
                 onValueChange={(v) => {
-                  const selectedVehicle = availableVehicles.find(vehicle => vehicle.id === v);
                   setChangeVehicleData({
                     ...changeVehicleData, 
                     new_vehicle_id: v,
-                    new_daily_rate: selectedVehicle?.tarif_journalier?.toString() || '',
                   });
                 }}
               >
@@ -1809,41 +1825,42 @@ export default function LocationDetails() {
             </div>
             
             <div>
-              <Label>Jour du changement *</Label>
+              <Label>Date du changement *</Label>
               <Input
-                type="number"
-                min="1"
-                max={contract.duration}
-                value={changeVehicleData.change_day}
-                onChange={(e) => setChangeVehicleData({...changeVehicleData, change_day: e.target.value})}
-                placeholder={`Ex: 1 à ${contract.duration}`}
+                type="date"
+                min={contract.date_debut}
+                max={contract.date_fin}
+                value={changeVehicleData.change_date}
+                onChange={(e) => setChangeVehicleData({...changeVehicleData, change_date: e.target.value})}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Indiquez à quel jour de la location le changement a lieu (1 = premier jour)
+                Date à laquelle le changement de véhicule a lieu (entre {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })} et {format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr })})
               </p>
             </div>
 
-            <div>
-              <Label>Nouveau tarif journalier *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={changeVehicleData.new_daily_rate}
-                onChange={(e) => setChangeVehicleData({...changeVehicleData, new_daily_rate: e.target.value})}
-                placeholder="Ex: 300.00"
-              />
-            </div>
-
-            {changeVehicleData.new_daily_rate && changeVehicleData.change_day && contract.duration && (
+            {changeVehicleData.new_vehicle_id && changeVehicleData.change_date && contract.duration && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-md">
                 <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Calcul au prorata</p>
                 {(() => {
+                  const selectedVehicle = availableVehicles.find(v => v.id === changeVehicleData.new_vehicle_id);
+                  if (!selectedVehicle) return null;
+
                   const oldRate = contract.daily_rate || 0;
-                  const newRate = parseFloat(changeVehicleData.new_daily_rate);
-                  const changeDay = parseInt(changeVehicleData.change_day);
+                  const newRate = selectedVehicle.tarif_journalier;
+                  const startDate = new Date(contract.date_debut);
+                  const changeDate = new Date(changeVehicleData.change_date);
                   const totalDays = contract.duration;
-                  const daysWithOld = changeDay - 1;
+                  const daysWithOld = Math.ceil((changeDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
                   const daysWithNew = totalDays - daysWithOld;
+                  
+                  if (daysWithOld < 0 || daysWithNew <= 0) {
+                    return (
+                      <p className="text-sm text-red-600 dark:text-red-400">
+                        Date invalide. Veuillez choisir une date entre le début et la fin de la location.
+                      </p>
+                    );
+                  }
+
                   const amountOld = daysWithOld * oldRate;
                   const amountNew = daysWithNew * newRate;
                   const totalAmount = amountOld + amountNew;
