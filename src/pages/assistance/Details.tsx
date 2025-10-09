@@ -24,6 +24,11 @@ export default function AssistanceDetails() {
   const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showFranchiseDialog, setShowFranchiseDialog] = useState(false);
+  
+  const [franchiseData, setFranchiseData] = useState({
+    franchise_montant: '',
+  });
 
   const [openSections, setOpenSections] = useState({
     dossier: true,
@@ -66,6 +71,10 @@ export default function AssistanceDetails() {
         tarif_journalier: assistance.tarif_journalier?.toString() || '',
         franchise_montant: assistance.franchise_montant?.toString() || '',
         remarques: assistance.remarques || '',
+      });
+      
+      setFranchiseData({
+        franchise_montant: assistance.franchise_montant?.toString() || '0',
       });
 
       if (assistance.kilometrage_depart) {
@@ -229,6 +238,33 @@ export default function AssistanceDetails() {
         description: "Le dossier a été clôturé avec succès",
       });
 
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleUpdateFranchise = async () => {
+    try {
+      const { error } = await supabase
+        .from("assistance")
+        .update({
+          franchise_montant: parseFloat(franchiseData.franchise_montant) || 0,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Franchise mise à jour",
+      });
+
+      setShowFranchiseDialog(false);
       loadAssistance();
     } catch (error: any) {
       toast({
@@ -415,9 +451,19 @@ export default function AssistanceDetails() {
         {/* Franchise */}
         <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-              <Key className="w-4 h-4 text-primary" />
-              <span>FRANCHISE</span>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Key className="w-4 h-4 text-primary" />
+                <span>FRANCHISE</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFranchiseDialog(true)}
+                className="h-7 w-7 p-0"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
             </div>
             <div className="text-3xl font-bold text-foreground mb-2">
               {assistance.franchise_montant ? assistance.franchise_montant.toFixed(2) : '0.00'}
@@ -427,7 +473,10 @@ export default function AssistanceDetails() {
         </Card>
 
         {/* Client */}
-        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+        <Card 
+          className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate(`/clients/${assistance.client_id}`)}
+        >
           <CardContent className="p-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
               <User className="w-4 h-4 text-primary" />
@@ -442,7 +491,10 @@ export default function AssistanceDetails() {
         </Card>
 
         {/* Véhicule */}
-        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+        <Card 
+          className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate(`/vehicules/${assistance.vehicle_id}`)}
+        >
           <CardContent className="p-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
               <Car className="w-4 h-4 text-primary" />
@@ -487,9 +539,19 @@ export default function AssistanceDetails() {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="px-4 pb-4 space-y-3 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">N° Dossier</span>
-                  <span className="font-medium">{assistance.num_dossier}</span>
+                  <Button
+                    variant="link"
+                    className="h-auto p-0 font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(assistance.num_dossier);
+                      toast({ title: "Copié", description: "N° Dossier copié dans le presse-papier" });
+                    }}
+                  >
+                    {assistance.num_dossier}
+                  </Button>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Type</span>
@@ -936,6 +998,38 @@ export default function AssistanceDetails() {
                 Annuler
               </Button>
               <Button onClick={handleUpdateAssistance}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Modifier la franchise */}
+      <Dialog open={showFranchiseDialog} onOpenChange={setShowFranchiseDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier la franchise</DialogTitle>
+            <DialogDescription>
+              Mettez à jour le montant de la franchise
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Montant de la franchise (DH)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={franchiseData.franchise_montant}
+                onChange={(e) => setFranchiseData({ ...franchiseData, franchise_montant: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowFranchiseDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateFranchise}>
                 Enregistrer
               </Button>
             </div>

@@ -661,16 +661,20 @@ export default function Locations() {
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            {!isAssistance && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openEditDialog(contract)}
-                                title="Modifier"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (isAssistance) {
+                                  navigate(detailsUrl);
+                                } else {
+                                  openEditDialog(contract);
+                                }
+                              }}
+                              title="Modifier"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
