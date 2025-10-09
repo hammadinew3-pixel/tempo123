@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ type Client = Database['public']['Tables']['clients']['Row'];
 type ClientInsert = Database['public']['Tables']['clients']['Insert'];
 
 export default function Clients() {
+  const navigate = useNavigate();
   const { isClientDialogOpen, setIsClientDialogOpen } = useLayoutContext();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -505,6 +507,13 @@ export default function Clients() {
                     <tr key={client.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="py-4 pl-4">
                         <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/clients/${client.id}`)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
