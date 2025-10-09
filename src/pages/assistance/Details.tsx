@@ -133,8 +133,8 @@ export default function AssistanceDetails() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-l-4 border-l-primary col-span-2">
+      <div className="grid grid-cols-1 gap-6">
+        <Card className="border-l-4 border-l-primary">
           <CardHeader>
             <CardTitle>Informations du dossier</CardTitle>
           </CardHeader>
@@ -200,33 +200,6 @@ export default function AssistanceDetails() {
                 <p className="text-foreground">{assistance.remarques}</p>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Statistiques</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Durée</p>
-              <p className="text-2xl font-bold text-foreground">
-                {assistance.date_fin 
-                  ? Math.ceil((new Date(assistance.date_fin).getTime() - new Date(assistance.date_debut).getTime()) / (1000 * 60 * 60 * 24))
-                  : Math.ceil((new Date().getTime() - new Date(assistance.date_debut).getTime()) / (1000 * 60 * 60 * 24))
-                } jours
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Créé le</p>
-              <p className="font-medium text-foreground">
-                {new Date(assistance.created_at).toLocaleDateString('fr-FR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
