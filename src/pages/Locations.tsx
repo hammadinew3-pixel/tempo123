@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { format } from "date-fns";
 
 type Contract = Database['public']['Tables']['contracts']['Row'];
 type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
@@ -438,6 +439,7 @@ export default function Locations() {
                       id="date_debut"
                       type="date"
                       value={formData.date_debut}
+                      min={format(new Date(), 'yyyy-MM-dd')}
                       onChange={(e) => setFormData({ ...formData, date_debut: e.target.value })}
                       required
                     />
@@ -449,6 +451,7 @@ export default function Locations() {
                       id="date_fin"
                       type="date"
                       value={formData.date_fin}
+                      min={formData.date_debut || format(new Date(), 'yyyy-MM-dd')}
                       onChange={(e) => setFormData({ ...formData, date_fin: e.target.value })}
                       required
                     />

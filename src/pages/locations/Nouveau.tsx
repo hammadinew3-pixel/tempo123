@@ -458,6 +458,7 @@ export default function NouveauLocation() {
                     onSelect={(date) =>
                       date && setFormData({ ...formData, date_debut: date })
                     }
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus
                     className="pointer-events-auto"
                   />
@@ -512,7 +513,10 @@ export default function NouveauLocation() {
                     onSelect={(date) =>
                       date && setFormData({ ...formData, date_fin: date })
                     }
-                    disabled={(date) => date < formData.date_debut}
+                    disabled={(date) => {
+                      const today = new Date(new Date().setHours(0, 0, 0, 0));
+                      return date < today || (formData.date_debut && date < formData.date_debut);
+                    }}
                     initialFocus
                     className="pointer-events-auto"
                   />

@@ -151,6 +151,18 @@ export default function Calendrier() {
 
   const handleDayClick = (day: number) => {
     const clickedDate = new Date(currentYear, currentMonth, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Don't allow selecting dates in the past
+    if (clickedDate < today) {
+      toast({
+        title: "Date invalide",
+        description: "Impossible de sélectionner une date passée",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // If no range start, set it
     if (!rangeStartDate) {
@@ -353,6 +365,10 @@ export default function Calendrier() {
                   ))}
                   {days.map((day, index) => {
                     const dayDate = day ? new Date(currentYear, currentMonth, day) : null;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const isPast = dayDate && dayDate < today;
+                    
                     const isToday = day === new Date().getDate() && 
                                     currentMonth === new Date().getMonth() && 
                                     currentYear === new Date().getFullYear();
@@ -369,15 +385,15 @@ export default function Calendrier() {
                         key={index}
                         className={`
                           min-h-[80px] md:min-h-[100px] p-1 md:p-2 border rounded-lg transition-colors
-                          ${day ? 'bg-card hover:bg-muted cursor-pointer' : 'bg-transparent border-transparent'}
+                          ${day ? (isPast ? 'bg-muted/50 cursor-not-allowed opacity-50' : 'bg-card hover:bg-muted cursor-pointer') : 'bg-transparent border-transparent'}
                           ${isToday ? 'border-primary bg-primary/10' : 'border-border'}
                           ${isRangeStart || isRangeEnd ? 'bg-primary/20 border-primary' : ''}
                           ${isInRange ? 'bg-primary/10' : ''}
                         `}
-                        onClick={() => day && handleDayClick(day)}
+                        onClick={() => day && !isPast && handleDayClick(day)}
                       >
                         {day && (
-                          <div className="text-xs md:text-sm font-medium text-foreground">
+                          <div className={`text-xs md:text-sm font-medium ${isPast ? 'text-muted-foreground' : 'text-foreground'}`}>
                             {day}
                           </div>
                         )}
@@ -504,6 +520,7 @@ export default function Calendrier() {
                   id="start-date"
                   type="date"
                   value={availabilityDates.start}
+                  min={format(new Date(), 'yyyy-MM-dd')}
                   onChange={(e) => setAvailabilityDates({...availabilityDates, start: e.target.value})}
                 />
               </div>
@@ -513,6 +530,7 @@ export default function Calendrier() {
                   id="end-date"
                   type="date"
                   value={availabilityDates.end}
+                  min={availabilityDates.start || format(new Date(), 'yyyy-MM-dd')}
                   onChange={(e) => setAvailabilityDates({...availabilityDates, end: e.target.value})}
                 />
               </div>

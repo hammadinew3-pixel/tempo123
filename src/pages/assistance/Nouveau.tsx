@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { format } from "date-fns";
 
 type AssistanceInsert = Database['public']['Tables']['assistance']['Insert'];
 type Client = Database['public']['Tables']['clients']['Row'];
@@ -271,6 +272,7 @@ export default function NouveauAssistance() {
                   id="date_debut"
                   type="date"
                   value={formData.date_debut}
+                  min={format(new Date(), 'yyyy-MM-dd')}
                   onChange={(e) => handleDateChange('date_debut', e.target.value)}
                   required
                 />
@@ -282,6 +284,7 @@ export default function NouveauAssistance() {
                   id="date_fin"
                   type="date"
                   value={formData.date_fin || ''}
+                  min={formData.date_debut || format(new Date(), 'yyyy-MM-dd')}
                   onChange={(e) => handleDateChange('date_fin', e.target.value || '')}
                 />
               </div>
