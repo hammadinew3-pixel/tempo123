@@ -230,7 +230,7 @@ export default function NouveauLocation() {
       } else {
         // Créer un dossier d'assistance
         const selectedAssurance = assurances.find((a) => a.id === formData.assurance_id);
-        const { error } = await supabase.from("assistance").insert([
+        const { data, error } = await supabase.from("assistance").insert([
           {
             num_dossier: formData.num_dossier,
             client_id: formData.client_id,
@@ -245,7 +245,7 @@ export default function NouveauLocation() {
             montant_total: calculatedValues.total,
             remarques: formData.notes || null,
           },
-        ]);
+        ]).select();
 
         if (error) throw error;
 
@@ -254,7 +254,12 @@ export default function NouveauLocation() {
           description: "Dossier d'assistance créé avec succès",
         });
 
-        navigate("/assistance");
+        // Rediriger vers la page de détails du dossier pour compléter les informations
+        if (data && data[0]) {
+          navigate(`/assistance/${data[0].id}`);
+        } else {
+          navigate("/assistance");
+        }
       }
     } catch (error: any) {
       console.error("Erreur création:", error);
