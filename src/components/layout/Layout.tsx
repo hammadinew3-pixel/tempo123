@@ -1,23 +1,48 @@
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { createContext, useContext, useState } from "react";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+interface LayoutContextType {
+  openClientDialog: () => void;
+  isClientDialogOpen: boolean;
+  setIsClientDialogOpen: (open: boolean) => void;
+}
+
+const LayoutContext = createContext<LayoutContextType | null>(null);
+
+export const useLayoutContext = () => {
+  const context = useContext(LayoutContext);
+  if (!context) {
+    throw new Error("useLayoutContext must be used within Layout");
+  }
+  return context;
+};
+
 export const Layout = ({ children }: LayoutProps) => {
+  const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+
+  const openClientDialog = () => {
+    setIsClientDialogOpen(true);
+  };
+
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <Header />
-          <main className="flex-1 p-6">
-            {children}
-          </main>
+    <LayoutContext.Provider value={{ openClientDialog, isClientDialogOpen, setIsClientDialogOpen }}>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <Sidebar onOpenClientDialog={openClientDialog} />
+          <div className="flex-1 flex flex-col">
+            <Header />
+            <main className="flex-1 p-6">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </LayoutContext.Provider>
   );
 };

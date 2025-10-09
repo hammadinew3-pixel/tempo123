@@ -40,7 +40,8 @@ interface NavItem {
   title: string;
   href?: string;
   icon: React.ComponentType<{ className?: string }>;
-  submenu?: { title: string; href: string; icon: React.ComponentType<{ className?: string }> }[];
+  submenu?: { title: string; href?: string; icon: React.ComponentType<{ className?: string }>; action?: string }[];
+  action?: string;
 }
 
 const mainNavItems: NavItem[] = [
@@ -68,7 +69,7 @@ const mainNavItems: NavItem[] = [
     icon: Users,
     submenu: [
       { title: "Voir les clients", href: "/clients", icon: List },
-      { title: "Ajouter client", href: "/clients/nouveau", icon: Plus },
+      { title: "Ajouter client", action: "open-client-dialog", icon: Plus },
     ]
   },
   { title: "Factures", href: "/factures", icon: FileText },
@@ -86,7 +87,11 @@ const adminNavItems: NavItem[] = [
   { title: "Mes Utilisateurs", href: "/utilisateurs", icon: Users },
 ];
 
-export const Sidebar = () => {
+interface SidebarProps {
+  onOpenClientDialog?: () => void;
+}
+
+export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const location = useLocation();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -98,7 +103,8 @@ export const Sidebar = () => {
     clients: true,
   });
 
-  const isActive = (href: string) => {
+  const isActive = (href?: string) => {
+    if (!href) return false;
     if (href === "/") {
       return location.pathname === "/";
     }
@@ -107,11 +113,17 @@ export const Sidebar = () => {
 
   const isGroupActive = (submenu?: NavItem["submenu"]) => {
     if (!submenu) return false;
-    return submenu.some(item => isActive(item.href));
+    return submenu.some(item => item.href && isActive(item.href));
   };
 
   const toggleGroup = (key: string) => {
     setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleItemClick = (item: { href?: string; action?: string }) => {
+    if (item.action === "open-client-dialog" && onOpenClientDialog) {
+      onOpenClientDialog();
+    }
   };
 
   const getNavCls = (isActive: boolean) =>
@@ -156,15 +168,23 @@ export const Sidebar = () => {
                         <CollapsibleContent>
                           <SidebarMenuSub>
                             {item.submenu?.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.href}>
+                              <SidebarMenuSubItem key={subItem.href || subItem.action}>
                                 <SidebarMenuSubButton
-                                  asChild
+                                  asChild={!!subItem.href}
                                   className={getNavCls(isActive(subItem.href))}
+                                  onClick={() => !subItem.href && handleItemClick(subItem)}
                                 >
-                                  <NavLink to={subItem.href}>
-                                    <subItem.icon className="h-4 w-4" />
-                                    <span>{subItem.title}</span>
-                                  </NavLink>
+                                  {subItem.href ? (
+                                    <NavLink to={subItem.href}>
+                                      <subItem.icon className="h-4 w-4" />
+                                      <span>{subItem.title}</span>
+                                    </NavLink>
+                                  ) : (
+                                    <div className="flex items-center gap-2 cursor-pointer">
+                                      <subItem.icon className="h-4 w-4" />
+                                      <span>{subItem.title}</span>
+                                    </div>
+                                  )}
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
                             ))}

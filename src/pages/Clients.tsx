@@ -12,14 +12,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { useLayoutContext } from "@/components/layout/Layout";
 
 type Client = Database['public']['Tables']['clients']['Row'];
 type ClientInsert = Database['public']['Tables']['clients']['Insert'];
 
 export default function Clients() {
+  const { isClientDialogOpen, setIsClientDialogOpen } = useLayoutContext();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const { toast } = useToast();
 
@@ -92,7 +93,7 @@ export default function Clients() {
         });
       }
 
-      setIsDialogOpen(false);
+      setIsClientDialogOpen(false);
       resetForm();
       loadClients();
     } catch (error: any) {
@@ -152,7 +153,7 @@ export default function Clients() {
   const openEditDialog = (client: Client) => {
     setEditingClient(client);
     setFormData(client);
-    setIsDialogOpen(true);
+    setIsClientDialogOpen(true);
   };
 
   return (
@@ -171,7 +172,7 @@ export default function Clients() {
             <Download className="w-4 h-4 mr-2" />
             IMPORTER
           </Button>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
+          <Dialog open={isClientDialogOpen} onOpenChange={(open) => { setIsClientDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="w-4 h-4 mr-2" />
@@ -444,7 +445,7 @@ export default function Clients() {
                   <Button 
                     type="button" 
                     variant="ghost" 
-                    onClick={() => { setIsDialogOpen(false); resetForm(); }}
+                    onClick={() => { setIsClientDialogOpen(false); resetForm(); }}
                     className="uppercase text-primary hover:text-primary/80 hover:bg-primary/10"
                   >
                     Annuler
