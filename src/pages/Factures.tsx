@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Download, Plus, Eye, Printer, FileText } from "lucide-react";
+import { Search, Filter, Download, Plus, Eye, Printer, FileText, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -188,6 +188,31 @@ export default function FacturesAssurance() {
 
   const getTotalAmount = (assistance: any) => {
     return (assistance.montant_facture || assistance.montant_total || 0).toFixed(2);
+  };
+
+  const handleDownloadInvoice = (assistanceId: string) => {
+    // TODO: Implémenter le téléchargement PDF
+    console.log('Télécharger facture:', assistanceId);
+  };
+
+  const handleEditInvoice = (assistanceId: string) => {
+    // TODO: Naviguer vers la page d'édition
+    console.log('Modifier facture:', assistanceId);
+  };
+
+  const handleDeleteInvoice = async (assistanceId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) return;
+    
+    try {
+      await supabase
+        .from('assistance')
+        .delete()
+        .eq('id', assistanceId);
+      
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+    }
   };
 
   return (
@@ -503,13 +528,39 @@ export default function FacturesAssurance() {
                         {getStatusBadge(assistance.etat_paiement)}
                       </td>
                       <td className="py-4">
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-1">
                           <Button 
                             variant="ghost" 
                             size="sm"
                             onClick={() => handlePrintInvoice(assistance.id)}
+                            title="Imprimer"
                           >
                             <Printer className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDownloadInvoice(assistance.id)}
+                            title="Télécharger"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEditInvoice(assistance.id)}
+                            title="Modifier"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteInvoice(assistance.id)}
+                            title="Supprimer"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>
