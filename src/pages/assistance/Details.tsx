@@ -33,6 +33,7 @@ export default function AssistanceDetails() {
   const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
   const [showEditDeliveryDialog, setShowEditDeliveryDialog] = useState(false);
   const [showEditReturnDialog, setShowEditReturnDialog] = useState(false);
+  const [showProlongationDialog, setShowProlongationDialog] = useState(false);
   
   const [franchiseData, setFranchiseData] = useState({
     franchise_montant: '',
@@ -93,6 +94,11 @@ export default function AssistanceDetails() {
     kilometrage_retour: '',
     niveau_carburant_retour: '',
     etat_vehicule_retour: '',
+  });
+
+  const [prolongationData, setProlongationData] = useState({
+    nouvelle_date_fin: '',
+    raison: '',
   });
 
   useEffect(() => {
@@ -490,6 +496,68 @@ export default function AssistanceDetails() {
     }
   };
 
+  const handleProlongerContrat = async () => {
+    try {
+      if (!prolongationData.nouvelle_date_fin) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Veuillez sélectionner une nouvelle date de fin",
+        });
+        return;
+      }
+
+      const nouvelleDateFin = new Date(prolongationData.nouvelle_date_fin);
+      const dateActuelle = assistance.date_fin ? new Date(assistance.date_fin) : new Date();
+      
+      if (nouvelleDateFin <= dateActuelle) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "La nouvelle date de fin doit être après la date de fin actuelle",
+        });
+        return;
+      }
+
+      // Recalculer la durée et le montant total
+      const dateDebut = new Date(assistance.date_debut);
+      const newDuration = Math.ceil((nouvelleDateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24));
+      const tarifJournalier = assistance.tarif_journalier || 0;
+      const nouveauMontantTotal = newDuration * tarifJournalier;
+
+      const remarquesUpdate = assistance.remarques 
+        ? `${assistance.remarques}\n\nPROLONGATION le ${format(new Date(), 'dd/MM/yyyy à HH:mm')}: Date de fin prolongée jusqu'au ${format(nouvelleDateFin, 'dd/MM/yyyy')}. Raison: ${prolongationData.raison || 'Non spécifiée'}`
+        : `PROLONGATION le ${format(new Date(), 'dd/MM/yyyy à HH:mm')}: Date de fin prolongée jusqu'au ${format(nouvelleDateFin, 'dd/MM/yyyy')}. Raison: ${prolongationData.raison || 'Non spécifiée'}`;
+
+      const { error } = await supabase
+        .from("assistance")
+        .update({
+          date_fin: format(nouvelleDateFin, 'yyyy-MM-dd'),
+          montant_total: nouveauMontantTotal,
+          montant_facture: nouveauMontantTotal,
+          remarques: remarquesUpdate,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Contrat prolongé",
+        description: `Le contrat a été prolongé jusqu'au ${format(nouvelleDateFin, 'dd/MM/yyyy', { locale: fr })}. Nouveau montant: ${nouveauMontantTotal.toFixed(2)} DH`,
+      });
+
+      setShowProlongationDialog(false);
+      setProlongationData({ nouvelle_date_fin: '', raison: '' });
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
   const handleGenerateContractPDF = async () => {
     try {
       toast({
@@ -836,23 +904,40 @@ export default function AssistanceDetails() {
       )}
 
       {assistance.etat === 'livre' && (
-        <Card className="p-4 bg-green-50 border-green-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="font-medium text-green-900">Assistance en cours</p>
-                <p className="text-sm text-green-700">
-                  En attente du retour du véhicule
-                </p>
+        <div className="space-y-3">
+          <Card className="p-4 bg-green-50 border-green-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-900">Assistance en cours</p>
+                  <p className="text-sm text-green-700">
+                    En attente du retour du véhicule
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setProlongationData({
+                      nouvelle_date_fin: assistance.date_fin || '',
+                      raison: '',
+                    });
+                    setShowProlongationDialog(true);
+                  }}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Prolonger
+                </Button>
+                <Button onClick={() => setShowReturnDialog(true)}>
+                  <Check className="w-4 h-4 mr-2" />
+                  Marquer le retour
+                </Button>
               </div>
             </div>
-            <Button onClick={() => setShowReturnDialog(true)}>
-              <Check className="w-4 h-4 mr-2" />
-              Marquer le retour
-            </Button>
-          </div>
-        </Card>
+          </Card>
+        </div>
       )}
 
       {assistance.etat === 'retour_effectue' && !assistance.etat_paiement && (
@@ -1998,6 +2083,77 @@ export default function AssistanceDetails() {
               </Button>
               <Button onClick={handleUpdateReturn}>
                 Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Prolonger le contrat */}
+      <Dialog open={showProlongationDialog} onOpenChange={setShowProlongationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Prolonger le contrat d'assistance</DialogTitle>
+            <DialogDescription>
+              Demande de prolongation de l'assurance
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Date de fin actuelle:</strong> {assistance.date_fin ? format(new Date(assistance.date_fin), 'dd/MM/yyyy', { locale: fr }) : 'Non définie'}
+              </p>
+              <p className="text-sm text-blue-800 mt-1">
+                <strong>Durée actuelle:</strong> {duration} jour{duration > 1 ? 's' : ''}
+              </p>
+              <p className="text-sm text-blue-800 mt-1">
+                <strong>Montant actuel:</strong> {totalAmount.toFixed(2)} DH
+              </p>
+            </div>
+            
+            <div>
+              <Label>
+                Nouvelle date de fin <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                type="date"
+                value={prolongationData.nouvelle_date_fin}
+                min={assistance.date_fin || format(new Date(), 'yyyy-MM-dd')}
+                onChange={(e) => setProlongationData({ ...prolongationData, nouvelle_date_fin: e.target.value })}
+                required
+              />
+              {prolongationData.nouvelle_date_fin && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Nouvelle durée: {calculateDuration(assistance.date_debut, prolongationData.nouvelle_date_fin)} jours
+                  <br />
+                  Nouveau montant: {(calculateDuration(assistance.date_debut, prolongationData.nouvelle_date_fin) * (assistance.tarif_journalier || 0)).toFixed(2)} DH
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label>Raison de la prolongation</Label>
+              <Textarea
+                value={prolongationData.raison}
+                onChange={(e) => setProlongationData({ ...prolongationData, raison: e.target.value })}
+                placeholder="Ex: Demande de l'assurance, réparation non terminée, etc."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowProlongationDialog(false);
+                  setProlongationData({ nouvelle_date_fin: '', raison: '' });
+                }}
+              >
+                Annuler
+              </Button>
+              <Button onClick={handleProlongerContrat}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Prolonger le contrat
               </Button>
             </div>
           </div>
