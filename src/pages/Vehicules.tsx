@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, Filter, Download, Plus, Edit, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -383,9 +383,22 @@ export default function Vehicules() {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
+                              navigate(`/vehicules/${vehicle.id}`);
+                            }}
+                            className="hover:bg-accent transition-colors"
+                            title="Afficher les détails"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               openEditDialog(vehicle);
                             }}
                             className="hover:bg-accent transition-colors"
+                            title="Modifier"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -397,6 +410,7 @@ export default function Vehicules() {
                               handleDelete(vehicle.id);
                             }}
                             className="hover:bg-accent transition-colors"
+                            title="Supprimer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
