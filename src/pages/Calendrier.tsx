@@ -195,8 +195,6 @@ export default function Calendrier() {
     return bars;
   };
 
-  const contractBars = getContractBars();
-
   const handlePreviousMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth - 1));
   };
@@ -216,6 +214,9 @@ export default function Calendrier() {
   for (let i = 1; i <= daysInMonth; i++) {
     days.push(i);
   }
+
+  // Calculate contract bars after firstDayOfMonth is defined
+  const contractBars = getContractBars();
 
   const selectedDayContracts = selectedDay ? getContractsForDay(selectedDay.getDate()) : [];
 
