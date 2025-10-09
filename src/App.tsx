@@ -22,6 +22,10 @@ import AssistanceDetails from "./pages/assistance/Details";
 import Assurances from "./pages/Assurances";
 import Factures from "./pages/Factures";
 import Calendrier from "./pages/Calendrier";
+import Statistiques from "./pages/Statistiques";
+import Revenus from "./pages/Revenus";
+import Charges from "./pages/Charges";
+import Cheques from "./pages/Cheques";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -191,6 +195,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Factures /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/statistiques"
+              element={
+                <ProtectedRoute>
+                  <Layout><Statistiques /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/revenus"
+              element={
+                <ProtectedRoute>
+                  <Layout><Revenus /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/charges"
+              element={
+                <ProtectedRoute>
+                  <Layout><Charges /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cheques"
+              element={
+                <ProtectedRoute>
+                  <Layout><Cheques /></Layout>
                 </ProtectedRoute>
               }
             />
