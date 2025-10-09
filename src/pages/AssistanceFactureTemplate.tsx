@@ -8,6 +8,7 @@ export default function AssistanceFactureTemplate() {
   const [searchParams] = useSearchParams();
   const assistanceId = searchParams.get("id");
   const assistanceIds = searchParams.get("ids");
+  const shouldPrint = searchParams.get("print") === "true";
   const [assistances, setAssistances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGrouped, setIsGrouped] = useState(false);
@@ -65,10 +66,10 @@ export default function AssistanceFactureTemplate() {
   };
 
   useEffect(() => {
-    if (assistances.length > 0 && !loading) {
+    if (assistances.length > 0 && !loading && shouldPrint) {
       setTimeout(() => window.print(), 500);
     }
-  }, [assistances, loading]);
+  }, [assistances, loading, shouldPrint]);
 
   if (loading) {
     return (

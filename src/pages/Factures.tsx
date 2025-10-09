@@ -122,13 +122,13 @@ export default function FacturesAssurance() {
   };
 
   const handlePrintInvoice = (assistanceId: string) => {
-    window.open(`/assistance-facture-template?id=${assistanceId}`, '_blank');
+    window.open(`/assistance-facture-template?id=${assistanceId}&print=true`, '_blank');
   };
 
   const handleGroupInvoice = () => {
     if (selectedForInvoice.length === 0) return;
     const ids = selectedForInvoice.join(',');
-    window.open(`/assistance-facture-template?ids=${ids}`, '_blank');
+    window.open(`/assistance-facture-template?ids=${ids}&print=true`, '_blank');
     setShowGroupDialog(false);
     setSelectedForInvoice([]);
     setGroupDialogAssurance('all');
