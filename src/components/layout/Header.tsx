@@ -18,32 +18,32 @@ export const Header = () => {
 
   return (
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-10">
-      <div className="flex items-center justify-between px-6 py-3">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between px-3 md:px-6 py-2 md:py-3">
+        <div className="flex items-center space-x-2 md:space-x-4">
           <SidebarTrigger />
           <div className="flex items-center space-x-2">
-            <img src={logoCrsapp} alt="CRSapp" className="h-8" />
+            <img src={logoCrsapp} alt="CRSapp" className="h-6 md:h-8" />
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-            <Bell className="w-5 h-5" />
+        <div className="flex items-center space-x-1 md:space-x-2">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative h-8 w-8 md:h-10 md:w-10">
+            <Bell className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <Avatar className="w-8 h-8">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground h-8 w-8 md:h-10 md:w-10">
+                <Avatar className="w-7 h-7 md:w-8 md:h-8">
                   <AvatarFallback>
-                    {user?.email?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}
+                    {user?.email?.charAt(0).toUpperCase() || <User className="w-3 h-3 md:w-4 md:h-4" />}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="z-50">
+            <DropdownMenuContent align="end" className="z-50 bg-card">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{user?.user_metadata?.nom || 'Utilisateur'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">{user?.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

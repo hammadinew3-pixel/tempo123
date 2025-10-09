@@ -172,27 +172,31 @@ export default function Vehicules() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6 p-3 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Liste des véhicules</h1>
-          <p className="text-sm text-muted-foreground">Gérez votre flotte de véhicules</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Liste des véhicules</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Gérez votre flotte de véhicules</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            FILTRER
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm">
+            <Filter className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">FILTRER</span>
+            <span className="sm:hidden">Filtrer</span>
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            IMPORTER
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm">
+            <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">IMPORTER</span>
+            <span className="sm:hidden">Import</span>
           </Button>
           <Button 
             size="sm"
             onClick={() => navigate('/vehicules/nouveau')}
+            className="w-full sm:w-auto text-xs md:text-sm"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Nouveau véhicule
+            <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Nouveau véhicule</span>
+            <span className="sm:hidden">Nouveau</span>
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto hidden">
@@ -334,116 +338,192 @@ export default function Vehicules() {
       </div>
 
       <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader className="space-y-4">
-          <div className="flex items-center gap-6 text-sm font-medium">
-            <button className="text-primary border-b-2 border-primary pb-2 transition-colors">
+        <CardHeader className="space-y-4 p-4 md:p-6">
+          <div className="flex items-center gap-3 md:gap-6 text-xs md:text-sm font-medium overflow-x-auto">
+            <button className="text-primary border-b-2 border-primary pb-2 transition-colors whitespace-nowrap">
               TOUS ({vehicles.length})
             </button>
-            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors">
+            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
               HORS SERVICE (0)
             </button>
-            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors">
+            <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
               SOUS LOCATION (0)
             </button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-6">
           {loading ? (
-            <p className="text-center text-muted-foreground py-8">Chargement...</p>
+            <p className="text-center text-muted-foreground py-8 text-sm">Chargement...</p>
           ) : vehicles.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
+            <p className="text-center text-muted-foreground py-8 px-4 text-sm">
               Aucun véhicule. Cliquez sur "Nouveau véhicule" pour commencer.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="pb-3 pl-4 font-medium">Actions</th>
-                    <th className="pb-3 font-medium">Marque/Modèle - Catégorie</th>
-                    <th className="pb-3 font-medium">Matricule</th>
-                    <th className="pb-3 font-medium">État</th>
-                    <th className="pb-3 font-medium">kilométrage</th>
-                    <th className="pb-3 font-medium">Prix location</th>
-                    <th className="pb-3 font-medium">Carburant</th>
-                    <th className="pb-3 font-medium">Créé le</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vehicles.map((vehicle) => (
-                    <tr 
-                      key={vehicle.id} 
-                      className="border-b last:border-0 cursor-pointer group"
-                      onClick={() => navigate(`/vehicules/${vehicle.id}`)}
-                    >
-                      <td className="py-4 pl-4">
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/vehicules/${vehicle.id}`);
-                            }}
-                            className="hover:bg-accent transition-colors"
-                            title="Afficher les détails"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditDialog(vehicle);
-                            }}
-                            className="hover:bg-accent transition-colors"
-                            title="Modifier"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(vehicle.id);
-                            }}
-                            className="hover:bg-accent transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <>
+              {/* Vue mobile - Cards */}
+              <div className="block lg:hidden space-y-3 p-3">
+                {vehicles.map((vehicle) => (
+                  <Card 
+                    key={vehicle.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/vehicules/${vehicle.id}`)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                             <span className="text-xs font-medium text-primary">{vehicle.marque.charAt(0)}</span>
                           </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground">Cat. Mixte</div>
-                            <div className="font-medium text-foreground">{vehicle.marque} {vehicle.modele}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-foreground truncate">{vehicle.marque} {vehicle.modele}</div>
+                            <div className="text-xs text-muted-foreground">{vehicle.immatriculation}</div>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation}</td>
-                      <td className="py-4">{getStatusBadge(vehicle.statut)}</td>
-                      <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()} km</td>
-                      <td className="py-4 font-medium text-foreground">{vehicle.tarif_journalier.toFixed(2)} MAD</td>
-                      <td className="py-4 text-muted-foreground">Diesel</td>
-                      <td className="py-4 text-muted-foreground text-xs">
-                        {new Date(vehicle.created_at).toLocaleDateString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
-                      </td>
+                        {getStatusBadge(vehicle.statut)}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <div>
+                          <span className="text-muted-foreground">Kilométrage:</span>
+                          <div className="font-medium">{vehicle.kilometrage.toLocaleString()} km</div>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Prix/jour:</span>
+                          <div className="font-medium">{vehicle.tarif_journalier.toFixed(2)} MAD</div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-3 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/vehicules/${vehicle.id}`);
+                          }}
+                          className="flex-1 text-xs"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Voir
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/vehicules/${vehicle.id}/modifier`);
+                          }}
+                          className="flex-1 text-xs"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(vehicle.id);
+                          }}
+                          className="text-xs"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Vue desktop - Tableau */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-muted-foreground border-b">
+                      <th className="pb-3 pl-4 font-medium">Actions</th>
+                      <th className="pb-3 font-medium">Marque/Modèle</th>
+                      <th className="pb-3 font-medium">Matricule</th>
+                      <th className="pb-3 font-medium">État</th>
+                      <th className="pb-3 font-medium">Kilométrage</th>
+                      <th className="pb-3 font-medium">Prix location</th>
+                      <th className="pb-3 font-medium">Créé le</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {vehicles.map((vehicle) => (
+                      <tr 
+                        key={vehicle.id} 
+                        className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => navigate(`/vehicules/${vehicle.id}`)}
+                      >
+                        <td className="py-4 pl-4">
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/vehicules/${vehicle.id}`);
+                              }}
+                              className="hover:bg-accent transition-colors"
+                              title="Afficher les détails"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/vehicules/${vehicle.id}/modifier`);
+                              }}
+                              className="hover:bg-accent transition-colors"
+                              title="Modifier"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(vehicle.id);
+                              }}
+                              className="hover:bg-accent transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-xs font-medium text-primary">{vehicle.marque.charAt(0)}</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-foreground">{vehicle.marque} {vehicle.modele}</div>
+                              <div className="text-xs text-muted-foreground">Cat. {vehicle.categorie || 'Mixte'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation}</td>
+                        <td className="py-4">{getStatusBadge(vehicle.statut)}</td>
+                        <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()} km</td>
+                        <td className="py-4 font-medium text-foreground">{vehicle.tarif_journalier.toFixed(2)} MAD</td>
+                        <td className="py-4 text-muted-foreground text-xs">
+                          {new Date(vehicle.created_at).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

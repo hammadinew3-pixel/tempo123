@@ -201,32 +201,32 @@ export default function ModifierVehicule() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 md:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground mb-2">
           Modifier le véhicule {formData.immatriculation}
         </h1>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/" className="hover:text-foreground">Tableau de bord</Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link to="/vehicules" className="hover:text-foreground">Véhicules</Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link to={`/vehicules/${id}`} className="hover:text-foreground">
+        <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground overflow-x-auto">
+          <Link to="/" className="hover:text-foreground whitespace-nowrap">Tableau de bord</Link>
+          <ChevronRight className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+          <Link to="/vehicules" className="hover:text-foreground whitespace-nowrap">Véhicules</Link>
+          <ChevronRight className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+          <Link to={`/vehicules/${id}`} className="hover:text-foreground whitespace-nowrap">
             Véhicule Mat. {formData.immatriculation}
           </Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-foreground">Modifier</span>
+          <ChevronRight className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+          <span className="text-foreground whitespace-nowrap">Modifier</span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <Card className="p-6">
+        <Card className="p-4 md:p-6">
           {/* Switches */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="flex items-center justify-between">
+          <div className="grid grid-cols-1 gap-4 md:gap-6 mb-4 md:mb-6">
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
               <div>
-                <Label className="text-base font-semibold">Voiture en service</Label>
+                <Label className="text-sm md:text-base font-semibold">Voiture en service</Label>
               </div>
               <Switch
                 checked={isInService}
@@ -234,10 +234,10 @@ export default function ModifierVehicule() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base font-semibold">Voiture sous location</Label>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div className="flex-1 mr-3">
+                <Label className="text-sm md:text-base font-semibold">Voiture sous location</Label>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">
                   Indiquez si la voiture appartient à une autre agence et que vous utilisez en sous-location
                 </p>
               </div>
@@ -417,16 +417,16 @@ export default function ModifierVehicule() {
           </div>
 
           {/* Show all fields toggle */}
-          <div className="mb-6">
+          <div className="mb-4 md:mb-6">
             <button
               type="button"
               onClick={() => setShowAllFields(!showAllFields)}
-              className="flex items-center gap-2 text-primary hover:underline font-medium"
+              className="flex items-center gap-2 text-primary hover:underline font-medium text-sm md:text-base"
             >
               AFFICHER TOUS LES CHAMPS
               {showAllFields ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               Pièces jointes, Concessionaire, Couleur, Puissance fiscale, Options, ...
             </p>
           </div>
@@ -505,6 +505,7 @@ export default function ModifierVehicule() {
               type="submit" 
               size="lg"
               disabled={saving}
+              className="w-full md:w-auto"
             >
               {saving ? "ENREGISTREMENT..." : "ENREGISTRER LES MODIFICATIONS"}
             </Button>
