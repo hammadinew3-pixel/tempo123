@@ -20,6 +20,7 @@ export default function AssistanceDetails() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [assistance, setAssistance] = useState<any>(null);
+  const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
@@ -28,6 +29,10 @@ export default function AssistanceDetails() {
   const [showFranchiseStatusDialog, setShowFranchiseStatusDialog] = useState(false);
   const [showClotureLocationDialog, setShowClotureLocationDialog] = useState(false);
   const [showPaiementDialog, setShowPaiementDialog] = useState(false);
+  const [showEditClientDialog, setShowEditClientDialog] = useState(false);
+  const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
+  const [showEditDeliveryDialog, setShowEditDeliveryDialog] = useState(false);
+  const [showEditReturnDialog, setShowEditReturnDialog] = useState(false);
   
   const [franchiseData, setFranchiseData] = useState({
     franchise_montant: '',
@@ -58,6 +63,23 @@ export default function AssistanceDetails() {
     tarif_journalier: '',
     franchise_montant: '',
     remarques: '',
+    type: '',
+    assureur_nom: '',
+    assureur_id: '',
+  });
+  
+  const [clientEditData, setClientEditData] = useState({
+    nom: '',
+    prenom: '',
+    telephone: '',
+    email: '',
+    cin: '',
+    permis_conduire: '',
+    adresse: '',
+  });
+  
+  const [vehicleEditData, setVehicleEditData] = useState({
+    vehicle_id: '',
   });
 
   const [deliveryData, setDeliveryData] = useState({
@@ -85,10 +107,23 @@ export default function AssistanceDetails() {
         tarif_journalier: assistance.tarif_journalier?.toString() || '',
         franchise_montant: assistance.franchise_montant?.toString() || '',
         remarques: assistance.remarques || '',
+        type: assistance.type || '',
+        assureur_nom: assistance.assureur_nom || '',
+        assureur_id: assistance.assureur_id || '',
       });
       
-      setFranchiseData({
-        franchise_montant: assistance.franchise_montant?.toString() || '0',
+      setClientEditData({
+        nom: assistance.clients?.nom || '',
+        prenom: assistance.clients?.prenom || '',
+        telephone: assistance.clients?.telephone || '',
+        email: assistance.clients?.email || '',
+        cin: assistance.clients?.cin || '',
+        permis_conduire: assistance.clients?.permis_conduire || '',
+        adresse: assistance.clients?.adresse || '',
+      });
+      
+      setVehicleEditData({
+        vehicle_id: assistance.vehicle_id || '',
       });
       
       setFranchiseStatusData({
@@ -429,6 +464,166 @@ export default function AssistanceDetails() {
     }
   };
 
+  const handleGeneratePDF = async () => {
+    try {
+      toast({
+        title: "Génération en cours",
+        description: "Veuillez patienter...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-assistance-pdf', {
+        body: { assistanceId: id }
+      });
+
+      if (error) throw error;
+
+      if (data?.pdf) {
+        // Convert base64 to blob and download
+        const byteCharacters = atob(data.pdf);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        
+        window.open(url, '_blank');
+        
+        toast({
+          title: 'PDF généré',
+          description: 'Le dossier a été ouvert dans un nouvel onglet',
+        });
+      }
+    } catch (error: any) {
+      console.error('Erreur génération PDF:', error);
+      toast({
+        title: 'Erreur de génération',
+        description: error.message || 'Impossible de générer le PDF',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateClient = async () => {
+    try {
+      const { error } = await supabase
+        .from("clients")
+        .update({
+          nom: clientEditData.nom,
+          prenom: clientEditData.prenom || null,
+          telephone: clientEditData.telephone,
+          email: clientEditData.email || null,
+          cin: clientEditData.cin || null,
+          permis_conduire: clientEditData.permis_conduire || null,
+          adresse: clientEditData.adresse || null,
+        })
+        .eq("id", assistance.client_id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Informations client mises à jour",
+      });
+
+      setShowEditClientDialog(false);
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleUpdateVehicle = async () => {
+    try {
+      const { error } = await supabase
+        .from("assistance")
+        .update({
+          vehicle_id: vehicleEditData.vehicle_id,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Véhicule de remplacement modifié",
+      });
+
+      setShowEditVehicleDialog(false);
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleUpdateDelivery = async () => {
+    try {
+      const { error } = await supabase
+        .from("assistance")
+        .update({
+          kilometrage_depart: parseInt(deliveryData.kilometrage_depart) || null,
+          niveau_carburant_depart: deliveryData.niveau_carburant_depart || null,
+          etat_vehicule_depart: deliveryData.etat_vehicule_depart || null,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Informations de livraison mises à jour",
+      });
+
+      setShowEditDeliveryDialog(false);
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleUpdateReturn = async () => {
+    try {
+      const { error } = await supabase
+        .from("assistance")
+        .update({
+          date_retour_effective: returnData.date_retour_effective || null,
+          kilometrage_retour: parseInt(returnData.kilometrage_retour) || null,
+          niveau_carburant_retour: returnData.niveau_carburant_retour || null,
+          etat_vehicule_retour: returnData.etat_vehicule_retour || null,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Informations de retour mises à jour",
+      });
+
+      setShowEditReturnDialog(false);
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
@@ -515,9 +710,9 @@ export default function AssistanceDetails() {
         </div>
         <div className="flex gap-2">
           {getStatusBadge(assistance.etat)}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleGeneratePDF}>
             <FileText className="w-4 h-4 mr-2" />
-            Générer facture
+            Générer PDF
           </Button>
         </div>
       </div>
@@ -859,7 +1054,19 @@ export default function AssistanceDetails() {
                   <User className="w-4 h-4 text-primary" />
                   <span>Info client</span>
                 </div>
-                {openSections.client ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEditClientDialog(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  {openSections.client ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
               </CardContent>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -906,7 +1113,19 @@ export default function AssistanceDetails() {
                   <Car className="w-4 h-4 text-primary" />
                   <span>Véhicule de remplacement</span>
                 </div>
-                {openSections.vehicule ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEditVehicleDialog(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  {openSections.vehicule ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
               </CardContent>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -941,7 +1160,21 @@ export default function AssistanceDetails() {
                   <MapPin className="w-4 h-4 text-primary" />
                   <span>Livraison</span>
                 </div>
-                {openSections.livraison ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="flex items-center gap-2">
+                  {assistance.kilometrage_depart && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowEditDeliveryDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {openSections.livraison ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
               </CardContent>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -993,7 +1226,21 @@ export default function AssistanceDetails() {
                   <MapPin className="w-4 h-4 text-primary" />
                   <span>Retour</span>
                 </div>
-                {openSections.retour ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="flex items-center gap-2">
+                  {assistance.date_retour_effective && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowEditReturnDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {openSections.retour ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
               </CardContent>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -1175,9 +1422,9 @@ export default function AssistanceDetails() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
+      {/* Edit Dialog - Modifier le dossier */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Modifier le dossier</DialogTitle>
             <DialogDescription>
@@ -1185,39 +1432,65 @@ export default function AssistanceDetails() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Date début</Label>
-              <Input
-                type="date"
-                value={editData.date_debut}
-                onChange={(e) => setEditData({ ...editData, date_debut: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Date fin prévue</Label>
-              <Input
-                type="date"
-                value={editData.date_fin}
-                onChange={(e) => setEditData({ ...editData, date_fin: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Tarif journalier (DH)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={editData.tarif_journalier}
-                onChange={(e) => setEditData({ ...editData, tarif_journalier: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Franchise (DH)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={editData.franchise_montant}
-                onChange={(e) => setEditData({ ...editData, franchise_montant: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Type d'assistance *</Label>
+                <Select
+                  value={editData.type}
+                  onValueChange={(v) => setEditData({ ...editData, type: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="remplacement">Véhicule de remplacement</SelectItem>
+                    <SelectItem value="panne">Panne</SelectItem>
+                    <SelectItem value="accident">Accident</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Assurance *</Label>
+                <Input
+                  value={editData.assureur_nom}
+                  onChange={(e) => setEditData({ ...editData, assureur_nom: e.target.value })}
+                  placeholder="Nom de l'assurance"
+                />
+              </div>
+              <div>
+                <Label>Date début *</Label>
+                <Input
+                  type="date"
+                  value={editData.date_debut}
+                  onChange={(e) => setEditData({ ...editData, date_debut: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Date fin prévue</Label>
+                <Input
+                  type="date"
+                  value={editData.date_fin}
+                  onChange={(e) => setEditData({ ...editData, date_fin: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Tarif journalier (DH)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editData.tarif_journalier}
+                  onChange={(e) => setEditData({ ...editData, tarif_journalier: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Franchise (DH)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editData.franchise_montant}
+                  onChange={(e) => setEditData({ ...editData, franchise_montant: e.target.value })}
+                />
+              </div>
             </div>
             <div>
               <Label>Remarques</Label>
@@ -1225,6 +1498,7 @@ export default function AssistanceDetails() {
                 value={editData.remarques}
                 onChange={(e) => setEditData({ ...editData, remarques: e.target.value })}
                 placeholder="Remarques diverses..."
+                rows={4}
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -1387,6 +1661,245 @@ export default function AssistanceDetails() {
                 Annuler
               </Button>
               <Button onClick={handleEnregistrerPaiement}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Modifier client */}
+      <Dialog open={showEditClientDialog} onOpenChange={setShowEditClientDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier les informations client</DialogTitle>
+            <DialogDescription>
+              Modifier les données du client
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Nom *</Label>
+                <Input
+                  value={clientEditData.nom}
+                  onChange={(e) => setClientEditData({ ...clientEditData, nom: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Prénom</Label>
+                <Input
+                  value={clientEditData.prenom}
+                  onChange={(e) => setClientEditData({ ...clientEditData, prenom: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Téléphone *</Label>
+                <Input
+                  value={clientEditData.telephone}
+                  onChange={(e) => setClientEditData({ ...clientEditData, telephone: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={clientEditData.email}
+                  onChange={(e) => setClientEditData({ ...clientEditData, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>CIN</Label>
+                <Input
+                  value={clientEditData.cin}
+                  onChange={(e) => setClientEditData({ ...clientEditData, cin: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Permis de conduire</Label>
+                <Input
+                  value={clientEditData.permis_conduire}
+                  onChange={(e) => setClientEditData({ ...clientEditData, permis_conduire: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Adresse</Label>
+              <Textarea
+                value={clientEditData.adresse}
+                onChange={(e) => setClientEditData({ ...clientEditData, adresse: e.target.value })}
+                rows={2}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditClientDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateClient}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Modifier véhicule */}
+      <Dialog open={showEditVehicleDialog} onOpenChange={setShowEditVehicleDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le véhicule de remplacement</DialogTitle>
+            <DialogDescription>
+              Changer le véhicule affecté à ce dossier
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Véhicule de remplacement *</Label>
+              <Select
+                value={vehicleEditData.vehicle_id}
+                onValueChange={(v) => setVehicleEditData({ ...vehicleEditData, vehicle_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un véhicule" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableVehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditVehicleDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateVehicle}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Modifier livraison */}
+      <Dialog open={showEditDeliveryDialog} onOpenChange={setShowEditDeliveryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier les informations de livraison</DialogTitle>
+            <DialogDescription>
+              Corriger les données de livraison
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Kilométrage départ</Label>
+              <Input
+                type="number"
+                value={deliveryData.kilometrage_depart}
+                onChange={(e) => setDeliveryData({ ...deliveryData, kilometrage_depart: e.target.value })}
+                placeholder="Ex: 25000"
+              />
+            </div>
+            <div>
+              <Label>Niveau carburant départ</Label>
+              <Select
+                value={deliveryData.niveau_carburant_depart}
+                onValueChange={(value) => setDeliveryData({ ...deliveryData, niveau_carburant_depart: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vide">Vide</SelectItem>
+                  <SelectItem value="1/4">1/4</SelectItem>
+                  <SelectItem value="1/2">1/2</SelectItem>
+                  <SelectItem value="3/4">3/4</SelectItem>
+                  <SelectItem value="plein">Plein</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>État du véhicule</Label>
+              <Textarea
+                value={deliveryData.etat_vehicule_depart}
+                onChange={(e) => setDeliveryData({ ...deliveryData, etat_vehicule_depart: e.target.value })}
+                placeholder="Décrire l'état du véhicule..."
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditDeliveryDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateDelivery}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog - Modifier retour */}
+      <Dialog open={showEditReturnDialog} onOpenChange={setShowEditReturnDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier les informations de retour</DialogTitle>
+            <DialogDescription>
+              Corriger les données de retour
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Date retour effective</Label>
+              <Input
+                type="date"
+                value={returnData.date_retour_effective}
+                onChange={(e) => setReturnData({ ...returnData, date_retour_effective: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Kilométrage retour</Label>
+              <Input
+                type="number"
+                value={returnData.kilometrage_retour}
+                onChange={(e) => setReturnData({ ...returnData, kilometrage_retour: e.target.value })}
+                placeholder="Ex: 25500"
+              />
+            </div>
+            <div>
+              <Label>Niveau carburant retour</Label>
+              <Select
+                value={returnData.niveau_carburant_retour}
+                onValueChange={(value) => setReturnData({ ...returnData, niveau_carburant_retour: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="vide">Vide</SelectItem>
+                  <SelectItem value="1/4">1/4</SelectItem>
+                  <SelectItem value="1/2">1/2</SelectItem>
+                  <SelectItem value="3/4">3/4</SelectItem>
+                  <SelectItem value="plein">Plein</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>État du véhicule</Label>
+              <Textarea
+                value={returnData.etat_vehicule_retour}
+                onChange={(e) => setReturnData({ ...returnData, etat_vehicule_retour: e.target.value })}
+                placeholder="Décrire l'état du véhicule au retour..."
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditReturnDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateReturn}>
                 Enregistrer
               </Button>
             </div>
