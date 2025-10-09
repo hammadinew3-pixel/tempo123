@@ -26,6 +26,9 @@ export default function Dashboard() {
     maintenanceVehicles: 0,
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
+  const [departures, setDepartures] = useState<any[]>([]);
+  const [returns, setReturns] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'departures' | 'returns'>('departures');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,6 +72,29 @@ export default function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(4);
 
+      // Load today's departures
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayDepartures } = await supabase
+        .from('contracts')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_debut', today)
+        .order('start_time', { ascending: true });
+
+      // Load today's returns
+      const { data: todayReturns } = await supabase
+        .from('contracts')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_fin', today)
+        .order('end_time', { ascending: true });
+
       setStats({
         vehiclesCount: vehiclesCount || 0,
         reservationsCount: reservationsCount || 0,
@@ -79,6 +105,8 @@ export default function Dashboard() {
       });
 
       setRecentReservations(reservations || []);
+      setDepartures(todayDepartures || []);
+      setReturns(todayReturns || []);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -289,11 +317,17 @@ export default function Dashboard() {
             </div>
             <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
             <div className="flex space-x-8 mt-4">
-              <button className="text-primary border-b-2 border-primary pb-2">
-                <span className="text-sm font-medium">00 Départs</span>
+              <button 
+                onClick={() => setActiveTab('departures')}
+                className={`pb-2 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <span className="text-sm font-medium">{departures.length.toString().padStart(2, '0')} Départs</span>
               </button>
-              <button className="text-muted-foreground pb-2 hover:text-foreground">
-                <span className="text-sm font-medium">00 Récupérations</span>
+              <button 
+                onClick={() => setActiveTab('returns')}
+                className={`pb-2 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <span className="text-sm font-medium">{returns.length.toString().padStart(2, '0')} Récupérations</span>
               </button>
             </div>
           </CardHeader>
@@ -305,21 +339,42 @@ export default function Dashboard() {
                     <th className="pb-3 font-medium">Rés. N°</th>
                     <th className="pb-3 font-medium">Véhicule</th>
                     <th className="pb-3 font-medium">Locataire</th>
-                    <th className="pb-3 font-medium">Heure de dé...</th>
-                    <th className="pb-3 font-medium">Date retour</th>
+                    <th className="pb-3 font-medium">Heure</th>
+                    <th className="pb-3 font-medium">{activeTab === 'departures' ? 'Date retour' : 'Date départ'}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={5} className="text-center py-12">
-                      <div className="flex flex-col items-center">
-                        <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
-                          <Calendar className="w-8 h-8 text-muted-foreground" />
+                  {(activeTab === 'departures' ? departures : returns).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-12">
+                        <div className="flex flex-col items-center">
+                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
+                            <Calendar className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <p className="text-muted-foreground">Aucun résultat</p>
                         </div>
-                        <p className="text-muted-foreground">Aucun résultat</p>
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
+                  ) : (
+                    (activeTab === 'departures' ? departures : returns).map((contract) => (
+                      <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
+                        <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
+                        <td className="py-4 text-foreground">
+                          {contract.vehicles?.marque} {contract.vehicles?.modele}
+                          <div className="text-xs text-muted-foreground">{contract.vehicles?.immatriculation}</div>
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {contract.clients?.nom} {contract.clients?.prenom}
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {activeTab === 'departures' ? contract.start_time || '--:--' : contract.end_time || '--:--'}
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {new Date(activeTab === 'departures' ? contract.date_fin : contract.date_debut).toLocaleDateString('fr-FR')}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
