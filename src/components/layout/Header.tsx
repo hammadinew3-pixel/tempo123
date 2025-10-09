@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import logoCrsapp from "@/assets/logo-crsapp.png";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
@@ -21,10 +22,7 @@ export const Header = () => {
         <div className="flex items-center space-x-4">
           <SidebarTrigger />
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-              <span className="text-primary-foreground text-sm font-bold">&lt;/&gt;</span>
-            </div>
-            <span className="text-xl font-semibold text-foreground">Locapp</span>
+            <img src={logoCrsapp} alt="CRSapp" className="h-8" />
           </div>
         </div>
         <div className="flex items-center space-x-2">
