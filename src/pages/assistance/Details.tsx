@@ -56,6 +56,7 @@ export default function AssistanceDetails() {
     vehicule: true,
     livraison: true,
     retour: true,
+    prolongations: true,
   });
 
   const [editData, setEditData] = useState({
@@ -1233,6 +1234,58 @@ export default function AssistanceDetails() {
             </CollapsibleContent>
           </Collapsible>
         </Card>
+
+        {/* Historique des prolongations */}
+        {assistance.prolongations && assistance.prolongations.length > 0 && (
+          <Card>
+            <Collapsible open={openSections.prolongations} onOpenChange={() => toggleSection("prolongations")}>
+              <CollapsibleTrigger className="w-full">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-sm font-medium">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span>Historique des prolongations</span>
+                    <Badge variant="outline" className="ml-2">
+                      {assistance.prolongations.length}
+                    </Badge>
+                  </div>
+                  {openSections.prolongations ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </CardContent>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="px-4 pb-4 space-y-4">
+                  {assistance.prolongations.map((prolongation: any, index: number) => (
+                    <div key={index} className="p-3 bg-muted/50 rounded-lg space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Prolongation #{index + 1}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(prolongation.date), "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Ancienne date de fin</span>
+                        <span className="font-medium">
+                          {format(new Date(prolongation.ancienne_date_fin), "dd/MM/yyyy", { locale: fr })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Nouvelle date de fin</span>
+                        <span className="font-medium text-primary">
+                          {format(new Date(prolongation.nouvelle_date_fin), "dd/MM/yyyy", { locale: fr })}
+                        </span>
+                      </div>
+                      {prolongation.raison && (
+                        <div className="pt-2 border-t border-border">
+                          <span className="text-muted-foreground block mb-1">Raison</span>
+                          <p className="text-foreground">{prolongation.raison}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
 
         {/* Info client */}
         <Card>
