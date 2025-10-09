@@ -14,7 +14,7 @@ export default function AssistanceDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [assistance, setAssistance] = useState<Assistance | null>(null);
+  const [assistance, setAssistance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +27,12 @@ export default function AssistanceDetails() {
     try {
       const { data, error } = await supabase
         .from('assistance')
-        .select('*')
+        .select(`
+          *,
+          clients (id, nom, prenom, telephone, email, cin, permis_conduire),
+          vehicles (id, marque, modele, immatriculation, categorie),
+          assurances (id, nom, contact_nom, contact_telephone, contact_email)
+        `)
         .eq('id', id!)
         .single();
 
@@ -179,7 +184,22 @@ export default function AssistanceDetails() {
                   </p>
                 </div>
               )}
+              {assistance.franchise_montant && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Franchise</p>
+                  <p className="font-semibold text-foreground">
+                    {Number(assistance.franchise_montant).toFixed(2)} MAD
+                  </p>
+                </div>
+              )}
             </div>
+
+            {assistance.remarques && (
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-2">Remarques</p>
+                <p className="text-foreground">{assistance.remarques}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -210,6 +230,125 @@ export default function AssistanceDetails() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Informations Client */}
+      {assistance.clients && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations client</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Nom complet</p>
+                <p className="font-semibold text-foreground">
+                  {assistance.clients.nom} {assistance.clients.prenom}
+                </p>
+              </div>
+              {assistance.clients.telephone && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Téléphone</p>
+                  <p className="font-semibold text-foreground">{assistance.clients.telephone}</p>
+                </div>
+              )}
+              {assistance.clients.email && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-semibold text-foreground">{assistance.clients.email}</p>
+                </div>
+              )}
+              {assistance.clients.cin && (
+                <div>
+                  <p className="text-sm text-muted-foreground">CIN</p>
+                  <p className="font-semibold text-foreground">{assistance.clients.cin}</p>
+                </div>
+              )}
+              {assistance.clients.permis_conduire && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Permis</p>
+                  <p className="font-semibold text-foreground">{assistance.clients.permis_conduire}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Informations Véhicule */}
+      {assistance.vehicles && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Véhicule de remplacement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Véhicule</p>
+                <p className="font-semibold text-foreground">
+                  {assistance.vehicles.marque} {assistance.vehicles.modele}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Immatriculation</p>
+                <p className="font-semibold text-foreground">{assistance.vehicles.immatriculation}</p>
+              </div>
+              {assistance.vehicles.categorie && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Catégorie</p>
+                  <p className="font-semibold text-foreground">
+                    Catégorie {assistance.vehicles.categorie.toUpperCase()}
+                  </p>
+                </div>
+              )}
+              {assistance.kilometrage_depart && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Km départ</p>
+                  <p className="font-semibold text-foreground">
+                    {assistance.kilometrage_depart.toLocaleString()} km
+                  </p>
+                </div>
+              )}
+              {assistance.kilometrage_retour && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Km retour</p>
+                  <p className="font-semibold text-foreground">
+                    {assistance.kilometrage_retour.toLocaleString()} km
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {(assistance.etat_vehicule_depart || assistance.niveau_carburant_depart) && (
+              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
+                {assistance.etat_vehicule_depart && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">État au départ</p>
+                    <p className="text-foreground">{assistance.etat_vehicule_depart}</p>
+                  </div>
+                )}
+                {assistance.niveau_carburant_depart && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Carburant départ</p>
+                    <p className="text-foreground">{assistance.niveau_carburant_depart}</p>
+                  </div>
+                )}
+                {assistance.etat_vehicule_retour && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">État au retour</p>
+                    <p className="text-foreground">{assistance.etat_vehicule_retour}</p>
+                  </div>
+                )}
+                {assistance.niveau_carburant_retour && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Carburant retour</p>
+                    <p className="text-foreground">{assistance.niveau_carburant_retour}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
