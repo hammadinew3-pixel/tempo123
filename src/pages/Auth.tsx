@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Auth() {
   const { signIn, signUp } = useAuth();
@@ -13,13 +13,13 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   // Sign In State
-  const [signInEmail, setSignInEmail] = useState('');
-  const [signInPassword, setSignInPassword] = useState('');
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
 
   // Sign Up State
-  const [signUpEmail, setSignUpEmail] = useState('');
-  const [signUpPassword, setSignUpPassword] = useState('');
-  const [nom, setNom] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpPassword, setSignUpPassword] = useState("");
+  const [nom, setNom] = useState("");
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,14 +29,14 @@ export default function Auth() {
 
     if (error) {
       toast({
-        title: 'Erreur de connexion',
+        title: "Erreur de connexion",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } else {
       toast({
-        title: 'Connexion réussie',
-        description: 'Bienvenue!',
+        title: "Connexion réussie",
+        description: "Bienvenue!",
       });
     }
 
@@ -51,14 +51,14 @@ export default function Auth() {
 
     if (error) {
       toast({
-        title: 'Erreur d\'inscription',
+        title: "Erreur d'inscription",
         description: error.message,
-        variant: 'destructive',
+        variant: "destructive",
       });
     } else {
       toast({
-        title: 'Inscription réussie',
-        description: 'Votre compte a été créé!',
+        title: "Inscription réussie",
+        description: "Votre compte a été créé!",
       });
     }
 
@@ -69,10 +69,8 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Locapp</CardTitle>
-          <CardDescription className="text-center">
-            Gestion de location de véhicules
-          </CardDescription>
+          <CardTitle className="text-2xl text-center">Crsapp</CardTitle>
+          <CardDescription className="text-center">Gestion de location de véhicules</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -104,7 +102,7 @@ export default function Auth() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Connexion...' : 'Se connecter'}
+                  {loading ? "Connexion..." : "Se connecter"}
                 </Button>
               </form>
             </TabsContent>
@@ -143,7 +141,7 @@ export default function Auth() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Inscription...' : 'S\'inscrire'}
+                  {loading ? "Inscription..." : "S'inscrire"}
                 </Button>
               </form>
             </TabsContent>
