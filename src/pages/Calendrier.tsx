@@ -324,7 +324,7 @@ export default function Calendrier() {
                 </div>
 
                 {/* Contract bars overlay */}
-                <div className="absolute top-[44px] left-0 right-0 pointer-events-none">
+                <div className="absolute top-[60px] left-0 right-0 pointer-events-none">
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {contractBars.map((bar, idx) => {
                       const rowOffset = bar.row * 30; // 30px per row for spacing
