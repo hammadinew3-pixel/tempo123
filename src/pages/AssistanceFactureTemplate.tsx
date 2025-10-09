@@ -176,9 +176,6 @@ export default function AssistanceFactureTemplate() {
         <div className="mb-6 bg-gray-50 p-4 rounded">
           <p className="text-sm"><span className="font-semibold">Dossier N° :</span> {firstAssistance.num_dossier}</p>
           <p className="text-sm">
-            <span className="font-semibold">Véhicule :</span> {firstAssistance.vehicles?.marque} {firstAssistance.vehicles?.modele} - {firstAssistance.vehicles?.immatriculation}
-          </p>
-          <p className="text-sm">
             <span className="font-semibold">Période :</span> Du {format(new Date(firstAssistance.date_debut), 'dd/MM/yyyy', { locale: fr })} au {format(new Date(firstAssistance.date_fin || new Date()), 'dd/MM/yyyy', { locale: fr })}
           </p>
         </div>
@@ -208,9 +205,8 @@ export default function AssistanceFactureTemplate() {
               <tr key={index} className="border-b border-gray-200">
                 <td className="py-4 px-2">
                   <p className="font-semibold">
-                    {isGrouped ? `Dossier ${assistance.num_dossier} - ` : ''}Location véhicule de remplacement
+                    {isGrouped ? `Dossier ${assistance.num_dossier}` : `Dossier ${assistance.num_dossier}`}
                   </p>
-                  <p className="text-sm text-gray-600">{vehicleName} - {assistance.vehicles?.immatriculation}</p>
                   <p className="text-sm text-gray-600">
                     Période : {format(startDate, 'dd/MM/yyyy', { locale: fr })} au {format(endDate, 'dd/MM/yyyy', { locale: fr })}
                   </p>
