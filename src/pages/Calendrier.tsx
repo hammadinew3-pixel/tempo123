@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, isSameDay, isWithinInterval, parseISO } from "date-fns";
+import { format, isSameDay, isWithinInterval, parseISO, differenceInDays, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const daysOfWeek = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -141,6 +141,62 @@ export default function Calendrier() {
     });
   };
 
+  // Calculate contract bars for continuous display
+  const getContractBars = () => {
+    const bars: Array<{
+      contract: Contract;
+      startCol: number;
+      width: number;
+      row: number;
+    }> = [];
+
+    const monthStart = new Date(currentYear, currentMonth, 1);
+    const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+
+    contracts.forEach((contract) => {
+      const contractStart = parseISO(contract.date_debut);
+      const contractEnd = parseISO(contract.date_fin);
+
+      // Skip if contract doesn't overlap with current month
+      if (contractEnd < monthStart || contractStart > monthEnd) return;
+
+      // Calculate start position (which day of month, accounting for firstDayOfMonth offset)
+      const displayStart = contractStart < monthStart ? monthStart : contractStart;
+      const displayEnd = contractEnd > monthEnd ? monthEnd : contractEnd;
+      
+      const startDay = displayStart.getDate();
+      const endDay = displayEnd.getDate();
+      const duration = endDay - startDay + 1;
+
+      // Calculate column position (accounting for empty cells at start)
+      const startCol = firstDayOfMonth + startDay - 1;
+      
+      // Find available row for this contract
+      let row = 0;
+      const conflictingBars = bars.filter(bar => {
+        const barEndCol = bar.startCol + bar.width - 1;
+        const thisEndCol = startCol + duration - 1;
+        return !(barEndCol < startCol || bar.startCol > thisEndCol);
+      });
+      
+      if (conflictingBars.length > 0) {
+        const usedRows = new Set(conflictingBars.map(b => b.row));
+        while (usedRows.has(row)) row++;
+      }
+
+      bars.push({
+        contract,
+        startCol,
+        width: duration,
+        row
+      });
+    });
+
+    return bars;
+  };
+
+  const contractBars = getContractBars();
+
   const handlePreviousMonth = () => {
     setCurrentDate(new Date(currentYear, currentMonth - 1));
   };
@@ -220,57 +276,75 @@ export default function Calendrier() {
             <div className="text-center py-8 text-muted-foreground">Chargement...</div>
           ) : (
             <>
-              <div className="grid grid-cols-7 gap-1 md:gap-2">
-                {daysOfWeek.map((day) => (
-                  <div
-                    key={day}
-                    className="text-center text-xs md:text-sm font-medium text-muted-foreground py-2"
-                  >
-                    {day}
-                  </div>
-                ))}
-                {days.map((day, index) => {
-                  const dayContracts = day ? getContractsForDay(day) : [];
-                  const isToday = day === new Date().getDate() && 
-                                  currentMonth === new Date().getMonth() && 
-                                  currentYear === new Date().getFullYear();
-                  
-                  return (
+              <div className="relative">
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  {daysOfWeek.map((day) => (
                     <div
-                      key={index}
-                      className={`
-                        min-h-[60px] md:min-h-[80px] p-1 md:p-2 border rounded-lg transition-colors
-                        ${day ? 'bg-card hover:bg-muted cursor-pointer' : 'bg-transparent border-transparent'}
-                        ${isToday ? 'border-primary bg-primary/10' : 'border-border'}
-                      `}
-                      onClick={() => day && setSelectedDay(new Date(currentYear, currentMonth, day))}
+                      key={day}
+                      className="text-center text-xs md:text-sm font-medium text-muted-foreground py-2"
                     >
-                      {day && (
-                        <>
-                          <div className="text-xs md:text-sm font-medium text-foreground mb-1">
+                      {day}
+                    </div>
+                  ))}
+                  {days.map((day, index) => {
+                    const isToday = day === new Date().getDate() && 
+                                    currentMonth === new Date().getMonth() && 
+                                    currentYear === new Date().getFullYear();
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={`
+                          min-h-[80px] md:min-h-[100px] p-1 md:p-2 border rounded-lg transition-colors
+                          ${day ? 'bg-card hover:bg-muted cursor-pointer' : 'bg-transparent border-transparent'}
+                          ${isToday ? 'border-primary bg-primary/10' : 'border-border'}
+                        `}
+                        onClick={() => day && setSelectedDay(new Date(currentYear, currentMonth, day))}
+                      >
+                        {day && (
+                          <div className="text-xs md:text-sm font-medium text-foreground">
                             {day}
                           </div>
-                          <div className="space-y-0.5">
-                            {dayContracts.slice(0, 2).map((contract) => (
-                              <div
-                                key={contract.id}
-                                className="text-[10px] md:text-xs px-1 py-0.5 bg-primary/20 text-primary rounded truncate"
-                                title={`${contract.vehicles?.immatriculation} - ${contract.clients?.nom}`}
-                              >
-                                {contract.vehicles?.immatriculation}
-                              </div>
-                            ))}
-                            {dayContracts.length > 2 && (
-                              <div className="text-[10px] text-muted-foreground">
-                                +{dayContracts.length - 2}
-                              </div>
-                            )}
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Contract bars overlay */}
+                <div className="absolute top-[44px] left-0 right-0 pointer-events-none">
+                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                    {contractBars.map((bar, idx) => {
+                      const rowOffset = bar.row * 28; // 28px per row
+                      const colIndex = bar.startCol % 7;
+                      const weekRow = Math.floor(bar.startCol / 7);
+                      
+                      return (
+                        <div
+                          key={`${bar.contract.id}-${idx}`}
+                          className="pointer-events-auto cursor-pointer"
+                          style={{
+                            gridColumn: `${colIndex + 1} / span ${Math.min(bar.width, 7 - colIndex)}`,
+                            gridRow: weekRow + 1,
+                            marginTop: `${rowOffset}px`,
+                            zIndex: 10 + bar.row
+                          }}
+                          onClick={() => navigate(`/locations/${bar.contract.id}`)}
+                        >
+                          <div className="bg-primary/90 text-primary-foreground rounded px-2 py-1 text-[10px] md:text-xs font-medium shadow-sm hover:bg-primary transition-colors truncate">
+                            <div className="truncate">
+                              {bar.contract.vehicles?.immatriculation} • {bar.contract.clients?.nom} {bar.contract.clients?.prenom}
+                            </div>
+                            <div className="truncate text-[9px] md:text-[10px] opacity-90">
+                              {bar.contract.vehicles?.marque} {bar.contract.vehicles?.modele}
+                            </div>
                           </div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t">
