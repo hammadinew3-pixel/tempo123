@@ -128,7 +128,7 @@ export default function Assistance() {
       ouvert: 'Réservation',
       contrat_valide: 'Contrat validé',
       livre: 'En cours',
-      retour_effectue: 'Retour effectué',
+      retour_effectue: 'En attente paiement',
       cloture: 'Clôturé',
     };
 
