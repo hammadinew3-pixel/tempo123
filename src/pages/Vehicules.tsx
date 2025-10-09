@@ -151,10 +151,10 @@ export default function Vehicules() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      disponible: 'bg-success/10 text-success',
-      loue: 'bg-primary/10 text-primary',
-      reserve: 'bg-warning/10 text-warning',
-      en_panne: 'bg-destructive/10 text-destructive',
+      disponible: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
+      loue: 'bg-primary/10 text-primary border-primary/20',
+      reserve: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+      en_panne: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
     };
 
     const labels: Record<string, string> = {
@@ -165,7 +165,7 @@ export default function Vehicules() {
     };
 
     return (
-      <Badge variant="outline" className={`${styles[status]} border-0`}>
+      <Badge variant="outline" className={`${styles[status]} font-medium`}>
         {labels[status]}
       </Badge>
     );
