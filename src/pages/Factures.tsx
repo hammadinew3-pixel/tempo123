@@ -23,7 +23,8 @@ export default function FacturesAssurance() {
   const [selectedAssurance, setSelectedAssurance] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedDossiers, setSelectedDossiers] = useState<string[]>([]);
+  const [selectedForStatus, setSelectedForStatus] = useState<string[]>([]);
+  const [selectedForInvoice, setSelectedForInvoice] = useState<string[]>([]);
   const [showGroupDialog, setShowGroupDialog] = useState(false);
   const [groupDialogAssurance, setGroupDialogAssurance] = useState<string>("all");
   const [groupDialogDateRange, setGroupDialogDateRange] = useState<{ from?: Date; to?: Date }>({});
@@ -125,38 +126,47 @@ export default function FacturesAssurance() {
   };
 
   const handleGroupInvoice = () => {
-    if (selectedDossiers.length === 0) return;
-    const ids = selectedDossiers.join(',');
+    if (selectedForInvoice.length === 0) return;
+    const ids = selectedForInvoice.join(',');
     window.open(`/assistance-facture-template?ids=${ids}`, '_blank');
     setShowGroupDialog(false);
-    setSelectedDossiers([]);
+    setSelectedForInvoice([]);
+    setGroupDialogAssurance('all');
+    setGroupDialogDateRange({});
+    setGroupDialogSearch('');
   };
 
-  const toggleDossierSelection = (id: string) => {
-    setSelectedDossiers(prev => 
+  const toggleInvoiceSelection = (id: string) => {
+    setSelectedForInvoice(prev => 
       prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
     );
   };
 
-  const toggleSelectAll = () => {
-    if (selectedDossiers.length === filteredAssistances.length) {
-      setSelectedDossiers([]);
+  const toggleStatusSelection = (id: string) => {
+    setSelectedForStatus(prev => 
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllForStatus = () => {
+    if (selectedForStatus.length === filteredAssistances.length) {
+      setSelectedForStatus([]);
     } else {
-      setSelectedDossiers(filteredAssistances.map(a => a.id));
+      setSelectedForStatus(filteredAssistances.map(a => a.id));
     }
   };
 
   const handleGroupStatusChange = async (newStatus: string) => {
-    if (selectedDossiers.length === 0) return;
+    if (selectedForStatus.length === 0) return;
     
     try {
       await supabase
         .from('assistance')
         .update({ etat_paiement: newStatus })
-        .in('id', selectedDossiers);
+        .in('id', selectedForStatus);
       
       await loadData();
-      setSelectedDossiers([]);
+      setSelectedForStatus([]);
     } catch (error) {
       console.error('Error updating status:', error);
     }
@@ -188,131 +198,9 @@ export default function FacturesAssurance() {
           <p className="text-sm text-muted-foreground">Gérez vos factures et paiements d'assurance</p>
         </div>
         <div className="flex items-center space-x-2">
-          {selectedDossiers.length > 0 && (
+          {selectedForStatus.length > 0 && (
             <div className="flex items-center space-x-2 bg-primary/10 px-4 py-2 rounded-lg">
-              <span className="text-sm font-medium">{selectedDossiers.length} sélectionné(s)</span>
-              <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Facture groupée
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
-                  <DialogHeader>
-                    <DialogTitle>Sélectionner les dossiers pour la facture groupée</DialogTitle>
-                  </DialogHeader>
-                  
-                  {/* Filters in dialog */}
-                  <div className="space-y-4 pb-4 border-b">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder="Rechercher..."
-                        className="pl-10"
-                        value={groupDialogSearch}
-                        onChange={(e) => setGroupDialogSearch(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs mb-1">Assurance</Label>
-                        <Select value={groupDialogAssurance} onValueChange={setGroupDialogAssurance}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Toutes les assurances" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">Toutes les assurances</SelectItem>
-                            {assurances.map((assurance) => (
-                              <SelectItem key={assurance.id} value={assurance.id}>
-                                {assurance.nom}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs mb-1">Période</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left font-normal">
-                              {groupDialogDateRange.from ? (
-                                groupDialogDateRange.to ? (
-                                  <>
-                                    {format(groupDialogDateRange.from, "dd/MM/yyyy")} - {format(groupDialogDateRange.to, "dd/MM/yyyy")}
-                                  </>
-                                ) : (
-                                  format(groupDialogDateRange.from, "dd/MM/yyyy")
-                                )
-                              ) : (
-                                <span>Sélectionner</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="range"
-                              selected={{ from: groupDialogDateRange.from, to: groupDialogDateRange.to }}
-                              onSelect={(range) => setGroupDialogDateRange({ from: range?.from, to: range?.to })}
-                              locale={fr}
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setGroupDialogAssurance('all');
-                        setGroupDialogDateRange({});
-                        setGroupDialogSearch('');
-                      }}
-                    >
-                      Réinitialiser les filtres
-                    </Button>
-                  </div>
-
-                  {/* Dossiers list */}
-                  <div className="flex-1 overflow-y-auto max-h-96">
-                    {filteredGroupDossiers.map((assistance) => (
-                      <div key={assistance.id} className="flex items-center space-x-2 py-2 border-b hover:bg-muted/50">
-                        <Checkbox
-                          id={`dialog-${assistance.id}`}
-                          checked={selectedDossiers.includes(assistance.id)}
-                          onCheckedChange={() => toggleDossierSelection(assistance.id)}
-                        />
-                        <Label htmlFor={`dialog-${assistance.id}`} className="flex-1 cursor-pointer">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <span className="font-medium">{assistance.num_dossier}</span> - {assistance.clients?.nom} {assistance.clients?.prenom}
-                              <div className="text-xs text-muted-foreground">
-                                {assistance.assurances?.nom || assistance.assureur_nom}
-                              </div>
-                            </div>
-                            <span className="font-semibold">{getTotalAmount(assistance)} DH</span>
-                          </div>
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4 border-t">
-                    <span className="text-sm text-muted-foreground">
-                      {selectedDossiers.length} dossier(s) sélectionné(s)
-                    </span>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" onClick={() => setShowGroupDialog(false)}>
-                        Annuler
-                      </Button>
-                      <Button onClick={handleGroupInvoice} disabled={selectedDossiers.length === 0}>
-                        Générer la facture
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <span className="text-sm font-medium">{selectedForStatus.length} sélectionné(s)</span>
               <Select onValueChange={handleGroupStatusChange}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Changer le statut" />
@@ -326,12 +214,144 @@ export default function FacturesAssurance() {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => setSelectedDossiers([])}
+                onClick={() => setSelectedForStatus([])}
               >
                 Annuler
               </Button>
             </div>
           )}
+          <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+            <DialogTrigger asChild>
+              <Button variant="default" size="sm">
+                <FileText className="w-4 h-4 mr-2" />
+                Facture groupée
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Sélectionner les dossiers pour la facture groupée</DialogTitle>
+              </DialogHeader>
+              
+              {/* Filters in dialog */}
+              <div className="space-y-4 pb-4 border-b">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Rechercher par N° dossier ou client..."
+                    className="pl-10"
+                    value={groupDialogSearch}
+                    onChange={(e) => setGroupDialogSearch(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs mb-1">Assurance</Label>
+                    <Select value={groupDialogAssurance} onValueChange={setGroupDialogAssurance}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Toutes les assurances" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes les assurances</SelectItem>
+                        {assurances.map((assurance) => (
+                          <SelectItem key={assurance.id} value={assurance.id}>
+                            {assurance.nom}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1">Période</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                          {groupDialogDateRange.from ? (
+                            groupDialogDateRange.to ? (
+                              <>
+                                {format(groupDialogDateRange.from, "dd/MM/yyyy")} - {format(groupDialogDateRange.to, "dd/MM/yyyy")}
+                              </>
+                            ) : (
+                              format(groupDialogDateRange.from, "dd/MM/yyyy")
+                            )
+                          ) : (
+                            <span>Sélectionner</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="range"
+                          selected={{ from: groupDialogDateRange.from, to: groupDialogDateRange.to }}
+                          onSelect={(range) => setGroupDialogDateRange({ from: range?.from, to: range?.to })}
+                          locale={fr}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setGroupDialogAssurance('all');
+                    setGroupDialogDateRange({});
+                    setGroupDialogSearch('');
+                  }}
+                >
+                  Réinitialiser les filtres
+                </Button>
+              </div>
+
+              {/* Dossiers list */}
+              <div className="flex-1 overflow-y-auto max-h-96">
+                {filteredGroupDossiers.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Aucun dossier trouvé
+                  </div>
+                ) : (
+                  filteredGroupDossiers.map((assistance) => (
+                    <div key={assistance.id} className="flex items-center space-x-3 py-3 px-2 border-b hover:bg-muted/50 rounded transition-colors">
+                      <Checkbox
+                        id={`dialog-${assistance.id}`}
+                        checked={selectedForInvoice.includes(assistance.id)}
+                        onCheckedChange={() => toggleInvoiceSelection(assistance.id)}
+                      />
+                      <Label htmlFor={`dialog-${assistance.id}`} className="flex-1 cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{assistance.num_dossier} - {assistance.clients?.nom} {assistance.clients?.prenom}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {assistance.assurances?.nom || assistance.assureur_nom} • {format(new Date(assistance.date_debut), 'dd/MM/yyyy', { locale: fr })}
+                            </div>
+                          </div>
+                          <span className="font-semibold">{getTotalAmount(assistance)} DH</span>
+                        </div>
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t">
+                <span className="text-sm text-muted-foreground">
+                  {selectedForInvoice.length} dossier(s) sélectionné(s)
+                </span>
+                <div className="flex space-x-2">
+                  <Button variant="outline" onClick={() => {
+                    setShowGroupDialog(false);
+                    setSelectedForInvoice([]);
+                  }}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleGroupInvoice} disabled={selectedForInvoice.length === 0}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    Générer la facture
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Exporter
@@ -431,8 +451,8 @@ export default function FacturesAssurance() {
                 <tr className="text-left text-sm text-muted-foreground border-b">
                   <th className="pb-3 font-medium w-12">
                     <Checkbox
-                      checked={selectedDossiers.length === filteredAssistances.length && filteredAssistances.length > 0}
-                      onCheckedChange={toggleSelectAll}
+                      checked={selectedForStatus.length === filteredAssistances.length && filteredAssistances.length > 0}
+                      onCheckedChange={toggleSelectAllForStatus}
                     />
                   </th>
                   <th className="pb-3 font-medium">N° Facture</th>
@@ -461,8 +481,8 @@ export default function FacturesAssurance() {
                     <tr key={assistance.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="py-4">
                         <Checkbox
-                          checked={selectedDossiers.includes(assistance.id)}
-                          onCheckedChange={() => toggleDossierSelection(assistance.id)}
+                          checked={selectedForStatus.includes(assistance.id)}
+                          onCheckedChange={() => toggleStatusSelection(assistance.id)}
                         />
                       </td>
                       <td className="py-4 font-medium text-foreground">FAC-{assistance.num_dossier}</td>
