@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Car, Calendar, Users, TrendingUp, AlertCircle } from "lucide-react";
+import { Car, Calendar, Users, TrendingUp, AlertCircle, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -104,49 +104,58 @@ export default function Dashboard() {
       <div className="p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">VÉHICULES</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Car className="w-4 h-4 text-primary" />
+                    <span>VÉHICULES</span>
+                  </div>
                   <p className="text-3xl font-bold text-foreground">
                     {stats.vehiclesCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Car className="w-8 h-8 text-blue-600" />
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Car className="w-7 h-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">RÉSERVATIONS</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span>RÉSERVATIONS</span>
+                  </div>
                   <p className="text-3xl font-bold text-foreground">
                     {stats.reservationsCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <Calendar className="w-8 h-8 text-indigo-600" />
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Calendar className="w-7 h-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">CLIENTS</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Users className="w-4 h-4 text-primary" />
+                    <span>CLIENTS</span>
+                  </div>
                   <p className="text-3xl font-bold text-foreground">
                     {stats.clientsCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Users className="w-8 h-8 text-purple-600" />
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Users className="w-7 h-7 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -157,35 +166,36 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Alerts Section */}
           <div className="lg:col-span-2">
-            <Card className="bg-orange-50 border-orange-200">
+            <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span className="text-2xl font-bold text-orange-600">
-                      {totalAlerts.toString().padStart(2, '0')}
-                    </span>
+                  <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center">
+                    <AlertCircle className="w-8 h-8 text-warning" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-orange-600">Alerts</h3>
-                    <div className="flex flex-wrap gap-4 mt-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertCircle className="w-5 h-5 text-warning" />
+                      <h3 className="text-xl font-semibold text-foreground">Alertes</h3>
+                      <span className="ml-2 text-2xl font-bold text-warning">
+                        {totalAlerts.toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-4 mt-3">
                       <div className="flex items-center space-x-2">
-                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                        <span className="w-3 h-3 rounded-full bg-success"></span>
                         <span className="text-sm text-foreground">00 Alertes chèques</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                        <span className="w-3 h-3 rounded-full bg-success"></span>
                         <span className="text-sm text-foreground">00 Alertes réservations</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="w-3 h-3 rounded-full bg-orange-500"></span>
+                        <span className="w-3 h-3 rounded-full bg-warning"></span>
                         <span className="text-sm text-foreground">
                           {vehicleAlerts.toString().padStart(2, '0')} Alertes véhicules
                         </span>
                       </div>
                     </div>
-                  </div>
-                  <div className="hidden md:block">
-                    <AlertCircle className="w-24 h-24 text-orange-400" />
                   </div>
                 </div>
               </CardContent>
@@ -193,10 +203,15 @@ export default function Dashboard() {
           </div>
 
           {/* Fleet Status */}
-          <Card>
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle>État du parc</CardTitle>
-              <CardDescription>État d'aujourd'hui</CardDescription>
+              <div className="flex items-center gap-2">
+                <Car className="w-5 h-5 text-primary" />
+                <div>
+                  <CardTitle>État du parc</CardTitle>
+                  <CardDescription>État d'aujourd'hui</CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-center mb-6">
@@ -214,7 +229,7 @@ export default function Dashboard() {
                       cx="50"
                       cy="50"
                       r="40"
-                      stroke="#10b981"
+                      stroke="hsl(var(--success))"
                       strokeWidth="8"
                       fill="none"
                       strokeDasharray="251.2"
@@ -224,7 +239,7 @@ export default function Dashboard() {
                       cx="50"
                       cy="50"
                       r="40"
-                      stroke="#3b82f6"
+                      stroke="hsl(var(--primary))"
                       strokeWidth="8"
                       fill="none"
                       strokeDasharray="251.2"
@@ -238,7 +253,7 @@ export default function Dashboard() {
                       <p className="text-sm text-muted-foreground">
                         {stats.availableVehicles.toString().padStart(2, '0')} véhicules
                       </p>
-                      <p className="text-xl font-bold text-green-600">Disponibles</p>
+                      <p className="text-xl font-bold text-success">Disponibles</p>
                       <p className="text-xs text-muted-foreground">{availablePercentage}%</p>
                     </div>
                   </div>
@@ -248,14 +263,14 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                    <span className="w-3 h-3 rounded-full bg-success"></span>
                     <span className="text-sm text-foreground">Disponibles</span>
                   </div>
                   <span className="text-sm font-medium text-foreground">{stats.availableVehicles}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+                    <span className="w-3 h-3 rounded-full bg-primary"></span>
                     <span className="text-sm text-foreground">En circulation</span>
                   </div>
                   <span className="text-sm font-medium text-foreground">{stats.rentedVehicles}</span>
@@ -266,9 +281,12 @@ export default function Dashboard() {
         </div>
 
         {/* Departures - Returns Section */}
-        <Card className="mb-6">
+        <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Départs - Récupérations</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <CardTitle>Départs - Récupérations</CardTitle>
+            </div>
             <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
             <div className="flex space-x-8 mt-4">
               <button className="text-primary border-b-2 border-primary pb-2">
@@ -309,11 +327,14 @@ export default function Dashboard() {
         </Card>
 
         {/* Volume de transactions - Full Width */}
-        <Card className="mb-6">
+        <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Volume de transactions</CardTitle>
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <CardTitle>Volume de transactions</CardTitle>
+                </div>
                 <CardDescription>Basé sur l'année sélectionnée</CardDescription>
               </div>
               <div className="flex gap-2">
@@ -337,18 +358,18 @@ export default function Dashboard() {
                 <Line
                   type="monotone"
                   dataKey="revenus"
-                  stroke="#10b981"
+                  stroke="hsl(var(--success))"
                   strokeWidth={2}
                   name="Revenus"
-                  dot={{ fill: '#10b981', r: 4 }}
+                  dot={{ fill: 'hsl(var(--success))', r: 4 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="charges"
-                  stroke="#ef4444"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={2}
                   name="Charges"
-                  dot={{ fill: '#ef4444', r: 4 }}
+                  dot={{ fill: 'hsl(var(--primary))', r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -361,11 +382,14 @@ export default function Dashboard() {
         </Card>
 
         {/* Recent Reservations - Full Width */}
-        <Card>
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Les dernières réservations</CardTitle>
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="w-5 h-5 text-primary" />
+                  <CardTitle>Les dernières réservations</CardTitle>
+                </div>
                 <CardDescription>Basé sur le type sélectionné</CardDescription>
               </div>
               <div className="flex gap-2">
@@ -411,10 +435,10 @@ export default function Dashboard() {
                             variant="secondary"
                             className={
                               reservation.statut === 'actif'
-                                ? 'bg-blue-100 text-blue-800'
+                                ? 'bg-primary/10 text-primary border-primary/20'
                                 : reservation.statut === 'termine'
-                                ? 'bg-gray-100 text-gray-800'
-                                : 'bg-yellow-100 text-yellow-800'
+                                ? 'bg-muted text-muted-foreground border-muted'
+                                : 'bg-warning/10 text-warning border-warning/20'
                             }
                           >
                             {reservation.statut === 'actif' ? 'Livrée' : reservation.statut}
