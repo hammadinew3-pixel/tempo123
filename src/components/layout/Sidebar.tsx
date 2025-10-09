@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   BarChart3,
   Calendar,
@@ -15,31 +16,68 @@ import {
   Upload,
   HelpCircle,
   User,
-  ChevronDown,
+  Plus,
+  List,
+  ChevronRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  Sidebar as SidebarUI,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface NavItem {
   title: string;
-  href: string;
+  href?: string;
   icon: React.ComponentType<{ className?: string }>;
-  hasSubmenu?: boolean;
+  submenu?: { title: string; href: string; icon: React.ComponentType<{ className?: string }> }[];
 }
 
 const mainNavItems: NavItem[] = [
   { title: "Tableau de bord", href: "/", icon: BarChart3 },
   { title: "Calendrier", href: "/calendrier", icon: Calendar },
-  { title: "Locations", href: "/locations", icon: MapPin, hasSubmenu: true },
-  { title: "Véhicules", href: "/vehicules", icon: Car, hasSubmenu: true },
+  { 
+    title: "Locations", 
+    icon: MapPin,
+    submenu: [
+      { title: "Liste des locations", href: "/locations", icon: List },
+      { title: "Ajouter location", href: "/locations/nouveau", icon: Plus },
+    ]
+  },
+  { 
+    title: "Véhicules", 
+    icon: Car,
+    submenu: [
+      { title: "Voir les véhicules", href: "/vehicules", icon: List },
+      { title: "Ajouter véhicule", href: "/vehicules/nouveau", icon: Plus },
+    ]
+  },
   { title: "Catégories", href: "/categories", icon: Grid3x3 },
-  { title: "Clients", href: "/clients", icon: Users },
+  { 
+    title: "Clients", 
+    icon: Users,
+    submenu: [
+      { title: "Voir les clients", href: "/clients", icon: List },
+      { title: "Ajouter client", href: "/clients/nouveau", icon: Plus },
+    ]
+  },
   { title: "Factures", href: "/factures", icon: FileText },
   { title: "Chèques", href: "/cheques", icon: CreditCard },
-  { title: "Longue durée", href: "/longue-duree", icon: Clock, hasSubmenu: true },
+  { title: "Longue durée", href: "/longue-duree", icon: Clock },
   { title: "Revenus", href: "/revenus", icon: TrendingUp },
   { title: "Charges", href: "/charges", icon: DollarSign },
   { title: "Statistiques", href: "/statistiques", icon: BarChart },
-  { title: "Importer", href: "/importer", icon: Upload, hasSubmenu: true },
+  { title: "Importer", href: "/importer", icon: Upload },
   { title: "Contact & Support", href: "/support", icon: HelpCircle },
 ];
 
@@ -50,6 +88,15 @@ const adminNavItems: NavItem[] = [
 
 export const Sidebar = () => {
   const location = useLocation();
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  
+  // Track which groups are open
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    locations: true,
+    vehicules: true,
+    clients: true,
+  });
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -58,60 +105,118 @@ export const Sidebar = () => {
     return location.pathname.startsWith(href);
   };
 
-  return (
-    <aside className="w-64 bg-sidebar-background min-h-screen text-sidebar-foreground">
-      <nav className="p-4">
-        <ul className="space-y-1">
-          {mainNavItems.map((item) => (
-            <li key={item.href}>
-              {item.hasSubmenu ? (
-                <div className="flex items-center justify-between p-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent cursor-pointer">
-                  <div className="flex items-center space-x-3">
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
-                  </div>
-                  <ChevronDown className="w-4 h-4" />
-                </div>
-              ) : (
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex items-center space-x-3 p-3 rounded-lg transition-colors",
-                    isActive(item.href)
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.title}</span>
-                </Link>
-              )}
-            </li>
-          ))}
-        </ul>
+  const isGroupActive = (submenu?: NavItem["submenu"]) => {
+    if (!submenu) return false;
+    return submenu.some(item => isActive(item.href));
+  };
 
-        <div className="mt-8 pt-4 border-t border-sidebar-border">
-          <p className="text-sm text-sidebar-foreground opacity-60 mb-4 px-3">Menu Administration</p>
-          <ul className="space-y-1">
-            {adminNavItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex items-center space-x-3 p-3 rounded-lg transition-colors",
-                    isActive(item.href)
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
-    </aside>
+  const toggleGroup = (key: string) => {
+    setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const getNavCls = (isActive: boolean) =>
+    isActive ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium" : "hover:bg-sidebar-accent";
+
+  return (
+    <SidebarUI collapsible="icon" className="border-r border-sidebar-border">
+      <SidebarContent>
+        {/* Main Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainNavItems.map((item) => {
+                const groupKey = item.title.toLowerCase();
+                const hasSubmenu = !!item.submenu;
+                const groupActive = isGroupActive(item.submenu);
+
+                if (hasSubmenu) {
+                  return (
+                    <Collapsible
+                      key={item.title}
+                      open={openGroups[groupKey]}
+                      onOpenChange={() => toggleGroup(groupKey)}
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            className={getNavCls(groupActive)}
+                            tooltip={item.title}
+                          >
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                            {!collapsed && (
+                              <ChevronRight 
+                                className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" 
+                              />
+                            )}
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.submenu?.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.href}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  className={getNavCls(isActive(subItem.href))}
+                                >
+                                  <NavLink to={subItem.href}>
+                                    <subItem.icon className="h-4 w-4" />
+                                    <span>{subItem.title}</span>
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
+                }
+
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      className={getNavCls(isActive(item.href!))}
+                      tooltip={item.title}
+                    >
+                      <NavLink to={item.href!}>
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Admin Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Administration</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    className={getNavCls(isActive(item.href!))}
+                    tooltip={item.title}
+                  >
+                    <NavLink to={item.href!}>
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </SidebarUI>
   );
 };

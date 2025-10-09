@@ -1,5 +1,6 @@
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -7,14 +8,16 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
         <Sidebar />
-        <main className="flex-1">
-          {children}
-        </main>
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <main className="flex-1 p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
