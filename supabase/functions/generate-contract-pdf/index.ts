@@ -39,11 +39,7 @@ serve(async (req) => {
     // Get vehicle changes history for this contract
     const { data: vehicleChanges, error: changesError } = await supabase
       .from('vehicle_changes')
-      .select(`
-        *,
-        old_vehicle:vehicles!vehicle_changes_old_vehicle_id_fkey(marque, modele, immatriculation),
-        new_vehicle:vehicles!vehicle_changes_new_vehicle_id_fkey(marque, modele, immatriculation)
-      `)
+      .select('*')
       .eq('contract_id', contractId)
       .order('change_date', { ascending: true });
 
@@ -51,10 +47,21 @@ serve(async (req) => {
       console.error('Error fetching vehicle changes:', changesError);
     }
 
+    // Get secondary drivers
+    const { data: secondaryDrivers, error: driversError } = await supabase
+      .from('secondary_drivers')
+      .select('*')
+      .eq('contract_id', contractId);
+
+    if (driversError) {
+      console.error('Error fetching secondary drivers:', driversError);
+    }
+
     console.log('📋 Vehicle changes found:', vehicleChanges?.length || 0);
+    console.log('👥 Secondary drivers found:', secondaryDrivers?.length || 0);
 
     // Generate HTML for the PDF
-    const html = generateContractHTML(contract, vehicleChanges || []);
+    const html = generateContractHTML(contract, vehicleChanges || [], secondaryDrivers || []);
 
     // Get the origin from the request headers
     const origin = req.headers.get('origin') || 'https://66e40113-c245-4ca2-bcfb-093ee69d0d09.lovableproject.com';
@@ -103,33 +110,44 @@ serve(async (req) => {
   }
 });
 
-function generateContractHTML(contract: any, vehicleChanges: any[]): string {
+function generateContractHTML(contract: any, vehicleChanges: any[], secondaryDrivers: any[]): string {
   const client = contract.clients;
   const vehicle = contract.vehicles;
+  const secondaryDriver = secondaryDrivers[0] || {};
 
   // Generate vehicle changes section if any exist
   let vehicleChangesHTML = '';
   if (vehicleChanges && vehicleChanges.length > 0) {
     vehicleChangesHTML = `
-      <tr>
-        <td colspan="2" style="background-color: #fff8e6; border: 2px solid #ffcc00; padding: 15px;">
-          <div style="color: #ff6600; font-weight: bold; margin-bottom: 10px;">⚠️ CHANGEMENT(S) DE VÉHICULE</div>
-          ${vehicleChanges.map((change: any, index: number) => `
-            <div style="margin-bottom: 10px; padding: 8px; border-left: 3px solid #ff6600; background-color: #fff;">
-              <div style="font-weight: bold; color: #ff6600; margin-bottom: 5px;">Changement #${index + 1} - ${new Date(change.change_date).toLocaleDateString('fr-FR')}</div>
-              <div style="font-size: 0.9em;">
-                <strong>Ancien véhicule:</strong> ${change.old_vehicle?.marque} ${change.old_vehicle?.modele} (${change.old_vehicle?.immatriculation})<br/>
-                <strong>Nouveau véhicule:</strong> ${change.new_vehicle?.marque} ${change.new_vehicle?.modele} (${change.new_vehicle?.immatriculation})<br/>
-                <strong>Raison:</strong> ${formatReason(change.reason)}<br/>
-                ${change.notes ? `<strong>Détails:</strong> <span style="font-size: 0.85em;">${change.notes}</span>` : ''}
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <thead>
+          <tr>
+            <th colspan="2" style="background-color: #fff8e6; border: 2px solid #ffcc00; padding: 10px; text-align: center; font-weight: bold; font-size: 12pt;">
+              ⚠️ CHANGEMENT(S) DE VÉHICULE
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2" style="border: 1px solid #000; padding: 12px;">
+              ${vehicleChanges.map((change: any, index: number) => `
+                <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #ddd;">
+                  <div style="font-weight: bold; color: #ff6600; margin-bottom: 6px; font-size: 10pt;">
+                    Changement #${index + 1} - ${change.change_date ? new Date(change.change_date).toLocaleDateString('fr-FR') : ''}
+                  </div>
+                  <div style="font-size: 9pt; line-height: 1.5;">
+                    <div><strong>Raison:</strong> ${formatReason(change.reason)}</div>
+                    ${change.notes ? `<div style="font-size: 8.5pt; color: #555; margin-top: 4px;"><strong>Détails:</strong> ${change.notes}</div>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+              <div style="margin-top: 12px; padding: 8px; background-color: #e6f7ff; border-radius: 4px; font-size: 9pt;">
+                <strong>Note:</strong> Le montant total ci-dessous inclut le calcul au prorata des changements de véhicule effectués.
               </div>
-            </div>
-          `).join('')}
-          <div style="margin-top: 10px; padding: 8px; background-color: #e6f7ff; border-radius: 4px; font-size: 0.9em;">
-            <strong>Note:</strong> Le montant total ci-dessous inclut le calcul au prorata des changements de véhicule effectués.
-          </div>
-        </td>
-      </tr>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     `;
   }
 
@@ -237,13 +255,13 @@ function generateContractHTML(contract: any, vehicleChanges: any[]): string {
         <div class="field"><strong>Tél:</strong> ${client?.telephone || ''}</div>
       </td>
       <td>
-        <div class="field"><strong>Nom & Prénom:</strong></div>
-        <div class="field"><strong>CIN N°:</strong></div>
-        <div class="field"><strong>Permis de conduire N°:</strong></div>
+        <div class="field"><strong>Nom & Prénom:</strong> ${secondaryDriver?.nom || ''} ${secondaryDriver?.prenom || ''}</div>
+        <div class="field"><strong>CIN N°:</strong> ${secondaryDriver?.cin || ''}</div>
+        <div class="field"><strong>Permis de conduire N°:</strong> ${secondaryDriver?.permis_conduire || ''}</div>
         <div class="field"><strong>Délivré le:</strong></div>
         <div class="field"><strong>Passeport N°:</strong></div>
         <div class="field"><strong>Adresse:</strong></div>
-        <div class="field"><strong>Tél:</strong></div>
+        <div class="field"><strong>Tél:</strong> ${secondaryDriver?.telephone || ''}</div>
       </td>
     </tr>
   </table>
@@ -271,7 +289,7 @@ function generateContractHTML(contract: any, vehicleChanges: any[]): string {
     </tr>
   </table>
 
-  ${vehicleChangesHTML ? `<table>${vehicleChangesHTML}</table>` : ''}
+  ${vehicleChangesHTML}
 
   <table>
     <tr>

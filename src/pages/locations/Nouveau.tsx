@@ -75,10 +75,17 @@ export default function NouveauLocation() {
     selectedCategorie,
   ]);
 
+  // Filtrer les véhicules disponibles en fonction des dates
+  useEffect(() => {
+    if (formData.date_debut && formData.date_fin) {
+      filterAvailableVehicles();
+    }
+  }, [formData.date_debut, formData.date_fin, contractType, selectedCategorie]);
+
   const loadData = async () => {
     try {
       const [vehiclesRes, clientsRes, assurancesRes] = await Promise.all([
-        supabase.from("vehicles").select("*").eq("statut", "disponible"),
+        supabase.from("vehicles").select("*"),
         supabase.from("clients").select("*"),
         supabase.from("assurances").select("*").eq("actif", true),
       ]);
@@ -98,6 +105,49 @@ export default function NouveauLocation() {
         variant: "destructive",
         title: "Erreur",
         description: "Impossible de charger les données",
+      });
+    }
+  };
+
+  const filterAvailableVehicles = async () => {
+    try {
+      const startDate = format(formData.date_debut, 'yyyy-MM-dd');
+      const endDate = format(formData.date_fin, 'yyyy-MM-dd');
+
+      // Récupérer tous les contrats qui se chevauchent avec les dates sélectionnées
+      const { data: overlappingContracts, error } = await supabase
+        .from('contracts')
+        .select('vehicle_id')
+        .or(`and(date_debut.lte.${endDate},date_fin.gte.${startDate})`)
+        .in('statut', ['brouillon', 'contrat_valide', 'livre']);
+
+      if (error) throw error;
+
+      // IDs des véhicules déjà réservés
+      const reservedVehicleIds = overlappingContracts?.map(c => c.vehicle_id) || [];
+
+      // Filtrer les véhicules
+      let availableVehicles = allVehicles.filter(v => 
+        v.statut === 'disponible' && !reservedVehicleIds.includes(v.id)
+      );
+
+      // Si c'est une assistance, filtrer par catégorie
+      if (contractType === 'assistance' && selectedCategorie) {
+        availableVehicles = availableVehicles.filter(v => v.categorie === selectedCategorie);
+      }
+
+      setVehicles(availableVehicles);
+      
+      // Réinitialiser la sélection du véhicule si celui-ci n'est plus disponible
+      if (formData.vehicle_id && !availableVehicles.find(v => v.id === formData.vehicle_id)) {
+        setFormData(prev => ({ ...prev, vehicle_id: '' }));
+      }
+    } catch (error) {
+      console.error('Erreur filtrage véhicules:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de vérifier les disponibilités",
       });
     }
   };
@@ -369,6 +419,137 @@ export default function NouveauLocation() {
           </div>
         )}
 
+        {/* Dates & Times - PREMIER */}
+        <div className="space-y-2 p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/10">
+          <div className="flex items-center gap-2 mb-2">
+            <CalendarIcon className="w-5 h-5 text-blue-600" />
+            <Label className="text-base font-semibold">Période de location</Label>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Sélectionnez d&apos;abord les dates pour voir les véhicules disponibles
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Date départ */}
+            <div className="space-y-2">
+              <Label>
+                Date de départ <span className="text-destructive">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "h-12 w-full justify-start text-left font-normal",
+                      !formData.date_debut && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.date_debut ? (
+                      format(formData.date_debut, "dd/MM/yyyy", { locale: fr })
+                    ) : (
+                      <span>Sélectionner</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date_debut}
+                    onSelect={(date) =>
+                      date && setFormData({ ...formData, date_debut: date })
+                    }
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Heure départ */}
+            <div className="space-y-2">
+              <Label>
+                Heure de départ {contractType === "standard" && <span className="text-destructive">*</span>}
+              </Label>
+              <div className="relative">
+                <Input
+                  type="time"
+                  value={formData.start_time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, start_time: e.target.value })
+                  }
+                  className="h-12"
+                />
+                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Date retour */}
+            <div className="space-y-2">
+              <Label>
+                Date de retour <span className="text-destructive">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "h-12 w-full justify-start text-left font-normal",
+                      !formData.date_fin && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.date_fin ? (
+                      format(formData.date_fin, "dd/MM/yyyy", { locale: fr })
+                    ) : (
+                      <span>Sélectionner</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date_fin}
+                    onSelect={(date) =>
+                      date && setFormData({ ...formData, date_fin: date })
+                    }
+                    disabled={(date) => date < formData.date_debut}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Heure retour */}
+            <div className="space-y-2">
+              <Label>
+                Heure de retour {contractType === "standard" && <span className="text-destructive">*</span>}
+              </Label>
+              <div className="relative">
+                <Input
+                  type="time"
+                  value={formData.end_time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, end_time: e.target.value })
+                  }
+                  className="h-12"
+                />
+                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+          </div>
+          {vehicles.length === 0 && formData.date_debut && formData.date_fin && (
+            <p className="text-sm text-orange-600 mt-2">
+              ⚠️ Aucun véhicule disponible pour cette période
+            </p>
+          )}
+          {vehicles.length > 0 && formData.date_debut && formData.date_fin && (
+            <p className="text-sm text-green-600 mt-2">
+              ✓ {vehicles.length} véhicule(s) disponible(s) pour cette période
+            </p>
+          )}
+        </div>
+
         {/* Vehicle & Client Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Vehicle */}
@@ -382,9 +563,10 @@ export default function NouveauLocation() {
                 onValueChange={(value) =>
                   setFormData({ ...formData, vehicle_id: value })
                 }
+                disabled={vehicles.length === 0}
               >
                 <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Sélectionner un véhicule" />
+                  <SelectValue placeholder={vehicles.length === 0 ? "Sélectionnez d'abord les dates" : "Sélectionner un véhicule"} />
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles.map((vehicle) => (
@@ -398,6 +580,9 @@ export default function NouveauLocation() {
                               (Cat. {vehicle.categorie})
                             </span>
                           )}
+                          <span className="ml-2 text-xs text-green-600">
+                            ({vehicle.tarif_journalier} DH/jour)
+                          </span>
                         </span>
                       </div>
                     </SelectItem>
@@ -448,118 +633,6 @@ export default function NouveauLocation() {
                 </Button>
                 <UserIcon className="w-5 h-5 text-muted-foreground" />
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Dates & Times */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Date départ */}
-          <div className="space-y-2">
-            <Label>
-              Date de départ <span className="text-destructive">*</span>
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "h-12 w-full justify-start text-left font-normal",
-                    !formData.date_debut && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date_debut ? (
-                    format(formData.date_debut, "dd/MM/yyyy", { locale: fr })
-                  ) : (
-                    <span>Sélectionner</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.date_debut}
-                  onSelect={(date) =>
-                    date && setFormData({ ...formData, date_debut: date })
-                  }
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Heure départ */}
-          <div className="space-y-2">
-            <Label>
-              Heure de départ {contractType === "standard" && <span className="text-destructive">*</span>}
-            </Label>
-            <div className="relative">
-              <Input
-                type="time"
-                value={formData.start_time}
-                onChange={(e) =>
-                  setFormData({ ...formData, start_time: e.target.value })
-                }
-                className="h-12"
-              />
-              <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Date retour */}
-          <div className="space-y-2">
-            <Label>
-              Date de retour <span className="text-destructive">*</span>
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "h-12 w-full justify-start text-left font-normal",
-                    !formData.date_fin && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date_fin ? (
-                    format(formData.date_fin, "dd/MM/yyyy", { locale: fr })
-                  ) : (
-                    <span>Sélectionner</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.date_fin}
-                  onSelect={(date) =>
-                    date && setFormData({ ...formData, date_fin: date })
-                  }
-                  disabled={(date) => date < formData.date_debut}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Heure retour */}
-          <div className="space-y-2">
-            <Label>
-              Heure de retour {contractType === "standard" && <span className="text-destructive">*</span>}
-            </Label>
-            <div className="relative">
-              <Input
-                type="time"
-                value={formData.end_time}
-                onChange={(e) =>
-                  setFormData({ ...formData, end_time: e.target.value })
-                }
-                className="h-12"
-              />
-              <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
             </div>
           </div>
         </div>
