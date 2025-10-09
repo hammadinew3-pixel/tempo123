@@ -463,14 +463,14 @@ export default function AssistanceDetails() {
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Info du dossier */}
+        {/* Informations du dossier */}
         <Card>
           <Collapsible open={openSections.dossier} onOpenChange={() => toggleSection("dossier")}>
             <CollapsibleTrigger className="w-full">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm font-medium">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <span>Info du dossier</span>
+                  <FileText className="w-4 h-4 text-primary" />
+                  <span>Informations du dossier</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -506,31 +506,43 @@ export default function AssistanceDetails() {
                   <span className="font-medium">{duration} {duration > 1 ? 'jours' : 'jour'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date début</span>
+                  <span className="text-muted-foreground">Départ</span>
                   <span className="font-medium">
-                    {format(new Date(assistance.date_debut), "dd MMM yyyy", { locale: fr })}
+                    {format(new Date(assistance.date_debut), "dd/MM/yyyy", { locale: fr })}
                   </span>
                 </div>
                 {assistance.date_fin && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Date fin prévue</span>
+                    <span className="text-muted-foreground">Retour prévu</span>
                     <span className="font-medium">
-                      {format(new Date(assistance.date_fin), "dd MMM yyyy", { locale: fr })}
+                      {format(new Date(assistance.date_fin), "dd/MM/yyyy", { locale: fr })}
                     </span>
                   </div>
                 )}
-                {assistance.date_retour_effective && (
+                {assistance.tarif_journalier && (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Date retour</span>
+                    <span className="text-muted-foreground">Prix/Jr</span>
+                    <span className="font-medium">{Number(assistance.tarif_journalier).toFixed(2)} DH</span>
+                  </div>
+                )}
+                {assistance.franchise_montant && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Franchise</span>
+                    <span className="font-medium">{Number(assistance.franchise_montant).toFixed(2)} DH</span>
+                  </div>
+                )}
+                {assistance.date_retour_effective && (
+                  <div className="flex justify-between border-t pt-3 mt-3">
+                    <span className="text-muted-foreground">Retour effectif</span>
                     <span className="font-medium">
-                      {format(new Date(assistance.date_retour_effective), "dd MMM yyyy", { locale: fr })}
+                      {format(new Date(assistance.date_retour_effective), "dd/MM/yyyy", { locale: fr })}
                     </span>
                   </div>
                 )}
                 {assistance.remarques && (
-                  <div className="pt-2 border-t">
+                  <div className="pt-3 border-t">
                     <span className="text-muted-foreground block mb-1">Remarques</span>
-                    <span className="text-foreground">{assistance.remarques}</span>
+                    <p className="text-sm text-foreground">{assistance.remarques}</p>
                   </div>
                 )}
               </CardContent>
