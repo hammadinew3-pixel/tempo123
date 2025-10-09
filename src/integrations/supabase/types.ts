@@ -40,6 +40,7 @@ export type Database = {
           niveau_carburant_depart: string | null
           niveau_carburant_retour: string | null
           num_dossier: string
+          prolongations: Json | null
           remarques: string | null
           tarif_journalier: number | null
           type: Database["public"]["Enums"]["assistance_type"]
@@ -71,6 +72,7 @@ export type Database = {
           niveau_carburant_depart?: string | null
           niveau_carburant_retour?: string | null
           num_dossier: string
+          prolongations?: Json | null
           remarques?: string | null
           tarif_journalier?: number | null
           type: Database["public"]["Enums"]["assistance_type"]
@@ -102,6 +104,7 @@ export type Database = {
           niveau_carburant_depart?: string | null
           niveau_carburant_retour?: string | null
           num_dossier?: string
+          prolongations?: Json | null
           remarques?: string | null
           tarif_journalier?: number | null
           type?: Database["public"]["Enums"]["assistance_type"]

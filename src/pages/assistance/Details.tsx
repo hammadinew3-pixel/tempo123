@@ -525,9 +525,16 @@ export default function AssistanceDetails() {
       const tarifJournalier = assistance.tarif_journalier || 0;
       const nouveauMontantTotal = newDuration * tarifJournalier;
 
-      const remarquesUpdate = assistance.remarques 
-        ? `${assistance.remarques}\n\nPROLONGATION le ${format(new Date(), 'dd/MM/yyyy à HH:mm')}: Date de fin prolongée jusqu'au ${format(nouvelleDateFin, 'dd/MM/yyyy')}. Raison: ${prolongationData.raison || 'Non spécifiée'}`
-        : `PROLONGATION le ${format(new Date(), 'dd/MM/yyyy à HH:mm')}: Date de fin prolongée jusqu'au ${format(nouvelleDateFin, 'dd/MM/yyyy')}. Raison: ${prolongationData.raison || 'Non spécifiée'}`;
+      // Get current prolongations array
+      const currentProlongations = assistance.prolongations || [];
+      
+      // Add new prolongation to the array
+      const newProlongation = {
+        date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+        ancienne_date_fin: format(dateActuelle, 'yyyy-MM-dd'),
+        nouvelle_date_fin: format(nouvelleDateFin, 'yyyy-MM-dd'),
+        raison: prolongationData.raison || 'Non spécifiée'
+      };
 
       const { error } = await supabase
         .from("assistance")
@@ -535,7 +542,7 @@ export default function AssistanceDetails() {
           date_fin: format(nouvelleDateFin, 'yyyy-MM-dd'),
           montant_total: nouveauMontantTotal,
           montant_facture: nouveauMontantTotal,
-          remarques: remarquesUpdate,
+          prolongations: [...currentProlongations, newProlongation],
         })
         .eq("id", id);
 
