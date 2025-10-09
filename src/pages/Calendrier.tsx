@@ -60,6 +60,8 @@ export default function Calendrier() {
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [showContractDetails, setShowContractDetails] = useState(false);
+  const [rangeStartDate, setRangeStartDate] = useState<Date | null>(null);
+  const [rangeEndDate, setRangeEndDate] = useState<Date | null>(null);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -97,8 +99,11 @@ export default function Calendrier() {
     }
   };
 
-  const checkAvailability = async () => {
-    if (!availabilityDates.start || !availabilityDates.end) {
+  const checkAvailability = async (startDate?: string, endDate?: string) => {
+    const start = startDate || availabilityDates.start;
+    const end = endDate || availabilityDates.end;
+
+    if (!start || !end) {
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner les dates",
@@ -108,6 +113,8 @@ export default function Calendrier() {
     }
 
     setCheckingAvailability(true);
+    setShowAvailabilityDialog(true);
+    
     try {
       // Get all vehicles
       const { data: allVehicles, error: vehiclesError } = await supabase
@@ -121,8 +128,8 @@ export default function Calendrier() {
       const { data: overlappingContracts, error: contractsError } = await supabase
         .from('contracts')
         .select('vehicle_id')
-        .lte('date_debut', availabilityDates.end)
-        .gte('date_fin', availabilityDates.start)
+        .lte('date_debut', end)
+        .gte('date_fin', start)
         .in('statut', ['contrat_valide', 'livre']);
 
       if (contractsError) throw contractsError;
@@ -139,6 +146,52 @@ export default function Calendrier() {
       });
     } finally {
       setCheckingAvailability(false);
+    }
+  };
+
+  const handleDayClick = (day: number) => {
+    const clickedDate = new Date(currentYear, currentMonth, day);
+    
+    // If no range start, set it
+    if (!rangeStartDate) {
+      setRangeStartDate(clickedDate);
+      setRangeEndDate(null);
+      setSelectedDay(clickedDate);
+      return;
+    }
+    
+    // If we have a start date, set end date and trigger search
+    if (rangeStartDate && !rangeEndDate) {
+      // Ensure end is after start
+      if (clickedDate < rangeStartDate) {
+        setRangeStartDate(clickedDate);
+        setRangeEndDate(rangeStartDate);
+      } else {
+        setRangeEndDate(clickedDate);
+      }
+      
+      const start = clickedDate < rangeStartDate ? clickedDate : rangeStartDate;
+      const end = clickedDate < rangeStartDate ? rangeStartDate : clickedDate;
+      
+      const startStr = format(start, 'yyyy-MM-dd');
+      const endStr = format(end, 'yyyy-MM-dd');
+      
+      setAvailabilityDates({
+        start: startStr,
+        end: endStr
+      });
+      
+      // Automatically trigger availability check
+      checkAvailability(startStr, endStr);
+      
+      return;
+    }
+    
+    // If both dates are set, reset and start over
+    if (rangeStartDate && rangeEndDate) {
+      setRangeStartDate(clickedDate);
+      setRangeEndDate(null);
+      setSelectedDay(clickedDate);
     }
   };
 
@@ -299,9 +352,17 @@ export default function Calendrier() {
                     </div>
                   ))}
                   {days.map((day, index) => {
+                    const dayDate = day ? new Date(currentYear, currentMonth, day) : null;
                     const isToday = day === new Date().getDate() && 
                                     currentMonth === new Date().getMonth() && 
                                     currentYear === new Date().getFullYear();
+                    
+                    const isRangeStart = dayDate && rangeStartDate && 
+                                        dayDate.getTime() === rangeStartDate.getTime();
+                    const isRangeEnd = dayDate && rangeEndDate && 
+                                      dayDate.getTime() === rangeEndDate.getTime();
+                    const isInRange = dayDate && rangeStartDate && rangeEndDate &&
+                                     dayDate > rangeStartDate && dayDate < rangeEndDate;
                     
                     return (
                       <div
@@ -310,8 +371,10 @@ export default function Calendrier() {
                           min-h-[80px] md:min-h-[100px] p-1 md:p-2 border rounded-lg transition-colors
                           ${day ? 'bg-card hover:bg-muted cursor-pointer' : 'bg-transparent border-transparent'}
                           ${isToday ? 'border-primary bg-primary/10' : 'border-border'}
+                          ${isRangeStart || isRangeEnd ? 'bg-primary/20 border-primary' : ''}
+                          ${isInRange ? 'bg-primary/10' : ''}
                         `}
-                        onClick={() => day && setSelectedDay(new Date(currentYear, currentMonth, day))}
+                        onClick={() => day && handleDayClick(day)}
                       >
                         {day && (
                           <div className="text-xs md:text-sm font-medium text-foreground">
@@ -456,7 +519,7 @@ export default function Calendrier() {
             </div>
 
             <Button 
-              onClick={checkAvailability}
+              onClick={() => checkAvailability()}
               disabled={checkingAvailability}
               className="w-full"
             >
