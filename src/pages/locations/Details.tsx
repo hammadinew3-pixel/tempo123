@@ -63,6 +63,7 @@ export default function LocationDetails() {
     reason: '',
     notes: '',
     new_daily_rate: '',
+    change_day: '',
   });
 
   const [deliveryData, setDeliveryData] = useState({
@@ -413,12 +414,44 @@ export default function LocationDetails() {
       return;
     }
 
+    if (!changeVehicleData.change_day || parseInt(changeVehicleData.change_day) <= 0 || parseInt(changeVehicleData.change_day) > contract.duration) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: `Le jour du changement doit être entre 1 et ${contract.duration}`,
+      });
+      return;
+    }
+
     try {
+      const oldDailyRate = contract.daily_rate || 0;
       const newDailyRate = parseFloat(changeVehicleData.new_daily_rate);
-      const duration = contract.duration || 1;
-      const newTotalAmount = duration * newDailyRate;
+      const totalDuration = contract.duration || 1;
+      const changeDay = parseInt(changeVehicleData.change_day);
+      
+      // Calcul au prorata
+      const daysWithOldVehicle = changeDay - 1; // Jours déjà effectués avec l'ancien véhicule
+      const daysWithNewVehicle = totalDuration - daysWithOldVehicle; // Jours restants avec le nouveau véhicule
+      
+      // Montant pour les jours avec l'ancien véhicule
+      const amountOldVehicle = daysWithOldVehicle * oldDailyRate;
+      
+      // Montant pour les jours avec le nouveau véhicule
+      const amountNewVehicle = daysWithNewVehicle * newDailyRate;
+      
+      // Nouveau montant total
+      const newTotalAmount = amountOldVehicle + amountNewVehicle;
+      
+      // Calcul du reste à payer
       const advancePayment = contract.advance_payment || 0;
       const newRemainingAmount = newTotalAmount - advancePayment;
+
+      // Note détaillée du calcul
+      const calculationNote = `Changement au jour ${changeDay}/${totalDuration}. ` +
+        `Ancien véhicule: ${daysWithOldVehicle} jours × ${oldDailyRate} DH = ${amountOldVehicle.toFixed(2)} DH. ` +
+        `Nouveau véhicule: ${daysWithNewVehicle} jours × ${newDailyRate} DH = ${amountNewVehicle.toFixed(2)} DH. ` +
+        `Montant total: ${newTotalAmount.toFixed(2)} DH. ` +
+        `${changeVehicleData.notes ? changeVehicleData.notes : ''}`;
 
       // 1. Enregistrer le changement dans l'historique
       const { error: changeError } = await supabase
@@ -428,7 +461,7 @@ export default function LocationDetails() {
           old_vehicle_id: contract.vehicle_id,
           new_vehicle_id: changeVehicleData.new_vehicle_id,
           reason: changeVehicleData.reason,
-          notes: changeVehicleData.notes || null,
+          notes: calculationNote,
         }]);
 
       if (changeError) throw changeError;
@@ -464,7 +497,7 @@ export default function LocationDetails() {
 
       toast({
         title: "Succès",
-        description: "Véhicule changé avec succès",
+        description: `Véhicule changé. Nouveau montant total: ${newTotalAmount.toFixed(2)} DH`,
       });
 
       setShowChangeVehicleDialog(false);
@@ -473,6 +506,7 @@ export default function LocationDetails() {
         reason: '',
         notes: '',
         new_daily_rate: '',
+        change_day: '',
       });
       loadContractData();
     } catch (error: any) {
@@ -1775,6 +1809,21 @@ export default function LocationDetails() {
             </div>
             
             <div>
+              <Label>Jour du changement *</Label>
+              <Input
+                type="number"
+                min="1"
+                max={contract.duration}
+                value={changeVehicleData.change_day}
+                onChange={(e) => setChangeVehicleData({...changeVehicleData, change_day: e.target.value})}
+                placeholder={`Ex: 1 à ${contract.duration}`}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Indiquez à quel jour de la location le changement a lieu (1 = premier jour)
+              </p>
+            </div>
+
+            <div>
               <Label>Nouveau tarif journalier *</Label>
               <Input
                 type="number"
@@ -1783,15 +1832,43 @@ export default function LocationDetails() {
                 onChange={(e) => setChangeVehicleData({...changeVehicleData, new_daily_rate: e.target.value})}
                 placeholder="Ex: 300.00"
               />
-              {changeVehicleData.new_daily_rate && contract.duration && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Nouveau montant total: {(parseFloat(changeVehicleData.new_daily_rate) * contract.duration).toFixed(2)} DH
-                  {contract.advance_payment > 0 && (
-                    <> (Reste à payer: {(parseFloat(changeVehicleData.new_daily_rate) * contract.duration - contract.advance_payment).toFixed(2)} DH)</>
-                  )}
-                </p>
-              )}
             </div>
+
+            {changeVehicleData.new_daily_rate && changeVehicleData.change_day && contract.duration && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-md">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Calcul au prorata</p>
+                {(() => {
+                  const oldRate = contract.daily_rate || 0;
+                  const newRate = parseFloat(changeVehicleData.new_daily_rate);
+                  const changeDay = parseInt(changeVehicleData.change_day);
+                  const totalDays = contract.duration;
+                  const daysWithOld = changeDay - 1;
+                  const daysWithNew = totalDays - daysWithOld;
+                  const amountOld = daysWithOld * oldRate;
+                  const amountNew = daysWithNew * newRate;
+                  const totalAmount = amountOld + amountNew;
+                  const difference = totalAmount - (contract.total_amount || 0);
+
+                  return (
+                    <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                      <p>• Ancien véhicule: {daysWithOld} jour{daysWithOld > 1 ? 's' : ''} × {oldRate} DH = {amountOld.toFixed(2)} DH</p>
+                      <p>• Nouveau véhicule: {daysWithNew} jour{daysWithNew > 1 ? 's' : ''} × {newRate} DH = {amountNew.toFixed(2)} DH</p>
+                      <p className="font-semibold pt-1 border-t border-blue-300 dark:border-blue-700">
+                        Nouveau montant total: {totalAmount.toFixed(2)} DH
+                        {difference !== 0 && (
+                          <span className={difference > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
+                            {' '}({difference > 0 ? '+' : ''}{difference.toFixed(2)} DH)
+                          </span>
+                        )}
+                      </p>
+                      {contract.advance_payment > 0 && (
+                        <p>Reste à payer: {(totalAmount - contract.advance_payment).toFixed(2)} DH</p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
             
             <div>
               <Label>Raison du changement *</Label>
