@@ -687,6 +687,64 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_changes: {
+        Row: {
+          change_date: string
+          changed_by: string | null
+          contract_id: string
+          created_at: string
+          id: string
+          new_vehicle_id: string
+          notes: string | null
+          old_vehicle_id: string
+          reason: string | null
+        }
+        Insert: {
+          change_date?: string
+          changed_by?: string | null
+          contract_id: string
+          created_at?: string
+          id?: string
+          new_vehicle_id: string
+          notes?: string | null
+          old_vehicle_id: string
+          reason?: string | null
+        }
+        Update: {
+          change_date?: string
+          changed_by?: string | null
+          contract_id?: string
+          created_at?: string
+          id?: string
+          new_vehicle_id?: string
+          notes?: string | null
+          old_vehicle_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_changes_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_changes_new_vehicle_id_fkey"
+            columns: ["new_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_changes_old_vehicle_id_fkey"
+            columns: ["old_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_insurance: {
         Row: {
           assureur: string

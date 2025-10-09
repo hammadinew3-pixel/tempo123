@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, FileText, Plus, Check, X, Download, CheckCircle2, AlertCircle, Clock, Edit, DollarSign, Car, User, Calendar, MapPin, Key, RotateCcw, Users, CreditCard } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Plus, Check, X, Download, CheckCircle2, AlertCircle, Clock, Edit, DollarSign, Car, User, Calendar, MapPin, Key, RotateCcw, Users, CreditCard, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,8 @@ export default function LocationDetails() {
   const [contract, setContract] = useState<any>(null);
   const [secondaryDrivers, setSecondaryDrivers] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [vehicleChanges, setVehicleChanges] = useState<any[]>([]);
+  const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeliveryDialog, setShowDeliveryDialog] = useState(false);
   const [showReturnDialog, setShowReturnDialog] = useState(false);
@@ -30,6 +32,7 @@ export default function LocationDetails() {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
   const [showCautionDialog, setShowCautionDialog] = useState(false);
+  const [showChangeVehicleDialog, setShowChangeVehicleDialog] = useState(false);
   
   const [contractEditData, setContractEditData] = useState({
     date_debut: '',
@@ -52,6 +55,13 @@ export default function LocationDetails() {
     recuperation: true,
     conducteurs: true,
     paiements: true,
+    vehicleHistory: true,
+  });
+
+  const [changeVehicleData, setChangeVehicleData] = useState({
+    new_vehicle_id: '',
+    reason: '',
+    notes: '',
   });
 
   const [deliveryData, setDeliveryData] = useState({
@@ -160,6 +170,29 @@ export default function LocationDetails() {
 
       if (paymentsError) throw paymentsError;
       setPayments(paymentsData || []);
+
+      // Load vehicle changes history
+      const { data: changesData, error: changesError } = await supabase
+        .from("vehicle_changes")
+        .select(`
+          *,
+          old_vehicle:old_vehicle_id (immatriculation, marque, modele),
+          new_vehicle:new_vehicle_id (immatriculation, marque, modele)
+        `)
+        .eq("contract_id", id)
+        .order("change_date", { ascending: false });
+
+      if (changesError) throw changesError;
+      setVehicleChanges(changesData || []);
+
+      // Load available vehicles for change
+      const { data: availableData, error: availableError } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("statut", "disponible");
+
+      if (availableError) throw availableError;
+      setAvailableVehicles(availableData || []);
 
     } catch (error: any) {
       console.error("Erreur chargement:", error);
@@ -347,6 +380,112 @@ export default function LocationDetails() {
         variant: "destructive",
         title: "Erreur",
         description: error.message,
+      });
+    }
+  };
+
+  const handleChangeVehicle = async () => {
+    if (!changeVehicleData.new_vehicle_id) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez sélectionner un nouveau véhicule",
+      });
+      return;
+    }
+
+    if (!changeVehicleData.reason) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez indiquer la raison du changement",
+      });
+      return;
+    }
+
+    try {
+      // 1. Enregistrer le changement dans l'historique
+      const { error: changeError } = await supabase
+        .from("vehicle_changes")
+        .insert([{
+          contract_id: id,
+          old_vehicle_id: contract.vehicle_id,
+          new_vehicle_id: changeVehicleData.new_vehicle_id,
+          reason: changeVehicleData.reason,
+          notes: changeVehicleData.notes || null,
+        }]);
+
+      if (changeError) throw changeError;
+
+      // 2. Mettre à jour le contrat avec le nouveau véhicule
+      const { error: contractError } = await supabase
+        .from("contracts")
+        .update({ vehicle_id: changeVehicleData.new_vehicle_id })
+        .eq("id", id);
+
+      if (contractError) throw contractError;
+
+      // 3. Libérer l'ancien véhicule
+      const { error: oldVehicleError } = await supabase
+        .from("vehicles")
+        .update({ statut: 'disponible' })
+        .eq("id", contract.vehicle_id);
+
+      if (oldVehicleError) throw oldVehicleError;
+
+      // 4. Marquer le nouveau véhicule comme loué
+      const { error: newVehicleError } = await supabase
+        .from("vehicles")
+        .update({ statut: 'loue' })
+        .eq("id", changeVehicleData.new_vehicle_id);
+
+      if (newVehicleError) throw newVehicleError;
+
+      toast({
+        title: "Succès",
+        description: "Véhicule changé avec succès",
+      });
+
+      setShowChangeVehicleDialog(false);
+      setChangeVehicleData({
+        new_vehicle_id: '',
+        reason: '',
+        notes: '',
+      });
+      loadContractData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleGenerateInvoice = async () => {
+    try {
+      toast({
+        title: "Génération en cours",
+        description: "La facture est en cours de génération...",
+      });
+
+      // Pour l'instant, on ouvre juste le PDF du contrat
+      // TODO: Créer une fonction edge spécifique pour générer une facture
+      if (contract.pdf_url) {
+        window.open(contract.pdf_url, '_blank');
+        toast({
+          title: "Facture générée",
+          description: "La facture a été ouverte dans un nouvel onglet",
+        });
+      } else {
+        // Générer le PDF d'abord
+        await handleGeneratePDF();
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de générer la facture",
       });
     }
   };
@@ -594,6 +733,16 @@ export default function LocationDetails() {
         </div>
         <div className="flex gap-2">
           {getStatusBadge(contract.statut)}
+          <Button variant="outline" size="sm" onClick={handleGenerateInvoice}>
+            <FileText className="w-4 h-4 mr-2" />
+            Générer facture
+          </Button>
+          {(contract.statut === 'livre' || contract.statut === 'contrat_valide') && (
+            <Button variant="outline" size="sm" onClick={() => setShowChangeVehicleDialog(true)}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Changer véhicule
+            </Button>
+          )}
           {contract.pdf_url && (
             <Button variant="outline" size="sm" onClick={() => window.open(contract.pdf_url, '_blank')}>
               <Download className="w-4 h-4 mr-2" />
@@ -1061,6 +1210,55 @@ export default function LocationDetails() {
         </Collapsible>
       </Card>
 
+      {/* Historique des changements de véhicule */}
+      {vehicleChanges.length > 0 && (
+        <Card>
+          <Collapsible open={openSections.vehicleHistory} onOpenChange={() => toggleSection("vehicleHistory")}>
+            <CollapsibleTrigger className="w-full">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm font-medium">
+                  <RefreshCw className="w-4 h-4 text-primary" />
+                  <span>Historique des changements de véhicule</span>
+                </div>
+                {openSections.vehicleHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </CardContent>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="px-4 pb-4">
+                <div className="space-y-4">
+                  {vehicleChanges.map((change: any) => (
+                    <div key={change.id} className="border-l-2 border-primary pl-4 py-2">
+                      <div className="text-sm space-y-1">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span>{format(new Date(change.change_date), "dd/MM/yyyy HH:mm", { locale: fr })}</span>
+                        </div>
+                        <div className="font-medium">
+                          <span className="text-red-600">
+                            {change.old_vehicle?.marque} {change.old_vehicle?.modele} ({change.old_vehicle?.immatriculation})
+                          </span>
+                          {' → '}
+                          <span className="text-green-600">
+                            {change.new_vehicle?.marque} {change.new_vehicle?.modele} ({change.new_vehicle?.immatriculation})
+                          </span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          <span className="font-medium">Raison:</span> {change.reason}
+                        </div>
+                        {change.notes && (
+                          <div className="text-muted-foreground">
+                            <span className="font-medium">Notes:</span> {change.notes}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+      )}
+
       {/* Dialog Livraison */}
       <Dialog open={showDeliveryDialog} onOpenChange={setShowDeliveryDialog}>
         <DialogContent>
@@ -1505,6 +1703,91 @@ export default function LocationDetails() {
               </Button>
               <Button onClick={handleUpdateCaution}>
                 Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Changement de véhicule */}
+      <Dialog open={showChangeVehicleDialog} onOpenChange={setShowChangeVehicleDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Changer de véhicule</DialogTitle>
+            <DialogDescription>
+              Remplacer le véhicule actuel par un autre véhicule disponible
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-muted p-3 rounded-md">
+              <div className="text-sm font-medium mb-1">Véhicule actuel</div>
+              <div className="text-sm text-muted-foreground">
+                {contract.vehicles?.marque} {contract.vehicles?.modele} - {contract.vehicles?.immatriculation}
+              </div>
+            </div>
+            
+            <div>
+              <Label>Nouveau véhicule *</Label>
+              <Select 
+                value={changeVehicleData.new_vehicle_id} 
+                onValueChange={(v) => setChangeVehicleData({...changeVehicleData, new_vehicle_id: v})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un véhicule" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableVehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Raison du changement *</Label>
+              <Select 
+                value={changeVehicleData.reason} 
+                onValueChange={(v) => setChangeVehicleData({...changeVehicleData, reason: v})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une raison" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="panne">Panne technique</SelectItem>
+                  <SelectItem value="accident">Accident</SelectItem>
+                  <SelectItem value="demande_client">Demande du client</SelectItem>
+                  <SelectItem value="maintenance">Maintenance urgente</SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Notes complémentaires</Label>
+              <Textarea
+                value={changeVehicleData.notes}
+                onChange={(e) => setChangeVehicleData({...changeVehicleData, notes: e.target.value})}
+                placeholder="Détails supplémentaires sur le changement..."
+                rows={3}
+              />
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 rounded-md flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium mb-1">Important</p>
+                <p>Le véhicule actuel sera libéré et marqué comme disponible. Le nouveau véhicule sera marqué comme loué.</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowChangeVehicleDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleChangeVehicle}>
+                Confirmer le changement
               </Button>
             </div>
           </div>
