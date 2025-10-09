@@ -373,11 +373,11 @@ export default function Vehicules() {
                   {vehicles.map((vehicle) => (
                     <tr 
                       key={vehicle.id} 
-                      className="border-b last:border-0 hover:bg-accent/50 cursor-pointer transition-colors group"
+                      className="border-b last:border-0 cursor-pointer group"
                       onClick={() => navigate(`/vehicules/${vehicle.id}`)}
                     >
                       <td className="py-4 pl-4">
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -385,7 +385,7 @@ export default function Vehicules() {
                               e.stopPropagation();
                               openEditDialog(vehicle);
                             }}
-                            className="hover:text-primary transition-colors"
+                            className="hover:bg-accent transition-colors"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -396,7 +396,7 @@ export default function Vehicules() {
                               e.stopPropagation();
                               handleDelete(vehicle.id);
                             }}
-                            className="hover:text-destructive transition-colors"
+                            className="hover:bg-accent transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -404,12 +404,12 @@ export default function Vehicules() {
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                             <span className="text-xs font-medium text-primary">{vehicle.marque.charAt(0)}</span>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground">Cat. Mixte</div>
-                            <div className="font-medium text-foreground group-hover:text-primary transition-colors">{vehicle.marque} {vehicle.modele}</div>
+                            <div className="font-medium text-foreground">{vehicle.marque} {vehicle.modele}</div>
                           </div>
                         </div>
                       </td>
