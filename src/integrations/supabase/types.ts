@@ -440,6 +440,186 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_insurance: {
+        Row: {
+          assureur: string
+          banque: string | null
+          coordonnees_assureur: string | null
+          created_at: string
+          date_debut: string
+          date_expiration: string
+          date_paiement: string
+          id: string
+          mode_paiement: Database["public"]["Enums"]["payment_method"]
+          montant: number
+          numero_cheque: string | null
+          numero_ordre: string
+          numero_police: string | null
+          remarques: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          assureur: string
+          banque?: string | null
+          coordonnees_assureur?: string | null
+          created_at?: string
+          date_debut: string
+          date_expiration: string
+          date_paiement: string
+          id?: string
+          mode_paiement: Database["public"]["Enums"]["payment_method"]
+          montant: number
+          numero_cheque?: string | null
+          numero_ordre: string
+          numero_police?: string | null
+          remarques?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          assureur?: string
+          banque?: string | null
+          coordonnees_assureur?: string | null
+          created_at?: string
+          date_debut?: string
+          date_expiration?: string
+          date_paiement?: string
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["payment_method"]
+          montant?: number
+          numero_cheque?: string | null
+          numero_ordre?: string
+          numero_police?: string | null
+          remarques?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_insurance_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_technical_inspection: {
+        Row: {
+          banque: string | null
+          centre_controle: string | null
+          created_at: string
+          date_expiration: string
+          date_paiement: string | null
+          date_visite: string
+          id: string
+          mode_paiement: Database["public"]["Enums"]["payment_method"] | null
+          montant: number | null
+          numero_cheque: string | null
+          numero_ordre: string
+          remarques: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          banque?: string | null
+          centre_controle?: string | null
+          created_at?: string
+          date_expiration: string
+          date_paiement?: string | null
+          date_visite: string
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["payment_method"] | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre: string
+          remarques?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          banque?: string | null
+          centre_controle?: string | null
+          created_at?: string
+          date_expiration?: string
+          date_paiement?: string | null
+          date_visite?: string
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["payment_method"] | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string
+          remarques?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_technical_inspection_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_vignette: {
+        Row: {
+          annee: number
+          banque: string | null
+          created_at: string
+          date_expiration: string
+          date_paiement: string | null
+          id: string
+          mode_paiement: Database["public"]["Enums"]["payment_method"] | null
+          montant: number | null
+          numero_cheque: string | null
+          numero_ordre: string
+          remarques: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          annee: number
+          banque?: string | null
+          created_at?: string
+          date_expiration: string
+          date_paiement?: string | null
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["payment_method"] | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre: string
+          remarques?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          annee?: number
+          banque?: string | null
+          created_at?: string
+          date_expiration?: string
+          date_paiement?: string | null
+          id?: string
+          mode_paiement?: Database["public"]["Enums"]["payment_method"] | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string
+          remarques?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_vignette_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           annee: number

@@ -48,9 +48,11 @@ export default function NouveauVehicule() {
         return;
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('vehicles')
-        .insert([formData as VehicleInsert]);
+        .insert([formData as VehicleInsert])
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -59,7 +61,15 @@ export default function NouveauVehicule() {
         description: "Le véhicule a été créé avec succès"
       });
 
-      navigate('/vehicules');
+      // Navigate to post-creation workflow
+      navigate(`/vehicules/${data.id}/workflow`, {
+        state: {
+          vehicleInfo: {
+            marque: data.marque,
+            immatriculation: data.immatriculation
+          }
+        }
+      });
     } catch (error: any) {
       toast({
         title: "Erreur",
