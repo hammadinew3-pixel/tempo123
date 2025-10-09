@@ -15,6 +15,27 @@ type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleStatus = Database['public']['Enums']['vehicle_status'];
 type VehicleCategory = Database['public']['Enums']['vehicle_category'];
 
+// Mapping des marques et leurs modèles
+const MARQUES_MODELES: Record<string, string[]> = {
+  BMW: ['Série 1', 'Série 2', 'Série 3', 'Série 4', 'Série 5', 'Série 6', 'Série 7', 'X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'Z4', 'i3', 'i4', 'iX'],
+  Mercedes: ['Classe A', 'Classe B', 'Classe C', 'Classe E', 'Classe S', 'CLA', 'CLS', 'GLA', 'GLB', 'GLC', 'GLE', 'GLS', 'EQA', 'EQB', 'EQC', 'EQE', 'EQS'],
+  Audi: ['A1', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'Q2', 'Q3', 'Q4 e-tron', 'Q5', 'Q7', 'Q8', 'e-tron', 'TT'],
+  Volkswagen: ['Polo', 'Golf', 'Jetta', 'Passat', 'Arteon', 'T-Cross', 'T-Roc', 'Tiguan', 'Touareg', 'ID.3', 'ID.4', 'ID.5'],
+  Renault: ['Clio', 'Captur', 'Mégane', 'Kadjar', 'Arkana', 'Austral', 'Koleos', 'Talisman', 'Twingo', 'Zoe'],
+  Peugeot: ['208', '2008', '308', '3008', '408', '508', '5008', 'Rifter', 'e-208', 'e-2008'],
+  Dacia: ['Sandero', 'Sandero Stepway', 'Logan', 'Duster', 'Jogger', 'Spring'],
+  Toyota: ['Yaris', 'Corolla', 'Camry', 'C-HR', 'RAV4', 'Highlander', 'Land Cruiser', 'Prius', 'Aygo X'],
+  Hyundai: ['i10', 'i20', 'i30', 'Bayon', 'Kona', 'Tucson', 'Santa Fe', 'Ioniq 5', 'Ioniq 6'],
+  Kia: ['Picanto', 'Rio', 'Ceed', 'Stonic', 'Niro', 'Sportage', 'Sorento', 'EV6', 'EV9'],
+  Fiat: ['500', 'Panda', 'Tipo', '500X', 'Doblo'],
+  Citroën: ['C3', 'C3 Aircross', 'C4', 'C5 Aircross', 'Berlingo', 'ë-C4'],
+  Nissan: ['Micra', 'Juke', 'Qashqai', 'X-Trail', 'Ariya', 'Leaf'],
+  Ford: ['Fiesta', 'Focus', 'Puma', 'Kuga', 'Explorer', 'Mustang Mach-E'],
+  Opel: ['Corsa', 'Astra', 'Crossland', 'Grandland', 'Mokka', 'Combo'],
+  Seat: ['Ibiza', 'Leon', 'Arona', 'Ateca', 'Tarraco'],
+  Skoda: ['Fabia', 'Scala', 'Octavia', 'Kamiq', 'Karoq', 'Kodiaq', 'Enyaq']
+};
+
 export default function ModifierVehicule() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -41,6 +62,7 @@ export default function ModifierVehicule() {
 
   const [isInService, setIsInService] = useState(true);
   const [isSousLocation, setIsSousLocation] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
 
   useEffect(() => {
     if (id) {
@@ -76,6 +98,11 @@ export default function ModifierVehicule() {
 
       setIsInService(data.statut === 'disponible' || data.statut === 'loue' || data.statut === 'reserve');
       
+      // Set available models based on the vehicle's brand
+      if (data.marque && MARQUES_MODELES[data.marque]) {
+        setAvailableModels(MARQUES_MODELES[data.marque]);
+      }
+      
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -86,6 +113,15 @@ export default function ModifierVehicule() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMarqueChange = (marque: string) => {
+    setFormData({
+      ...formData,
+      marque,
+      modele: '' // Reset model when brand changes
+    });
+    setAvailableModels(MARQUES_MODELES[marque] || []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -181,22 +217,15 @@ export default function ModifierVehicule() {
               <Label htmlFor="marque">Marque *</Label>
               <Select 
                 value={formData.marque} 
-                onValueChange={(value) => setFormData({...formData, marque: value})}
+                onValueChange={handleMarqueChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BMW">BMW</SelectItem>
-                  <SelectItem value="Mercedes">Mercedes</SelectItem>
-                  <SelectItem value="Audi">Audi</SelectItem>
-                  <SelectItem value="Volkswagen">Volkswagen</SelectItem>
-                  <SelectItem value="Renault">Renault</SelectItem>
-                  <SelectItem value="Peugeot">Peugeot</SelectItem>
-                  <SelectItem value="Dacia">Dacia</SelectItem>
-                  <SelectItem value="Toyota">Toyota</SelectItem>
-                  <SelectItem value="Hyundai">Hyundai</SelectItem>
-                  <SelectItem value="Kia">Kia</SelectItem>
+                <SelectContent className="bg-background">
+                  {Object.keys(MARQUES_MODELES).sort().map((marque) => (
+                    <SelectItem key={marque} value={marque}>{marque}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -253,12 +282,20 @@ export default function ModifierVehicule() {
             {/* Modèle */}
             <div>
               <Label htmlFor="modele">Modèle</Label>
-              <Input
-                id="modele"
-                value={formData.modele}
-                onChange={(e) => setFormData({...formData, modele: e.target.value})}
-                placeholder="Ex: Serie 3"
-              />
+              <Select 
+                value={formData.modele} 
+                onValueChange={(value) => setFormData({...formData, modele: value})}
+                disabled={!formData.marque || availableModels.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={formData.marque ? "Sélectionner un modèle" : "Sélectionnez d'abord une marque"} />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {availableModels.map((modele) => (
+                    <SelectItem key={modele} value={modele}>{modele}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Prix location */}
