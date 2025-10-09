@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, FileText, Plus, Check, X, Download, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Plus, Check, X, Download, CheckCircle2, AlertCircle, Clock, Edit, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,23 @@ export default function LocationDetails() {
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   const [showDriverDialog, setShowDriverDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showEditContractDialog, setShowEditContractDialog] = useState(false);
+  const [showCautionDialog, setShowCautionDialog] = useState(false);
+  
+  const [contractEditData, setContractEditData] = useState({
+    date_debut: '',
+    date_fin: '',
+    daily_rate: '',
+    caution_montant: '',
+    start_location: '',
+    end_location: '',
+    notes: '',
+  });
+
+  const [cautionData, setCautionData] = useState({
+    caution_statut: '',
+    caution_notes: '',
+  });
   
   const [openSections, setOpenSections] = useState({
     reservation: true,
@@ -73,6 +90,40 @@ export default function LocationDetails() {
   useEffect(() => {
     loadContractData();
   }, [id]);
+
+  useEffect(() => {
+    if (contract) {
+      setContractEditData({
+        date_debut: contract.date_debut,
+        date_fin: contract.date_fin,
+        daily_rate: contract.daily_rate?.toString() || '',
+        caution_montant: contract.caution_montant?.toString() || '',
+        start_location: contract.start_location || '',
+        end_location: contract.end_location || '',
+        notes: contract.notes || '',
+      });
+      
+      if (contract.delivery_date) {
+        setDeliveryData({
+          delivery_type: contract.delivery_type || '',
+          delivery_date: contract.delivery_date ? new Date(contract.delivery_date).toISOString().slice(0, 16) : '',
+          delivery_km: contract.delivery_km?.toString() || '',
+          delivery_fuel_level: contract.delivery_fuel_level || '',
+          delivery_notes: contract.delivery_notes || '',
+        });
+      }
+      
+      if (contract.return_date) {
+        setReturnData({
+          return_type: contract.return_type || '',
+          return_date: contract.return_date ? new Date(contract.return_date).toISOString().slice(0, 16) : '',
+          return_km: contract.return_km?.toString() || '',
+          return_fuel_level: contract.return_fuel_level || '',
+          return_notes: contract.return_notes || '',
+        });
+      }
+    }
+  }, [contract]);
 
   const loadContractData = async () => {
     try {
@@ -123,16 +174,22 @@ export default function LocationDetails() {
 
   const handleDelivery = async () => {
     try {
+      const updateData: any = {
+        delivery_type: deliveryData.delivery_type,
+        delivery_date: deliveryData.delivery_date,
+        delivery_km: parseInt(deliveryData.delivery_km) || null,
+        delivery_fuel_level: deliveryData.delivery_fuel_level,
+        delivery_notes: deliveryData.delivery_notes,
+      };
+      
+      // Only update status to 'actif' if it's currently 'brouillon'
+      if (contract.statut === 'brouillon') {
+        updateData.statut = 'actif';
+      }
+
       const { error } = await supabase
         .from("contracts")
-        .update({
-          delivery_type: deliveryData.delivery_type,
-          delivery_date: deliveryData.delivery_date,
-          delivery_km: parseInt(deliveryData.delivery_km) || null,
-          delivery_fuel_level: deliveryData.delivery_fuel_level,
-          delivery_notes: deliveryData.delivery_notes,
-          statut: 'actif',
-        })
+        .update(updateData)
         .eq("id", id);
 
       if (error) throw error;
@@ -155,16 +212,22 @@ export default function LocationDetails() {
 
   const handleReturn = async () => {
     try {
+      const updateData: any = {
+        return_type: returnData.return_type,
+        return_date: returnData.return_date,
+        return_km: parseInt(returnData.return_km) || null,
+        return_fuel_level: returnData.return_fuel_level,
+        return_notes: returnData.return_notes,
+      };
+      
+      // Only update status to 'termine' if not already modified
+      if (contract.statut === 'actif') {
+        updateData.statut = 'termine';
+      }
+
       const { error } = await supabase
         .from("contracts")
-        .update({
-          return_type: returnData.return_type,
-          return_date: returnData.return_date,
-          return_km: parseInt(returnData.return_km) || null,
-          return_fuel_level: returnData.return_fuel_level,
-          return_notes: returnData.return_notes,
-          statut: 'termine',
-        })
+        .update(updateData)
         .eq("id", id);
 
       if (error) throw error;
@@ -395,22 +458,67 @@ export default function LocationDetails() {
     }
   };
 
-  const handleRefundCaution = async () => {
-    if (!confirm("Confirmer le remboursement de la caution ?")) return;
-
+  const handleUpdateContract = async () => {
     try {
+      // Recalculate duration and amounts
+      const startDate = new Date(contractEditData.date_debut);
+      const endDate = new Date(contractEditData.date_fin);
+      const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const dailyRate = parseFloat(contractEditData.daily_rate);
+      const totalAmount = duration * dailyRate;
+      const remainingAmount = totalAmount - paidAmount;
+
       const { error } = await supabase
         .from("contracts")
-        .update({ caution_statut: 'remboursee' })
+        .update({
+          date_debut: contractEditData.date_debut,
+          date_fin: contractEditData.date_fin,
+          duration,
+          daily_rate: dailyRate,
+          total_amount: totalAmount,
+          remaining_amount: remainingAmount,
+          caution_montant: parseFloat(contractEditData.caution_montant),
+          start_location: contractEditData.start_location,
+          end_location: contractEditData.end_location,
+          notes: contractEditData.notes,
+        })
         .eq("id", id);
 
       if (error) throw error;
 
       toast({
         title: "Succès",
-        description: "La caution a été marquée comme remboursée",
+        description: "Contrat mis à jour avec succès",
       });
 
+      setShowEditContractDialog(false);
+      loadContractData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleUpdateCaution = async () => {
+    try {
+      const { error } = await supabase
+        .from("contracts")
+        .update({ 
+          caution_statut: cautionData.caution_statut as any,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Statut de la caution mis à jour",
+      });
+
+      setShowCautionDialog(false);
       loadContractData();
     } catch (error: any) {
       toast({
@@ -602,7 +710,13 @@ export default function LocationDetails() {
                 </p>
               </div>
             </div>
-            <Button onClick={handleRefundCaution}>
+            <Button onClick={() => {
+              setCautionData({ 
+                caution_statut: 'remboursee',
+                caution_notes: '' 
+              });
+              setShowCautionDialog(true);
+            }}>
               <Check className="w-4 h-4 mr-2" />
               Marquer comme remboursée
             </Button>
@@ -611,7 +725,7 @@ export default function LocationDetails() {
       )}
 
       {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Total à payer */}
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-0">
           <CardContent className="p-6">
@@ -626,6 +740,42 @@ export default function LocationDetails() {
             <div className="text-sm font-semibold">
               Reste: {remainingAmount.toFixed(2)} DH
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Caution */}
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-0 relative">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-muted-foreground">CAUTION</div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0"
+                onClick={() => {
+                  setCautionData({ 
+                    caution_statut: contract.caution_statut,
+                    caution_notes: '' 
+                  });
+                  setShowCautionDialog(true);
+                }}
+              >
+                <Edit className="w-3 h-3" />
+              </Button>
+            </div>
+            <div className="text-3xl font-bold mb-2">
+              {contract.caution_montant?.toFixed(2)}
+              <span className="text-lg ml-1">DH</span>
+            </div>
+            <Badge variant="outline" className={
+              contract.caution_statut === 'remboursee' ? 'bg-green-100 text-green-800 border-0' :
+              contract.caution_statut === 'utilisee' ? 'bg-red-100 text-red-800 border-0' :
+              'bg-yellow-100 text-yellow-800 border-0'
+            }>
+              {contract.caution_statut === 'bloquee' && '🔒 Bloquée'}
+              {contract.caution_statut === 'remboursee' && '✅ Remboursée'}
+              {contract.caution_statut === 'utilisee' && '❌ Utilisée'}
+            </Badge>
           </CardContent>
         </Card>
 
@@ -662,7 +812,19 @@ export default function LocationDetails() {
                 <div className="flex items-center space-x-2 text-sm font-medium">
                   <span>📋 Info de réservation</span>
                 </div>
-                {openSections.reservation ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEditContractDialog(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  {openSections.reservation ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
               </CardContent>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -708,7 +870,21 @@ export default function LocationDetails() {
                 <div className="flex items-center space-x-2 text-sm font-medium">
                   <span>🔑 Info de livraison</span>
                 </div>
-                {openSections.livraison ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="flex items-center gap-2">
+                  {contract.delivery_date && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeliveryDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {openSections.livraison ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
               </CardContent>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -816,7 +992,21 @@ export default function LocationDetails() {
                 <div className="flex items-center space-x-2 text-sm font-medium">
                   <span>🔙 Info de retour</span>
                 </div>
-                {openSections.recuperation ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="flex items-center gap-2">
+                  {contract.return_date && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowReturnDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {openSections.recuperation ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
               </CardContent>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -1216,6 +1406,159 @@ export default function LocationDetails() {
                 Annuler
               </Button>
               <Button onClick={handleAddPayment}>
+                Enregistrer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Modifier Contrat */}
+      <Dialog open={showEditContractDialog} onOpenChange={setShowEditContractDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier la réservation</DialogTitle>
+            <DialogDescription>
+              Modifiez les dates, tarifs ou prolongez la location
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Date début *</Label>
+                <Input
+                  type="date"
+                  value={contractEditData.date_debut}
+                  onChange={(e) => setContractEditData({...contractEditData, date_debut: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Date fin *</Label>
+                <Input
+                  type="date"
+                  value={contractEditData.date_fin}
+                  onChange={(e) => setContractEditData({...contractEditData, date_fin: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Tarif journalier *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={contractEditData.daily_rate}
+                  onChange={(e) => setContractEditData({...contractEditData, daily_rate: e.target.value})}
+                  placeholder="Ex: 300.00"
+                />
+              </div>
+              <div>
+                <Label>Caution *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={contractEditData.caution_montant}
+                  onChange={(e) => setContractEditData({...contractEditData, caution_montant: e.target.value})}
+                  placeholder="Ex: 3000.00"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Lieu de départ</Label>
+              <Input
+                value={contractEditData.start_location}
+                onChange={(e) => setContractEditData({...contractEditData, start_location: e.target.value})}
+                placeholder="Ex: Casablanca"
+              />
+            </div>
+            <div>
+              <Label>Lieu de retour</Label>
+              <Input
+                value={contractEditData.end_location}
+                onChange={(e) => setContractEditData({...contractEditData, end_location: e.target.value})}
+                placeholder="Ex: Marrakech"
+              />
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea
+                value={contractEditData.notes}
+                onChange={(e) => setContractEditData({...contractEditData, notes: e.target.value})}
+                placeholder="Remarques diverses..."
+                rows={3}
+              />
+            </div>
+            <div className="bg-blue-50 p-4 rounded-md">
+              <p className="text-sm font-medium text-blue-900 mb-2">Aperçu du calcul</p>
+              <div className="text-sm text-blue-700 space-y-1">
+                <p>Durée: {calculateDuration(contractEditData.date_debut, contractEditData.date_fin)} jours</p>
+                <p>Total: {(calculateDuration(contractEditData.date_debut, contractEditData.date_fin) * parseFloat(contractEditData.daily_rate || '0')).toFixed(2)} DH</p>
+                <p>Reste à payer: {((calculateDuration(contractEditData.date_debut, contractEditData.date_fin) * parseFloat(contractEditData.daily_rate || '0')) - paidAmount).toFixed(2)} DH</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditContractDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateContract}>
+                Enregistrer les modifications
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Gestion Caution */}
+      <Dialog open={showCautionDialog} onOpenChange={setShowCautionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gestion de la caution</DialogTitle>
+            <DialogDescription>
+              Modifier le statut de la caution ({contract.caution_montant?.toFixed(2)} DH)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Statut de la caution *</Label>
+              <Select value={cautionData.caution_statut} onValueChange={(v) => setCautionData({...cautionData, caution_statut: v})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bloquee">🔒 Bloquée</SelectItem>
+                  <SelectItem value="remboursee">✅ Remboursée</SelectItem>
+                  <SelectItem value="utilisee">❌ Utilisée (retenue)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Notes (optionnel)</Label>
+              <Textarea
+                value={cautionData.caution_notes}
+                onChange={(e) => setCautionData({...cautionData, caution_notes: e.target.value})}
+                placeholder="Raison de l'utilisation de la caution, etc."
+                rows={3}
+              />
+            </div>
+            {cautionData.caution_statut === 'utilisee' && (
+              <div className="bg-red-50 p-3 rounded-md">
+                <p className="text-sm text-red-800">
+                  ⚠️ Attention: La caution sera marquée comme utilisée et ne pourra pas être remboursée automatiquement.
+                </p>
+              </div>
+            )}
+            {cautionData.caution_statut === 'remboursee' && (
+              <div className="bg-green-50 p-3 rounded-md">
+                <p className="text-sm text-green-800">
+                  ✅ La caution sera marquée comme remboursée au client.
+                </p>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowCautionDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateCaution}>
                 Enregistrer
               </Button>
             </div>
