@@ -408,10 +408,10 @@ export default function Calendrier() {
                 </div>
 
                 {/* Contract bars overlay */}
-                <div className="absolute top-[60px] left-0 right-0 pointer-events-none">
+                <div className="absolute top-[70px] md:top-[80px] left-0 right-0 pointer-events-none">
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {contractBars.map((bar, idx) => {
-                      const rowOffset = bar.row * 30; // 30px per row for spacing
+                      const rowOffset = bar.row * 32; // 32px per row for spacing
                       const colIndex = bar.startCol % 7;
                       const weekRow = Math.floor(bar.startCol / 7);
                       
@@ -422,7 +422,7 @@ export default function Calendrier() {
                           style={{
                             gridColumn: `${colIndex + 1} / span ${Math.min(bar.width, 7 - colIndex)}`,
                             gridRow: weekRow + 1,
-                            marginTop: `${rowOffset}px`,
+                            marginTop: `${rowOffset + 5}px`,
                             zIndex: 10 + bar.row
                           }}
                           onClick={() => {
@@ -552,7 +552,6 @@ export default function Calendrier() {
                         }
                       }}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      initialFocus
                       className="pointer-events-auto"
                     />
                   </PopoverContent>
