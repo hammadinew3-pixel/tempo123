@@ -939,11 +939,23 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "agent" | "comptable"
-      assistance_status: "ouvert" | "cloture"
+      assistance_status:
+        | "ouvert"
+        | "cloture"
+        | "contrat_valide"
+        | "livre"
+        | "retour_effectue"
       assistance_type: "remplacement" | "prolongation"
       caution_status: "bloquee" | "utilisee" | "remboursee"
       client_type: "particulier" | "entreprise"
-      contract_status: "brouillon" | "actif" | "termine" | "annule"
+      contract_status:
+        | "brouillon"
+        | "actif"
+        | "termine"
+        | "annule"
+        | "contrat_valide"
+        | "livre"
+        | "retour_effectue"
       expense_category:
         | "entretien"
         | "assurance"
@@ -1083,11 +1095,25 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "agent", "comptable"],
-      assistance_status: ["ouvert", "cloture"],
+      assistance_status: [
+        "ouvert",
+        "cloture",
+        "contrat_valide",
+        "livre",
+        "retour_effectue",
+      ],
       assistance_type: ["remplacement", "prolongation"],
       caution_status: ["bloquee", "utilisee", "remboursee"],
       client_type: ["particulier", "entreprise"],
-      contract_status: ["brouillon", "actif", "termine", "annule"],
+      contract_status: [
+        "brouillon",
+        "actif",
+        "termine",
+        "annule",
+        "contrat_valide",
+        "livre",
+        "retour_effectue",
+      ],
       expense_category: [
         "entretien",
         "assurance",

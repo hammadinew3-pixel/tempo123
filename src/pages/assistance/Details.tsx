@@ -46,12 +46,18 @@ export default function AssistanceDetails() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      ouvert: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-      cloture: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20',
+      ouvert: 'bg-gray-100 text-gray-800 dark:text-gray-400 border-gray-500/20',
+      contrat_valide: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      livre: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
+      retour_effectue: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      cloture: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
     };
 
     const labels: Record<string, string> = {
-      ouvert: 'Ouvert',
+      ouvert: 'Réservation',
+      contrat_valide: 'Contrat validé',
+      livre: 'En cours',
+      retour_effectue: 'Retour effectué',
       cloture: 'Clôturé',
     };
 

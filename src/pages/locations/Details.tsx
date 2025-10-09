@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { ContractWorkflow } from "@/components/workflow/ContractWorkflow";
 
 export default function LocationDetails() {
   const { id } = useParams();
@@ -180,12 +181,8 @@ export default function LocationDetails() {
         delivery_km: parseInt(deliveryData.delivery_km) || null,
         delivery_fuel_level: deliveryData.delivery_fuel_level,
         delivery_notes: deliveryData.delivery_notes,
+        statut: 'livre', // Passe au statut "livre" (en cours)
       };
-      
-      // Only update status to 'actif' if it's currently 'brouillon'
-      if (contract.statut === 'brouillon') {
-        updateData.statut = 'actif';
-      }
 
       const { error } = await supabase
         .from("contracts")
@@ -196,7 +193,7 @@ export default function LocationDetails() {
 
       toast({
         title: "Succès",
-        description: "Informations de livraison enregistrées",
+        description: "Véhicule livré, location en cours",
       });
 
       setShowDeliveryDialog(false);
@@ -218,12 +215,8 @@ export default function LocationDetails() {
         return_km: parseInt(returnData.return_km) || null,
         return_fuel_level: returnData.return_fuel_level,
         return_notes: returnData.return_notes,
+        statut: 'retour_effectue', // Passe au statut "retour effectué"
       };
-      
-      // Only update status to 'termine' if not already modified
-      if (contract.statut === 'actif') {
-        updateData.statut = 'termine';
-      }
 
       const { error } = await supabase
         .from("contracts")
@@ -234,7 +227,7 @@ export default function LocationDetails() {
 
       toast({
         title: "Succès",
-        description: "Informations de retour enregistrées",
+        description: "Véhicule retourné avec succès",
       });
 
       setShowReturnDialog(false);
@@ -365,21 +358,25 @@ export default function LocationDetails() {
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       brouillon: "bg-gray-100 text-gray-800",
-      actif: "bg-green-100 text-green-800",
-      termine: "bg-blue-100 text-blue-800",
+      contrat_valide: "bg-blue-100 text-blue-800",
+      livre: "bg-green-100 text-green-800",
+      retour_effectue: "bg-amber-100 text-amber-800",
+      termine: "bg-indigo-100 text-indigo-800",
       annule: "bg-red-100 text-red-800",
     };
 
     const labels: Record<string, string> = {
-      brouillon: "Brouillon",
-      actif: "Actif",
-      termine: "Terminé",
+      brouillon: "Réservation",
+      contrat_valide: "Contrat validé",
+      livre: "En cours",
+      retour_effectue: "Retour effectué",
+      termine: "Clôturé",
       annule: "Annulé",
     };
 
     return (
       <Badge variant="outline" className={`${styles[status]} border-0`}>
-        {labels[status]}
+        {labels[status] || status}
       </Badge>
     );
   };
@@ -423,19 +420,10 @@ export default function LocationDetails() {
   };
 
   const handleValidateContract = async () => {
-    if (!contract.delivery_date) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Veuillez d'abord enregistrer la livraison du véhicule",
-      });
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from("contracts")
-        .update({ statut: 'actif' })
+        .update({ statut: 'contrat_valide' })
         .eq("id", id);
 
       if (error) throw error;
@@ -444,8 +432,8 @@ export default function LocationDetails() {
       await handleGeneratePDF();
 
       toast({
-        title: "Contrat activé",
-        description: "Le contrat a été validé et activé avec succès",
+        title: "Contrat validé",
+        description: "Le contrat a été validé avec succès",
       });
 
       loadContractData();
@@ -529,17 +517,37 @@ export default function LocationDetails() {
     }
   };
 
-  const getWorkflowStep = () => {
-    if (!contract) return 0;
-    
-    if (contract.statut === 'brouillon') return 1;
-    if (contract.statut === 'actif' && !contract.delivery_date) return 2;
-    if (contract.statut === 'actif' && contract.delivery_date && !contract.return_date) return 3;
-    if (contract.return_date && contract.caution_statut !== 'remboursee') return 4;
-    if (contract.statut === 'termine') return 5;
-    if (contract.statut === 'annule') return 0;
-    
-    return 0;
+  const handleWorkflowAction = async (step: string) => {
+    if (step === 'contrat_valide') {
+      await handleValidateContract();
+    } else if (step === 'livre') {
+      setShowDeliveryDialog(true);
+    } else if (step === 'retour_effectue') {
+      setShowReturnDialog(true);
+    } else if (step === 'termine') {
+      // Clôturer le contrat
+      try {
+        const { error } = await supabase
+          .from("contracts")
+          .update({ statut: 'termine' })
+          .eq("id", id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Contrat clôturé",
+          description: "Le contrat a été clôturé avec succès",
+        });
+
+        loadContractData();
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: error.message,
+        });
+      }
+    }
   };
 
   if (loading) {
@@ -567,15 +575,6 @@ export default function LocationDetails() {
   const paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.montant), 0);
   const remainingAmount = totalAmount - paidAmount;
   const duration = calculateDuration(contract.date_debut, contract.date_fin);
-  const currentStep = getWorkflowStep();
-
-  const workflowSteps = [
-    { id: 1, name: "Réservation", icon: FileText },
-    { id: 2, name: "Livraison", icon: CheckCircle2 },
-    { id: 3, name: "En cours", icon: Clock },
-    { id: 4, name: "Retour", icon: CheckCircle2 },
-    { id: 5, name: "Clôturé", icon: Check },
-  ];
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -610,92 +609,13 @@ export default function LocationDetails() {
         </div>
       </div>
 
-      {/* Workflow Steps */}
+      {/* Workflow Component */}
       {contract.statut !== 'annule' && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            {workflowSteps.map((step, index) => {
-              const StepIcon = step.icon;
-              const isActive = currentStep >= step.id;
-              const isCurrent = currentStep === step.id;
-              
-              return (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                    } ${isCurrent ? 'ring-4 ring-primary/30' : ''}`}>
-                      <StepIcon className="w-6 h-6" />
-                    </div>
-                    <div className={`text-sm mt-2 font-medium ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {step.name}
-                    </div>
-                  </div>
-                  {index < workflowSteps.length - 1 && (
-                    <div className={`h-1 flex-1 mx-2 ${isActive ? 'bg-primary' : 'bg-muted'}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      )}
-
-      {/* Actions rapides */}
-      {contract.statut === 'brouillon' && !contract.delivery_date && (
-        <Card className="p-4 bg-blue-50 border-blue-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="font-medium text-blue-900">Prochaine étape: Livraison du véhicule</p>
-                <p className="text-sm text-blue-700">Enregistrez les informations de livraison pour activer le contrat</p>
-              </div>
-            </div>
-            <Button onClick={() => setShowDeliveryDialog(true)}>
-              <Check className="w-4 h-4 mr-2" />
-              Marquer comme livré
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {contract.statut === 'brouillon' && contract.delivery_date && !contract.pdf_url && (
-        <Card className="p-4 bg-green-50 border-green-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="font-medium text-green-900">Prêt à activer</p>
-                <p className="text-sm text-green-700">Le véhicule est livré, vous pouvez maintenant valider et activer le contrat</p>
-              </div>
-            </div>
-            <Button onClick={handleValidateContract}>
-              <Check className="w-4 h-4 mr-2" />
-              Valider et activer
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {contract.statut === 'actif' && !contract.return_date && (
-        <Card className="p-4 bg-amber-50 border-amber-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Clock className="w-5 h-5 text-amber-600" />
-              <div>
-                <p className="font-medium text-amber-900">Location en cours</p>
-                <p className="text-sm text-amber-700">
-                  Retour prévu le {format(new Date(contract.date_fin), "dd/MM/yyyy", { locale: fr })}
-                </p>
-              </div>
-            </div>
-            <Button onClick={() => setShowReturnDialog(true)}>
-              <Check className="w-4 h-4 mr-2" />
-              Marquer comme retourné
-            </Button>
-          </div>
-        </Card>
+        <ContractWorkflow
+          currentStatus={contract.statut}
+          onStepAction={handleWorkflowAction}
+          canProceed={true}
+        />
       )}
 
       {contract.statut === 'termine' && contract.caution_statut === 'bloquee' && (
