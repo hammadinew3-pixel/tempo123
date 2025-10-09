@@ -11,6 +11,7 @@ import NouveauLocation from "./pages/locations/Nouveau";
 import LocationDetails from "./pages/locations/Details";
 import Vehicules from "./pages/Vehicules";
 import VehiculeDetails from "./pages/vehicles/Details";
+import NouveauVehicule from "./pages/vehicles/Nouveau";
 import Clients from "./pages/Clients";
 import Factures from "./pages/Factures";
 import Calendrier from "./pages/Calendrier";
@@ -92,6 +93,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Vehicules /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vehicules/nouveau"
+              element={
+                <ProtectedRoute>
+                  <Layout><NouveauVehicule /></Layout>
                 </ProtectedRoute>
               }
             />

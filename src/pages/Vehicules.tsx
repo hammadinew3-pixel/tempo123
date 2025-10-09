@@ -187,14 +187,15 @@ export default function Vehicules() {
             <Download className="w-4 h-4 mr-2" />
             IMPORTER
           </Button>
+          <Button 
+            size="sm"
+            onClick={() => navigate('/vehicules/nouveau')}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouveau véhicule
+          </Button>
           <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Nouveau véhicule
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto hidden">
               <DialogHeader>
                 <DialogTitle>{editingVehicle ? 'Modifier' : 'Ajouter'} un véhicule</DialogTitle>
                 <DialogDescription>
