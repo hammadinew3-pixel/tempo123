@@ -1,7 +1,8 @@
-import { ChevronLeft, ChevronRight, Plus, Search, Car } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Car, ArrowRight, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,13 @@ type Contract = {
   statut: string;
   numero_contrat: string;
   vehicle_id: string;
+  duration?: number;
+  daily_rate?: number;
+  total_amount?: number;
+  start_time?: string;
+  end_time?: string;
+  delivery_km?: number;
+  return_km?: number;
   vehicles?: {
     immatriculation: string;
     marque: string;
@@ -50,6 +58,8 @@ export default function Calendrier() {
   });
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [showContractDetails, setShowContractDetails] = useState(false);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -317,23 +327,26 @@ export default function Calendrier() {
                 <div className="absolute top-[44px] left-0 right-0 pointer-events-none">
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {contractBars.map((bar, idx) => {
-                      const rowOffset = bar.row * 26; // 26px per row
+                      const rowOffset = bar.row * 30; // 30px per row for spacing
                       const colIndex = bar.startCol % 7;
                       const weekRow = Math.floor(bar.startCol / 7);
                       
                       return (
                         <div
                           key={`${bar.contract.id}-${idx}`}
-                          className="pointer-events-auto cursor-pointer"
+                          className="pointer-events-auto cursor-pointer mb-1"
                           style={{
                             gridColumn: `${colIndex + 1} / span ${Math.min(bar.width, 7 - colIndex)}`,
                             gridRow: weekRow + 1,
                             marginTop: `${rowOffset}px`,
                             zIndex: 10 + bar.row
                           }}
-                          onClick={() => navigate(`/locations/${bar.contract.id}`)}
+                          onClick={() => {
+                            setSelectedContract(bar.contract);
+                            setShowContractDetails(true);
+                          }}
                         >
-                          <div className="bg-blue-100 text-blue-700 rounded px-2 py-1 text-[10px] md:text-xs font-medium border border-blue-200 hover:bg-blue-200 transition-colors">
+                          <div className="bg-red-500/50 text-red-900 rounded px-2 py-1 text-[10px] md:text-xs font-medium border border-red-300 hover:bg-red-500/60 transition-colors">
                             <div className="truncate">
                               {bar.contract.vehicles?.immatriculation} - Rés. {bar.contract.numero_contrat} - {bar.contract.clients?.nom} {bar.contract.clients?.prenom} - {bar.contract.vehicles?.marque} {bar.contract.vehicles?.modele}
                             </div>
@@ -504,6 +517,130 @@ export default function Calendrier() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Contract Details Sheet */}
+      <Sheet open={showContractDetails} onOpenChange={setShowContractDetails}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          {selectedContract && (
+            <>
+              <SheetHeader>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground uppercase tracking-wide">
+                    Location Courte Durée
+                  </p>
+                  <SheetTitle className="text-xl">
+                    Rés. {selectedContract.numero_contrat} par {selectedContract.clients?.nom} {selectedContract.clients?.prenom}
+                  </SheetTitle>
+                </div>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-4">
+                {/* État */}
+                <div className="flex items-center justify-between py-3 border-b">
+                  <span className="text-sm text-muted-foreground">État</span>
+                  <Badge 
+                    variant={selectedContract.statut === 'livre' ? 'default' : 'secondary'}
+                    className="text-sm"
+                  >
+                    {selectedContract.statut === 'livre' ? 'Livrée' : 
+                     selectedContract.statut === 'contrat_valide' ? 'Validé' : 
+                     selectedContract.statut}
+                  </Badge>
+                </div>
+
+                {/* Client */}
+                <div className="flex items-center justify-between py-3 border-b">
+                  <span className="text-sm text-muted-foreground">Client</span>
+                  <span className="text-sm font-medium">
+                    {selectedContract.clients?.nom} {selectedContract.clients?.prenom}
+                  </span>
+                </div>
+
+                {/* Véhicule */}
+                <div className="flex items-center justify-between py-3 border-b">
+                  <span className="text-sm text-muted-foreground">Véhicule</span>
+                  <div className="flex items-center gap-2">
+                    <Car className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">
+                      {selectedContract.vehicles?.marque} - {selectedContract.vehicles?.modele} - {selectedContract.vehicles?.immatriculation}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Date de départ */}
+                <div className="flex items-center justify-between py-3 border-b">
+                  <span className="text-sm text-muted-foreground">Date de départ</span>
+                  <span className="text-sm font-medium">
+                    {format(parseISO(selectedContract.date_debut), 'dd/MM/yyyy', { locale: fr })}
+                    {selectedContract.start_time && ` ${selectedContract.start_time}`}
+                  </span>
+                </div>
+
+                {/* Date de retour */}
+                <div className="flex items-center justify-between py-3 border-b">
+                  <span className="text-sm text-muted-foreground">Date de retour</span>
+                  <span className="text-sm font-medium">
+                    {format(parseISO(selectedContract.date_fin), 'dd/MM/yyyy', { locale: fr })}
+                    {selectedContract.end_time && ` ${selectedContract.end_time}`}
+                  </span>
+                </div>
+
+                {/* Durée */}
+                {selectedContract.duration && (
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-sm text-muted-foreground">Durée</span>
+                    <span className="text-sm font-medium">
+                      {selectedContract.duration} Jour{selectedContract.duration > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+
+                {/* Prix/Jr */}
+                {selectedContract.daily_rate && (
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-sm text-muted-foreground">Prix/Jr</span>
+                    <span className="text-sm font-medium">
+                      {selectedContract.daily_rate.toFixed(2)} Dh
+                    </span>
+                  </div>
+                )}
+
+                {/* Total à payer */}
+                {selectedContract.total_amount && (
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-sm text-muted-foreground">Total à payer</span>
+                    <span className="text-sm font-medium">
+                      {selectedContract.total_amount.toFixed(2)} Dh
+                    </span>
+                  </div>
+                )}
+
+                {/* Kilométrage */}
+                {(selectedContract.delivery_km || selectedContract.return_km) && (
+                  <div className="flex items-center justify-between py-3 border-b">
+                    <span className="text-sm text-muted-foreground">Kilométrage</span>
+                    <span className="text-sm font-medium">
+                      {selectedContract.delivery_km || '—'} / {selectedContract.return_km || '—'} Kms
+                    </span>
+                  </div>
+                )}
+
+                {/* Button to view full details */}
+                <Button 
+                  className="w-full mt-6"
+                  onClick={() => {
+                    setShowContractDetails(false);
+                    navigate(`/locations/${selectedContract.id}`);
+                  }}
+                >
+                  Page de réservation
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
