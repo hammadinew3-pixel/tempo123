@@ -583,11 +583,16 @@ export default function Calendrier() {
                       selected={availabilityDates.end ? new Date(availabilityDates.end) : undefined}
                       onSelect={(date) => {
                         if (date) {
+                          const endDate = format(date, 'yyyy-MM-dd');
                           setAvailabilityDates({
                             ...availabilityDates, 
-                            end: format(date, 'yyyy-MM-dd')
+                            end: endDate
                           });
                           setAvailEndOpen(false);
+                          // Lancer automatiquement la vérification si date de début existe
+                          if (availabilityDates.start) {
+                            checkAvailability(availabilityDates.start, endDate);
+                          }
                         }
                       }}
                       disabled={(date) => {
