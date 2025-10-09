@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus, Search, Car, ArrowRight, Calendar, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Car, ArrowRight, Calendar as CalendarIcon, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -6,12 +6,15 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, isSameDay, isWithinInterval, parseISO, differenceInDays, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 const daysOfWeek = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 const months = [
@@ -62,6 +65,8 @@ export default function Calendrier() {
   const [showContractDetails, setShowContractDetails] = useState(false);
   const [rangeStartDate, setRangeStartDate] = useState<Date | null>(null);
   const [rangeEndDate, setRangeEndDate] = useState<Date | null>(null);
+  const [availStartOpen, setAvailStartOpen] = useState(false);
+  const [availEndOpen, setAvailEndOpen] = useState(false);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -514,25 +519,87 @@ export default function Calendrier() {
           
           <div className="space-y-4 mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start-date">Date de début</Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={availabilityDates.start}
-                  min={format(new Date(), 'yyyy-MM-dd')}
-                  onChange={(e) => setAvailabilityDates({...availabilityDates, start: e.target.value})}
-                />
+              <div className="space-y-2">
+                <Label>Date de début</Label>
+                <Popover open={availStartOpen} onOpenChange={setAvailStartOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-12",
+                        !availabilityDates.start && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {availabilityDates.start ? (
+                        format(new Date(availabilityDates.start), "dd/MM/yyyy", { locale: fr })
+                      ) : (
+                        <span>Sélectionner une date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={availabilityDates.start ? new Date(availabilityDates.start) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setAvailabilityDates({
+                            ...availabilityDates, 
+                            start: format(date, 'yyyy-MM-dd')
+                          });
+                          setAvailStartOpen(false);
+                        }
+                      }}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-              <div>
-                <Label htmlFor="end-date">Date de fin</Label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={availabilityDates.end}
-                  min={availabilityDates.start || format(new Date(), 'yyyy-MM-dd')}
-                  onChange={(e) => setAvailabilityDates({...availabilityDates, end: e.target.value})}
-                />
+              <div className="space-y-2">
+                <Label>Date de fin</Label>
+                <Popover open={availEndOpen} onOpenChange={setAvailEndOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-12",
+                        !availabilityDates.end && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {availabilityDates.end ? (
+                        format(new Date(availabilityDates.end), "dd/MM/yyyy", { locale: fr })
+                      ) : (
+                        <span>Sélectionner une date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={availabilityDates.end ? new Date(availabilityDates.end) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setAvailabilityDates({
+                            ...availabilityDates, 
+                            end: format(date, 'yyyy-MM-dd')
+                          });
+                          setAvailEndOpen(false);
+                        }
+                      }}
+                      disabled={(date) => {
+                        const today = new Date(new Date().setHours(0, 0, 0, 0));
+                        const startDate = availabilityDates.start ? new Date(availabilityDates.start) : today;
+                        return date < today || date < startDate;
+                      }}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
