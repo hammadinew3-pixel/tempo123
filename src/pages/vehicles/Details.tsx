@@ -166,7 +166,7 @@ export default function VehiculeDetails() {
         <div className="flex items-center gap-2">
           <Badge variant={statusVariant}>{statusBadge}</Badge>
           <Button 
-            onClick={() => navigate(`/vehicules/${id}/workflow`)}
+            onClick={() => navigate(`/vehicules/${id}/modifier`)}
           >
             <Edit className="w-4 h-4 mr-2" />
             Modifier
