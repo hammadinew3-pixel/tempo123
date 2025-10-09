@@ -1,22 +1,9 @@
-import { Car, Calendar, Users, Info, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Car, Calendar, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Dashboard() {
   return (
     <div className="w-full">
-      {/* Trial Banner */}
-      <div className="bg-primary text-primary-foreground px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Info className="w-5 h-5" />
-          <span>Il vous reste 30 jours sur votre version d'essai.</span>
-        </div>
-        <Button variant="ghost" className="text-primary-foreground hover:bg-primary/90">
-          <span>Souscrire à un abonnement</span>
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
-
       <div className="p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
