@@ -36,8 +36,8 @@ export default function Locations() {
     payment_method: 'especes',
     start_location: '',
     end_location: '',
-    start_time: '',
-    end_time: '',
+    start_time: null,
+    end_time: null,
     notes: '',
   });
 
@@ -47,6 +47,8 @@ export default function Locations() {
 
   const loadData = async () => {
     try {
+      console.log('🔄 Chargement des données...');
+      
       const [contractsRes, vehiclesRes, clientsRes] = await Promise.all([
         supabase
           .from('contracts')
@@ -65,17 +67,31 @@ export default function Locations() {
           .select('*')
       ]);
 
-      if (contractsRes.error) throw contractsRes.error;
-      if (vehiclesRes.error) throw vehiclesRes.error;
-      if (clientsRes.error) throw clientsRes.error;
+      if (contractsRes.error) {
+        console.error('❌ Erreur contrats:', contractsRes.error);
+        throw contractsRes.error;
+      }
+      if (vehiclesRes.error) {
+        console.error('❌ Erreur véhicules:', vehiclesRes.error);
+        throw vehiclesRes.error;
+      }
+      if (clientsRes.error) {
+        console.error('❌ Erreur clients:', clientsRes.error);
+        throw clientsRes.error;
+      }
+
+      console.log('✅ Contrats chargés:', contractsRes.data?.length || 0);
+      console.log('✅ Véhicules chargés:', vehiclesRes.data?.length || 0);
+      console.log('✅ Clients chargés:', clientsRes.data?.length || 0);
 
       setContracts(contractsRes.data || []);
       setVehicles(vehiclesRes.data || []);
       setClients(clientsRes.data || []);
     } catch (error: any) {
+      console.error('❌ Erreur lors du chargement:', error);
       toast({
-        title: 'Erreur',
-        description: error.message,
+        title: 'Erreur de chargement',
+        description: error.message || 'Impossible de charger les données',
         variant: 'destructive',
       });
     } finally {
@@ -88,13 +104,28 @@ export default function Locations() {
     setLoading(true);
 
     try {
+      // Préparer les données en convertissant les chaînes vides en null pour les champs time
+      const dataToSubmit = {
+        ...formData,
+        start_time: formData.start_time || null,
+        end_time: formData.end_time || null,
+        start_location: formData.start_location || null,
+        end_location: formData.end_location || null,
+        notes: formData.notes || null,
+      };
+
+      console.log('📝 Données à enregistrer:', dataToSubmit);
+
       if (editingContract) {
         const { error } = await supabase
           .from('contracts')
-          .update(formData)
+          .update(dataToSubmit)
           .eq('id', editingContract.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erreur modification:', error);
+          throw error;
+        }
 
         toast({
           title: 'Succès',
@@ -103,9 +134,12 @@ export default function Locations() {
       } else {
         const { error } = await supabase
           .from('contracts')
-          .insert([formData as ContractInsert]);
+          .insert([dataToSubmit as ContractInsert]);
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erreur création:', error);
+          throw error;
+        }
 
         toast({
           title: 'Succès',
@@ -117,9 +151,10 @@ export default function Locations() {
       resetForm();
       loadData();
     } catch (error: any) {
+      console.error('❌ Erreur handleSubmit:', error);
       toast({
         title: 'Erreur',
-        description: error.message,
+        description: error.message || 'Une erreur est survenue',
         variant: 'destructive',
       });
     } finally {
@@ -167,8 +202,8 @@ export default function Locations() {
       payment_method: 'especes',
       start_location: '',
       end_location: '',
-      start_time: '',
-      end_time: '',
+      start_time: null,
+      end_time: null,
       notes: '',
     });
     setEditingContract(null);
@@ -227,28 +262,45 @@ export default function Locations() {
 
   const handleGeneratePDF = async (contractId: string) => {
     try {
-      setLoading(true);
+      console.log('📄 Génération du PDF pour le contrat:', contractId);
+      
+      toast({
+        title: "Génération en cours",
+        description: "Veuillez patienter...",
+      });
+
       const { data, error } = await supabase.functions.invoke('generate-contract-pdf', {
         body: { contractId }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erreur Edge Function:', error);
+        throw error;
+      }
 
-      toast({
-        title: 'Succès',
-        description: 'PDF généré avec succès',
-      });
+      console.log('✅ Réponse Edge Function:', data);
 
-      // Reload to get updated pdf_url
-      loadData();
+      if (data?.pdfUrl) {
+        // Ouvrir le PDF dans un nouvel onglet
+        window.open(data.pdfUrl, '_blank');
+        
+        toast({
+          title: 'PDF généré',
+          description: 'Le contrat a été ouvert dans un nouvel onglet',
+        });
+        
+        // Recharger les données pour mettre à jour le pdf_url
+        loadData();
+      } else {
+        throw new Error('Aucune URL de PDF reçue');
+      }
     } catch (error: any) {
+      console.error('❌ Erreur lors de la génération du PDF:', error);
       toast({
-        title: 'Erreur',
-        description: error.message,
+        title: 'Erreur de génération',
+        description: error.message || 'Impossible de générer le PDF',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -433,8 +485,8 @@ export default function Locations() {
                     <Input
                       id="start_time"
                       type="time"
-                      value={formData.start_time}
-                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                      value={formData.start_time || ''}
+                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value || null })}
                     />
                   </div>
 
@@ -443,8 +495,8 @@ export default function Locations() {
                     <Input
                       id="end_time"
                       type="time"
-                      value={formData.end_time}
-                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                      value={formData.end_time || ''}
+                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value || null })}
                     />
                   </div>
 
