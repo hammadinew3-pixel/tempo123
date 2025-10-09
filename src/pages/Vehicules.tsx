@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Download, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
 
 export default function Vehicules() {
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -368,20 +370,30 @@ export default function Vehicules() {
                 </thead>
                 <tbody>
                   {vehicles.map((vehicle) => (
-                    <tr key={vehicle.id} className="border-b last:border-0 hover:bg-muted/50">
+                    <tr 
+                      key={vehicle.id} 
+                      className="border-b last:border-0 hover:bg-muted/50 cursor-pointer"
+                      onClick={() => navigate(`/vehicules/${vehicle.id}`)}
+                    >
                       <td className="py-4 pl-4">
                         <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => openEditDialog(vehicle)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditDialog(vehicle);
+                            }}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(vehicle.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(vehicle.id);
+                            }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
