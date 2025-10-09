@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, Edit, FileText, Receipt, Trash2, Plus, Check, X } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Plus, Check, X, Download, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -328,6 +328,112 @@ export default function LocationDetails() {
     return diff;
   };
 
+  const handleGeneratePDF = async () => {
+    try {
+      toast({
+        title: "Génération en cours",
+        description: "Le PDF du contrat est en cours de génération...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-contract-pdf', {
+        body: { contractId: id }
+      });
+
+      if (error) throw error;
+
+      if (data?.pdfUrl) {
+        window.open(data.pdfUrl, '_blank');
+        toast({
+          title: "Succès",
+          description: "Le contrat PDF a été généré avec succès",
+        });
+        loadContractData();
+      }
+    } catch (error: any) {
+      console.error('Erreur génération PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de générer le PDF",
+      });
+    }
+  };
+
+  const handleValidateContract = async () => {
+    if (!contract.delivery_date) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez d'abord enregistrer la livraison du véhicule",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("contracts")
+        .update({ statut: 'actif' })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Générer le PDF automatiquement
+      await handleGeneratePDF();
+
+      toast({
+        title: "Contrat activé",
+        description: "Le contrat a été validé et activé avec succès",
+      });
+
+      loadContractData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleRefundCaution = async () => {
+    if (!confirm("Confirmer le remboursement de la caution ?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("contracts")
+        .update({ caution_statut: 'remboursee' })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "La caution a été marquée comme remboursée",
+      });
+
+      loadContractData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const getWorkflowStep = () => {
+    if (!contract) return 0;
+    
+    if (contract.statut === 'brouillon') return 1;
+    if (contract.statut === 'actif' && !contract.delivery_date) return 2;
+    if (contract.statut === 'actif' && contract.delivery_date && !contract.return_date) return 3;
+    if (contract.return_date && contract.caution_statut !== 'remboursee') return 4;
+    if (contract.statut === 'termine') return 5;
+    if (contract.statut === 'annule') return 0;
+    
+    return 0;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -353,6 +459,15 @@ export default function LocationDetails() {
   const paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.montant), 0);
   const remainingAmount = totalAmount - paidAmount;
   const duration = calculateDuration(contract.date_debut, contract.date_fin);
+  const currentStep = getWorkflowStep();
+
+  const workflowSteps = [
+    { id: 1, name: "Réservation", icon: FileText },
+    { id: 2, name: "Livraison", icon: CheckCircle2 },
+    { id: 3, name: "En cours", icon: Clock },
+    { id: 4, name: "Retour", icon: CheckCircle2 },
+    { id: 5, name: "Clôturé", icon: Check },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -372,8 +487,128 @@ export default function LocationDetails() {
         </div>
         <div className="flex gap-2">
           {getStatusBadge(contract.statut)}
+          {contract.pdf_url && (
+            <Button variant="outline" size="sm" onClick={() => window.open(contract.pdf_url, '_blank')}>
+              <Download className="w-4 h-4 mr-2" />
+              Télécharger PDF
+            </Button>
+          )}
+          {!contract.pdf_url && contract.statut !== 'brouillon' && (
+            <Button variant="outline" size="sm" onClick={handleGeneratePDF}>
+              <FileText className="w-4 h-4 mr-2" />
+              Générer PDF
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Workflow Steps */}
+      {contract.statut !== 'annule' && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            {workflowSteps.map((step, index) => {
+              const StepIcon = step.icon;
+              const isActive = currentStep >= step.id;
+              const isCurrent = currentStep === step.id;
+              
+              return (
+                <div key={step.id} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    } ${isCurrent ? 'ring-4 ring-primary/30' : ''}`}>
+                      <StepIcon className="w-6 h-6" />
+                    </div>
+                    <div className={`text-sm mt-2 font-medium ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {step.name}
+                    </div>
+                  </div>
+                  {index < workflowSteps.length - 1 && (
+                    <div className={`h-1 flex-1 mx-2 ${isActive ? 'bg-primary' : 'bg-muted'}`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Actions rapides */}
+      {contract.statut === 'brouillon' && !contract.delivery_date && (
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="font-medium text-blue-900">Prochaine étape: Livraison du véhicule</p>
+                <p className="text-sm text-blue-700">Enregistrez les informations de livraison pour activer le contrat</p>
+              </div>
+            </div>
+            <Button onClick={() => setShowDeliveryDialog(true)}>
+              <Check className="w-4 h-4 mr-2" />
+              Marquer comme livré
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {contract.statut === 'brouillon' && contract.delivery_date && !contract.pdf_url && (
+        <Card className="p-4 bg-green-50 border-green-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="font-medium text-green-900">Prêt à activer</p>
+                <p className="text-sm text-green-700">Le véhicule est livré, vous pouvez maintenant valider et activer le contrat</p>
+              </div>
+            </div>
+            <Button onClick={handleValidateContract}>
+              <Check className="w-4 h-4 mr-2" />
+              Valider et activer
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {contract.statut === 'actif' && !contract.return_date && (
+        <Card className="p-4 bg-amber-50 border-amber-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-amber-600" />
+              <div>
+                <p className="font-medium text-amber-900">Location en cours</p>
+                <p className="text-sm text-amber-700">
+                  Retour prévu le {format(new Date(contract.date_fin), "dd/MM/yyyy", { locale: fr })}
+                </p>
+              </div>
+            </div>
+            <Button onClick={() => setShowReturnDialog(true)}>
+              <Check className="w-4 h-4 mr-2" />
+              Marquer comme retourné
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {contract.statut === 'termine' && contract.caution_statut === 'bloquee' && (
+        <Card className="p-4 bg-purple-50 border-purple-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-purple-600" />
+              <div>
+                <p className="font-medium text-purple-900">Caution à rembourser</p>
+                <p className="text-sm text-purple-700">
+                  Montant: {contract.caution_montant?.toFixed(2)} DH
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleRefundCaution}>
+              <Check className="w-4 h-4 mr-2" />
+              Marquer comme remboursée
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
