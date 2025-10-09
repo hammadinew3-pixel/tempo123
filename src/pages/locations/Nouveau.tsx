@@ -310,6 +310,58 @@ export default function NouveauLocation() {
           </RadioGroup>
         </div>
 
+        {/* Assurance Selection (only for assistance) */}
+        {contractType === "assistance" && (
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+            <div className="space-y-2">
+              <Label htmlFor="assurance">
+                Sélectionner une assurance <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.assurance_id}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, assurance_id: value });
+                  loadBaremes(value);
+                }}
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Sélectionner une assurance" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assurances.map((assurance) => (
+                    <SelectItem key={assurance.id} value={assurance.id}>
+                      {assurance.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {baremes.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">
+                  Sélectionner une catégorie <span className="text-destructive">*</span>
+                </Label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {baremes.map((bareme) => (
+                    <Button
+                      key={bareme.id}
+                      type="button"
+                      variant={selectedCategorie === bareme.categorie ? "default" : "outline"}
+                      onClick={() => handleCategorieSelect(bareme.categorie)}
+                      className="p-4 h-auto flex flex-col items-center"
+                    >
+                      <p className="text-xs mb-1">Catégorie {bareme.categorie}</p>
+                      <p className="text-lg font-bold">{bareme.tarif_journalier} DH</p>
+                      <p className="text-xs">par jour</p>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Vehicle & Client Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Vehicle */}
@@ -392,58 +444,6 @@ export default function NouveauLocation() {
             </div>
           </div>
         </div>
-
-        {/* Assurance Selection (only for assistance) */}
-        {contractType === "assistance" && (
-          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-            <div className="space-y-2">
-              <Label htmlFor="assurance">
-                Sélectionner une assurance <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.assurance_id}
-                onValueChange={(value) => {
-                  setFormData({ ...formData, assurance_id: value });
-                  loadBaremes(value);
-                }}
-              >
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Sélectionner une assurance" />
-                </SelectTrigger>
-                <SelectContent>
-                  {assurances.map((assurance) => (
-                    <SelectItem key={assurance.id} value={assurance.id}>
-                      {assurance.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {baremes.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">
-                  Sélectionner une catégorie <span className="text-destructive">*</span>
-                </Label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  {baremes.map((bareme) => (
-                    <Button
-                      key={bareme.id}
-                      type="button"
-                      variant={selectedCategorie === bareme.categorie ? "default" : "outline"}
-                      onClick={() => handleCategorieSelect(bareme.categorie)}
-                      className="p-4 h-auto flex flex-col items-center"
-                    >
-                      <p className="text-xs mb-1">Catégorie {bareme.categorie}</p>
-                      <p className="text-lg font-bold">{bareme.tarif_journalier} DH</p>
-                      <p className="text-xs">par jour</p>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Dates & Times */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
