@@ -190,9 +190,36 @@ export default function FacturesAssurance() {
     return (assistance.montant_facture || assistance.montant_total || 0).toFixed(2);
   };
 
-  const handleDownloadInvoice = (assistanceId: string) => {
-    // Ouvre la facture en mode impression pour permettre le téléchargement en PDF
-    window.open(`/assistance-facture-template?id=${assistanceId}`, '_blank');
+  const handleDownloadInvoice = async (assistanceId: string) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-assistance-pdf`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({ assistanceId }),
+        }
+      );
+
+      if (!response.ok) throw new Error('Erreur lors de la génération du PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facture-${assistanceId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      // Fallback: ouvrir dans un nouvel onglet
+      window.open(`/assistance-facture-template?id=${assistanceId}`, '_blank');
+    }
   };
 
   const handleEditInvoice = (assistanceId: string) => {
