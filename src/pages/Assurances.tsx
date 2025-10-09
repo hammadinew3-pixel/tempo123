@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,12 +13,17 @@ import { Database } from "@/integrations/supabase/types";
 
 type Assurance = Database['public']['Tables']['assurances']['Row'];
 type AssuranceInsert = Database['public']['Tables']['assurances']['Insert'];
+type Bareme = Database['public']['Tables']['assurance_bareme']['Row'];
+type BaremeInsert = Database['public']['Tables']['assurance_bareme']['Insert'];
 
 export default function Assurances() {
   const [assurances, setAssurances] = useState<Assurance[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [baremeDialogOpen, setBaremeDialogOpen] = useState(false);
   const [editingAssurance, setEditingAssurance] = useState<Assurance | null>(null);
+  const [selectedAssurance, setSelectedAssurance] = useState<Assurance | null>(null);
+  const [baremes, setBaremes] = useState<Bareme[]>([]);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<Partial<AssuranceInsert>>({
@@ -30,6 +35,14 @@ export default function Assurances() {
     conditions_paiement: '',
     delai_paiement_jours: 30,
     actif: true,
+  });
+
+  const [baremeForm, setBaremeForm] = useState<Record<string, number>>({
+    A: 0,
+    B: 0,
+    C: 0,
+    D: 0,
+    E: 0,
   });
 
   useEffect(() => {
@@ -53,6 +66,34 @@ export default function Assurances() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadBaremes = async (assuranceId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('assurance_bareme')
+        .select('*')
+        .eq('assurance_id', assuranceId);
+
+      if (error) throw error;
+      
+      const baremeData: Record<string, number> = {
+        A: 0, B: 0, C: 0, D: 0, E: 0,
+      };
+      
+      (data || []).forEach((b) => {
+        baremeData[b.categorie] = Number(b.tarif_journalier);
+      });
+      
+      setBaremeForm(baremeData);
+      setBaremes(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -123,6 +164,50 @@ export default function Assurances() {
         description: error.message,
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleSaveBareme = async () => {
+    if (!selectedAssurance) return;
+
+    setLoading(true);
+    try {
+      // Delete existing baremes
+      await supabase
+        .from('assurance_bareme')
+        .delete()
+        .eq('assurance_id', selectedAssurance.id);
+
+      // Insert new baremes
+      const baremeInserts: BaremeInsert[] = Object.entries(baremeForm)
+        .filter(([_, tarif]) => tarif > 0)
+        .map(([categorie, tarif]) => ({
+          assurance_id: selectedAssurance.id,
+          categorie: categorie as any,
+          tarif_journalier: tarif,
+        }));
+
+      if (baremeInserts.length > 0) {
+        const { error } = await supabase
+          .from('assurance_bareme')
+          .insert(baremeInserts);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Succès',
+        description: 'Barème mis à jour avec succès',
+      });
+      setBaremeDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -246,6 +331,56 @@ export default function Assurances() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={baremeDialogOpen} onOpenChange={setBaremeDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Barème de {selectedAssurance?.nom}
+            </DialogTitle>
+          </DialogHeader>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Définissez les tarifs journaliers pour chaque catégorie de véhicule
+                </p>
+                {['A', 'B', 'C', 'D', 'E'].map((categorie) => (
+                  <div key={categorie} className="grid grid-cols-2 gap-4 items-center">
+                    <Label htmlFor={`cat-${categorie}`}>Catégorie {categorie}</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id={`cat-${categorie}`}
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={baremeForm[categorie] || ''}
+                        onChange={(e) => setBaremeForm({
+                          ...baremeForm,
+                          [categorie]: parseFloat(e.target.value) || 0
+                        })}
+                      />
+                      <span className="text-sm text-muted-foreground">MAD/jour</span>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setBaremeDialogOpen(false)}
+                  >
+                    Annuler
+                  </Button>
+                  <Button onClick={handleSaveBareme} disabled={loading}>
+                    {loading ? 'Enregistrement...' : 'Enregistrer'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
+
       <Card className="border-l-4 border-l-primary shadow-sm">
         <CardContent className="pt-6">
           {loading ? (
@@ -276,6 +411,19 @@ export default function Assurances() {
                     >
                       <td className="py-4 pl-4">
                         <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Gérer le barème"
+                            onClick={() => {
+                              setSelectedAssurance(assurance);
+                              loadBaremes(assurance.id);
+                              setBaremeDialogOpen(true);
+                            }}
+                            className="hover:bg-accent transition-colors"
+                          >
+                            <DollarSign className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"

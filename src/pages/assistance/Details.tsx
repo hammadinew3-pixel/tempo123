@@ -157,11 +157,19 @@ export default function AssistanceDetails() {
                   {assistance.date_fin ? new Date(assistance.date_fin).toLocaleDateString('fr-FR') : '-'}
                 </p>
               </div>
-              {assistance.montant_facture && (
+              {assistance.tarif_journalier && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Montant facture</p>
+                  <p className="text-sm text-muted-foreground">Tarif journalier</p>
+                  <p className="font-semibold text-foreground">
+                    {Number(assistance.tarif_journalier).toFixed(2)} MAD/jour
+                  </p>
+                </div>
+              )}
+              {assistance.montant_total && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Montant total</p>
                   <p className="font-semibold text-primary text-lg">
-                    {assistance.montant_facture.toFixed(2)} MAD
+                    {Number(assistance.montant_total).toFixed(2)} MAD
                   </p>
                 </div>
               )}

@@ -22,10 +22,20 @@ export type Database = {
           created_at: string
           date_debut: string
           date_fin: string | null
+          date_retour_effective: string | null
           etat: Database["public"]["Enums"]["assistance_status"]
+          etat_vehicule_depart: string | null
+          etat_vehicule_retour: string | null
           id: string
+          kilometrage_depart: number | null
+          kilometrage_retour: number | null
           montant_facture: number | null
+          montant_total: number | null
+          niveau_carburant_depart: string | null
+          niveau_carburant_retour: string | null
           num_dossier: string
+          remarques: string | null
+          tarif_journalier: number | null
           type: Database["public"]["Enums"]["assistance_type"]
           updated_at: string
           vehicle_id: string | null
@@ -37,10 +47,20 @@ export type Database = {
           created_at?: string
           date_debut: string
           date_fin?: string | null
+          date_retour_effective?: string | null
           etat?: Database["public"]["Enums"]["assistance_status"]
+          etat_vehicule_depart?: string | null
+          etat_vehicule_retour?: string | null
           id?: string
+          kilometrage_depart?: number | null
+          kilometrage_retour?: number | null
           montant_facture?: number | null
+          montant_total?: number | null
+          niveau_carburant_depart?: string | null
+          niveau_carburant_retour?: string | null
           num_dossier: string
+          remarques?: string | null
+          tarif_journalier?: number | null
           type: Database["public"]["Enums"]["assistance_type"]
           updated_at?: string
           vehicle_id?: string | null
@@ -52,10 +72,20 @@ export type Database = {
           created_at?: string
           date_debut?: string
           date_fin?: string | null
+          date_retour_effective?: string | null
           etat?: Database["public"]["Enums"]["assistance_status"]
+          etat_vehicule_depart?: string | null
+          etat_vehicule_retour?: string | null
           id?: string
+          kilometrage_depart?: number | null
+          kilometrage_retour?: number | null
           montant_facture?: number | null
+          montant_total?: number | null
+          niveau_carburant_depart?: string | null
+          niveau_carburant_retour?: string | null
           num_dossier?: string
+          remarques?: string | null
+          tarif_journalier?: number | null
           type?: Database["public"]["Enums"]["assistance_type"]
           updated_at?: string
           vehicle_id?: string | null
@@ -80,6 +110,41 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assurance_bareme: {
+        Row: {
+          assurance_id: string
+          categorie: Database["public"]["Enums"]["vehicle_category"]
+          created_at: string
+          id: string
+          tarif_journalier: number
+          updated_at: string
+        }
+        Insert: {
+          assurance_id: string
+          categorie: Database["public"]["Enums"]["vehicle_category"]
+          created_at?: string
+          id?: string
+          tarif_journalier: number
+          updated_at?: string
+        }
+        Update: {
+          assurance_id?: string
+          categorie?: Database["public"]["Enums"]["vehicle_category"]
+          created_at?: string
+          id?: string
+          tarif_journalier?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assurance_bareme_assurance_id_fkey"
+            columns: ["assurance_id"]
+            isOneToOne: false
+            referencedRelation: "assurances"
             referencedColumns: ["id"]
           },
         ]
@@ -800,6 +865,7 @@ export type Database = {
         Row: {
           annee: number
           assurance_expire_le: string | null
+          categorie: Database["public"]["Enums"]["vehicle_category"] | null
           created_at: string
           id: string
           immatriculation: string
@@ -817,6 +883,7 @@ export type Database = {
         Insert: {
           annee: number
           assurance_expire_le?: string | null
+          categorie?: Database["public"]["Enums"]["vehicle_category"] | null
           created_at?: string
           id?: string
           immatriculation: string
@@ -834,6 +901,7 @@ export type Database = {
         Update: {
           annee?: number
           assurance_expire_le?: string | null
+          categorie?: Database["public"]["Enums"]["vehicle_category"] | null
           created_at?: string
           id?: string
           immatriculation?: string
@@ -879,6 +947,7 @@ export type Database = {
         | "autres"
       notification_type: "expiration" | "contrat" | "paiement" | "autre"
       payment_method: "especes" | "virement" | "carte" | "cheque"
+      vehicle_category: "A" | "B" | "C" | "D" | "E"
       vehicle_status: "disponible" | "reserve" | "loue" | "en_panne"
     }
     CompositeTypes: {
@@ -1023,6 +1092,7 @@ export const Constants = {
       ],
       notification_type: ["expiration", "contrat", "paiement", "autre"],
       payment_method: ["especes", "virement", "carte", "cheque"],
+      vehicle_category: ["A", "B", "C", "D", "E"],
       vehicle_status: ["disponible", "reserve", "loue", "en_panne"],
     },
   },

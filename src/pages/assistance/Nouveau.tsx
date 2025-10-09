@@ -14,6 +14,7 @@ type AssistanceInsert = Database['public']['Tables']['assistance']['Insert'];
 type Client = Database['public']['Tables']['clients']['Row'];
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type Assurance = Database['public']['Tables']['assurances']['Row'];
+type Bareme = Database['public']['Tables']['assurance_bareme']['Row'];
 
 export default function NouveauAssistance() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function NouveauAssistance() {
   const [clients, setClients] = useState<Client[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [assurances, setAssurances] = useState<Assurance[]>([]);
+  const [baremes, setBaremes] = useState<Bareme[]>([]);
 
   const [formData, setFormData] = useState<Partial<AssistanceInsert>>({
     num_dossier: `ASS-${Date.now()}`,
@@ -33,6 +35,8 @@ export default function NouveauAssistance() {
     date_fin: undefined,
     type: 'remplacement',
     montant_facture: undefined,
+    tarif_journalier: undefined,
+    montant_total: undefined,
     etat: 'ouvert',
   });
 
@@ -64,7 +68,7 @@ export default function NouveauAssistance() {
     }
   };
 
-  const handleAssuranceChange = (assuranceId: string) => {
+  const handleAssuranceChange = async (assuranceId: string) => {
     const assurance = assurances.find(a => a.id === assuranceId);
     if (assurance) {
       setFormData({
@@ -72,7 +76,51 @@ export default function NouveauAssistance() {
         assureur_id: assuranceId,
         assureur_nom: assurance.nom,
       });
+      
+      // Load baremes for this assurance
+      const { data } = await supabase
+        .from('assurance_bareme')
+        .select('*')
+        .eq('assurance_id', assuranceId);
+      
+      setBaremes(data || []);
+      calculatePrice(formData.vehicle_id, assuranceId, formData.date_debut, formData.date_fin);
     }
+  };
+
+  const calculatePrice = async (vehicleId?: string, assuranceId?: string, dateDebut?: string, dateFin?: string) => {
+    if (!vehicleId || !assuranceId || !dateDebut) return;
+
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (!vehicle || !vehicle.categorie) return;
+
+    const bareme = baremes.find(b => b.categorie === vehicle.categorie && b.assurance_id === assuranceId);
+    if (!bareme) return;
+
+    const days = dateFin && dateDebut 
+      ? Math.ceil((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / (1000 * 60 * 60 * 24)) 
+      : 1;
+
+    const tarif = Number(bareme.tarif_journalier);
+    const total = tarif * days;
+
+    setFormData(prev => ({
+      ...prev,
+      tarif_journalier: tarif,
+      montant_total: total,
+      montant_facture: total,
+    }));
+  };
+
+  const handleVehicleChange = (vehicleId: string) => {
+    setFormData({ ...formData, vehicle_id: vehicleId });
+    calculatePrice(vehicleId, formData.assureur_id, formData.date_debut, formData.date_fin);
+  };
+
+  const handleDateChange = (field: 'date_debut' | 'date_fin', value: string) => {
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
+    calculatePrice(formData.vehicle_id, formData.assureur_id, newFormData.date_debut, newFormData.date_fin);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,7 +248,7 @@ export default function NouveauAssistance() {
                 <Label htmlFor="vehicle">Véhicule *</Label>
                 <Select
                   value={formData.vehicle_id}
-                  onValueChange={(value) => setFormData({ ...formData, vehicle_id: value })}
+                  onValueChange={handleVehicleChange}
                   required
                 >
                   <SelectTrigger>
@@ -210,6 +258,7 @@ export default function NouveauAssistance() {
                     {vehicles.map((vehicle) => (
                       <SelectItem key={vehicle.id} value={vehicle.id}>
                         {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                        {vehicle.categorie && ` (Cat. ${vehicle.categorie})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -222,7 +271,7 @@ export default function NouveauAssistance() {
                   id="date_debut"
                   type="date"
                   value={formData.date_debut}
-                  onChange={(e) => setFormData({ ...formData, date_debut: e.target.value })}
+                  onChange={(e) => handleDateChange('date_debut', e.target.value)}
                   required
                 />
               </div>
@@ -233,18 +282,31 @@ export default function NouveauAssistance() {
                   id="date_fin"
                   type="date"
                   value={formData.date_fin || ''}
-                  onChange={(e) => setFormData({ ...formData, date_fin: e.target.value || undefined })}
+                  onChange={(e) => handleDateChange('date_fin', e.target.value || '')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="montant">Montant facture (MAD)</Label>
+                <Label htmlFor="tarif">Tarif journalier (MAD)</Label>
+                <Input
+                  id="tarif"
+                  type="number"
+                  step="0.01"
+                  value={formData.tarif_journalier || ''}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="montant">Montant total (MAD)</Label>
                 <Input
                   id="montant"
                   type="number"
                   step="0.01"
-                  value={formData.montant_facture || ''}
-                  onChange={(e) => setFormData({ ...formData, montant_facture: parseFloat(e.target.value) || undefined })}
+                  value={formData.montant_total || ''}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
 

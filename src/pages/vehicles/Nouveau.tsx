@@ -31,6 +31,7 @@ export default function NouveauVehicule() {
     statut: 'disponible',
     tarif_journalier: 0,
     valeur_achat: 0,
+    categorie: undefined,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -229,24 +230,25 @@ export default function NouveauVehicule() {
           {/* Right Column */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="categorie">Catégorie *</Label>
-              <div className="flex gap-2">
-                <Select defaultValue="mixte">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mixte">Mixte</SelectItem>
-                    <SelectItem value="economique">Économique</SelectItem>
-                    <SelectItem value="berline">Berline</SelectItem>
-                    <SelectItem value="suv">SUV</SelectItem>
-                    <SelectItem value="luxe">Luxe</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button type="button" size="icon" variant="outline">
-                  <span className="text-lg">+</span>
-                </Button>
-              </div>
+              <Label htmlFor="categorie">Catégorie (Assistance) *</Label>
+              <Select 
+                value={formData.categorie}
+                onValueChange={(value) => setFormData({ ...formData, categorie: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A">Catégorie A</SelectItem>
+                  <SelectItem value="B">Catégorie B</SelectItem>
+                  <SelectItem value="C">Catégorie C</SelectItem>
+                  <SelectItem value="D">Catégorie D</SelectItem>
+                  <SelectItem value="E">Catégorie E</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Catégorie utilisée pour le calcul des tarifs d'assistance
+              </p>
             </div>
 
             <div className="space-y-2">
