@@ -14,6 +14,7 @@ import VehiculeDetails from "./pages/vehicles/Details";
 import NouveauVehicule from "./pages/vehicles/Nouveau";
 import WorkflowWrapper from "./pages/vehicles/WorkflowWrapper";
 import Clients from "./pages/Clients";
+import ClientDetails from "./pages/clients/Details";
 import Factures from "./pages/Factures";
 import Calendrier from "./pages/Calendrier";
 import Auth from "./pages/Auth";
@@ -126,6 +127,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Clients /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id"
+              element={
+                <ProtectedRoute>
+                  <Layout><ClientDetails /></Layout>
                 </ProtectedRoute>
               }
             />

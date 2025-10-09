@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, Download, Plus, Edit, Trash2, FileText } from "lucide-react";
+import { Search, Filter, Download, Plus, Edit, Trash2, FileText, Eye, Car, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -578,7 +578,31 @@ export default function Locations() {
                         onClick={() => navigate(`/locations/${contract.id}`)}
                       >
                       <td className="py-4 pl-4">
-                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/locations/${contract.id}`)}
+                            title="Voir le contrat"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/vehicules/${contract.vehicle_id}`)}
+                            title="Voir le véhicule"
+                          >
+                            <Car className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/clients/${contract.client_id}`)}
+                            title="Voir le client"
+                          >
+                            <User className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
