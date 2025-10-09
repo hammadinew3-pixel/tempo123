@@ -654,7 +654,16 @@ export default function AssistanceDetails() {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, etatPaiement?: string) => {
+    // Si retour effectué mais en attente de paiement, afficher "En attente de paiement"
+    if (status === 'retour_effectue' && etatPaiement && etatPaiement !== 'paye') {
+      return (
+        <Badge variant="outline" className="bg-orange-100 text-orange-800 border-0">
+          En attente de paiement
+        </Badge>
+      );
+    }
+
     const styles: Record<string, string> = {
       ouvert: "bg-gray-100 text-gray-800",
       contrat_valide: "bg-blue-100 text-blue-800",
@@ -735,7 +744,7 @@ export default function AssistanceDetails() {
           </div>
         </div>
         <div className="flex gap-2">
-          {getStatusBadge(assistance.etat)}
+          {getStatusBadge(assistance.etat, assistance.etat_paiement)}
           <Button variant="outline" size="sm" onClick={handleGeneratePDF}>
             <FileText className="w-4 h-4 mr-2" />
             Générer PDF
