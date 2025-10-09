@@ -191,13 +191,13 @@ export default function FacturesAssurance() {
   };
 
   const handleDownloadInvoice = (assistanceId: string) => {
-    // TODO: Implémenter le téléchargement PDF
-    console.log('Télécharger facture:', assistanceId);
+    // Ouvre la facture en mode impression pour permettre le téléchargement en PDF
+    window.open(`/assistance-facture-template?id=${assistanceId}`, '_blank');
   };
 
   const handleEditInvoice = (assistanceId: string) => {
-    // TODO: Naviguer vers la page d'édition
-    console.log('Modifier facture:', assistanceId);
+    // Redirige vers la page de détails de l'assistance pour modification
+    window.location.href = `/assistance/${assistanceId}`;
   };
 
   const handleDeleteInvoice = async (assistanceId: string) => {
