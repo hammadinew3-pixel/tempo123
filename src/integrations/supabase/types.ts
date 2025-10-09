@@ -122,6 +122,53 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_payments: {
+        Row: {
+          banque: string | null
+          contract_id: string
+          created_at: string
+          date_paiement: string
+          id: string
+          methode: Database["public"]["Enums"]["payment_method"]
+          montant: number
+          numero_cheque: string | null
+          remarques: string | null
+          updated_at: string
+        }
+        Insert: {
+          banque?: string | null
+          contract_id: string
+          created_at?: string
+          date_paiement?: string
+          id?: string
+          methode: Database["public"]["Enums"]["payment_method"]
+          montant: number
+          numero_cheque?: string | null
+          remarques?: string | null
+          updated_at?: string
+        }
+        Update: {
+          banque?: string | null
+          contract_id?: string
+          created_at?: string
+          date_paiement?: string
+          id?: string
+          methode?: Database["public"]["Enums"]["payment_method"]
+          montant?: number
+          numero_cheque?: string | null
+          remarques?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           advance_payment: number | null
@@ -135,6 +182,11 @@ export type Database = {
           daily_rate: number | null
           date_debut: string
           date_fin: string
+          delivery_date: string | null
+          delivery_fuel_level: string | null
+          delivery_km: number | null
+          delivery_notes: string | null
+          delivery_type: string | null
           dropoff_branch_id: number | null
           duration: number | null
           end_location: string | null
@@ -146,6 +198,11 @@ export type Database = {
           pdf_url: string | null
           pickup_branch_id: number | null
           remaining_amount: number | null
+          return_date: string | null
+          return_fuel_level: string | null
+          return_km: number | null
+          return_notes: string | null
+          return_type: string | null
           signed_at: string | null
           start_location: string | null
           start_time: string | null
@@ -167,6 +224,11 @@ export type Database = {
           daily_rate?: number | null
           date_debut: string
           date_fin: string
+          delivery_date?: string | null
+          delivery_fuel_level?: string | null
+          delivery_km?: number | null
+          delivery_notes?: string | null
+          delivery_type?: string | null
           dropoff_branch_id?: number | null
           duration?: number | null
           end_location?: string | null
@@ -178,6 +240,11 @@ export type Database = {
           pdf_url?: string | null
           pickup_branch_id?: number | null
           remaining_amount?: number | null
+          return_date?: string | null
+          return_fuel_level?: string | null
+          return_km?: number | null
+          return_notes?: string | null
+          return_type?: string | null
           signed_at?: string | null
           start_location?: string | null
           start_time?: string | null
@@ -199,6 +266,11 @@ export type Database = {
           daily_rate?: number | null
           date_debut?: string
           date_fin?: string
+          delivery_date?: string | null
+          delivery_fuel_level?: string | null
+          delivery_km?: number | null
+          delivery_notes?: string | null
+          delivery_type?: string | null
           dropoff_branch_id?: number | null
           duration?: number | null
           end_location?: string | null
@@ -210,6 +282,11 @@ export type Database = {
           pdf_url?: string | null
           pickup_branch_id?: number | null
           remaining_amount?: number | null
+          return_date?: string | null
+          return_fuel_level?: string | null
+          return_km?: number | null
+          return_notes?: string | null
+          return_type?: string | null
           signed_at?: string | null
           start_location?: string | null
           start_time?: string | null
@@ -418,6 +495,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      secondary_drivers: {
+        Row: {
+          cin: string | null
+          contract_id: string
+          created_at: string
+          email: string | null
+          id: string
+          nom: string
+          permis_conduire: string | null
+          prenom: string | null
+          telephone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cin?: string | null
+          contract_id: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nom: string
+          permis_conduire?: string | null
+          prenom?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cin?: string | null
+          contract_id?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nom?: string
+          permis_conduire?: string | null
+          prenom?: string | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secondary_drivers_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
