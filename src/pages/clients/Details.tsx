@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Phone, Mail, MapPin, CreditCard, FileText } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export default function ClientDetails() {
   const { id } = useParams();
@@ -14,6 +18,8 @@ export default function ClientDetails() {
   const [client, setClient] = useState<any>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [infoOpen, setInfoOpen] = useState(true);
+  const [statsOpen, setStatsOpen] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -28,7 +34,7 @@ export default function ClientDetails() {
           .from('clients')
           .select('*')
           .eq('id', id)
-          .single(),
+          .maybeSingle(),
         supabase
           .from('contracts')
           .select(`
@@ -40,6 +46,15 @@ export default function ClientDetails() {
       ]);
 
       if (clientRes.error) throw clientRes.error;
+      if (!clientRes.data) {
+        toast({
+          title: 'Erreur',
+          description: 'Client introuvable',
+          variant: 'destructive',
+        });
+        navigate('/clients');
+        return;
+      }
       if (contractsRes.error) throw contractsRes.error;
 
       setClient(clientRes.data);
@@ -56,6 +71,82 @@ export default function ClientDetails() {
     }
   };
 
+  const calculateTotalRevenue = () => {
+    return contracts.reduce((sum, contract) => sum + (contract.total_amount || 0), 0);
+  };
+
+  const getContractStats = () => {
+    const stats = {
+      shortTerm: {
+        pending: 0,
+        delivered: 0,
+        returned: 0,
+        cancelled: 0,
+        total: 0
+      },
+      longTerm: {
+        pending: 0,
+        delivered: 0,
+        returned: 0,
+        cancelled: 0,
+        total: 0
+      }
+    };
+
+    contracts.forEach((contract) => {
+      const duration = contract.duration || 0;
+      const isShortTerm = duration <= 7;
+      const category = isShortTerm ? 'shortTerm' : 'longTerm';
+
+      if (contract.statut === 'brouillon') {
+        stats[category].pending++;
+      } else if (contract.statut === 'livre' || contract.statut === 'contrat_valide') {
+        stats[category].delivered++;
+      } else if (contract.statut === 'retour_effectue' || contract.statut === 'termine') {
+        stats[category].returned++;
+      } else if (contract.statut === 'annule') {
+        stats[category].cancelled++;
+      }
+      stats[category].total++;
+    });
+
+    return stats;
+  };
+
+  const handleDeleteClient = async () => {
+    if (contracts.length > 0) {
+      toast({
+        title: 'Impossible de supprimer',
+        description: 'Ce client a des réservations actives',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Succès',
+        description: 'Client supprimé avec succès',
+      });
+      navigate('/clients');
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -66,197 +157,336 @@ export default function ClientDetails() {
 
   if (!client) return null;
 
+  const stats = getContractStats();
+  const totalRevenue = calculateTotalRevenue();
+  const isNewClient = contracts.length <= 2;
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/clients')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {client.nom} {client.prenom}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              <Badge variant="outline" className="capitalize">
-                {client.type === 'particulier' ? 'Particulier' : 'Professionnel'}
-              </Badge>
-            </p>
+    <div className="space-y-6 p-6 bg-muted/30 min-h-screen">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link to="/" className="hover:text-foreground">Tableau de bord</Link>
+        <ChevronRight className="w-4 h-4" />
+        <Link to="/clients" className="hover:text-foreground">Clients</Link>
+        <ChevronRight className="w-4 h-4" />
+        <span className="text-foreground font-medium">
+          {client.type === 'entreprise' ? client.nom : `${client.nom} ${client.prenom || ''}`}
+        </span>
+      </nav>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Revenu Total */}
+        <Card className="relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-1/2 h-full opacity-10">
+            <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 rounded-full transform translate-x-1/4 -translate-y-1/4 scale-150" />
           </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Informations de contact */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations de contact</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {client.telephone && (
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Téléphone</p>
-                  <p className="font-medium">{client.telephone}</p>
-                </div>
-              </div>
-            )}
-            {client.email && (
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{client.email}</p>
-                </div>
-              </div>
-            )}
-            {client.adresse && (
-              <div className="flex items-center gap-3">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Adresse</p>
-                  <p className="font-medium">{client.adresse}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Documents */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Documents</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {client.cin && (
-              <div className="flex items-center gap-3">
-                <CreditCard className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">CIN</p>
-                  <p className="font-medium">{client.cin}</p>
-                  {client.cin_url && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0"
-                      onClick={() => window.open(client.cin_url, '_blank')}
-                    >
-                      Voir le document
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-            {client.permis_conduire && (
-              <div className="flex items-center gap-3">
-                <FileText className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Permis de conduire</p>
-                  <p className="font-medium">{client.permis_conduire}</p>
-                  {client.permis_url && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0"
-                      onClick={() => window.open(client.permis_url, '_blank')}
-                    >
-                      Voir le document
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Statistiques */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Statistiques</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total locations</p>
-                <p className="text-2xl font-bold">{contracts.length}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Locations actives</p>
-                <p className="text-2xl font-bold">
-                  {contracts.filter(c => c.statut === 'actif').length}
+                <p className="text-sm font-medium text-green-600 mb-2">REVENU TOTAL</p>
+                <p className="text-3xl font-bold text-foreground">
+                  {totalRevenue.toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-xl">DH</span>
                 </p>
               </div>
+              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                <DollarSign className="w-8 h-8 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Réservations */}
+        <Card className="relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-1/2 h-full opacity-10">
+            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 rounded-full transform translate-x-1/4 -translate-y-1/4 scale-150" />
+          </div>
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-600 mb-2">RÉSERVATIONS</p>
+                <p className="text-3xl font-bold text-foreground">{contracts.length.toString().padStart(2, '0')}</p>
+              </div>
+              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                <Calendar className="w-8 h-8 text-blue-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Historique des locations */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Historique des locations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {contracts.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Aucune location</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="pb-3 font-medium">N° Contrat</th>
-                    <th className="pb-3 font-medium">Véhicule</th>
-                    <th className="pb-3 font-medium">Période</th>
-                    <th className="pb-3 font-medium">Montant</th>
-                    <th className="pb-3 font-medium">Statut</th>
-                    <th className="pb-3 font-medium">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contracts.map((contract) => (
-                    <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
-                      <td className="py-3 font-medium">{contract.numero_contrat}</td>
-                      <td className="py-3">
-                        {contract.vehicles?.marque} {contract.vehicles?.modele}
-                      </td>
-                      <td className="py-3 text-sm">
-                        {new Date(contract.date_debut).toLocaleDateString('fr-FR')} -{' '}
-                        {new Date(contract.date_fin).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="py-3">{contract.total_amount?.toFixed(2)} MAD</td>
-                      <td className="py-3">
-                        <Badge
-                          variant="outline"
-                          className={
-                            contract.statut === 'actif'
-                              ? 'bg-green-100 text-green-800'
-                              : contract.statut === 'termine'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }
-                        >
-                          {contract.statut}
+      {/* Informations */}
+      <Collapsible open={infoOpen} onOpenChange={setInfoOpen}>
+        <Card>
+          <CollapsibleTrigger className="w-full">
+            <div className="p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Info className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-semibold">Informations</h2>
+              </div>
+              {infoOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <Tabs defaultValue="resume" className="w-full">
+              <div className="px-6 border-b">
+                <TabsList className="bg-transparent h-auto p-0">
+                  <TabsTrigger 
+                    value="resume" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                  >
+                    RÉSUMÉ
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="personal" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                  >
+                    INFO PERSONNELLES
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="license" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                  >
+                    PERMIS DE CONDUIRE
+                  </TabsTrigger>
+                  {client.type === 'entreprise' && (
+                    <TabsTrigger 
+                      value="company" 
+                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                    >
+                      ENTREPRISE
+                    </TabsTrigger>
+                  )}
+                </TabsList>
+              </div>
+
+              <TabsContent value="resume" className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Type</p>
+                    <p className="font-medium capitalize">{client.type === 'particulier' ? 'Particulier' : 'Entreprise'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Nom complet</p>
+                    <p className="font-medium">
+                      {client.type === 'entreprise' ? client.nom : `${client.nom} ${client.prenom || ''}`}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Fiabilité</p>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/20">
+                      {isNewClient ? 'Nouveau client' : 'Client fidèle'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">N° CIN</p>
+                    <p className="font-medium">{client.cin || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Sexe</p>
+                    <p className="font-medium text-blue-600">👤 {client.prenom ? 'Homme' : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">N° permis</p>
+                    <p className="font-medium">{client.permis_conduire || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Téléphone</p>
+                    <p className="font-medium">{client.telephone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Date création</p>
+                    <p className="font-medium">
+                      {client.created_at ? format(new Date(client.created_at), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground mb-1">Pièces jointes</p>
+                    <p className="font-medium">—</p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="personal" className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Nom</p>
+                    <p className="font-medium">{client.nom || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Prénom</p>
+                    <p className="font-medium">{client.prenom || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Email</p>
+                    <p className="font-medium">{client.email || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Téléphone</p>
+                    <p className="font-medium">{client.telephone || '—'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground mb-1">Adresse</p>
+                    <p className="font-medium">{client.adresse || '—'}</p>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="license" className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">N° permis de conduire</p>
+                    <p className="font-medium">{client.permis_conduire || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">CIN</p>
+                    <p className="font-medium">{client.cin || '—'}</p>
+                  </div>
+                  {client.permis_url && (
+                    <div className="col-span-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => window.open(client.permis_url, '_blank')}
+                      >
+                        Voir le document du permis
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {client.type === 'entreprise' && (
+                <TabsContent value="company" className="p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Nom de l&apos;entreprise</p>
+                      <p className="font-medium">{client.nom || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Email</p>
+                      <p className="font-medium">{client.email || '—'}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground mb-1">Adresse</p>
+                      <p className="font-medium">{client.adresse || '—'}</p>
+                    </div>
+                  </div>
+                </TabsContent>
+              )}
+            </Tabs>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Statistiques des réservations */}
+      <Collapsible open={statsOpen} onOpenChange={setStatsOpen}>
+        <Card>
+          <CollapsibleTrigger className="w-full">
+            <div className="p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <h2 className="text-lg font-semibold">Statistiques des réservations</h2>
+              </div>
+              {statsOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type location</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">En attente</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Livrée</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Récupérée</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Annulée</th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b">
+                      <td className="py-3 px-4 text-sm">Courte durée</td>
+                      <td className="text-center py-3 px-4">{stats.shortTerm.pending.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.shortTerm.delivered.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.shortTerm.returned.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.shortTerm.cancelled.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.shortTerm.total.toString().padStart(2, '0')}</td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-3 px-4 text-sm">Longue durée</td>
+                      <td className="text-center py-3 px-4">{stats.longTerm.pending.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.longTerm.delivered.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.longTerm.returned.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.longTerm.cancelled.toString().padStart(2, '0')}</td>
+                      <td className="text-center py-3 px-4">{stats.longTerm.total.toString().padStart(2, '0')}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-4 text-sm font-semibold">Total</td>
+                      <td className="text-center py-3 px-4">
+                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900/20">
+                          {(stats.shortTerm.pending + stats.longTerm.pending).toString().padStart(2, '0')}
                         </Badge>
                       </td>
-                      <td className="py-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/locations/${contract.id}`)}
-                        >
-                          Voir
-                        </Button>
+                      <td className="text-center py-3 px-4">
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/20">
+                          {(stats.shortTerm.delivered + stats.longTerm.delivered).toString().padStart(2, '0')}
+                        </Badge>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20">
+                          {(stats.shortTerm.returned + stats.longTerm.returned).toString().padStart(2, '0')}
+                        </Badge>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/20">
+                          {(stats.shortTerm.cancelled + stats.longTerm.cancelled).toString().padStart(2, '0')}
+                        </Badge>
+                      </td>
+                      <td className="text-center py-3 px-4">
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-700">
+                          {(stats.shortTerm.total + stats.longTerm.total).toString().padStart(2, '0')}
+                        </Badge>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/10 rounded-md flex items-start gap-2">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                  <p className="text-blue-600 font-medium cursor-pointer hover:underline">
+                    Cliquez ici pour consulter toutes les locations courtes durées de ce client.
+                  </p>
+                  <p className="text-blue-600 font-medium cursor-pointer hover:underline">
+                    Cliquez ici pour consulter toutes les locations longues durées de ce client.
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Delete Button */}
+      <div className="flex justify-start">
+        <Button
+          variant="destructive"
+          onClick={handleDeleteClient}
+          disabled={contracts.length > 0}
+          className="bg-gray-300 text-gray-500 hover:bg-gray-400 disabled:opacity-50"
+        >
+          SUPPRIMER CE CLIENT
+        </Button>
+        {contracts.length > 0 && (
+          <p className="ml-4 text-sm text-muted-foreground flex items-center gap-2 mt-2">
+            <AlertCircle className="w-4 h-4" />
+            Vous ne pouvez pas supprimer un client s&apos;il a eu des réservations.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
