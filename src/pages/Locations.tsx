@@ -23,6 +23,7 @@ export default function Locations() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<any>(null);
+  const [filterType, setFilterType] = useState<'all' | 'location' | 'assistance'>('all');
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<Partial<ContractInsert>>({
@@ -579,14 +580,35 @@ export default function Locations() {
       <Card>
         <CardHeader className="space-y-4">
           <div className="flex items-center gap-4 text-sm font-medium">
-            <button className="text-primary border-b-2 border-primary pb-2">
+            <button 
+              onClick={() => setFilterType('all')}
+              className={`pb-2 transition-colors ${
+                filterType === 'all' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
               TOUS ({contracts.length})
             </button>
-            <button className="text-muted-foreground hover:text-foreground pb-2">
-              ACTIF ({contracts.filter(c => c.statut === 'actif').length})
+            <button 
+              onClick={() => setFilterType('location')}
+              className={`pb-2 transition-colors ${
+                filterType === 'location' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              LOCATIONS ({contracts.filter(c => c.type_contrat === 'location').length})
             </button>
-            <button className="text-muted-foreground hover:text-foreground pb-2">
-              TERMINÉ ({contracts.filter(c => c.statut === 'termine').length})
+            <button 
+              onClick={() => setFilterType('assistance')}
+              className={`pb-2 transition-colors ${
+                filterType === 'assistance' 
+                  ? 'text-primary border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              ASSISTANCES ({contracts.filter(c => c.type_contrat === 'assistance').length})
             </button>
           </div>
         </CardHeader>
@@ -614,7 +636,12 @@ export default function Locations() {
                   </tr>
                 </thead>
                 <tbody>
-                  {contracts.map((contract) => {
+                  {contracts
+                    .filter(contract => {
+                      if (filterType === 'all') return true;
+                      return contract.type_contrat === filterType;
+                    })
+                    .map((contract) => {
                     const isAssistance = contract.type_contrat === 'assistance';
                     const detailsUrl = isAssistance ? `/assistance/${contract.id}` : `/locations/${contract.id}`;
                     
