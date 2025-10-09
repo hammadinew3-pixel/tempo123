@@ -413,20 +413,18 @@ export default function AssistanceDetails() {
         </Card>
 
         {/* Franchise */}
-        {assistance.franchise_montant && (
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                <Key className="w-4 h-4 text-primary" />
-                <span>FRANCHISE</span>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">
-                {assistance.franchise_montant.toFixed(2)}
-                <span className="text-lg ml-1">DH</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+              <Key className="w-4 h-4 text-primary" />
+              <span>FRANCHISE</span>
+            </div>
+            <div className="text-3xl font-bold text-foreground mb-2">
+              {assistance.franchise_montant ? assistance.franchise_montant.toFixed(2) : '0.00'}
+              <span className="text-lg ml-1">DH</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Client */}
         <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
@@ -501,6 +499,12 @@ export default function AssistanceDetails() {
                   <span className="text-muted-foreground">Assurance</span>
                   <span className="font-medium">{assistance.assureur_nom}</span>
                 </div>
+                {assistance.vehicles?.categorie && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Catégorie</span>
+                    <span className="font-medium">Catégorie {assistance.vehicles.categorie.toUpperCase()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Durée</span>
                   <span className="font-medium">{duration} {duration > 1 ? 'jours' : 'jour'}</span>
