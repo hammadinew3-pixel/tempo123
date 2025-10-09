@@ -13,6 +13,8 @@ export default function ContractTemplate() {
   useEffect(() => {
     if (contractId) {
       loadContractData();
+    } else {
+      setLoading(false);
     }
   }, [contractId]);
 
@@ -42,6 +44,15 @@ export default function ContractTemplate() {
 
   if (loading) {
     return <div className="p-10 text-center">Chargement...</div>;
+  }
+
+  if (!contractId) {
+    return (
+      <div className="p-10 text-center">
+        <h2 className="text-xl font-bold mb-4">Aucun contrat spécifié</h2>
+        <p className="text-muted-foreground">Veuillez accéder à cette page depuis la liste des contrats.</p>
+      </div>
+    );
   }
 
   if (!contract) {
