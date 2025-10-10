@@ -38,6 +38,8 @@ import NouvelleInfraction from "./pages/infractions/Nouveau";
 import InfractionDetails from "./pages/infractions/Details";
 import ModifierInfraction from "./pages/infractions/Modifier";
 import Auth from "./pages/Auth";
+import Utilisateurs from "./pages/Utilisateurs";
+import Parametres from "./pages/Parametres";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
 import AssistanceContractTemplate from "./pages/AssistanceContractTemplate";
@@ -326,6 +328,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><ModifierInfraction /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/utilisateurs"
+              element={
+                <ProtectedRoute>
+                  <Layout><Utilisateurs /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/parametres"
+              element={
+                <ProtectedRoute>
+                  <Layout><Parametres /></Layout>
                 </ProtectedRoute>
               }
             />

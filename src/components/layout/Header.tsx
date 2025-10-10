@@ -13,11 +13,15 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useAlertes } from "@/contexts/AlertesContext";
 import { useNavigate } from "react-router-dom";
+import { useUserRole } from "@/hooks/use-user-role";
+import { Badge } from "@/components/ui/badge";
+import { Shield } from "lucide-react";
 import logoCrsapp from "@/assets/logo-crsapp.png";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
   const { totalAlerts } = useAlertes();
+  const { role } = useUserRole();
   const navigate = useNavigate();
 
   return (
@@ -58,6 +62,18 @@ export const Header = () => {
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{user?.user_metadata?.nom || 'Utilisateur'}</p>
                   <p className="text-xs text-muted-foreground truncate max-w-[200px]">{user?.email}</p>
+                  {role && (
+                    <Badge 
+                      variant={role === 'admin' ? 'default' : 'secondary'}
+                      className={`mt-1 ${role === 'admin' ? 'bg-green-500' : 'bg-blue-500'}`}
+                    >
+                      {role === 'admin' ? (
+                        <><Shield className="w-3 h-3 mr-1" /> Admin</>
+                      ) : (
+                        <>Agent</>
+                      )}
+                    </Badge>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

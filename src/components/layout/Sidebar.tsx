@@ -22,6 +22,7 @@ import {
   LifeBuoy,
   Building2,
   AlertTriangle,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar as SidebarUI,
@@ -38,6 +39,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useUserRole } from "@/hooks/use-user-role";
 
 interface NavItem {
   title: string;
@@ -104,8 +106,8 @@ const mainNavItems: NavItem[] = [
 ];
 
 const adminNavItems: NavItem[] = [
-  { title: "Mon compte", href: "/compte", icon: User },
-  { title: "Mes Utilisateurs", href: "/utilisateurs", icon: Users },
+  { title: "Utilisateurs", href: "/utilisateurs", icon: Users },
+  { title: "Paramètres", href: "/parametres", icon: Settings },
 ];
 
 interface SidebarProps {
@@ -115,6 +117,7 @@ interface SidebarProps {
 export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const location = useLocation();
   const { state } = useSidebar();
+  const { isAdmin } = useUserRole();
   const collapsed = state === "collapsed";
   
   // Track which groups are open
@@ -237,27 +240,29 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
         </SidebarGroup>
 
         {/* Admin Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    className={getNavCls(isActive(item.href!))}
-                    tooltip={item.title}
-                  >
-                    <NavLink to={item.href!}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminNavItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      className={getNavCls(isActive(item.href!))}
+                      tooltip={item.title}
+                    >
+                      <NavLink to={item.href!}>
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </SidebarUI>
   );

@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      agence_settings: {
+        Row: {
+          adresse: string | null
+          alerte_assurance_jours: number | null
+          alerte_autorisation_jours: number | null
+          alerte_cheque_jours: number | null
+          alerte_vidange_kms: number | null
+          alerte_visite_jours: number | null
+          cgv_url: string | null
+          cnss: string | null
+          created_at: string | null
+          email: string | null
+          grace_long: number | null
+          grace_medium: number | null
+          grace_short: number | null
+          ice: string | null
+          id: string
+          if_number: string | null
+          inclure_cgv: boolean | null
+          logo_url: string | null
+          masquer_entete: boolean | null
+          masquer_logo: boolean | null
+          masquer_pied_page: boolean | null
+          patente: string | null
+          raison_sociale: string | null
+          rc: string | null
+          taux_tva: number | null
+          telephone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          alerte_assurance_jours?: number | null
+          alerte_autorisation_jours?: number | null
+          alerte_cheque_jours?: number | null
+          alerte_vidange_kms?: number | null
+          alerte_visite_jours?: number | null
+          cgv_url?: string | null
+          cnss?: string | null
+          created_at?: string | null
+          email?: string | null
+          grace_long?: number | null
+          grace_medium?: number | null
+          grace_short?: number | null
+          ice?: string | null
+          id?: string
+          if_number?: string | null
+          inclure_cgv?: boolean | null
+          logo_url?: string | null
+          masquer_entete?: boolean | null
+          masquer_logo?: boolean | null
+          masquer_pied_page?: boolean | null
+          patente?: string | null
+          raison_sociale?: string | null
+          rc?: string | null
+          taux_tva?: number | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          alerte_assurance_jours?: number | null
+          alerte_autorisation_jours?: number | null
+          alerte_cheque_jours?: number | null
+          alerte_vidange_kms?: number | null
+          alerte_visite_jours?: number | null
+          cgv_url?: string | null
+          cnss?: string | null
+          created_at?: string | null
+          email?: string | null
+          grace_long?: number | null
+          grace_medium?: number | null
+          grace_short?: number | null
+          ice?: string | null
+          id?: string
+          if_number?: string | null
+          inclure_cgv?: boolean | null
+          logo_url?: string | null
+          masquer_entete?: boolean | null
+          masquer_logo?: boolean | null
+          masquer_pied_page?: boolean | null
+          patente?: string | null
+          raison_sociale?: string | null
+          rc?: string | null
+          taux_tva?: number | null
+          telephone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       assistance: {
         Row: {
           assureur_id: string | null
