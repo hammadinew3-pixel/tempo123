@@ -44,7 +44,7 @@ export function EditInspectionDialog({
       }
 
       setUploading(true);
-      let photoUrl = selectedInspection.photo_url;
+      let photoUrl = selectedInspection?.photo_url || null;
 
       // Upload photo if provided
       if (inspectionPhoto) {
@@ -208,7 +208,7 @@ export function EditInspectionDialog({
                 accept="image/*"
                 onChange={(e) => setInspectionPhoto(e.target.files?.[0] || null)}
               />
-              {selectedInspection.photo_url && !inspectionPhoto && (
+              {selectedInspection?.photo_url && !inspectionPhoto && (
                 <p className="text-sm text-muted-foreground mt-2">Photo actuelle disponible. Sélectionnez une nouvelle photo pour la remplacer.</p>
               )}
             </div>
@@ -262,7 +262,7 @@ export function EditVignetteDialog({
       }
 
       setUploading(true);
-      let photoUrl = selectedVignette.photo_url;
+      let photoUrl = selectedVignette?.photo_url || null;
 
       // Upload photo if provided
       if (vignettePhoto) {
@@ -418,7 +418,7 @@ export function EditVignetteDialog({
                 accept="image/*"
                 onChange={(e) => setVignettePhoto(e.target.files?.[0] || null)}
               />
-              {selectedVignette.photo_url && !vignettePhoto && (
+              {selectedVignette?.photo_url && !vignettePhoto && (
                 <p className="text-sm text-muted-foreground mt-2">Photo actuelle disponible. Sélectionnez une nouvelle photo pour la remplacer.</p>
               )}
             </div>
