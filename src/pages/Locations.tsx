@@ -687,7 +687,7 @@ export default function Locations() {
                 ASSISTANCES ({contracts.filter(c => c.type_contrat === 'assistance').length})
               </button>
             </div>
-            {selectedIds.size > 0 && (
+            {selectedIds.size > 0 && hasPermission('contracts.delete') && (
               <Button 
                 variant="destructive" 
                 size="sm"
@@ -763,28 +763,32 @@ export default function Locations() {
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (isAssistance) {
-                                  navigate(detailsUrl);
-                                } else {
-                                  openEditDialog(contract);
-                                }
-                              }}
-                              title="Modifier"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(contract.id)}
-                              title="Supprimer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {hasPermission('contracts.update') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (isAssistance) {
+                                    navigate(detailsUrl);
+                                  } else {
+                                    openEditDialog(contract);
+                                  }
+                                }}
+                                title="Modifier"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {hasPermission('contracts.delete') && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(contract.id)}
+                                title="Supprimer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                         {visibleColumns.type && (

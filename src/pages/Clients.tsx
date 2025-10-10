@@ -727,7 +727,7 @@ export default function Clients() {
                 ENTREPRISES ({clients.filter(c => c.type === 'entreprise').length})
               </button>
             </div>
-            {selectedIds.size > 0 && (
+            {selectedIds.size > 0 && hasPermission('clients.delete') && (
               <Button 
                 variant="destructive" 
                 size="sm"
