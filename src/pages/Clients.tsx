@@ -26,6 +26,7 @@ export default function Clients() {
   const [loading, setLoading] = useState(true);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const [showAllFields, setShowAllFields] = useState(false);
@@ -206,6 +207,21 @@ export default function Clients() {
     setFormData(client);
     setIsClientDialogOpen(true);
   };
+
+  const filteredClients = clients.filter(client => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      client.nom?.toLowerCase().includes(query) ||
+      client.prenom?.toLowerCase().includes(query) ||
+      client.telephone?.toLowerCase().includes(query) ||
+      client.email?.toLowerCase().includes(query) ||
+      client.cin?.toLowerCase().includes(query) ||
+      client.permis_conduire?.toLowerCase().includes(query) ||
+      client.adresse?.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -515,6 +531,18 @@ export default function Clients() {
         </div>
       </div>
 
+      {/* Search Input */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Rechercher un client (nom, téléphone, email...)"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <Card>
         <CardHeader className="space-y-4">
           <div className="flex items-center justify-between">
@@ -544,9 +572,9 @@ export default function Clients() {
         <CardContent>
           {loading ? (
             <p className="text-center text-muted-foreground py-8">Chargement...</p>
-          ) : clients.length === 0 ? (
+          ) : filteredClients.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Aucun client. Cliquez sur "Nouveau client" pour commencer.
+              {searchQuery ? 'Aucun client trouvé pour cette recherche.' : 'Aucun client. Cliquez sur "Nouveau client" pour commencer.'}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -570,7 +598,7 @@ export default function Clients() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clients.map((client) => (
+                  {filteredClients.map((client) => (
                     <tr key={client.id} className="border-b last:border-0 hover:bg-muted/50">
                       <td className="py-4 pl-4">
                         <Checkbox 
