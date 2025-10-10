@@ -621,13 +621,12 @@ export default function Dashboard() {
                     <th className="pb-3 font-medium">Rés. N°</th>
                     <th className="pb-3 font-medium">Véhicule</th>
                     <th className="pb-3 font-medium">Locataire</th>
-                    <th className="pb-3 font-medium">Heure</th>
                     <th className="pb-3 font-medium">{activeTab === 'departures' ? 'Date retour' : 'Date départ'}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(activeTab === 'departures' ? departures : returns).length === 0 ? <tr>
-                      <td colSpan={5} className="text-center py-12">
+                      <td colSpan={4} className="text-center py-12">
                         <div className="flex flex-col items-center">
                           <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
                             <Calendar className="w-8 h-8 text-muted-foreground" />
@@ -652,9 +651,6 @@ export default function Dashboard() {
                         </td>
                         <td className="py-4 text-foreground">
                           {contract.clients?.nom} {contract.clients?.prenom}
-                        </td>
-                        <td className="py-4 text-foreground">
-                          {activeTab === 'departures' ? contract.start_time || '--:--' : contract.end_time || '--:--'}
                         </td>
                         <td className="py-4 text-foreground">
                           {new Date(activeTab === 'departures' ? contract.date_fin : contract.date_debut).toLocaleDateString('fr-FR')}
