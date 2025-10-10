@@ -363,10 +363,10 @@ export default function Vehicules() {
   };
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
   const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
-  const countDisponible = vehicles.filter(v => v.statut === 'disponible').length;
-  const countLoue = vehicles.filter(v => v.statut === 'loue').length;
-  const countReserve = vehicles.filter(v => v.statut === 'reserve').length;
-  const countEnPanne = vehicles.filter(v => v.statut === 'en_panne').length;
+  const countDisponible = vehicles.filter(v => v.statut === 'disponible' && v.en_service !== false).length;
+  const countLoue = vehicles.filter(v => v.statut === 'loue' && v.en_service !== false).length;
+  const countReserve = vehicles.filter(v => v.statut === 'reserve' && v.en_service !== false).length;
+  const countEnPanne = vehicles.filter(v => v.statut === 'en_panne' && v.en_service !== false).length;
   return <div className="space-y-4 md:space-y-6 p-3 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
