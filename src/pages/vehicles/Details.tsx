@@ -498,6 +498,33 @@ export default function VehiculeDetails() {
         </Card>
       </div>
 
+      {/* Alerts Section */}
+      {alerts.length > 0 && <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-warning">
+                <AlertCircle className="w-5 h-5" />
+                {alerts.length.toString().padStart(2, '0')} alertes trouvées pour ce véhicule
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {alerts.map((alert, index) => <Alert key={index} className={`border-l-4 ${alert.severity === 'critical' ? 'border-l-destructive bg-destructive/5' : alert.severity === 'high' ? 'border-l-warning bg-warning/5' : 'border-l-warning bg-warning/5'}`}>
+                <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
+                <AlertDescription className="flex items-center justify-between">
+                  <span className="text-sm">{alert.message}</span>
+                  <Button variant="outline" size="sm" className={`ml-4 ${alert.severity === 'critical' ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' : 'border-warning text-warning hover:bg-warning hover:text-white'}`} onClick={() => {
+              if (alert.action === "EFFECTUER VIDANGE") {
+                setShowVidangeDialog(true);
+              }
+            }}>
+                    {alert.action}
+                  </Button>
+                </AlertDescription>
+              </Alert>)}
+          </CardContent>
+        </Card>}
+
       {/* Vidange Status Card */}
       <Card className={`border-l-4 ${getOilChangeAlertLevel() === 'critical' ? 'border-l-destructive bg-destructive/5' : getOilChangeAlertLevel() === 'warning' ? 'border-l-warning bg-warning/5' : 'border-l-success bg-success/5'}`}>
         <CardContent className="p-6">
@@ -744,32 +771,6 @@ export default function VehiculeDetails() {
         </CardContent>
       </Card>
 
-      {/* Alerts Section */}
-      {alerts.length > 0 && <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-warning">
-                <AlertCircle className="w-5 h-5" />
-                {alerts.length.toString().padStart(2, '0')} alertes trouvées pour ce véhicule
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {alerts.map((alert, index) => <Alert key={index} className={`border-l-4 ${alert.severity === 'critical' ? 'border-l-destructive bg-destructive/5' : alert.severity === 'high' ? 'border-l-warning bg-warning/5' : 'border-l-warning bg-warning/5'}`}>
-                <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
-                <AlertDescription className="flex items-center justify-between">
-                  <span className="text-sm">{alert.message}</span>
-                  <Button variant="outline" size="sm" className={`ml-4 ${alert.severity === 'critical' ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' : 'border-warning text-warning hover:bg-warning hover:text-white'}`} onClick={() => {
-              if (alert.action === "EFFECTUER VIDANGE") {
-                setShowVidangeDialog(true);
-              }
-            }}>
-                    {alert.action}
-                  </Button>
-                </AlertDescription>
-              </Alert>)}
-          </CardContent>
-        </Card>}
 
       {/* Assurances, interventions Section */}
       <Card>
