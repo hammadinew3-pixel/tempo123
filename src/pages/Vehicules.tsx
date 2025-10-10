@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -20,16 +20,17 @@ type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
 export default function Vehicules() {
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [assurances, setAssurances] = useState<Array<{ id: string; nom: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location' | 'disponible' | 'loue' | 'reserve' | 'en_panne'>('tous');
-  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({
     marque: 'all',
     categorie: 'all',
-    assurance: 'tous' as 'tous' | 'expiree' | 'proche' | 'valide'
+    assurance_id: 'all'
   });
   const { toast } = useToast();
 
@@ -47,13 +48,35 @@ export default function Vehicules() {
 
   useEffect(() => {
     loadVehicles();
+    loadAssurances();
   }, []);
+
+  const loadAssurances = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('assurances')
+        .select('id, nom')
+        .eq('actif', true)
+        .order('nom');
+
+      if (error) throw error;
+      setAssurances(data || []);
+    } catch (error: any) {
+      console.error('Error loading assurances:', error);
+    }
+  };
 
   const loadVehicles = async () => {
     try {
       const { data, error } = await supabase
         .from('vehicles')
-        .select('*')
+        .select(`
+          *,
+          vehicle_insurance (
+            id,
+            assureur
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -266,17 +289,18 @@ export default function Vehicules() {
     if (advancedFilters.marque && advancedFilters.marque !== 'all' && vehicle.marque !== advancedFilters.marque) return false;
     if (advancedFilters.categorie && advancedFilters.categorie !== 'all' && vehicle.categorie !== advancedFilters.categorie) return false;
     
-    // Filtre d'assurance
-    if (advancedFilters.assurance !== 'tous') {
-      if (!vehicle.assurance_expire_le) return false;
+    // Filtre d'assurance par assureur
+    if (advancedFilters.assurance_id && advancedFilters.assurance_id !== 'all') {
+      const vehicleInsurance = (vehicle as any).vehicle_insurance;
+      if (!vehicleInsurance || vehicleInsurance.length === 0) return false;
       
-      const today = new Date();
-      const expiryDate = new Date(vehicle.assurance_expire_le);
-      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      const assuranceMatch = assurances.find(a => a.id === advancedFilters.assurance_id);
+      if (!assuranceMatch) return false;
       
-      if (advancedFilters.assurance === 'expiree' && daysUntilExpiry >= 0) return false;
-      if (advancedFilters.assurance === 'proche' && (daysUntilExpiry < 0 || daysUntilExpiry > 30)) return false;
-      if (advancedFilters.assurance === 'valide' && daysUntilExpiry < 30) return false;
+      const hasMatchingInsurance = vehicleInsurance.some((ins: any) => 
+        ins.assureur === assuranceMatch.nom
+      );
+      if (!hasMatchingInsurance) return false;
     }
     
     return true;
@@ -290,11 +314,11 @@ export default function Vehicules() {
     setAdvancedFilters({
       marque: 'all',
       categorie: 'all',
-      assurance: 'tous'
+      assurance_id: 'all'
     });
   };
 
-  const hasActiveFilters = advancedFilters.marque !== 'all' || advancedFilters.categorie !== 'all' || advancedFilters.assurance !== 'tous';
+  const hasActiveFilters = advancedFilters.marque !== 'all' || advancedFilters.categorie !== 'all' || advancedFilters.assurance_id !== 'all';
 
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
   const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
@@ -311,8 +335,8 @@ export default function Vehicules() {
           <p className="text-xs md:text-sm text-muted-foreground">Gérez votre flotte de véhicules</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
-            <SheetTrigger asChild>
+          <Popover open={filterPopoverOpen} onOpenChange={setFilterPopoverOpen}>
+            <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm relative">
                 <Filter className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
                 <span className="hidden sm:inline">FILTRER</span>
@@ -323,25 +347,26 @@ export default function Vehicules() {
                   </Badge>
                 )}
               </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filtres avancés</SheetTitle>
-                <SheetDescription>
-                  Affinez votre recherche de véhicules
-                </SheetDescription>
-              </SheetHeader>
-              <div className="space-y-6 mt-6">
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-background" align="start">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-sm mb-3">Filtres avancés</h4>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Affinez votre recherche de véhicules
+                  </p>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="filter-marque">Marque</Label>
+                  <Label htmlFor="filter-marque" className="text-xs">Marque</Label>
                   <Select
                     value={advancedFilters.marque}
                     onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, marque: value })}
                   >
-                    <SelectTrigger id="filter-marque">
+                    <SelectTrigger id="filter-marque" className="h-9">
                       <SelectValue placeholder="Toutes les marques" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="all">Toutes les marques</SelectItem>
                       {uniqueMarques.map((marque) => (
                         <SelectItem key={marque} value={marque}>
@@ -353,15 +378,15 @@ export default function Vehicules() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="filter-categorie">Catégorie</Label>
+                  <Label htmlFor="filter-categorie" className="text-xs">Catégorie</Label>
                   <Select
                     value={advancedFilters.categorie}
                     onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, categorie: value })}
                   >
-                    <SelectTrigger id="filter-categorie">
+                    <SelectTrigger id="filter-categorie" className="h-9">
                       <SelectValue placeholder="Toutes les catégories" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="all">Toutes les catégories</SelectItem>
                       {uniqueCategories.map((categorie) => (
                         <SelectItem key={categorie} value={categorie}>
@@ -373,41 +398,45 @@ export default function Vehicules() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="filter-assurance">Statut d'assurance</Label>
+                  <Label htmlFor="filter-assurance" className="text-xs">Assurance</Label>
                   <Select
-                    value={advancedFilters.assurance}
-                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, assurance: value as any })}
+                    value={advancedFilters.assurance_id}
+                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, assurance_id: value })}
                   >
-                    <SelectTrigger id="filter-assurance">
-                      <SelectValue />
+                    <SelectTrigger id="filter-assurance" className="h-9">
+                      <SelectValue placeholder="Toutes les assurances" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="tous">Tous les statuts</SelectItem>
-                      <SelectItem value="valide">Assurance valide (&gt; 30 jours)</SelectItem>
-                      <SelectItem value="proche">Expire bientôt (≤ 30 jours)</SelectItem>
-                      <SelectItem value="expiree">Expirée</SelectItem>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">Toutes les assurances</SelectItem>
+                      {assurances.map((assurance) => (
+                        <SelectItem key={assurance.id} value={assurance.id}>
+                          {assurance.nom}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="flex gap-2 pt-4">
+                <div className="flex gap-2 pt-2">
                   <Button
                     variant="outline"
+                    size="sm"
                     className="flex-1"
                     onClick={resetAdvancedFilters}
                   >
                     Réinitialiser
                   </Button>
                   <Button
+                    size="sm"
                     className="flex-1"
-                    onClick={() => setFilterSheetOpen(false)}
+                    onClick={() => setFilterPopoverOpen(false)}
                   >
                     Appliquer
                   </Button>
                 </div>
               </div>
-            </SheetContent>
-          </Sheet>
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm">
             <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">IMPORTER</span>
