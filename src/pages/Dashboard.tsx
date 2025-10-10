@@ -621,7 +621,7 @@ export default function Dashboard() {
                     <th className="pb-3 font-medium">Rés. N°</th>
                     <th className="pb-3 font-medium">Véhicule</th>
                     <th className="pb-3 font-medium">Locataire</th>
-                    <th className="pb-3 font-medium">{activeTab === 'departures' ? 'Date retour' : 'Date départ'}</th>
+                    <th className="pb-3 font-medium">{activeTab === 'departures' ? 'Date départ' : 'Date retour'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -653,7 +653,7 @@ export default function Dashboard() {
                           {contract.clients?.nom} {contract.clients?.prenom}
                         </td>
                         <td className="py-4 text-foreground">
-                          {new Date(activeTab === 'departures' ? contract.date_fin : contract.date_debut).toLocaleDateString('fr-FR')}
+                          {new Date(activeTab === 'departures' ? contract.date_debut : contract.date_fin).toLocaleDateString('fr-FR')}
                         </td>
                       </tr>)}
                 </tbody>
