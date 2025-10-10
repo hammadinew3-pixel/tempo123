@@ -47,7 +47,82 @@ export default function Dashboard() {
   const [reservationType, setReservationType] = useState<'standard' | 'assistance'>('standard');
   useEffect(() => {
     loadDashboardData();
+
+    // Subscribe to real-time updates for contracts
+    const channel = supabase
+      .channel('dashboard-contracts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contracts'
+        },
+        () => {
+          // Reload departures and returns when contracts change
+          loadDeparturesAndReturns();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const loadDeparturesAndReturns = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Load today's departures
+      const { data: todayDepartures } = await supabase
+        .from('contracts')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_debut', today)
+        .order('start_time', { ascending: true });
+
+      // Load today's returns
+      const { data: todayReturns } = await supabase
+        .from('contracts')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_fin', today)
+        .order('end_time', { ascending: true });
+
+      // Load tomorrow's returns (J+1)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      
+      const { data: tomorrowReturns } = await supabase
+        .from('contracts')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_fin', tomorrowStr)
+        .order('end_time', { ascending: true });
+
+      // Combine today's and tomorrow's returns with a flag
+      const allReturns = [
+        ...(todayReturns || []).map(r => ({ ...r, isJ1: false })),
+        ...(tomorrowReturns || []).map(r => ({ ...r, isJ1: true }))
+      ];
+
+      setDepartures(todayDepartures || []);
+      setReturns(allReturns || []);
+    } catch (error) {
+      console.error('Error loading departures and returns:', error);
+    }
+  };
   const loadDashboardData = async () => {
     try {
       // Load vehicles count
