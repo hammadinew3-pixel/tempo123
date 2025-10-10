@@ -364,69 +364,66 @@ export default function Dashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card 
-            className="relative overflow-hidden border-0 shadow-lg card-hover cursor-pointer group"
+            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate('/vehicules')}
           >
-            <div className="absolute inset-0 gradient-primary opacity-5 group-hover:opacity-10 transition-opacity"></div>
-            <CardContent className="pt-6 relative z-10">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-primary mb-2">
-                    <Car className="w-4 h-4" />
-                    <span className="tracking-wide">VÉHICULES</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Car className="w-4 h-4 text-primary" />
+                    <span>VÉHICULES</span>
                   </div>
-                  <p className="text-4xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  <p className="text-3xl font-bold text-foreground">
                     {stats.vehiclesCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="stat-icon w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center shadow-primary">
-                  <Car className="w-8 h-8 text-white" />
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Car className="w-7 h-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className="relative overflow-hidden border-0 shadow-lg card-hover cursor-pointer group"
+            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate('/locations')}
           >
-            <div className="absolute inset-0 gradient-info opacity-5 group-hover:opacity-10 transition-opacity"></div>
-            <CardContent className="pt-6 relative z-10">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-info mb-2">
-                    <Calendar className="w-4 h-4" />
-                    <span className="tracking-wide">RÉSERVATIONS</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span>RÉSERVATIONS</span>
                   </div>
-                  <p className="text-4xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  <p className="text-3xl font-bold text-foreground">
                     {stats.reservationsCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="stat-icon w-16 h-16 gradient-info rounded-2xl flex items-center justify-center shadow-lg shadow-info/30">
-                  <Calendar className="w-8 h-8 text-white" />
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Calendar className="w-7 h-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card 
-            className="relative overflow-hidden border-0 shadow-lg card-hover cursor-pointer group"
+            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate('/clients')}
           >
-            <div className="absolute inset-0 gradient-success opacity-5 group-hover:opacity-10 transition-opacity"></div>
-            <CardContent className="pt-6 relative z-10">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-success mb-2">
-                    <Users className="w-4 h-4" />
-                    <span className="tracking-wide">CLIENTS</span>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Users className="w-4 h-4 text-primary" />
+                    <span>CLIENTS</span>
                   </div>
-                  <p className="text-4xl font-bold text-foreground bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  <p className="text-3xl font-bold text-foreground">
                     {stats.clientsCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="stat-icon w-16 h-16 gradient-success rounded-2xl flex items-center justify-center shadow-lg shadow-success/30">
-                  <Users className="w-8 h-8 text-white" />
+                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Users className="w-7 h-7 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -437,12 +434,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Alerts Section */}
           <div className="lg:col-span-2">
-            <Card className="relative overflow-hidden border-0 shadow-lg card-hover group">
-              <div className="absolute inset-0 gradient-warning opacity-5 group-hover:opacity-10 transition-opacity"></div>
-              <CardContent className="pt-6 relative z-10">
+            <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
+              <CardContent className="pt-6">
                 <div className="flex items-center space-x-4">
-                  <div className="stat-icon w-16 h-16 gradient-warning rounded-2xl flex items-center justify-center shadow-lg shadow-warning/30">
-                    <AlertCircle className="w-8 h-8 text-white" />
+                  <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center">
+                    <AlertCircle className="w-8 h-8 text-warning" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -479,15 +475,12 @@ export default function Dashboard() {
           </div>
 
           {/* Fleet Status */}
-          <Card className="relative overflow-hidden border-0 shadow-lg card-hover group">
-            <div className="absolute inset-0 gradient-primary opacity-5 group-hover:opacity-10 transition-opacity"></div>
-            <CardHeader className="relative z-10">
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader>
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
-                  <Car className="w-5 h-5 text-white" />
-                </div>
+                <Car className="w-5 h-5 text-primary" />
                 <div>
-                  <CardTitle className="text-lg">État du parc</CardTitle>
+                  <CardTitle>État du parc</CardTitle>
                   <CardDescription>État d'aujourd'hui</CardDescription>
                 </div>
               </div>
@@ -604,36 +597,19 @@ export default function Dashboard() {
         {vehicleAlerts.length > 0}
 
         {/* Departures - Returns Section */}
-        <Card className="relative overflow-hidden mb-6 border-0 shadow-lg card-hover group">
-          <div className="absolute inset-0 gradient-info opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <CardHeader className="relative z-10">
+        <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-10 h-10 gradient-info rounded-xl flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
-              <CardTitle className="text-lg">Départs - Récupérations</CardTitle>
+              <Calendar className="w-5 h-5 text-primary" />
+              <CardTitle>Départs - Récupérations</CardTitle>
             </div>
             <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
-            <div className="flex space-x-2 mt-4">
-              <button 
-                onClick={() => setActiveTab('departures')} 
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'departures' 
-                    ? 'bg-info text-white shadow-md shadow-info/30' 
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {departures.length.toString().padStart(2, '0')} Départs
+            <div className="flex space-x-8 mt-4">
+              <button onClick={() => setActiveTab('departures')} className={`pb-2 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <span className="text-sm font-medium">{departures.length.toString().padStart(2, '0')} Départs</span>
               </button>
-              <button 
-                onClick={() => setActiveTab('returns')} 
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'returns' 
-                    ? 'bg-info text-white shadow-md shadow-info/30' 
-                    : 'text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {returns.length.toString().padStart(2, '0')} Récupérations
+              <button onClick={() => setActiveTab('returns')} className={`pb-2 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <span className="text-sm font-medium">{returns.length.toString().padStart(2, '0')} Récupérations</span>
               </button>
             </div>
           </CardHeader>
@@ -683,32 +659,21 @@ export default function Dashboard() {
         </Card>
 
         {/* Volume de transactions - Full Width */}
-        <Card className="relative overflow-hidden mb-6 border-0 shadow-lg card-hover group">
-          <div className="absolute inset-0 gradient-success opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <CardHeader className="relative z-10">
+        <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-10 h-10 gradient-success rounded-xl flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-white" />
-                  </div>
-                  <CardTitle className="text-lg">Volume de transactions</CardTitle>
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <CardTitle>Volume de transactions</CardTitle>
                 </div>
                 <CardDescription>Basé sur l'année sélectionnée</CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="rounded-lg font-medium bg-success text-white shadow-md shadow-success/30 hover:bg-success/90 hover:text-white"
-                >
+                <Button variant="ghost" size="sm" className="text-primary border-b-2 border-primary">
                   2025
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="rounded-lg text-muted-foreground hover:bg-muted"
-                >
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
                   2024
                 </Button>
               </div>
@@ -745,16 +710,13 @@ export default function Dashboard() {
         </Card>
 
         {/* Recent Reservations - Full Width */}
-        <Card className="relative overflow-hidden border-0 shadow-lg card-hover group">
-          <div className="absolute inset-0 gradient-primary opacity-5 group-hover:opacity-10 transition-opacity"></div>
-          <CardHeader className="relative z-10">
+        <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-white" />
-                  </div>
-                  <CardTitle className="text-lg">Les dernières réservations</CardTitle>
+                  <FileText className="w-5 h-5 text-primary" />
+                  <CardTitle>Les dernières réservations</CardTitle>
                 </div>
                 <CardDescription>Basé sur le type sélectionné</CardDescription>
               </div>
@@ -762,11 +724,7 @@ export default function Dashboard() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`rounded-lg font-medium transition-all duration-200 ${
-                    reservationType === 'standard' 
-                      ? 'bg-primary text-white shadow-md shadow-primary/30 hover:bg-primary/90 hover:text-white' 
-                      : 'text-muted-foreground hover:bg-muted'
-                  }`}
+                  className={reservationType === 'standard' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}
                   onClick={() => setReservationType('standard')}
                 >
                   Standard
@@ -774,11 +732,7 @@ export default function Dashboard() {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`rounded-lg font-medium transition-all duration-200 ${
-                    reservationType === 'assistance' 
-                      ? 'bg-primary text-white shadow-md shadow-primary/30 hover:bg-primary/90 hover:text-white' 
-                      : 'text-muted-foreground hover:bg-muted'
-                  }`}
+                  className={reservationType === 'assistance' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}
                   onClick={() => setReservationType('assistance')}
                 >
                   Assurances
