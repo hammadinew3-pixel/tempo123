@@ -85,6 +85,14 @@ const mainNavItems: NavItem[] = [
     ]
   },
   { title: "Sinistres", href: "/sinistres", icon: AlertTriangle },
+  { 
+    title: "Infractions", 
+    icon: AlertTriangle,
+    submenu: [
+      { title: "Liste des infractions", href: "/infractions", icon: List },
+      { title: "Nouvelle infraction", href: "/infractions/nouveau", icon: Plus },
+    ]
+  },
   { title: "Chèques", href: "/cheques", icon: CreditCard },
   { title: "Revenus", href: "/revenus", icon: TrendingUp },
   { title: "Charges", href: "/charges", icon: DollarSign },

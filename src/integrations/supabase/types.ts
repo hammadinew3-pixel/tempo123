@@ -543,6 +543,120 @@ export type Database = {
           },
         ]
       }
+      infraction_files: {
+        Row: {
+          file_name: string
+          file_type: Database["public"]["Enums"]["infraction_file_type"]
+          file_url: string
+          id: string
+          infraction_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          file_name: string
+          file_type?: Database["public"]["Enums"]["infraction_file_type"]
+          file_url: string
+          id?: string
+          infraction_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          file_name?: string
+          file_type?: Database["public"]["Enums"]["infraction_file_type"]
+          file_url?: string
+          id?: string
+          infraction_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "infraction_files_infraction_id_fkey"
+            columns: ["infraction_id"]
+            isOneToOne: false
+            referencedRelation: "infractions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      infractions: {
+        Row: {
+          client_id: string | null
+          commentaire: string | null
+          contract_id: string | null
+          created_at: string
+          created_by: string | null
+          date_infraction: string
+          date_transmission: string | null
+          description: string | null
+          id: string
+          lieu: string
+          montant: number
+          reference: string
+          statut_traitement: Database["public"]["Enums"]["infraction_statut"]
+          type_infraction: Database["public"]["Enums"]["infraction_type"]
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          commentaire?: string | null
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_infraction: string
+          date_transmission?: string | null
+          description?: string | null
+          id?: string
+          lieu: string
+          montant?: number
+          reference: string
+          statut_traitement?: Database["public"]["Enums"]["infraction_statut"]
+          type_infraction: Database["public"]["Enums"]["infraction_type"]
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          client_id?: string | null
+          commentaire?: string | null
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_infraction?: string
+          date_transmission?: string | null
+          description?: string | null
+          id?: string
+          lieu?: string
+          montant?: number
+          reference?: string
+          statut_traitement?: Database["public"]["Enums"]["infraction_statut"]
+          type_infraction?: Database["public"]["Enums"]["infraction_type"]
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "infractions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "infractions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "infractions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           contract_id: string | null
@@ -1232,6 +1346,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_infraction_reference: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_sinistre_reference: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1270,6 +1388,14 @@ export type Database = {
         | "marketing"
         | "salaires"
         | "autres"
+      infraction_file_type: "pv" | "photo" | "recu" | "autre"
+      infraction_statut: "nouveau" | "transmis" | "clos"
+      infraction_type:
+        | "exces_vitesse"
+        | "stationnement"
+        | "feu_rouge"
+        | "telephone"
+        | "autre"
       notification_type: "expiration" | "contrat" | "paiement" | "autre"
       payment_method: "especes" | "virement" | "carte" | "cheque"
       sinistre_file_type: "photo" | "constat" | "facture" | "autre"
@@ -1438,6 +1564,15 @@ export const Constants = {
         "marketing",
         "salaires",
         "autres",
+      ],
+      infraction_file_type: ["pv", "photo", "recu", "autre"],
+      infraction_statut: ["nouveau", "transmis", "clos"],
+      infraction_type: [
+        "exces_vitesse",
+        "stationnement",
+        "feu_rouge",
+        "telephone",
+        "autre",
       ],
       notification_type: ["expiration", "contrat", "paiement", "autre"],
       payment_method: ["especes", "virement", "carte", "cheque"],

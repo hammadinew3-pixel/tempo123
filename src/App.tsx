@@ -33,6 +33,10 @@ import Sinistres from "./pages/Sinistres";
 import NouveauSinistre from "./pages/sinistres/Nouveau";
 import SinistreDetails from "./pages/sinistres/Details";
 import ModifierSinistre from "./pages/sinistres/Modifier";
+import Infractions from "./pages/Infractions";
+import NouvelleInfraction from "./pages/infractions/Nouveau";
+import InfractionDetails from "./pages/infractions/Details";
+import ModifierInfraction from "./pages/infractions/Modifier";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -290,6 +294,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><ModifierSinistre /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/infractions"
+              element={
+                <ProtectedRoute>
+                  <Layout><Infractions /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/infractions/nouveau"
+              element={
+                <ProtectedRoute>
+                  <Layout><NouvelleInfraction /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/infractions/:id"
+              element={
+                <ProtectedRoute>
+                  <Layout><InfractionDetails /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/infractions/:id/modifier"
+              element={
+                <ProtectedRoute>
+                  <Layout><ModifierInfraction /></Layout>
                 </ProtectedRoute>
               }
             />
