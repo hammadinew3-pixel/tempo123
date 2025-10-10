@@ -21,6 +21,7 @@ import {
   ChevronRight,
   LifeBuoy,
   Building2,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Sidebar as SidebarUI,
@@ -83,6 +84,7 @@ const mainNavItems: NavItem[] = [
       { title: "Ajouter client", action: "open-client-dialog", icon: Plus },
     ]
   },
+  { title: "Sinistres", href: "/sinistres", icon: AlertTriangle },
   { title: "Chèques", href: "/cheques", icon: CreditCard },
   { title: "Revenus", href: "/revenus", icon: TrendingUp },
   { title: "Charges", href: "/charges", icon: DollarSign },

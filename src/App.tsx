@@ -29,6 +29,10 @@ import Cheques from "./pages/Cheques";
 import Alertes from "./pages/Alertes";
 import Historique from "./pages/Historique";
 import Rapports from "./pages/Rapports";
+import Sinistres from "./pages/Sinistres";
+import NouveauSinistre from "./pages/sinistres/Nouveau";
+import SinistreDetails from "./pages/sinistres/Details";
+import ModifierSinistre from "./pages/sinistres/Modifier";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -254,6 +258,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Rapports /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sinistres"
+              element={
+                <ProtectedRoute>
+                  <Layout><Sinistres /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sinistres/nouveau"
+              element={
+                <ProtectedRoute>
+                  <Layout><NouveauSinistre /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sinistres/:id"
+              element={
+                <ProtectedRoute>
+                  <Layout><SinistreDetails /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sinistres/:id/modifier"
+              element={
+                <ProtectedRoute>
+                  <Layout><ModifierSinistre /></Layout>
                 </ProtectedRoute>
               }
             />

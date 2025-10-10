@@ -16,6 +16,10 @@ interface DashboardStats {
   rentedVehicles: number;
   maintenanceVehicles: number;
   outOfServiceVehicles: number;
+  sinistresCount: number;
+  sinistresOuvert: number;
+  sinistresCoutTotal: number;
+  topSinistredVehicles: Array<{id: string; immatriculation: string; count: number}>;
 }
 interface VehicleAlert {
   vehicleId: string;
@@ -32,7 +36,11 @@ export default function Dashboard() {
     availableVehicles: 0,
     rentedVehicles: 0,
     maintenanceVehicles: 0,
-    outOfServiceVehicles: 0
+    outOfServiceVehicles: 0,
+    sinistresCount: 0,
+    sinistresOuvert: 0,
+    sinistresCoutTotal: 0,
+    topSinistredVehicles: [],
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
   const [recentAssistance, setRecentAssistance] = useState<any[]>([]);
@@ -233,6 +241,30 @@ export default function Dashboard() {
         ascending: false
       }).limit(4);
 
+      // Load sinistres stats
+      const { data: sinistres } = await supabase.from('sinistres').select('*, vehicles(immatriculation)');
+      const sinistresCount = sinistres?.length || 0;
+      const sinistresOuvert = sinistres?.filter(s => s.statut === 'ouvert').length || 0;
+      const sinistresCoutTotal = sinistres?.reduce((sum, s) => sum + (s.cout_estime || 0), 0) || 0;
+      
+      // Top 3 vehicles with most sinistres
+      const vehicleSinistresCount: Record<string, { id: string; immatriculation: string; count: number }> = {};
+      sinistres?.forEach(s => {
+        if (s.vehicle_id && s.vehicles) {
+          if (!vehicleSinistresCount[s.vehicle_id]) {
+            vehicleSinistresCount[s.vehicle_id] = {
+              id: s.vehicle_id,
+              immatriculation: s.vehicles.immatriculation,
+              count: 0
+            };
+          }
+          vehicleSinistresCount[s.vehicle_id].count++;
+        }
+      });
+      const topSinistredVehicles = Object.values(vehicleSinistresCount)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
+
       setStats({
         vehiclesCount: vehiclesCount || 0,
         reservationsCount: reservationsCount || 0,
@@ -240,7 +272,11 @@ export default function Dashboard() {
         availableVehicles,
         rentedVehicles,
         maintenanceVehicles,
-        outOfServiceVehicles
+        outOfServiceVehicles,
+        sinistresCount,
+        sinistresOuvert,
+        sinistresCoutTotal,
+        topSinistredVehicles,
       });
       setRecentReservations(reservations || []);
       setRecentAssistance(assistance || []);
@@ -512,6 +548,73 @@ export default function Dashboard() {
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
                   <Users className="w-7 h-7 text-primary" />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sinistres KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card 
+            className="border-l-4 border-l-destructive shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/sinistres')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Sinistres totaux</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.sinistresCount}</p>
+                </div>
+                <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-destructive" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-orange-500 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">En cours</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.sinistresOuvert}</p>
+                </div>
+                <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-orange-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-primary shadow-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Coût total estimé</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.sinistresCoutTotal.toFixed(2)} DH</p>
+                </div>
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-secondary shadow-sm">
+            <CardContent className="pt-6">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Top véhicules touchés</p>
+                {stats.topSinistredVehicles.length > 0 ? (
+                  <div className="space-y-1">
+                    {stats.topSinistredVehicles.map((v, i) => (
+                      <p key={v.id} className="text-xs">
+                        {i + 1}. {v.immatriculation} ({v.count})
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Aucun</p>
+                )}
               </div>
             </CardContent>
           </Card>

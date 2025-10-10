@@ -726,6 +726,120 @@ export type Database = {
           },
         ]
       }
+      sinistre_files: {
+        Row: {
+          file_name: string
+          file_type: Database["public"]["Enums"]["sinistre_file_type"]
+          file_url: string
+          id: string
+          sinistre_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          file_name: string
+          file_type: Database["public"]["Enums"]["sinistre_file_type"]
+          file_url: string
+          id?: string
+          sinistre_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          file_name?: string
+          file_type?: Database["public"]["Enums"]["sinistre_file_type"]
+          file_url?: string
+          id?: string
+          sinistre_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sinistre_files_sinistre_id_fkey"
+            columns: ["sinistre_id"]
+            isOneToOne: false
+            referencedRelation: "sinistres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sinistres: {
+        Row: {
+          client_id: string | null
+          contract_id: string | null
+          cout_estime: number | null
+          created_at: string
+          created_by: string | null
+          date_sinistre: string
+          description: string | null
+          gravite: Database["public"]["Enums"]["sinistre_gravite"]
+          id: string
+          lieu: string
+          reference: string
+          responsabilite: Database["public"]["Enums"]["sinistre_responsabilite"]
+          statut: Database["public"]["Enums"]["sinistre_statut"]
+          type_sinistre: Database["public"]["Enums"]["sinistre_type"]
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          contract_id?: string | null
+          cout_estime?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_sinistre: string
+          description?: string | null
+          gravite: Database["public"]["Enums"]["sinistre_gravite"]
+          id?: string
+          lieu: string
+          reference: string
+          responsabilite: Database["public"]["Enums"]["sinistre_responsabilite"]
+          statut?: Database["public"]["Enums"]["sinistre_statut"]
+          type_sinistre: Database["public"]["Enums"]["sinistre_type"]
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          contract_id?: string | null
+          cout_estime?: number | null
+          created_at?: string
+          created_by?: string | null
+          date_sinistre?: string
+          description?: string | null
+          gravite?: Database["public"]["Enums"]["sinistre_gravite"]
+          id?: string
+          lieu?: string
+          reference?: string
+          responsabilite?: Database["public"]["Enums"]["sinistre_responsabilite"]
+          statut?: Database["public"]["Enums"]["sinistre_statut"]
+          type_sinistre?: Database["public"]["Enums"]["sinistre_type"]
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sinistres_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sinistres_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sinistres_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1115,6 +1229,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_sinistre_reference: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1151,6 +1269,11 @@ export type Database = {
         | "autres"
       notification_type: "expiration" | "contrat" | "paiement" | "autre"
       payment_method: "especes" | "virement" | "carte" | "cheque"
+      sinistre_file_type: "photo" | "constat" | "facture" | "autre"
+      sinistre_gravite: "legere" | "moyenne" | "grave"
+      sinistre_responsabilite: "locataire" | "tiers" | "indeterminee"
+      sinistre_statut: "ouvert" | "en_cours" | "clos"
+      sinistre_type: "accident" | "vol" | "panne_grave" | "autre"
       vehicle_category: "A" | "B" | "C" | "D" | "E"
       vehicle_status: "disponible" | "reserve" | "loue" | "en_panne"
     }
@@ -1310,6 +1433,11 @@ export const Constants = {
       ],
       notification_type: ["expiration", "contrat", "paiement", "autre"],
       payment_method: ["especes", "virement", "carte", "cheque"],
+      sinistre_file_type: ["photo", "constat", "facture", "autre"],
+      sinistre_gravite: ["legere", "moyenne", "grave"],
+      sinistre_responsabilite: ["locataire", "tiers", "indeterminee"],
+      sinistre_statut: ["ouvert", "en_cours", "clos"],
+      sinistre_type: ["accident", "vol", "panne_grave", "autre"],
       vehicle_category: ["A", "B", "C", "D", "E"],
       vehicle_status: ["disponible", "reserve", "loue", "en_panne"],
     },
