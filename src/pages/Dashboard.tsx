@@ -594,7 +594,9 @@ export default function Dashboard() {
         </div>
 
         {/* Departures - Returns Section */}
-        <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-5 h-5 text-primary" />
@@ -654,6 +656,8 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
+          </div>
+        </div>
 
         {/* Volume de transactions - Full Width */}
         <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
