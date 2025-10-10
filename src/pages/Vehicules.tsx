@@ -269,10 +269,12 @@ export default function Vehicules() {
     // Filtres de statut
     if (filter === 'hors_service' && vehicle.en_service !== false) return false;
     if (filter === 'sous_location' && vehicle.sous_location !== true) return false;
-    if (filter === 'disponible' && vehicle.statut !== 'disponible') return false;
-    if (filter === 'loue' && vehicle.statut !== 'loue') return false;
-    if (filter === 'reserve' && vehicle.statut !== 'reserve') return false;
-    if (filter === 'en_panne' && vehicle.statut !== 'en_panne') return false;
+    
+    // Pour les filtres de statut (disponible, loué, etc.), exclure les véhicules hors service
+    if (filter === 'disponible' && (vehicle.statut !== 'disponible' || vehicle.en_service === false)) return false;
+    if (filter === 'loue' && (vehicle.statut !== 'loue' || vehicle.en_service === false)) return false;
+    if (filter === 'reserve' && (vehicle.statut !== 'reserve' || vehicle.en_service === false)) return false;
+    if (filter === 'en_panne' && (vehicle.statut !== 'en_panne' || vehicle.en_service === false)) return false;
 
     // Recherche par mot-clé
     if (advancedFilters.searchText) {
