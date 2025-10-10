@@ -15,6 +15,7 @@ interface DashboardStats {
   availableVehicles: number;
   rentedVehicles: number;
   maintenanceVehicles: number;
+  outOfServiceVehicles: number;
 }
 interface VehicleAlert {
   vehicleId: string;
@@ -30,7 +31,8 @@ export default function Dashboard() {
     clientsCount: 0,
     availableVehicles: 0,
     rentedVehicles: 0,
-    maintenanceVehicles: 0
+    maintenanceVehicles: 0,
+    outOfServiceVehicles: 0
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
   const [departures, setDepartures] = useState<any[]>([]);
@@ -61,6 +63,7 @@ export default function Dashboard() {
       const availableVehicles = vehicles?.filter(v => v.statut === 'disponible').length || 0;
       const rentedVehicles = vehicles?.filter(v => v.statut === 'loue').length || 0;
       const maintenanceVehicles = vehicles?.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length || 0;
+      const outOfServiceVehicles = vehicles?.filter(v => v.en_service === false).length || 0;
 
       // Load contracts count
       const {
@@ -117,7 +120,8 @@ export default function Dashboard() {
         clientsCount: clientsCount || 0,
         availableVehicles,
         rentedVehicles,
-        maintenanceVehicles
+        maintenanceVehicles,
+        outOfServiceVehicles
       });
       setRecentReservations(reservations || []);
       setDepartures(todayDepartures || []);
@@ -480,6 +484,18 @@ export default function Dashboard() {
                       strokeDasharray="251.2" 
                       strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles) / stats.vehiclesCount) : 251.2} 
                     />
+                    
+                    {/* Out of service vehicles (destructive) */}
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="40" 
+                      stroke="hsl(var(--destructive))" 
+                      strokeWidth="8" 
+                      fill="none" 
+                      strokeDasharray="251.2" 
+                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles + stats.outOfServiceVehicles) / stats.vehiclesCount) : 251.2} 
+                    />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -518,6 +534,15 @@ export default function Dashboard() {
                   </div>
                   <span className="text-sm font-medium text-foreground">
                     {stats.maintenanceVehicles} ({stats.vehiclesCount > 0 ? ((stats.maintenanceVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-3 h-3 rounded-full bg-destructive"></span>
+                    <span className="text-sm text-foreground">Hors service</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {stats.outOfServiceVehicles} ({stats.vehiclesCount > 0 ? ((stats.outOfServiceVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
                   </span>
                 </div>
               </div>
