@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Car, Calendar, Users, TrendingUp, AlertCircle, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DashboardStats {
   vehiclesCount: number;
@@ -16,7 +17,15 @@ interface DashboardStats {
   maintenanceVehicles: number;
 }
 
+interface VehicleAlert {
+  vehicleId: string;
+  vehicleInfo: string;
+  message: string;
+  severity: 'critical' | 'warning' | 'high';
+}
+
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     vehiclesCount: 0,
     reservationsCount: 0,
@@ -30,6 +39,7 @@ export default function Dashboard() {
   const [returns, setReturns] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'departures' | 'returns'>('departures');
   const [loading, setLoading] = useState(true);
+  const [vehicleAlerts, setVehicleAlerts] = useState<VehicleAlert[]>([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -42,10 +52,10 @@ export default function Dashboard() {
         .from('vehicles')
         .select('*', { count: 'exact', head: true });
 
-      // Load vehicles by status
+      // Load all vehicles with related data for alerts
       const { data: vehicles } = await supabase
         .from('vehicles')
-        .select('statut');
+        .select('*');
 
       const availableVehicles = vehicles?.filter(v => v.statut === 'disponible').length || 0;
       const rentedVehicles = vehicles?.filter(v => v.statut === 'loue').length || 0;
@@ -107,11 +117,148 @@ export default function Dashboard() {
       setRecentReservations(reservations || []);
       setDepartures(todayDepartures || []);
       setReturns(todayReturns || []);
+
+      // Calculate alerts for all vehicles
+      if (vehicles) {
+        await calculateVehicleAlerts(vehicles);
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateVehicleAlerts = async (vehicles: any[]) => {
+    const alerts: VehicleAlert[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const vehicle of vehicles) {
+      // Load insurance data
+      const { data: insurances } = await supabase
+        .from('vehicle_insurance')
+        .select('*')
+        .eq('vehicle_id', vehicle.id)
+        .order('date_debut', { ascending: false });
+
+      // Load technical inspection data
+      const { data: technicalInspections } = await supabase
+        .from('vehicle_technical_inspection')
+        .select('*')
+        .eq('vehicle_id', vehicle.id)
+        .order('date_visite', { ascending: false });
+
+      // Load vignette data
+      const { data: vignettes } = await supabase
+        .from('vehicle_vignette')
+        .select('*')
+        .eq('vehicle_id', vehicle.id)
+        .order('annee', { ascending: false });
+
+      const vehicleInfo = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation})`;
+
+      // Check insurance alerts
+      if (!insurances || insurances.length === 0) {
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Véhicule sans assurance ajoutée.",
+          severity: "high"
+        });
+      } else {
+        const latestInsurance = insurances[0];
+        if (latestInsurance?.date_expiration) {
+          const expirationDate = new Date(latestInsurance.date_expiration);
+          expirationDate.setHours(0, 0, 0, 0);
+          const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (expirationDate < today) {
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Assurance expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
+              severity: "critical"
+            });
+          } else if (daysUntilExpiration <= 30) {
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Assurance expire dans ${daysUntilExpiration} jour(s).`,
+              severity: "warning"
+            });
+          }
+        }
+      }
+
+      // Check technical inspection alerts
+      if (!technicalInspections || technicalInspections.length === 0) {
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Véhicule sans visite technique ajoutée.",
+          severity: "high"
+        });
+      } else {
+        const latestInspection = technicalInspections[0];
+        if (latestInspection?.date_expiration) {
+          const expirationDate = new Date(latestInspection.date_expiration);
+          expirationDate.setHours(0, 0, 0, 0);
+          const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (expirationDate < today) {
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Visite technique expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
+              severity: "critical"
+            });
+          } else if (daysUntilExpiration <= 30) {
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`,
+              severity: "warning"
+            });
+          }
+        }
+      }
+
+      // Check vignette alerts
+      if (!vignettes || vignettes.length === 0) {
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Véhicule sans vignette ajoutée.",
+          severity: "high"
+        });
+      } else {
+        const latestVignette = vignettes[0];
+        if (latestVignette?.date_expiration) {
+          const expirationDate = new Date(latestVignette.date_expiration);
+          expirationDate.setHours(0, 0, 0, 0);
+          const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (expirationDate < today) {
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Vignette expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
+              severity: "critical"
+            });
+          } else if (daysUntilExpiration <= 30) {
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Vignette expire dans ${daysUntilExpiration} jour(s).`,
+              severity: "warning"
+            });
+          }
+        }
+      }
+    }
+
+    setVehicleAlerts(alerts);
   };
 
   const chartData = [
@@ -120,8 +267,7 @@ export default function Dashboard() {
     { month: 'Oct.\n2025', revenus: 6000, charges: 400 },
   ];
 
-  const vehicleAlerts = stats.vehiclesCount - stats.availableVehicles;
-  const totalAlerts = vehicleAlerts;
+  const totalAlerts = vehicleAlerts.length;
 
   const availablePercentage = stats.vehiclesCount > 0 
     ? ((stats.availableVehicles / stats.vehiclesCount) * 100).toFixed(2)
@@ -220,7 +366,7 @@ export default function Dashboard() {
                       <div className="flex items-center space-x-2">
                         <span className="w-3 h-3 rounded-full bg-warning"></span>
                         <span className="text-sm text-foreground">
-                          {vehicleAlerts.toString().padStart(2, '0')} Alertes véhicules
+                          {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
                         </span>
                       </div>
                     </div>
@@ -307,6 +453,54 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Vehicle Alerts Section */}
+        {vehicleAlerts.length > 0 && (
+          <Card className="mb-6 border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-warning">
+                  <AlertCircle className="w-5 h-5" />
+                  {vehicleAlerts.length.toString().padStart(2, '0')} alertes véhicules
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {vehicleAlerts.map((alert, index) => (
+                <Alert 
+                  key={index} 
+                  className={`border-l-4 cursor-pointer hover:bg-accent/50 ${
+                    alert.severity === 'critical' 
+                      ? 'border-l-destructive bg-destructive/5' 
+                      : alert.severity === 'high' 
+                      ? 'border-l-warning bg-warning/5' 
+                      : 'border-l-warning bg-warning/5'
+                  }`}
+                  onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
+                >
+                  <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
+                  <AlertDescription className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{alert.vehicleInfo}</p>
+                      <p className="text-sm text-muted-foreground">{alert.message}</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className={`ml-4 ${
+                        alert.severity === 'critical' 
+                          ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' 
+                          : 'border-warning text-warning hover:bg-warning hover:text-white'
+                      }`}
+                    >
+                      VOIR DÉTAILS
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Departures - Returns Section */}
         <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
