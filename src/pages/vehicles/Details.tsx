@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, TrendingUp, TrendingDown, Calendar, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings } from "lucide-react";
+import { Edit, TrendingUp, TrendingDown, Calendar, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 
@@ -36,6 +38,54 @@ export default function VehiculeDetails() {
   const [showVidangeDialog, setShowVidangeDialog] = useState(false);
   const [prochainKmVidange, setProchainKmVidange] = useState<string>('');
   const [montantVidange, setMontantVidange] = useState<string>('');
+  
+  // Dialog states for adding documents
+  const [showInsuranceDialog, setShowInsuranceDialog] = useState(false);
+  const [showInspectionDialog, setShowInspectionDialog] = useState(false);
+  const [showVignetteDialog, setShowVignetteDialog] = useState(false);
+  
+  // Form states for insurance
+  const [insuranceForm, setInsuranceForm] = useState({
+    numero_ordre: '',
+    numero_police: '',
+    assureur: '',
+    coordonnees_assureur: '',
+    date_debut: '',
+    date_expiration: '',
+    montant: '',
+    date_paiement: '',
+    mode_paiement: 'especes' as 'especes' | 'cheque' | 'virement' | 'carte',
+    numero_cheque: '',
+    banque: '',
+    remarques: ''
+  });
+  
+  // Form states for inspection
+  const [inspectionForm, setInspectionForm] = useState({
+    numero_ordre: '',
+    centre_controle: '',
+    date_visite: '',
+    date_expiration: '',
+    montant: '',
+    date_paiement: '',
+    mode_paiement: 'especes' as 'especes' | 'cheque' | 'virement' | 'carte',
+    numero_cheque: '',
+    banque: '',
+    remarques: ''
+  });
+  
+  // Form states for vignette
+  const [vignetteForm, setVignetteForm] = useState({
+    numero_ordre: '',
+    annee: new Date().getFullYear().toString(),
+    date_expiration: '',
+    montant: '',
+    date_paiement: '',
+    mode_paiement: 'especes' as 'especes' | 'cheque' | 'virement' | 'carte',
+    numero_cheque: '',
+    banque: '',
+    remarques: ''
+  });
 
   useEffect(() => {
     if (id) {
@@ -533,11 +583,59 @@ export default function VehiculeDetails() {
                 {/* Service Toggles */}
                 <div className="flex items-center gap-8">
                   <div className="flex items-center gap-3">
-                    <Switch checked={vehicle.en_service} disabled />
+                    <Switch 
+                      checked={vehicle.en_service || false} 
+                      onCheckedChange={async (checked) => {
+                        try {
+                          const { error } = await supabase
+                            .from('vehicles')
+                            .update({ en_service: checked })
+                            .eq('id', vehicle.id);
+                          
+                          if (error) throw error;
+                          
+                          setVehicle({ ...vehicle, en_service: checked });
+                          toast({
+                            title: "Succès",
+                            description: `Véhicule ${checked ? 'mis en service' : 'retiré du service'}`,
+                          });
+                        } catch (error: any) {
+                          toast({
+                            title: "Erreur",
+                            description: error.message,
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                    />
                     <span className="text-sm font-medium">En service</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Switch checked={vehicle.sous_location} disabled />
+                    <Switch 
+                      checked={vehicle.sous_location || false}
+                      onCheckedChange={async (checked) => {
+                        try {
+                          const { error } = await supabase
+                            .from('vehicles')
+                            .update({ sous_location: checked })
+                            .eq('id', vehicle.id);
+                          
+                          if (error) throw error;
+                          
+                          setVehicle({ ...vehicle, sous_location: checked });
+                          toast({
+                            title: "Succès",
+                            description: `Véhicule ${checked ? 'en' : 'retiré de'} sous-location`,
+                          });
+                        } catch (error: any) {
+                          toast({
+                            title: "Erreur",
+                            description: error.message,
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                    />
                     <span className="text-sm font-medium">Sous location</span>
                   </div>
                 </div>
@@ -679,7 +777,7 @@ export default function VehiculeDetails() {
             <TabsContent value="assurance" className="mt-6">
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <Button size="sm" className="gap-2">
+                  <Button size="sm" className="gap-2" onClick={() => setShowInsuranceDialog(true)}>
                     <Plus className="w-4 h-4" />
                     AJOUTER ASSURANCE
                   </Button>
@@ -737,7 +835,7 @@ export default function VehiculeDetails() {
             <TabsContent value="visite" className="mt-6">
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <Button size="sm" className="gap-2">
+                  <Button size="sm" className="gap-2" onClick={() => setShowInspectionDialog(true)}>
                     <Plus className="w-4 h-4" />
                     AJOUTER VISITE
                   </Button>
@@ -755,18 +853,33 @@ export default function VehiculeDetails() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {technicalInspections.map((inspection) => (
-                        <TableRow key={inspection.id}>
-                          <TableCell>{inspection.numero_ordre}</TableCell>
-                          <TableCell>{inspection.centre_controle || '-'}</TableCell>
-                          <TableCell>{format(new Date(inspection.date_visite), 'dd/MM/yyyy', { locale: fr })}</TableCell>
-                          <TableCell>{format(new Date(inspection.date_expiration), 'dd/MM/yyyy', { locale: fr })}</TableCell>
-                          <TableCell className="text-right">{inspection.montant?.toFixed(2) || '-'}</TableCell>
-                          <TableCell className="text-right text-muted-foreground text-sm">
-                            {format(new Date(inspection.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {technicalInspections.map((inspection) => {
+                        const today = new Date();
+                        const expirationDate = new Date(inspection.date_expiration);
+                        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        return (
+                          <TableRow key={inspection.id}>
+                            <TableCell>{inspection.numero_ordre}</TableCell>
+                            <TableCell>{inspection.centre_controle || '-'}</TableCell>
+                            <TableCell>{format(new Date(inspection.date_visite), 'dd/MM/yyyy', { locale: fr })}</TableCell>
+                            <TableCell>
+                              <span className={daysUntilExpiration <= 30 && daysUntilExpiration > 0 ? 'text-warning font-medium' : ''}>
+                                {format(new Date(inspection.date_expiration), 'dd/MM/yyyy', { locale: fr })}
+                              </span>
+                              {daysUntilExpiration > 0 && daysUntilExpiration <= 30 && (
+                                <Badge variant="outline" className="ml-2 bg-warning/10 text-warning border-warning">
+                                  {daysUntilExpiration}J
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">{inspection.montant?.toFixed(2) || '-'}</TableCell>
+                            <TableCell className="text-right text-muted-foreground text-sm">
+                              {format(new Date(inspection.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 ) : (
@@ -846,7 +959,7 @@ export default function VehiculeDetails() {
             <TabsContent value="vignette" className="mt-6">
               <div className="space-y-4">
                 <div className="flex justify-end">
-                  <Button size="sm" className="gap-2">
+                  <Button size="sm" className="gap-2" onClick={() => setShowVignetteDialog(true)}>
                     <Plus className="w-4 h-4" />
                     AJOUTER VIGNETTE
                   </Button>
@@ -863,17 +976,32 @@ export default function VehiculeDetails() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {vignettes.map((vignette) => (
-                        <TableRow key={vignette.id}>
-                          <TableCell>{vignette.numero_ordre}</TableCell>
-                          <TableCell>{vignette.annee}</TableCell>
-                          <TableCell>{format(new Date(vignette.date_expiration), 'dd/MM/yyyy', { locale: fr })}</TableCell>
-                          <TableCell className="text-right">{vignette.montant?.toFixed(2) || '-'}</TableCell>
-                          <TableCell className="text-right text-muted-foreground text-sm">
-                            {format(new Date(vignette.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {vignettes.map((vignette) => {
+                        const today = new Date();
+                        const expirationDate = new Date(vignette.date_expiration);
+                        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        return (
+                          <TableRow key={vignette.id}>
+                            <TableCell>{vignette.numero_ordre}</TableCell>
+                            <TableCell>{vignette.annee}</TableCell>
+                            <TableCell>
+                              <span className={daysUntilExpiration <= 30 && daysUntilExpiration > 0 ? 'text-warning font-medium' : ''}>
+                                {format(new Date(vignette.date_expiration), 'dd/MM/yyyy', { locale: fr })}
+                              </span>
+                              {daysUntilExpiration > 0 && daysUntilExpiration <= 30 && (
+                                <Badge variant="outline" className="ml-2 bg-warning/10 text-warning border-warning">
+                                  {daysUntilExpiration}J
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">{vignette.montant?.toFixed(2) || '-'}</TableCell>
+                            <TableCell className="text-right text-muted-foreground text-sm">
+                              {format(new Date(vignette.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 ) : (
@@ -1000,6 +1128,522 @@ export default function VehiculeDetails() {
               Annuler
             </Button>
             <Button onClick={handleMarkOilChangeDone}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for adding insurance */}
+      <Dialog open={showInsuranceDialog} onOpenChange={setShowInsuranceDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ajouter une assurance</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div>
+              <Label htmlFor="ins-numero-ordre">N° d'ordre *</Label>
+              <Input
+                id="ins-numero-ordre"
+                value={insuranceForm.numero_ordre}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, numero_ordre: e.target.value })}
+                placeholder="Ex: ASS001"
+              />
+            </div>
+            <div>
+              <Label htmlFor="ins-numero-police">N° de police</Label>
+              <Input
+                id="ins-numero-police"
+                value={insuranceForm.numero_police}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, numero_police: e.target.value })}
+                placeholder="Ex: POL123456"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="ins-assureur">Assureur *</Label>
+              <Input
+                id="ins-assureur"
+                value={insuranceForm.assureur}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, assureur: e.target.value })}
+                placeholder="Ex: AXA Assurance"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="ins-coordonnees">Coordonnées de l'assureur</Label>
+              <Textarea
+                id="ins-coordonnees"
+                value={insuranceForm.coordonnees_assureur}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, coordonnees_assureur: e.target.value })}
+                placeholder="Adresse, téléphone, email..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="ins-date-debut">Date début *</Label>
+              <Input
+                id="ins-date-debut"
+                type="date"
+                value={insuranceForm.date_debut}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, date_debut: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ins-date-exp">Date d'expiration *</Label>
+              <Input
+                id="ins-date-exp"
+                type="date"
+                value={insuranceForm.date_expiration}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, date_expiration: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ins-montant">Montant *</Label>
+              <Input
+                id="ins-montant"
+                type="number"
+                step="0.01"
+                value={insuranceForm.montant}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, montant: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="ins-date-paiement">Date de paiement *</Label>
+              <Input
+                id="ins-date-paiement"
+                type="date"
+                value={insuranceForm.date_paiement}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, date_paiement: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ins-mode-paiement">Mode de paiement *</Label>
+              <Select value={insuranceForm.mode_paiement} onValueChange={(value: any) => setInsuranceForm({ ...insuranceForm, mode_paiement: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="especes">Espèces</SelectItem>
+                  <SelectItem value="cheque">Chèque</SelectItem>
+                  <SelectItem value="virement">Virement</SelectItem>
+                  <SelectItem value="carte">Carte</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {insuranceForm.mode_paiement === 'cheque' && (
+              <>
+                <div>
+                  <Label htmlFor="ins-numero-cheque">N° de chèque</Label>
+                  <Input
+                    id="ins-numero-cheque"
+                    value={insuranceForm.numero_cheque}
+                    onChange={(e) => setInsuranceForm({ ...insuranceForm, numero_cheque: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ins-banque">Banque</Label>
+                  <Input
+                    id="ins-banque"
+                    value={insuranceForm.banque}
+                    onChange={(e) => setInsuranceForm({ ...insuranceForm, banque: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            <div className="col-span-2">
+              <Label htmlFor="ins-remarques">Remarques</Label>
+              <Textarea
+                id="ins-remarques"
+                value={insuranceForm.remarques}
+                onChange={(e) => setInsuranceForm({ ...insuranceForm, remarques: e.target.value })}
+                placeholder="Notes additionnelles..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowInsuranceDialog(false);
+              setInsuranceForm({
+                numero_ordre: '', numero_police: '', assureur: '', coordonnees_assureur: '',
+                date_debut: '', date_expiration: '', montant: '', date_paiement: '',
+                mode_paiement: 'especes', numero_cheque: '', banque: '', remarques: ''
+              });
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={async () => {
+              try {
+                if (!insuranceForm.numero_ordre || !insuranceForm.assureur || !insuranceForm.date_debut || 
+                    !insuranceForm.date_expiration || !insuranceForm.montant || !insuranceForm.date_paiement) {
+                  toast({
+                    title: "Erreur",
+                    description: "Veuillez remplir tous les champs obligatoires",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
+                const { error } = await supabase.from('vehicle_insurance').insert({
+                  vehicle_id: vehicle!.id,
+                  ...insuranceForm,
+                  montant: parseFloat(insuranceForm.montant)
+                });
+
+                if (error) throw error;
+
+                // Update vehicle expiration date
+                await supabase.from('vehicles').update({
+                  assurance_expire_le: insuranceForm.date_expiration
+                }).eq('id', vehicle!.id);
+
+                toast({
+                  title: "Succès",
+                  description: "Assurance ajoutée avec succès"
+                });
+
+                setShowInsuranceDialog(false);
+                setInsuranceForm({
+                  numero_ordre: '', numero_police: '', assureur: '', coordonnees_assureur: '',
+                  date_debut: '', date_expiration: '', montant: '', date_paiement: '',
+                  mode_paiement: 'especes', numero_cheque: '', banque: '', remarques: ''
+                });
+                loadVehicle();
+              } catch (error: any) {
+                toast({
+                  title: "Erreur",
+                  description: error.message,
+                  variant: "destructive"
+                });
+              }
+            }}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for adding technical inspection */}
+      <Dialog open={showInspectionDialog} onOpenChange={setShowInspectionDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ajouter une visite technique</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div>
+              <Label htmlFor="insp-numero-ordre">N° d'ordre *</Label>
+              <Input
+                id="insp-numero-ordre"
+                value={inspectionForm.numero_ordre}
+                onChange={(e) => setInspectionForm({ ...inspectionForm, numero_ordre: e.target.value })}
+                placeholder="Ex: VT001"
+              />
+            </div>
+            <div>
+              <Label htmlFor="insp-centre">Centre de contrôle</Label>
+              <Input
+                id="insp-centre"
+                value={inspectionForm.centre_controle}
+                onChange={(e) => setInspectionForm({ ...inspectionForm, centre_controle: e.target.value })}
+                placeholder="Ex: Centre Auto Contrôle"
+              />
+            </div>
+            <div>
+              <Label htmlFor="insp-date-visite">Date de visite *</Label>
+              <Input
+                id="insp-date-visite"
+                type="date"
+                value={inspectionForm.date_visite}
+                onChange={(e) => setInspectionForm({ ...inspectionForm, date_visite: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="insp-date-exp">Date d'expiration *</Label>
+              <Input
+                id="insp-date-exp"
+                type="date"
+                value={inspectionForm.date_expiration}
+                onChange={(e) => setInspectionForm({ ...inspectionForm, date_expiration: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="insp-montant">Montant</Label>
+              <Input
+                id="insp-montant"
+                type="number"
+                step="0.01"
+                value={inspectionForm.montant}
+                onChange={(e) => setInspectionForm({ ...inspectionForm, montant: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="insp-date-paiement">Date de paiement</Label>
+              <Input
+                id="insp-date-paiement"
+                type="date"
+                value={inspectionForm.date_paiement}
+                onChange={(e) => setInspectionForm({ ...inspectionForm, date_paiement: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="insp-mode-paiement">Mode de paiement</Label>
+              <Select value={inspectionForm.mode_paiement} onValueChange={(value: any) => setInspectionForm({ ...inspectionForm, mode_paiement: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="especes">Espèces</SelectItem>
+                  <SelectItem value="cheque">Chèque</SelectItem>
+                  <SelectItem value="virement">Virement</SelectItem>
+                  <SelectItem value="carte">Carte</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {inspectionForm.mode_paiement === 'cheque' && (
+              <>
+                <div>
+                  <Label htmlFor="insp-numero-cheque">N° de chèque</Label>
+                  <Input
+                    id="insp-numero-cheque"
+                    value={inspectionForm.numero_cheque}
+                    onChange={(e) => setInspectionForm({ ...inspectionForm, numero_cheque: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="insp-banque">Banque</Label>
+                  <Input
+                    id="insp-banque"
+                    value={inspectionForm.banque}
+                    onChange={(e) => setInspectionForm({ ...inspectionForm, banque: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            <div className="col-span-2">
+              <Label htmlFor="insp-remarques">Remarques</Label>
+              <Textarea
+                id="insp-remarques"
+                value={inspectionForm.remarques}
+                onChange={(e) => setInspectionForm({ ...inspectionForm, remarques: e.target.value })}
+                placeholder="Notes additionnelles..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowInspectionDialog(false);
+              setInspectionForm({
+                numero_ordre: '', centre_controle: '', date_visite: '', date_expiration: '',
+                montant: '', date_paiement: '', mode_paiement: 'especes',
+                numero_cheque: '', banque: '', remarques: ''
+              });
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={async () => {
+              try {
+                if (!inspectionForm.numero_ordre || !inspectionForm.date_visite || !inspectionForm.date_expiration) {
+                  toast({
+                    title: "Erreur",
+                    description: "Veuillez remplir tous les champs obligatoires",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
+                const { error } = await supabase.from('vehicle_technical_inspection').insert({
+                  vehicle_id: vehicle!.id,
+                  ...inspectionForm,
+                  montant: inspectionForm.montant ? parseFloat(inspectionForm.montant) : null
+                });
+
+                if (error) throw error;
+
+                // Update vehicle expiration date
+                await supabase.from('vehicles').update({
+                  visite_technique_expire_le: inspectionForm.date_expiration
+                }).eq('id', vehicle!.id);
+
+                toast({
+                  title: "Succès",
+                  description: "Visite technique ajoutée avec succès"
+                });
+
+                setShowInspectionDialog(false);
+                setInspectionForm({
+                  numero_ordre: '', centre_controle: '', date_visite: '', date_expiration: '',
+                  montant: '', date_paiement: '', mode_paiement: 'especes',
+                  numero_cheque: '', banque: '', remarques: ''
+                });
+                loadVehicle();
+              } catch (error: any) {
+                toast({
+                  title: "Erreur",
+                  description: error.message,
+                  variant: "destructive"
+                });
+              }
+            }}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for adding vignette */}
+      <Dialog open={showVignetteDialog} onOpenChange={setShowVignetteDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ajouter une vignette</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div>
+              <Label htmlFor="vig-numero-ordre">N° d'ordre *</Label>
+              <Input
+                id="vig-numero-ordre"
+                value={vignetteForm.numero_ordre}
+                onChange={(e) => setVignetteForm({ ...vignetteForm, numero_ordre: e.target.value })}
+                placeholder="Ex: VIG001"
+              />
+            </div>
+            <div>
+              <Label htmlFor="vig-annee">Année *</Label>
+              <Input
+                id="vig-annee"
+                type="number"
+                value={vignetteForm.annee}
+                onChange={(e) => setVignetteForm({ ...vignetteForm, annee: e.target.value })}
+                placeholder={new Date().getFullYear().toString()}
+              />
+            </div>
+            <div>
+              <Label htmlFor="vig-date-exp">Date d'expiration *</Label>
+              <Input
+                id="vig-date-exp"
+                type="date"
+                value={vignetteForm.date_expiration}
+                onChange={(e) => setVignetteForm({ ...vignetteForm, date_expiration: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="vig-montant">Montant</Label>
+              <Input
+                id="vig-montant"
+                type="number"
+                step="0.01"
+                value={vignetteForm.montant}
+                onChange={(e) => setVignetteForm({ ...vignetteForm, montant: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="vig-date-paiement">Date de paiement</Label>
+              <Input
+                id="vig-date-paiement"
+                type="date"
+                value={vignetteForm.date_paiement}
+                onChange={(e) => setVignetteForm({ ...vignetteForm, date_paiement: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="vig-mode-paiement">Mode de paiement</Label>
+              <Select value={vignetteForm.mode_paiement} onValueChange={(value: any) => setVignetteForm({ ...vignetteForm, mode_paiement: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="especes">Espèces</SelectItem>
+                  <SelectItem value="cheque">Chèque</SelectItem>
+                  <SelectItem value="virement">Virement</SelectItem>
+                  <SelectItem value="carte">Carte</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {vignetteForm.mode_paiement === 'cheque' && (
+              <>
+                <div>
+                  <Label htmlFor="vig-numero-cheque">N° de chèque</Label>
+                  <Input
+                    id="vig-numero-cheque"
+                    value={vignetteForm.numero_cheque}
+                    onChange={(e) => setVignetteForm({ ...vignetteForm, numero_cheque: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="vig-banque">Banque</Label>
+                  <Input
+                    id="vig-banque"
+                    value={vignetteForm.banque}
+                    onChange={(e) => setVignetteForm({ ...vignetteForm, banque: e.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            <div className="col-span-2">
+              <Label htmlFor="vig-remarques">Remarques</Label>
+              <Textarea
+                id="vig-remarques"
+                value={vignetteForm.remarques}
+                onChange={(e) => setVignetteForm({ ...vignetteForm, remarques: e.target.value })}
+                placeholder="Notes additionnelles..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowVignetteDialog(false);
+              setVignetteForm({
+                numero_ordre: '', annee: new Date().getFullYear().toString(), date_expiration: '',
+                montant: '', date_paiement: '', mode_paiement: 'especes',
+                numero_cheque: '', banque: '', remarques: ''
+              });
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={async () => {
+              try {
+                if (!vignetteForm.numero_ordre || !vignetteForm.annee || !vignetteForm.date_expiration) {
+                  toast({
+                    title: "Erreur",
+                    description: "Veuillez remplir tous les champs obligatoires",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
+                const { error } = await supabase.from('vehicle_vignette').insert({
+                  vehicle_id: vehicle!.id,
+                  ...vignetteForm,
+                  annee: parseInt(vignetteForm.annee),
+                  montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null
+                });
+
+                if (error) throw error;
+
+                // Update vehicle expiration date
+                await supabase.from('vehicles').update({
+                  vignette_expire_le: vignetteForm.date_expiration
+                }).eq('id', vehicle!.id);
+
+                toast({
+                  title: "Succès",
+                  description: "Vignette ajoutée avec succès"
+                });
+
+                setShowVignetteDialog(false);
+                setVignetteForm({
+                  numero_ordre: '', annee: new Date().getFullYear().toString(), date_expiration: '',
+                  montant: '', date_paiement: '', mode_paiement: 'especes',
+                  numero_cheque: '', banque: '', remarques: ''
+                });
+                loadVehicle();
+              } catch (error: any) {
+                toast({
+                  title: "Erreur",
+                  description: error.message,
+                  variant: "destructive"
+                });
+              }
+            }}>
               Enregistrer
             </Button>
           </DialogFooter>
