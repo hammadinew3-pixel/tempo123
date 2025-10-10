@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, Download, Plus, Edit, Trash2, FileText, Eye, Car, User } from "lucide-react";
+import { Search, Filter, Download, Plus, Edit, Trash2, FileText, Eye, Car, User, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -27,6 +28,15 @@ export default function Locations() {
   const [editingContract, setEditingContract] = useState<any>(null);
   const [filterType, setFilterType] = useState<'all' | 'location' | 'assistance'>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [visibleColumns, setVisibleColumns] = useState({
+    type: true,
+    numeroContrat: true,
+    client: true,
+    vehicule: true,
+    dates: true,
+    statut: true,
+    montant: true,
+  });
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<Partial<ContractInsert>>({
@@ -377,6 +387,10 @@ export default function Locations() {
     return diff;
   };
 
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
+  };
+
   const handleGeneratePDF = async (contractId: string) => {
     try {
       console.log('📄 Génération du PDF pour le contrat:', contractId);
@@ -429,6 +443,77 @@ export default function Locations() {
           <p className="text-sm text-muted-foreground">Gérez vos contrats de location</p>
         </div>
         <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Columns className="w-4 h-4 mr-2" />
+                COLONNES
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Afficher les colonnes</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-type"
+                      checked={visibleColumns.type}
+                      onCheckedChange={() => toggleColumn('type')}
+                    />
+                    <label htmlFor="col-type" className="text-sm cursor-pointer">Type</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-numero"
+                      checked={visibleColumns.numeroContrat}
+                      onCheckedChange={() => toggleColumn('numeroContrat')}
+                    />
+                    <label htmlFor="col-numero" className="text-sm cursor-pointer">N° Contrat</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-client"
+                      checked={visibleColumns.client}
+                      onCheckedChange={() => toggleColumn('client')}
+                    />
+                    <label htmlFor="col-client" className="text-sm cursor-pointer">Client</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-vehicule"
+                      checked={visibleColumns.vehicule}
+                      onCheckedChange={() => toggleColumn('vehicule')}
+                    />
+                    <label htmlFor="col-vehicule" className="text-sm cursor-pointer">Véhicule</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-dates"
+                      checked={visibleColumns.dates}
+                      onCheckedChange={() => toggleColumn('dates')}
+                    />
+                    <label htmlFor="col-dates" className="text-sm cursor-pointer">Dates</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-statut"
+                      checked={visibleColumns.statut}
+                      onCheckedChange={() => toggleColumn('statut')}
+                    />
+                    <label htmlFor="col-statut" className="text-sm cursor-pointer">Statut</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-montant"
+                      checked={visibleColumns.montant}
+                      onCheckedChange={() => toggleColumn('montant')}
+                    />
+                    <label htmlFor="col-montant" className="text-sm cursor-pointer">Montant</label>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             FILTRER
@@ -516,14 +601,14 @@ export default function Locations() {
                       />
                     </th>
                     <th className="pb-3 font-medium">Actions</th>
-                    <th className="pb-3 font-medium">Type</th>
-                    <th className="pb-3 font-medium">N° Contrat</th>
-                    <th className="pb-3 font-medium">Véhicule</th>
-                    <th className="pb-3 font-medium">Client</th>
-                    <th className="pb-3 font-medium">Période</th>
-                    <th className="pb-3 font-medium">Durée</th>
-                    <th className="pb-3 font-medium">Montant</th>
-                    <th className="pb-3 font-medium">Statut</th>
+                    {visibleColumns.type && <th className="pb-3 font-medium">Type</th>}
+                    {visibleColumns.numeroContrat && <th className="pb-3 font-medium">N° Contrat</th>}
+                    {visibleColumns.vehicule && <th className="pb-3 font-medium">Véhicule</th>}
+                    {visibleColumns.client && <th className="pb-3 font-medium">Client</th>}
+                    {visibleColumns.dates && <th className="pb-3 font-medium">Période</th>}
+                    {visibleColumns.dates && <th className="pb-3 font-medium">Durée</th>}
+                    {visibleColumns.montant && <th className="pb-3 font-medium">Montant</th>}
+                    {visibleColumns.statut && <th className="pb-3 font-medium">Statut</th>}
                     <th className="pb-3 font-medium">Créé le</th>
                   </tr>
                 </thead>
@@ -583,29 +668,45 @@ export default function Locations() {
                             </Button>
                           </div>
                         </td>
-                        <td className="py-4">
-                          <Badge 
-                            variant="outline" 
-                            className={isAssistance ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' : 'bg-blue-500/10 text-blue-600 border-blue-500/20'}
-                          >
-                            {isAssistance ? 'Assistance' : 'Location'}
-                          </Badge>
-                        </td>
-                        <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
-                        <td className="py-4 text-foreground">
-                          {contract.vehicles?.marque} {contract.vehicles?.modele}
-                        </td>
-                        <td className="py-4 text-foreground">
-                          {contract.clients?.nom} {contract.clients?.prenom}
-                        </td>
-                        <td className="py-4 text-foreground text-sm">
-                          {new Date(contract.date_debut).toLocaleDateString('fr-FR')} - {contract.date_fin ? new Date(contract.date_fin).toLocaleDateString('fr-FR') : 'En cours'}
-                        </td>
-                        <td className="py-4 text-foreground">
-                          {contract.date_fin ? (contract.duration || calculateDuration(contract.date_debut, contract.date_fin)) + ' jours' : '-'}
-                        </td>
-                        <td className="py-4 text-foreground">{contract.total_amount?.toFixed(2) || '0.00'} MAD</td>
-                        <td className="py-4">{getStatusBadge(contract.statut)}</td>
+                        {visibleColumns.type && (
+                          <td className="py-4">
+                            <Badge 
+                              variant="outline" 
+                              className={isAssistance ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' : 'bg-blue-500/10 text-blue-600 border-blue-500/20'}
+                            >
+                              {isAssistance ? 'Assistance' : 'Location'}
+                            </Badge>
+                          </td>
+                        )}
+                        {visibleColumns.numeroContrat && (
+                          <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
+                        )}
+                        {visibleColumns.vehicule && (
+                          <td className="py-4 text-foreground">
+                            {contract.vehicles?.marque} {contract.vehicles?.modele}
+                          </td>
+                        )}
+                        {visibleColumns.client && (
+                          <td className="py-4 text-foreground">
+                            {contract.clients?.nom} {contract.clients?.prenom}
+                          </td>
+                        )}
+                        {visibleColumns.dates && (
+                          <>
+                            <td className="py-4 text-foreground text-sm">
+                              {new Date(contract.date_debut).toLocaleDateString('fr-FR')} - {contract.date_fin ? new Date(contract.date_fin).toLocaleDateString('fr-FR') : 'En cours'}
+                            </td>
+                            <td className="py-4 text-foreground">
+                              {contract.date_fin ? (contract.duration || calculateDuration(contract.date_debut, contract.date_fin)) + ' jours' : '-'}
+                            </td>
+                          </>
+                        )}
+                        {visibleColumns.montant && (
+                          <td className="py-4 text-foreground">{contract.total_amount?.toFixed(2) || '0.00'} MAD</td>
+                        )}
+                        {visibleColumns.statut && (
+                          <td className="py-4">{getStatusBadge(contract.statut)}</td>
+                        )}
                         <td className="py-4 text-foreground text-sm">
                           {new Date(contract.created_at).toLocaleString('fr-FR', {
                             day: '2-digit',

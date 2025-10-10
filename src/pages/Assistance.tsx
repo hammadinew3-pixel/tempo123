@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Filter, Download, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Filter, Download, Eye, Edit, Trash2, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -16,6 +17,15 @@ export default function Assistance() {
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [visibleColumns, setVisibleColumns] = useState({
+    numeroDossier: true,
+    assurance: true,
+    type: true,
+    dateDebut: true,
+    dateFin: true,
+    etat: true,
+    montant: true,
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -148,6 +158,10 @@ export default function Assistance() {
     return labels[type] || type;
   };
 
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -156,6 +170,77 @@ export default function Assistance() {
           <p className="text-sm text-muted-foreground">Gérez les véhicules de remplacement pour les assurances</p>
         </div>
         <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Columns className="w-4 h-4 mr-2" />
+                COLONNES
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Afficher les colonnes</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-numero"
+                      checked={visibleColumns.numeroDossier}
+                      onCheckedChange={() => toggleColumn('numeroDossier')}
+                    />
+                    <label htmlFor="col-numero" className="text-sm cursor-pointer">N° Dossier</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-assurance"
+                      checked={visibleColumns.assurance}
+                      onCheckedChange={() => toggleColumn('assurance')}
+                    />
+                    <label htmlFor="col-assurance" className="text-sm cursor-pointer">Assurance</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-type"
+                      checked={visibleColumns.type}
+                      onCheckedChange={() => toggleColumn('type')}
+                    />
+                    <label htmlFor="col-type" className="text-sm cursor-pointer">Type</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-date-debut"
+                      checked={visibleColumns.dateDebut}
+                      onCheckedChange={() => toggleColumn('dateDebut')}
+                    />
+                    <label htmlFor="col-date-debut" className="text-sm cursor-pointer">Date début</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-date-fin"
+                      checked={visibleColumns.dateFin}
+                      onCheckedChange={() => toggleColumn('dateFin')}
+                    />
+                    <label htmlFor="col-date-fin" className="text-sm cursor-pointer">Date fin</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-etat"
+                      checked={visibleColumns.etat}
+                      onCheckedChange={() => toggleColumn('etat')}
+                    />
+                    <label htmlFor="col-etat" className="text-sm cursor-pointer">État</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-montant"
+                      checked={visibleColumns.montant}
+                      onCheckedChange={() => toggleColumn('montant')}
+                    />
+                    <label htmlFor="col-montant" className="text-sm cursor-pointer">Montant</label>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             FILTRER
@@ -219,13 +304,13 @@ export default function Assistance() {
                       />
                     </th>
                     <th className="pb-3 font-medium">Actions</th>
-                    <th className="pb-3 font-medium">N° Dossier</th>
-                    <th className="pb-3 font-medium">Assurance</th>
-                    <th className="pb-3 font-medium">Type</th>
-                    <th className="pb-3 font-medium">Date début</th>
-                    <th className="pb-3 font-medium">Date fin</th>
-                    <th className="pb-3 font-medium">État</th>
-                    <th className="pb-3 font-medium">Montant</th>
+                    {visibleColumns.numeroDossier && <th className="pb-3 font-medium">N° Dossier</th>}
+                    {visibleColumns.assurance && <th className="pb-3 font-medium">Assurance</th>}
+                    {visibleColumns.type && <th className="pb-3 font-medium">Type</th>}
+                    {visibleColumns.dateDebut && <th className="pb-3 font-medium">Date début</th>}
+                    {visibleColumns.dateFin && <th className="pb-3 font-medium">Date fin</th>}
+                    {visibleColumns.etat && <th className="pb-3 font-medium">État</th>}
+                    {visibleColumns.montant && <th className="pb-3 font-medium">Montant</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -269,19 +354,33 @@ export default function Assistance() {
                           </Button>
                         </div>
                       </td>
-                      <td className="py-4 font-semibold text-foreground">{assistance.num_dossier}</td>
-                      <td className="py-4 text-foreground">{assistance.assureur_nom}</td>
-                      <td className="py-4 text-muted-foreground text-sm">{getTypeLabel(assistance.type)}</td>
-                      <td className="py-4 text-foreground">
-                        {new Date(assistance.date_debut).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="py-4 text-foreground">
-                        {assistance.date_fin ? new Date(assistance.date_fin).toLocaleDateString('fr-FR') : '-'}
-                      </td>
-                      <td className="py-4">{getStatusBadge(assistance.etat)}</td>
-                      <td className="py-4 font-medium text-foreground">
-                        {assistance.montant_facture ? `${assistance.montant_facture.toFixed(2)} MAD` : '-'}
-                      </td>
+                      {visibleColumns.numeroDossier && (
+                        <td className="py-4 font-semibold text-foreground">{assistance.num_dossier}</td>
+                      )}
+                      {visibleColumns.assurance && (
+                        <td className="py-4 text-foreground">{assistance.assureur_nom}</td>
+                      )}
+                      {visibleColumns.type && (
+                        <td className="py-4 text-muted-foreground text-sm">{getTypeLabel(assistance.type)}</td>
+                      )}
+                      {visibleColumns.dateDebut && (
+                        <td className="py-4 text-foreground">
+                          {new Date(assistance.date_debut).toLocaleDateString('fr-FR')}
+                        </td>
+                      )}
+                      {visibleColumns.dateFin && (
+                        <td className="py-4 text-foreground">
+                          {assistance.date_fin ? new Date(assistance.date_fin).toLocaleDateString('fr-FR') : '-'}
+                        </td>
+                      )}
+                      {visibleColumns.etat && (
+                        <td className="py-4">{getStatusBadge(assistance.etat)}</td>
+                      )}
+                      {visibleColumns.montant && (
+                        <td className="py-4 font-medium text-foreground">
+                          {assistance.montant_facture ? `${assistance.montant_facture.toFixed(2)} MAD` : '-'}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

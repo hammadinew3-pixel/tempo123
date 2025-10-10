@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, Plus, Edit, Trash2, Eye, X } from "lucide-react";
+import { Search, Filter, Download, Plus, Edit, Trash2, Eye, X, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,6 +39,14 @@ export default function Vehicules() {
     prixMax: '',
     dateMin: '',
     dateMax: ''
+  });
+  const [visibleColumns, setVisibleColumns] = useState({
+    marqueModele: true,
+    matricule: true,
+    etat: true,
+    kilometrage: true,
+    prixLocation: true,
+    creeLe: true,
   });
   const {
     toast
@@ -342,6 +350,9 @@ export default function Vehicules() {
       assurances: prev.assurances.includes(assuranceId) ? prev.assurances.filter(a => a !== assuranceId) : [...prev.assurances, assuranceId]
     }));
   };
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
+  };
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
   const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
   const countDisponible = vehicles.filter(v => v.statut === 'disponible').length;
@@ -476,6 +487,70 @@ export default function Vehicules() {
                   <Button onClick={() => setFilterPopoverOpen(false)} className="font-semibold">
                     APPLIQUER
                   </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm">
+                <Columns className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">COLONNES</span>
+                <span className="sm:hidden">Colonnes</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Afficher les colonnes</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-marque"
+                      checked={visibleColumns.marqueModele}
+                      onCheckedChange={() => toggleColumn('marqueModele')}
+                    />
+                    <label htmlFor="col-marque" className="text-sm cursor-pointer">Marque/Modèle</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-matricule"
+                      checked={visibleColumns.matricule}
+                      onCheckedChange={() => toggleColumn('matricule')}
+                    />
+                    <label htmlFor="col-matricule" className="text-sm cursor-pointer">Matricule</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-etat"
+                      checked={visibleColumns.etat}
+                      onCheckedChange={() => toggleColumn('etat')}
+                    />
+                    <label htmlFor="col-etat" className="text-sm cursor-pointer">État</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-km"
+                      checked={visibleColumns.kilometrage}
+                      onCheckedChange={() => toggleColumn('kilometrage')}
+                    />
+                    <label htmlFor="col-km" className="text-sm cursor-pointer">Kilométrage</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-prix"
+                      checked={visibleColumns.prixLocation}
+                      onCheckedChange={() => toggleColumn('prixLocation')}
+                    />
+                    <label htmlFor="col-prix" className="text-sm cursor-pointer">Prix location</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-cree"
+                      checked={visibleColumns.creeLe}
+                      onCheckedChange={() => toggleColumn('creeLe')}
+                    />
+                    <label htmlFor="col-cree" className="text-sm cursor-pointer">Créé le</label>
+                  </div>
                 </div>
               </div>
             </PopoverContent>
@@ -714,13 +789,13 @@ export default function Vehicules() {
                       <th className="pb-3 pl-4 font-medium w-12">
                         <Checkbox checked={selectedIds.size > 0 && selectedIds.size === filteredVehicles.length} onCheckedChange={toggleSelectAll} />
                       </th>
-                      <th className="pb-3 font-medium">Actions</th>
-                      <th className="pb-3 font-medium">Marque/Modèle</th>
-                      <th className="pb-3 font-medium">Matricule</th>
-                      <th className="pb-3 font-medium">État</th>
-                      <th className="pb-3 font-medium">Kilométrage</th>
-                      <th className="pb-3 font-medium">Prix location</th>
-                      <th className="pb-3 font-medium">Créé le</th>
+                    <th className="pb-3 font-medium">Actions</th>
+                    {visibleColumns.marqueModele && <th className="pb-3 font-medium">Marque/Modèle</th>}
+                    {visibleColumns.matricule && <th className="pb-3 font-medium">Matricule</th>}
+                    {visibleColumns.etat && <th className="pb-3 font-medium">État</th>}
+                    {visibleColumns.kilometrage && <th className="pb-3 font-medium">Kilométrage</th>}
+                    {visibleColumns.prixLocation && <th className="pb-3 font-medium">Prix location</th>}
+                    {visibleColumns.creeLe && <th className="pb-3 font-medium">Créé le</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -750,35 +825,47 @@ export default function Vehicules() {
                             </Button>
                           </div>
                         </td>
-                        <td className="py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-xs font-medium text-primary">{vehicle.marque.charAt(0)}</span>
+                        {visibleColumns.marqueModele && (
+                          <td className="py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-xs font-medium text-primary">{vehicle.marque.charAt(0)}</span>
+                              </div>
+                              <div>
+                                <div className="font-medium text-foreground">{vehicle.marque} {vehicle.modele}</div>
+                                <div className="text-xs text-muted-foreground">Cat. {vehicle.categorie || 'Mixte'}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-medium text-foreground">{vehicle.marque} {vehicle.modele}</div>
-                              <div className="text-xs text-muted-foreground">Cat. {vehicle.categorie || 'Mixte'}</div>
+                          </td>
+                        )}
+                        {visibleColumns.matricule && (
+                          <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation}</td>
+                        )}
+                        {visibleColumns.etat && (
+                          <td className="py-4">
+                            <div className="flex flex-col gap-1">
+                              {getStatusBadge(vehicle.statut)}
+                              {needsOilChange(vehicle) && <Badge variant="outline" className={`${getOilChangeAlertLevel(vehicle) === 'critical' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-orange-500/10 text-orange-600 border-orange-500/20'} text-xs`}>
+                                  🛠️ Vidange à faire
+                                </Badge>}
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation}</td>
-                        <td className="py-4">
-                          <div className="flex flex-col gap-1">
-                            {getStatusBadge(vehicle.statut)}
-                            {needsOilChange(vehicle) && <Badge variant="outline" className={`${getOilChangeAlertLevel(vehicle) === 'critical' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-orange-500/10 text-orange-600 border-orange-500/20'} text-xs`}>
-                                🛠️ Vidange à faire
-                              </Badge>}
-                          </div>
-                        </td>
-                        <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()} km</td>
-                        <td className="py-4 font-medium text-foreground">{vehicle.tarif_journalier.toFixed(2)} MAD</td>
-                        <td className="py-4 text-muted-foreground text-xs">
-                          {new Date(vehicle.created_at).toLocaleDateString('fr-FR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    })}
-                        </td>
+                          </td>
+                        )}
+                        {visibleColumns.kilometrage && (
+                          <td className="py-4 text-foreground">{vehicle.kilometrage.toLocaleString()} km</td>
+                        )}
+                        {visibleColumns.prixLocation && (
+                          <td className="py-4 font-medium text-foreground">{vehicle.tarif_journalier.toFixed(2)} MAD</td>
+                        )}
+                        {visibleColumns.creeLe && (
+                          <td className="py-4 text-muted-foreground text-xs">
+                            {new Date(vehicle.created_at).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                          </td>
+                        )}
                       </tr>)}
                   </tbody>
                 </table>

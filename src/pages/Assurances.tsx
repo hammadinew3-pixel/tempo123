@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, DollarSign, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -24,6 +26,14 @@ export default function Assurances() {
   const [editingAssurance, setEditingAssurance] = useState<Assurance | null>(null);
   const [selectedAssurance, setSelectedAssurance] = useState<Assurance | null>(null);
   const [baremes, setBaremes] = useState<Bareme[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState({
+    nom: true,
+    contact: true,
+    telephone: true,
+    email: true,
+    delaiPaiement: true,
+    statut: true,
+  });
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<Partial<AssuranceInsert>>({
@@ -231,6 +241,10 @@ export default function Assurances() {
     setIsDialogOpen(true);
   };
 
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -238,13 +252,78 @@ export default function Assurances() {
           <h1 className="text-2xl font-bold text-foreground">Liste des assurances</h1>
           <p className="text-sm text-muted-foreground">Gérez vos partenaires assurance</p>
         </div>
-        <Button 
-          size="sm"
-          onClick={() => { resetForm(); setIsDialogOpen(true); }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouvelle assurance
-        </Button>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Columns className="w-4 h-4 mr-2" />
+                COLONNES
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Afficher les colonnes</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-nom"
+                      checked={visibleColumns.nom}
+                      onCheckedChange={() => toggleColumn('nom')}
+                    />
+                    <label htmlFor="col-nom" className="text-sm cursor-pointer">Nom</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-contact"
+                      checked={visibleColumns.contact}
+                      onCheckedChange={() => toggleColumn('contact')}
+                    />
+                    <label htmlFor="col-contact" className="text-sm cursor-pointer">Contact</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-telephone"
+                      checked={visibleColumns.telephone}
+                      onCheckedChange={() => toggleColumn('telephone')}
+                    />
+                    <label htmlFor="col-telephone" className="text-sm cursor-pointer">Téléphone</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-email"
+                      checked={visibleColumns.email}
+                      onCheckedChange={() => toggleColumn('email')}
+                    />
+                    <label htmlFor="col-email" className="text-sm cursor-pointer">Email</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-delai"
+                      checked={visibleColumns.delaiPaiement}
+                      onCheckedChange={() => toggleColumn('delaiPaiement')}
+                    />
+                    <label htmlFor="col-delai" className="text-sm cursor-pointer">Délai paiement</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-statut"
+                      checked={visibleColumns.statut}
+                      onCheckedChange={() => toggleColumn('statut')}
+                    />
+                    <label htmlFor="col-statut" className="text-sm cursor-pointer">Statut</label>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button 
+            size="sm"
+            onClick={() => { resetForm(); setIsDialogOpen(true); }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouvelle assurance
+          </Button>
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
@@ -395,12 +474,12 @@ export default function Assurances() {
                 <thead>
                   <tr className="text-left text-sm text-muted-foreground border-b">
                     <th className="pb-3 pl-4 font-medium">Actions</th>
-                    <th className="pb-3 font-medium">Nom</th>
-                    <th className="pb-3 font-medium">Contact</th>
-                    <th className="pb-3 font-medium">Téléphone</th>
-                    <th className="pb-3 font-medium">Email</th>
-                    <th className="pb-3 font-medium">Délai paiement</th>
-                    <th className="pb-3 font-medium">Statut</th>
+                    {visibleColumns.nom && <th className="pb-3 font-medium">Nom</th>}
+                    {visibleColumns.contact && <th className="pb-3 font-medium">Contact</th>}
+                    {visibleColumns.telephone && <th className="pb-3 font-medium">Téléphone</th>}
+                    {visibleColumns.email && <th className="pb-3 font-medium">Email</th>}
+                    {visibleColumns.delaiPaiement && <th className="pb-3 font-medium">Délai paiement</th>}
+                    {visibleColumns.statut && <th className="pb-3 font-medium">Statut</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -444,22 +523,34 @@ export default function Assurances() {
                           </Button>
                         </div>
                       </td>
-                      <td className="py-4 font-semibold text-foreground">{assurance.nom}</td>
-                      <td className="py-4 text-foreground">{assurance.contact_nom || '-'}</td>
-                      <td className="py-4 text-foreground">{assurance.contact_telephone || '-'}</td>
-                      <td className="py-4 text-muted-foreground text-sm">{assurance.contact_email || '-'}</td>
-                      <td className="py-4 text-foreground">{assurance.delai_paiement_jours} jours</td>
-                      <td className="py-4">
-                        {assurance.actif ? (
-                          <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 font-medium">
-                            Actif
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 font-medium">
-                            Inactif
-                          </Badge>
-                        )}
-                      </td>
+                      {visibleColumns.nom && (
+                        <td className="py-4 font-semibold text-foreground">{assurance.nom}</td>
+                      )}
+                      {visibleColumns.contact && (
+                        <td className="py-4 text-foreground">{assurance.contact_nom || '-'}</td>
+                      )}
+                      {visibleColumns.telephone && (
+                        <td className="py-4 text-foreground">{assurance.contact_telephone || '-'}</td>
+                      )}
+                      {visibleColumns.email && (
+                        <td className="py-4 text-muted-foreground text-sm">{assurance.contact_email || '-'}</td>
+                      )}
+                      {visibleColumns.delaiPaiement && (
+                        <td className="py-4 text-foreground">{assurance.delai_paiement_jours} jours</td>
+                      )}
+                      {visibleColumns.statut && (
+                        <td className="py-4">
+                          {assurance.actif ? (
+                            <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 font-medium">
+                              Actif
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 font-medium">
+                              Inactif
+                            </Badge>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
