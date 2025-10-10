@@ -387,22 +387,6 @@ export default function VehiculeDetails() {
         }
       }
     }
-    const kmDepuis = vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
-    if (kmDepuis > 10000) {
-      alerts.push({
-        message: `Vidange urgente ! ${kmDepuis.toLocaleString()} km depuis la dernière vidange.`,
-        action: "EFFECTUER VIDANGE",
-        link: `/vehicules/${vehicle.id}`,
-        severity: "critical"
-      });
-    } else if (kmDepuis > 8000) {
-      alerts.push({
-        message: `Vidange à prévoir - ${kmDepuis.toLocaleString()} km depuis la dernière vidange.`,
-        action: "PLANIFIER",
-        link: `/vehicules/${vehicle.id}`,
-        severity: "warning"
-      });
-    }
     return alerts;
   };
   if (loading) {
