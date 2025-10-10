@@ -15,6 +15,7 @@ interface DashboardStats {
   availableVehicles: number;
   rentedVehicles: number;
   maintenanceVehicles: number;
+  immobilizedVehicles: number;
   outOfServiceVehicles: number;
   sinistresTotal: number;
   sinistresOuverts: number;
@@ -36,6 +37,7 @@ export default function Dashboard() {
     availableVehicles: 0,
     rentedVehicles: 0,
     maintenanceVehicles: 0,
+    immobilizedVehicles: 0,
     outOfServiceVehicles: 0,
     sinistresTotal: 0,
     sinistresOuverts: 0,
@@ -193,6 +195,7 @@ export default function Dashboard() {
       const availableVehicles = vehicles?.filter(v => v.statut === 'disponible').length || 0;
       const rentedVehicles = vehicles?.filter(v => v.statut === 'loue').length || 0;
       const maintenanceVehicles = vehicles?.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length || 0;
+      const immobilizedVehicles = vehicles?.filter(v => v.statut === 'immobilise').length || 0;
       const outOfServiceVehicles = vehicles?.filter(v => v.en_service === false).length || 0;
 
       // Load contracts count
@@ -250,6 +253,7 @@ export default function Dashboard() {
         availableVehicles,
         rentedVehicles,
         maintenanceVehicles,
+        immobilizedVehicles,
         outOfServiceVehicles,
         sinistresTotal,
         sinistresOuverts,
@@ -662,8 +666,11 @@ export default function Dashboard() {
                     {/* Maintenance vehicles (warning) */}
                     <circle cx="50" cy="50" r="40" stroke="hsl(var(--warning))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles) / stats.vehiclesCount : 251.2} />
                     
+                    {/* Immobilized vehicles (orange/amber) */}
+                    <circle cx="50" cy="50" r="40" stroke="hsl(30 100% 50%)" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles + stats.immobilizedVehicles) / stats.vehiclesCount : 251.2} />
+                    
                     {/* Out of service vehicles (destructive) */}
-                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--destructive))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles + stats.outOfServiceVehicles) / stats.vehiclesCount : 251.2} />
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--destructive))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles + stats.immobilizedVehicles + stats.outOfServiceVehicles) / stats.vehiclesCount : 251.2} />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -702,6 +709,15 @@ export default function Dashboard() {
                   </div>
                   <span className="text-sm font-medium text-foreground">
                     {stats.maintenanceVehicles} ({stats.vehiclesCount > 0 ? (stats.maintenanceVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(30 100% 50%)' }}></span>
+                    <span className="text-sm text-foreground">Immobilisés</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {stats.immobilizedVehicles} ({stats.vehiclesCount > 0 ? (stats.immobilizedVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
