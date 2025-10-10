@@ -593,9 +593,6 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Vehicle Alerts Section */}
-        {vehicleAlerts.length > 0}
-
         {/* Departures - Returns Section */}
         <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
