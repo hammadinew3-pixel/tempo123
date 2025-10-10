@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar, Eye } from "lucide-react";
+import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar, Eye, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -27,6 +28,14 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleColumns, setVisibleColumns] = useState({
+    type: true,
+    cinPermis: true,
+    telephone: true,
+    email: true,
+    adresse: true,
+    createdAt: true,
+  });
   const { toast } = useToast();
 
   const [showAllFields, setShowAllFields] = useState(false);
@@ -223,6 +232,10 @@ export default function Clients() {
     );
   });
 
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -231,6 +244,69 @@ export default function Clients() {
           <p className="text-sm text-muted-foreground">Gérez votre base de clients</p>
         </div>
         <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Columns className="w-4 h-4 mr-2" />
+                COLONNES
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Afficher les colonnes</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-type"
+                      checked={visibleColumns.type}
+                      onCheckedChange={() => toggleColumn('type')}
+                    />
+                    <label htmlFor="col-type" className="text-sm cursor-pointer">Type</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-cin"
+                      checked={visibleColumns.cinPermis}
+                      onCheckedChange={() => toggleColumn('cinPermis')}
+                    />
+                    <label htmlFor="col-cin" className="text-sm cursor-pointer">CIN / Permis</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-tel"
+                      checked={visibleColumns.telephone}
+                      onCheckedChange={() => toggleColumn('telephone')}
+                    />
+                    <label htmlFor="col-tel" className="text-sm cursor-pointer">Téléphone</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-email"
+                      checked={visibleColumns.email}
+                      onCheckedChange={() => toggleColumn('email')}
+                    />
+                    <label htmlFor="col-email" className="text-sm cursor-pointer">Email</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-adresse"
+                      checked={visibleColumns.adresse}
+                      onCheckedChange={() => toggleColumn('adresse')}
+                    />
+                    <label htmlFor="col-adresse" className="text-sm cursor-pointer">Adresse</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-created"
+                      checked={visibleColumns.createdAt}
+                      onCheckedChange={() => toggleColumn('createdAt')}
+                    />
+                    <label htmlFor="col-created" className="text-sm cursor-pointer">Créé le</label>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" size="sm">
             <Filter className="w-4 h-4 mr-2" />
             FILTRER
@@ -589,12 +665,12 @@ export default function Clients() {
                     </th>
                     <th className="pb-3 font-medium">Actions</th>
                     <th className="pb-3 font-medium">Nom / Entreprise</th>
-                    <th className="pb-3 font-medium">Type</th>
-                    <th className="pb-3 font-medium">CIN / Permis</th>
-                    <th className="pb-3 font-medium">Téléphone</th>
-                    <th className="pb-3 font-medium">Email</th>
-                    <th className="pb-3 font-medium">Adresse</th>
-                    <th className="pb-3 font-medium">Créé le</th>
+                    {visibleColumns.type && <th className="pb-3 font-medium">Type</th>}
+                    {visibleColumns.cinPermis && <th className="pb-3 font-medium">CIN / Permis</th>}
+                    {visibleColumns.telephone && <th className="pb-3 font-medium">Téléphone</th>}
+                    {visibleColumns.email && <th className="pb-3 font-medium">Email</th>}
+                    {visibleColumns.adresse && <th className="pb-3 font-medium">Adresse</th>}
+                    {visibleColumns.createdAt && <th className="pb-3 font-medium">Créé le</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -641,39 +717,51 @@ export default function Clients() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-4">
-                        <Badge variant="outline" className={client.type === 'particulier' ? 'bg-primary/10 text-primary border-0' : 'bg-secondary/10 text-secondary border-0'}>
-                          {client.type === 'particulier' ? 'Particulier' : 'Entreprise'}
-                        </Badge>
-                      </td>
-                      <td className="py-4 text-foreground text-sm">
-                        {client.cin && <div>CIN: {client.cin}</div>}
-                        {client.permis_conduire && <div>Permis: {client.permis_conduire}</div>}
-                      </td>
-                      <td className="py-4">
-                        <div className="flex items-center gap-2 text-foreground">
-                          <Phone className="w-4 h-4 text-muted-foreground" />
-                          <span>{client.telephone}</span>
-                        </div>
-                      </td>
-                      <td className="py-4">
-                        {client.email && (
+                      {visibleColumns.type && (
+                        <td className="py-4">
+                          <Badge variant="outline" className={client.type === 'particulier' ? 'bg-primary/10 text-primary border-0' : 'bg-secondary/10 text-secondary border-0'}>
+                            {client.type === 'particulier' ? 'Particulier' : 'Entreprise'}
+                          </Badge>
+                        </td>
+                      )}
+                      {visibleColumns.cinPermis && (
+                        <td className="py-4 text-foreground text-sm">
+                          {client.cin && <div>CIN: {client.cin}</div>}
+                          {client.permis_conduire && <div>Permis: {client.permis_conduire}</div>}
+                        </td>
+                      )}
+                      {visibleColumns.telephone && (
+                        <td className="py-4">
                           <div className="flex items-center gap-2 text-foreground">
-                            <Mail className="w-4 h-4 text-muted-foreground" />
-                            <span>{client.email}</span>
+                            <Phone className="w-4 h-4 text-muted-foreground" />
+                            <span>{client.telephone}</span>
                           </div>
-                        )}
-                      </td>
-                      <td className="py-4 text-foreground">{client.adresse || '-'}</td>
-                      <td className="py-4 text-foreground text-sm">
-                        {new Date(client.created_at).toLocaleString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </td>
+                        </td>
+                      )}
+                      {visibleColumns.email && (
+                        <td className="py-4">
+                          {client.email && (
+                            <div className="flex items-center gap-2 text-foreground">
+                              <Mail className="w-4 h-4 text-muted-foreground" />
+                              <span>{client.email}</span>
+                            </div>
+                          )}
+                        </td>
+                      )}
+                      {visibleColumns.adresse && (
+                        <td className="py-4 text-foreground">{client.adresse || '-'}</td>
+                      )}
+                      {visibleColumns.createdAt && (
+                        <td className="py-4 text-foreground text-sm">
+                          {new Date(client.created_at).toLocaleString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
