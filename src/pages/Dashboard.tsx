@@ -442,17 +442,51 @@ export default function Dashboard() {
               <div className="flex items-center justify-center mb-6">
                 <div className="relative w-48 h-48">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="#e5e7eb" strokeWidth="8" fill="none" />
-                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--success))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={251.2 - 251.2 * stats.availableVehicles / stats.vehiclesCount} />
-                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--primary))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles) / stats.vehiclesCount} />
+                    {/* Background circle */}
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
+                    
+                    {/* Available vehicles (green) */}
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="40" 
+                      stroke="hsl(var(--success))" 
+                      strokeWidth="8" 
+                      fill="none" 
+                      strokeDasharray="251.2" 
+                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * stats.availableVehicles / stats.vehiclesCount) : 251.2} 
+                    />
+                    
+                    {/* Rented vehicles (primary) */}
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="40" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth="8" 
+                      fill="none" 
+                      strokeDasharray="251.2" 
+                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles) / stats.vehiclesCount) : 251.2} 
+                    />
+                    
+                    {/* Maintenance vehicles (warning) */}
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="40" 
+                      stroke="hsl(var(--warning))" 
+                      strokeWidth="8" 
+                      fill="none" 
+                      strokeDasharray="251.2" 
+                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles) / stats.vehiclesCount) : 251.2} 
+                    />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">
-                        {stats.availableVehicles.toString().padStart(2, '0')} véhicules
+                      <p className="text-3xl font-bold text-foreground">
+                        {stats.vehiclesCount.toString().padStart(2, '0')}
                       </p>
-                      <p className="text-xl font-bold text-success">Disponibles</p>
-                      <p className="text-xs text-muted-foreground">{availablePercentage}%</p>
+                      <p className="text-sm text-muted-foreground">Véhicules</p>
                     </div>
                   </div>
                 </div>
@@ -464,14 +498,27 @@ export default function Dashboard() {
                     <span className="w-3 h-3 rounded-full bg-success"></span>
                     <span className="text-sm text-foreground">Disponibles</span>
                   </div>
-                  <span className="text-sm font-medium text-foreground">{stats.availableVehicles}</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {stats.availableVehicles} ({stats.vehiclesCount > 0 ? ((stats.availableVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="w-3 h-3 rounded-full bg-primary"></span>
                     <span className="text-sm text-foreground">En circulation</span>
                   </div>
-                  <span className="text-sm font-medium text-foreground">{stats.rentedVehicles}</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {stats.rentedVehicles} ({stats.vehiclesCount > 0 ? ((stats.rentedVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-3 h-3 rounded-full bg-warning"></span>
+                    <span className="text-sm text-foreground">Maintenance</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {stats.maintenanceVehicles} ({stats.vehiclesCount > 0 ? ((stats.maintenanceVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                  </span>
                 </div>
               </div>
             </CardContent>
