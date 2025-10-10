@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, Edit, Calendar, TrendingUp, TrendingDown, AlertCircle, FileText, Settings, Eye, Gauge, Wrench } from "lucide-react";
+import { ChevronRight, Edit, Calendar, TrendingUp, TrendingDown, AlertCircle, FileText, Settings, Eye, Gauge, Wrench, Shield, ClipboardCheck, FileCheck, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -216,7 +216,7 @@ export default function VehiculeDetails() {
     
     // Check if there are any insurance records
     if (insurances.length === 0) {
-      alerts.push({ message: "Véhicule sans assurance ajoutée.", action: "CRÉER ASSURANCE", link: "/vehicules" });
+      alerts.push({ message: "Véhicule sans assurance ajoutée.", action: "CRÉER ASSURANCE", link: "/vehicules", severity: "high" });
     } else if (vehicle?.assurance_expire_le) {
       const expirationDate = new Date(vehicle.assurance_expire_le);
       expirationDate.setHours(0, 0, 0, 0);
@@ -225,15 +225,15 @@ export default function VehiculeDetails() {
       const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       
       if (expirationDate < today) {
-        alerts.push({ message: "Assurance expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules" });
+        alerts.push({ message: "Assurance expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
       } else if (daysUntilExpiration <= 30) {
-        alerts.push({ message: `Assurance expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules" });
+        alerts.push({ message: `Assurance expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
       }
     }
 
     // Check if there are any technical inspection records
     if (technicalInspections.length === 0) {
-      alerts.push({ message: "Véhicule sans visite technique ajoutée.", action: "CRÉER VISITE", link: "/vehicules" });
+      alerts.push({ message: "Véhicule sans visite technique ajoutée.", action: "CRÉER VISITE", link: "/vehicules", severity: "high" });
     } else if (vehicle?.visite_technique_expire_le) {
       const expirationDate = new Date(vehicle.visite_technique_expire_le);
       expirationDate.setHours(0, 0, 0, 0);
@@ -241,15 +241,15 @@ export default function VehiculeDetails() {
       const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       
       if (expirationDate < today) {
-        alerts.push({ message: "Visite technique expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules" });
+        alerts.push({ message: "Visite technique expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
       } else if (daysUntilExpiration <= 30) {
-        alerts.push({ message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules" });
+        alerts.push({ message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
       }
     }
 
     // Check if there are any vignette records
     if (vignettes.length === 0) {
-      alerts.push({ message: "Véhicule sans vignette ajoutée.", action: "CRÉER VIGNETTE", link: "/vehicules" });
+      alerts.push({ message: "Véhicule sans vignette ajoutée.", action: "CRÉER VIGNETTE", link: "/vehicules", severity: "high" });
     } else if (vehicle?.vignette_expire_le) {
       const expirationDate = new Date(vehicle.vignette_expire_le);
       expirationDate.setHours(0, 0, 0, 0);
@@ -257,9 +257,9 @@ export default function VehiculeDetails() {
       const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       
       if (expirationDate < today) {
-        alerts.push({ message: "Vignette expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules" });
+        alerts.push({ message: "Vignette expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
       } else if (daysUntilExpiration <= 30) {
-        alerts.push({ message: `Vignette expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules" });
+        alerts.push({ message: `Vignette expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
       }
     }
 
@@ -269,17 +269,46 @@ export default function VehiculeDetails() {
       alerts.push({ 
         message: `Vidange urgente ! ${kmDepuis.toLocaleString()} km depuis la dernière vidange.`, 
         action: "EFFECTUER VIDANGE", 
-        link: `/vehicules/${vehicle.id}` 
+        link: `/vehicules/${vehicle.id}`,
+        severity: "critical"
       });
     } else if (kmDepuis > 8000) {
       alerts.push({ 
         message: `Vidange à prévoir - ${kmDepuis.toLocaleString()} km depuis la dernière vidange.`, 
         action: "PLANIFIER", 
-        link: `/vehicules/${vehicle.id}` 
+        link: `/vehicules/${vehicle.id}`,
+        severity: "warning"
       });
     }
 
     return alerts;
+  };
+
+  const getDocumentStatus = (expirationDate: string | null, hasRecords: boolean) => {
+    if (!hasRecords) {
+      return { status: 'missing', label: 'Non renseigné', color: 'bg-gray-100 text-gray-800 border-gray-300' };
+    }
+    
+    if (!expirationDate) {
+      return { status: 'valid', label: 'Valide', color: 'bg-green-100 text-green-800 border-green-300' };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const expDate = new Date(expirationDate);
+    expDate.setHours(0, 0, 0, 0);
+    
+    const daysUntilExpiration = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (expDate < today) {
+      return { status: 'expired', label: 'Expiré', color: 'bg-red-100 text-red-800 border-red-300' };
+    } else if (daysUntilExpiration <= 7) {
+      return { status: 'urgent', label: `${daysUntilExpiration}j restants`, color: 'bg-red-100 text-red-800 border-red-300' };
+    } else if (daysUntilExpiration <= 30) {
+      return { status: 'warning', label: `${daysUntilExpiration}j restants`, color: 'bg-orange-100 text-orange-800 border-orange-300' };
+    } else {
+      return { status: 'valid', label: format(expDate, 'dd/MM/yyyy', { locale: fr }), color: 'bg-green-100 text-green-800 border-green-300' };
+    }
   };
 
   if (loading) {
@@ -504,9 +533,24 @@ export default function VehiculeDetails() {
           </CardHeader>
           <CardContent className="space-y-2">
             {alerts.map((alert, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-background border border-orange-200 rounded">
-                <span className="text-xs md:text-sm">{alert.message}</span>
-                <Button variant="link" className="text-orange-600 text-xs h-auto p-0 self-start sm:self-center whitespace-nowrap">
+              <div key={index} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 border rounded ${
+                alert.severity === 'critical' ? 'bg-red-50 border-red-200 dark:bg-red-950/20' :
+                alert.severity === 'high' ? 'bg-orange-50 border-orange-200 dark:bg-orange-950/20' :
+                'bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20'
+              }`}>
+                <span className="text-xs md:text-sm flex items-center gap-2">
+                  <AlertCircle className={`w-4 h-4 ${
+                    alert.severity === 'critical' ? 'text-red-600' :
+                    alert.severity === 'high' ? 'text-orange-600' :
+                    'text-yellow-600'
+                  }`} />
+                  {alert.message}
+                </span>
+                <Button variant="link" className={`text-xs h-auto p-0 self-start sm:self-center whitespace-nowrap ${
+                  alert.severity === 'critical' ? 'text-red-600' :
+                  alert.severity === 'high' ? 'text-orange-600' :
+                  'text-yellow-600'
+                }`}>
                   {alert.action}
                 </Button>
               </div>
@@ -514,6 +558,97 @@ export default function VehiculeDetails() {
           </CardContent>
         </Card>
       )}
+
+      {/* Documents Overview */}
+      <Card className="mb-4 md:mb-6">
+        <CardHeader>
+          <CardTitle className="text-base md:text-lg flex items-center gap-2">
+            <FileCheck className="w-5 h-5" />
+            Documents du véhicule
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Assurance */}
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-950 rounded-lg">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Assurance</p>
+                  {vehicle.assurance_expire_le && (
+                    <p className="text-xs text-muted-foreground">
+                      Expire le {format(new Date(vehicle.assurance_expire_le), 'dd/MM/yyyy', { locale: fr })}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Badge className={`${getDocumentStatus(vehicle.assurance_expire_le, insurances.length > 0).color} border`}>
+                {getDocumentStatus(vehicle.assurance_expire_le, insurances.length > 0).label}
+              </Badge>
+            </div>
+
+            {/* Visite Technique */}
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 dark:bg-green-950 rounded-lg">
+                  <ClipboardCheck className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Visite Technique</p>
+                  {vehicle.visite_technique_expire_le && (
+                    <p className="text-xs text-muted-foreground">
+                      Expire le {format(new Date(vehicle.visite_technique_expire_le), 'dd/MM/yyyy', { locale: fr })}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Badge className={`${getDocumentStatus(vehicle.visite_technique_expire_le, technicalInspections.length > 0).color} border`}>
+                {getDocumentStatus(vehicle.visite_technique_expire_le, technicalInspections.length > 0).label}
+              </Badge>
+            </div>
+
+            {/* Vignette */}
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 dark:bg-purple-950 rounded-lg">
+                  <CreditCard className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Vignette</p>
+                  {vehicle.vignette_expire_le && (
+                    <p className="text-xs text-muted-foreground">
+                      Expire le {format(new Date(vehicle.vignette_expire_le), 'dd/MM/yyyy', { locale: fr })}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <Badge className={`${getDocumentStatus(vehicle.vignette_expire_le, vignettes.length > 0).color} border`}>
+                {getDocumentStatus(vehicle.vignette_expire_le, vignettes.length > 0).label}
+              </Badge>
+            </div>
+
+            {/* Carte Grise */}
+            <div className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 dark:bg-orange-950 rounded-lg">
+                  <FileText className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Carte Grise</p>
+                  <p className="text-xs text-muted-foreground">
+                    Immatriculation: {vehicle.immatriculation}
+                  </p>
+                </div>
+              </div>
+              <Badge className="bg-green-100 text-green-800 border border-green-300">
+                Valide
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Content */}
       <Card>
