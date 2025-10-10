@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, Download, Eye, Edit, Trash2, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePermissions } from "@/hooks/use-permissions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ type Assistance = Database['public']['Tables']['assistance']['Row'];
 
 export default function Assistance() {
   const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -326,13 +328,15 @@ export default function Assistance() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button 
-            size="sm"
-            onClick={() => navigate('/assistance/nouveau')}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nouveau dossier
-          </Button>
+          {hasPermission('assistance.create') && (
+            <Button 
+              size="sm"
+              onClick={() => navigate('/assistance/nouveau')}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau dossier
+            </Button>
+          )}
         </div>
       </div>
 
@@ -417,18 +421,20 @@ export default function Assistance() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(assistance.id);
-                            }}
-                            className="hover:bg-accent transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {hasPermission('assistance.delete') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(assistance.id);
+                              }}
+                              className="hover:bg-accent transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                       {visibleColumns.numeroDossier && (
