@@ -75,7 +75,6 @@ const mainNavItems: NavItem[] = [
       { title: "Ajouter véhicule", href: "/vehicules/nouveau", icon: Plus },
     ]
   },
-  { title: "Catégories", href: "/categories", icon: Grid3x3 },
   { 
     title: "Clients", 
     icon: Users,
@@ -85,7 +84,6 @@ const mainNavItems: NavItem[] = [
     ]
   },
   { title: "Chèques", href: "/cheques", icon: CreditCard },
-  { title: "Longue durée", href: "/longue-duree", icon: Clock },
   { title: "Revenus", href: "/revenus", icon: TrendingUp },
   { title: "Charges", href: "/charges", icon: DollarSign },
   { title: "Statistiques", href: "/statistiques", icon: BarChart },
