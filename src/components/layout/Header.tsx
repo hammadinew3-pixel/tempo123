@@ -11,10 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import logoCrsapp from "@/assets/logo-crsapp.png";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-10">
@@ -26,7 +28,12 @@ export const Header = () => {
           </div>
         </div>
         <div className="flex items-center space-x-1 md:space-x-2">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative h-8 w-8 md:h-10 md:w-10">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-muted-foreground hover:text-foreground relative h-8 w-8 md:h-10 md:w-10"
+            onClick={() => navigate("/alertes")}
+          >
             <Bell className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
           <DropdownMenu>

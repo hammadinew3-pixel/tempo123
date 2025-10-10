@@ -26,6 +26,7 @@ import Statistiques from "./pages/Statistiques";
 import Revenus from "./pages/Revenus";
 import Charges from "./pages/Charges";
 import Cheques from "./pages/Cheques";
+import Alertes from "./pages/Alertes";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -227,6 +228,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Cheques /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/alertes"
+              element={
+                <ProtectedRoute>
+                  <Layout><Alertes /></Layout>
                 </ProtectedRoute>
               }
             />
