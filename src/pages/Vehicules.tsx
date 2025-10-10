@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Search, Filter, Download, Plus, Edit, Trash2, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -24,6 +25,12 @@ export default function Vehicules() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location' | 'disponible' | 'loue' | 'reserve' | 'en_panne'>('tous');
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    marque: '',
+    categorie: '',
+    assurance: 'tous' as 'tous' | 'expiree' | 'proche' | 'valide'
+  });
   const { toast } = useToast();
 
   // Form state
@@ -247,14 +254,47 @@ export default function Vehicules() {
   };
 
   const filteredVehicles = vehicles.filter((vehicle) => {
-    if (filter === 'hors_service') return vehicle.en_service === false;
-    if (filter === 'sous_location') return vehicle.sous_location === true;
-    if (filter === 'disponible') return vehicle.statut === 'disponible';
-    if (filter === 'loue') return vehicle.statut === 'loue';
-    if (filter === 'reserve') return vehicle.statut === 'reserve';
-    if (filter === 'en_panne') return vehicle.statut === 'en_panne';
-    return true; // 'tous'
+    // Filtres de statut
+    if (filter === 'hors_service' && vehicle.en_service !== false) return false;
+    if (filter === 'sous_location' && vehicle.sous_location !== true) return false;
+    if (filter === 'disponible' && vehicle.statut !== 'disponible') return false;
+    if (filter === 'loue' && vehicle.statut !== 'loue') return false;
+    if (filter === 'reserve' && vehicle.statut !== 'reserve') return false;
+    if (filter === 'en_panne' && vehicle.statut !== 'en_panne') return false;
+    
+    // Filtres avancés
+    if (advancedFilters.marque && vehicle.marque !== advancedFilters.marque) return false;
+    if (advancedFilters.categorie && vehicle.categorie !== advancedFilters.categorie) return false;
+    
+    // Filtre d'assurance
+    if (advancedFilters.assurance !== 'tous') {
+      if (!vehicle.assurance_expire_le) return false;
+      
+      const today = new Date();
+      const expiryDate = new Date(vehicle.assurance_expire_le);
+      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (advancedFilters.assurance === 'expiree' && daysUntilExpiry >= 0) return false;
+      if (advancedFilters.assurance === 'proche' && (daysUntilExpiry < 0 || daysUntilExpiry > 30)) return false;
+      if (advancedFilters.assurance === 'valide' && daysUntilExpiry < 30) return false;
+    }
+    
+    return true;
   });
+
+  // Extraire les valeurs uniques pour les filtres
+  const uniqueMarques = Array.from(new Set(vehicles.map(v => v.marque).filter(Boolean))).sort();
+  const uniqueCategories = Array.from(new Set(vehicles.map(v => v.categorie).filter(Boolean))).sort();
+
+  const resetAdvancedFilters = () => {
+    setAdvancedFilters({
+      marque: '',
+      categorie: '',
+      assurance: 'tous'
+    });
+  };
+
+  const hasActiveFilters = advancedFilters.marque || advancedFilters.categorie || advancedFilters.assurance !== 'tous';
 
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
   const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
@@ -271,11 +311,103 @@ export default function Vehicules() {
           <p className="text-xs md:text-sm text-muted-foreground">Gérez votre flotte de véhicules</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm">
-            <Filter className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">FILTRER</span>
-            <span className="sm:hidden">Filtrer</span>
-          </Button>
+          <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm relative">
+                <Filter className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">FILTRER</span>
+                <span className="sm:hidden">Filtrer</span>
+                {hasActiveFilters && (
+                  <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center" variant="destructive">
+                    !
+                  </Badge>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Filtres avancés</SheetTitle>
+                <SheetDescription>
+                  Affinez votre recherche de véhicules
+                </SheetDescription>
+              </SheetHeader>
+              <div className="space-y-6 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="filter-marque">Marque</Label>
+                  <Select
+                    value={advancedFilters.marque}
+                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, marque: value })}
+                  >
+                    <SelectTrigger id="filter-marque">
+                      <SelectValue placeholder="Toutes les marques" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Toutes les marques</SelectItem>
+                      {uniqueMarques.map((marque) => (
+                        <SelectItem key={marque} value={marque}>
+                          {marque}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="filter-categorie">Catégorie</Label>
+                  <Select
+                    value={advancedFilters.categorie}
+                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, categorie: value })}
+                  >
+                    <SelectTrigger id="filter-categorie">
+                      <SelectValue placeholder="Toutes les catégories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Toutes les catégories</SelectItem>
+                      {uniqueCategories.map((categorie) => (
+                        <SelectItem key={categorie} value={categorie}>
+                          {categorie}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="filter-assurance">Statut d'assurance</Label>
+                  <Select
+                    value={advancedFilters.assurance}
+                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, assurance: value as any })}
+                  >
+                    <SelectTrigger id="filter-assurance">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tous">Tous les statuts</SelectItem>
+                      <SelectItem value="valide">Assurance valide (&gt; 30 jours)</SelectItem>
+                      <SelectItem value="proche">Expire bientôt (≤ 30 jours)</SelectItem>
+                      <SelectItem value="expiree">Expirée</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={resetAdvancedFilters}
+                  >
+                    Réinitialiser
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => setFilterSheetOpen(false)}
+                  >
+                    Appliquer
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
           <Button variant="outline" size="sm" className="flex-1 sm:flex-none text-xs md:text-sm">
             <Download className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">IMPORTER</span>
