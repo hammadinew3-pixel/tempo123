@@ -13,6 +13,7 @@ import Vehicules from "./pages/Vehicules";
 import VehiculeDetails from "./pages/vehicles/Details";
 import NouveauVehicule from "./pages/vehicles/Nouveau";
 import ModifierVehicule from "./pages/vehicles/Modifier";
+import ModifierVehiculeSimple from "./pages/vehicles/ModifierSimple";
 import WorkflowWrapper from "./pages/vehicles/WorkflowWrapper";
 import Clients from "./pages/Clients";
 import ClientDetails from "./pages/clients/Details";
@@ -144,6 +145,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><ModifierVehicule /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vehicules/:id/modifier-simple"
+              element={
+                <ProtectedRoute>
+                  <Layout><ModifierVehiculeSimple /></Layout>
                 </ProtectedRoute>
               }
             />

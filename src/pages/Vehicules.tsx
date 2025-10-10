@@ -172,6 +172,15 @@ export default function Vehicules() {
     }
   };
   const handleDelete = async (id: string) => {
+    if (!hasPermission('vehicles.delete')) {
+      toast({
+        title: 'Accès refusé',
+        description: 'Vous n\'avez pas la permission de supprimer des véhicules',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) return;
     try {
       const {
@@ -192,6 +201,15 @@ export default function Vehicules() {
     }
   };
   const handleBulkDelete = async () => {
+    if (!hasPermission('vehicles.delete')) {
+      toast({
+        title: 'Accès refusé',
+        description: 'Vous n\'avez pas la permission de supprimer des véhicules',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (selectedIds.size === 0) return;
     if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.size} véhicule(s) ?`)) return;
     try {

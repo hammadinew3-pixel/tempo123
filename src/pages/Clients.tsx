@@ -152,6 +152,15 @@ export default function Clients() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!hasPermission('clients.delete')) {
+      toast({
+        title: 'Accès refusé',
+        description: 'Vous n\'avez pas la permission de supprimer des clients',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) return;
 
     try {
@@ -178,6 +187,15 @@ export default function Clients() {
   };
 
   const handleBulkDelete = async () => {
+    if (!hasPermission('clients.delete')) {
+      toast({
+        title: 'Accès refusé',
+        description: 'Vous n\'avez pas la permission de supprimer des clients',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (selectedIds.size === 0) return;
     
     if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedIds.size} client(s) ?`)) return;
