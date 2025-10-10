@@ -18,6 +18,8 @@ export default function NouveauSinistre() {
   const [clients, setClients] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [vehicleChanges, setVehicleChanges] = useState<any[]>([]);
+  const [autoFilledFromContract, setAutoFilledFromContract] = useState(false);
 
   const [formData, setFormData] = useState({
     type_sinistre: 'accident',
@@ -41,7 +43,7 @@ export default function NouveauSinistre() {
       const [vehiclesRes, clientsRes, contractsRes] = await Promise.all([
         supabase.from('vehicles').select('id, immatriculation, marque, modele').order('immatriculation'),
         supabase.from('clients').select('id, nom, prenom').order('nom'),
-        supabase.from('contracts').select('id, numero_contrat').order('created_at', { ascending: false }),
+        supabase.from('contracts').select('id, numero_contrat, client_id, vehicle_id, date_debut, date_fin').order('created_at', { ascending: false }),
       ]);
 
       if (vehiclesRes.data) setVehicles(vehiclesRes.data);
@@ -49,6 +51,71 @@ export default function NouveauSinistre() {
       if (contractsRes.data) setContracts(contractsRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
+    }
+  };
+
+  const loadVehicleChanges = async (contractId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_changes')
+        .select('*')
+        .eq('contract_id', contractId)
+        .order('change_date', { ascending: true });
+
+      if (error) throw error;
+      setVehicleChanges(data || []);
+    } catch (error) {
+      console.error('Error loading vehicle changes:', error);
+    }
+  };
+
+  const determineVehicleForDate = (contractId: string, sinistreDate: string) => {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) return '';
+
+    // Si pas de date de sinistre, utiliser le véhicule initial
+    if (!sinistreDate) return contract.vehicle_id;
+
+    // Trouver le véhicule actif à la date du sinistre
+    let activeVehicleId = contract.vehicle_id;
+    
+    for (const change of vehicleChanges) {
+      if (new Date(change.change_date) <= new Date(sinistreDate)) {
+        activeVehicleId = change.new_vehicle_id;
+      } else {
+        break;
+      }
+    }
+
+    return activeVehicleId;
+  };
+
+  const handleContractChange = async (contractId: string) => {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) return;
+
+    // Charger les changements de véhicule pour ce contrat
+    await loadVehicleChanges(contractId);
+
+    // Déterminer le véhicule en fonction de la date du sinistre
+    const vehicleId = determineVehicleForDate(contractId, formData.date_sinistre);
+
+    setFormData({
+      ...formData,
+      contract_id: contractId,
+      client_id: contract.client_id,
+      vehicle_id: vehicleId,
+    });
+    setAutoFilledFromContract(true);
+  };
+
+  const handleDateChange = (date: string) => {
+    setFormData({ ...formData, date_sinistre: date });
+
+    // Si un contrat est sélectionné, recalculer le véhicule
+    if (formData.contract_id && autoFilledFromContract) {
+      const vehicleId = determineVehicleForDate(formData.contract_id, date);
+      setFormData(prev => ({ ...prev, vehicle_id: vehicleId, date_sinistre: date }));
     }
   };
 
@@ -179,7 +246,7 @@ export default function NouveauSinistre() {
                   id="date"
                   type="date"
                   value={formData.date_sinistre}
-                  onChange={(e) => setFormData({ ...formData, date_sinistre: e.target.value })}
+                  onChange={(e) => handleDateChange(e.target.value)}
                   required
                 />
               </div>
@@ -252,48 +319,10 @@ export default function NouveauSinistre() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="vehicle">Véhicule</Label>
-              <Select
-                value={formData.vehicle_id}
-                onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}
-              >
-                <SelectTrigger id="vehicle">
-                  <SelectValue placeholder="Sélectionner un véhicule" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicles.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.marque} {v.modele} ({v.immatriculation})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
-              <Select
-                value={formData.client_id}
-                onValueChange={(v) => setFormData({ ...formData, client_id: v })}
-              >
-                <SelectTrigger id="client">
-                  <SelectValue placeholder="Sélectionner un client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.prenom} {c.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contract">Contrat</Label>
+              <Label htmlFor="contract">Contrat *</Label>
               <Select
                 value={formData.contract_id}
-                onValueChange={(v) => setFormData({ ...formData, contract_id: v })}
+                onValueChange={handleContractChange}
               >
                 <SelectTrigger id="contract">
                   <SelectValue placeholder="Sélectionner un contrat" />
@@ -306,6 +335,55 @@ export default function NouveauSinistre() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="client">Client</Label>
+              <Select
+                value={formData.client_id}
+                onValueChange={(v) => !autoFilledFromContract && setFormData({ ...formData, client_id: v })}
+                disabled={autoFilledFromContract}
+              >
+                <SelectTrigger id="client">
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.prenom} {c.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {autoFilledFromContract && (
+                <p className="text-xs text-muted-foreground">Renseigné automatiquement depuis le contrat</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="vehicle">Véhicule</Label>
+              <Select
+                value={formData.vehicle_id}
+                onValueChange={(v) => !autoFilledFromContract && setFormData({ ...formData, vehicle_id: v })}
+                disabled={autoFilledFromContract}
+              >
+                <SelectTrigger id="vehicle">
+                  <SelectValue placeholder="Sélectionner un véhicule" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vehicles.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.marque} {v.modele} ({v.immatriculation})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {autoFilledFromContract && (
+                <p className="text-xs text-muted-foreground">
+                  Véhicule déterminé selon la date du sinistre
+                  {vehicleChanges.length > 0 && ' (changements de véhicule détectés)'}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
