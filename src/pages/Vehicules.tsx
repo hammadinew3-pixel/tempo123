@@ -29,7 +29,7 @@ export default function Vehicules() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location' | 'disponible' | 'loue' | 'reserve' | 'en_panne'>('tous');
+  const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location' | 'disponible' | 'loue' | 'reserve' | 'en_panne' | 'immobilise'>('tous');
   const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({
     searchText: '',
@@ -233,13 +233,15 @@ export default function Vehicules() {
       disponible: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
       loue: 'bg-primary/10 text-primary border-primary/20',
       reserve: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
-      en_panne: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+      en_panne: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+      immobilise: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
     };
     const labels: Record<string, string> = {
       disponible: 'Libre',
       loue: 'En circulation',
       reserve: 'Réservé',
-      en_panne: 'En panne'
+      en_panne: 'En panne',
+      immobilise: 'Immobilisé'
     };
     return <Badge variant="outline" className={`${styles[status]} font-medium`}>
         {labels[status]}
@@ -278,6 +280,7 @@ export default function Vehicules() {
     if (filter === 'loue' && (vehicle.statut !== 'loue' || vehicle.en_service === false)) return false;
     if (filter === 'reserve' && (vehicle.statut !== 'reserve' || vehicle.en_service === false)) return false;
     if (filter === 'en_panne' && (vehicle.statut !== 'en_panne' || vehicle.en_service === false)) return false;
+    if (filter === 'immobilise' && (vehicle.statut !== 'immobilise' || vehicle.en_service === false)) return false;
 
     // Recherche par mot-clé
     if (advancedFilters.searchText) {
@@ -378,7 +381,8 @@ export default function Vehicules() {
       'Statut': v.en_service === false ? 'Hors service' : 
                 v.statut === 'disponible' ? 'Disponible' :
                 v.statut === 'loue' ? 'En location' :
-                v.statut === 'reserve' ? 'Réservé' : 'En panne',
+                v.statut === 'reserve' ? 'Réservé' :
+                v.statut === 'immobilise' ? 'Immobilisé' : 'En panne',
       'Tarif journalier (DH)': v.tarif_journalier,
       'Valeur achat (DH)': v.valeur_achat || 0,
       'Créé le': format(new Date(v.created_at), 'dd/MM/yyyy')
@@ -406,6 +410,7 @@ export default function Vehicules() {
   const countLoue = vehicles.filter(v => v.statut === 'loue' && v.en_service !== false).length;
   const countReserve = vehicles.filter(v => v.statut === 'reserve' && v.en_service !== false).length;
   const countEnPanne = vehicles.filter(v => v.statut === 'en_panne' && v.en_service !== false).length;
+  const countImmobilise = vehicles.filter(v => v.statut === 'immobilise' && v.en_service !== false).length;
   return <div className="space-y-4 md:space-y-6 p-3 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -688,6 +693,7 @@ export default function Vehicules() {
                         <SelectItem value="loue">Loué</SelectItem>
                         <SelectItem value="reserve">Réservé</SelectItem>
                         <SelectItem value="en_panne">En panne</SelectItem>
+                        <SelectItem value="immobilise">Immobilisé</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -762,6 +768,9 @@ export default function Vehicules() {
               </button>
               <button onClick={() => setFilter('en_panne')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'en_panne' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
                 EN PANNE ({countEnPanne})
+              </button>
+              <button onClick={() => setFilter('immobilise')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'immobilise' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
+                IMMOBILISÉ ({countImmobilise})
               </button>
               <button onClick={() => setFilter('hors_service')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'hors_service' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
                 HORS SERVICE ({countHorsService})
