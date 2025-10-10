@@ -28,9 +28,16 @@ export default function Vehicules() {
   const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location' | 'disponible' | 'loue' | 'reserve' | 'en_panne'>('tous');
   const [filterPopoverOpen, setFilterPopoverOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({
-    marque: 'all',
-    categorie: 'all',
-    assurance_id: 'all'
+    searchText: '',
+    marques: [] as string[],
+    categories: [] as string[],
+    assurances: [] as string[],
+    kmMin: '',
+    kmMax: '',
+    prixMin: '',
+    prixMax: '',
+    dateMin: '',
+    dateMax: ''
   });
   const { toast } = useToast();
 
@@ -285,22 +292,55 @@ export default function Vehicules() {
     if (filter === 'reserve' && vehicle.statut !== 'reserve') return false;
     if (filter === 'en_panne' && vehicle.statut !== 'en_panne') return false;
     
-    // Filtres avancés
-    if (advancedFilters.marque && advancedFilters.marque !== 'all' && vehicle.marque !== advancedFilters.marque) return false;
-    if (advancedFilters.categorie && advancedFilters.categorie !== 'all' && vehicle.categorie !== advancedFilters.categorie) return false;
+    // Recherche par mot-clé
+    if (advancedFilters.searchText) {
+      const searchLower = advancedFilters.searchText.toLowerCase();
+      const matchesSearch = 
+        vehicle.immatriculation?.toLowerCase().includes(searchLower) ||
+        vehicle.marque?.toLowerCase().includes(searchLower) ||
+        vehicle.modele?.toLowerCase().includes(searchLower) ||
+        vehicle.categorie?.toLowerCase().includes(searchLower);
+      if (!matchesSearch) return false;
+    }
     
-    // Filtre d'assurance par assureur
-    if (advancedFilters.assurance_id && advancedFilters.assurance_id !== 'all') {
+    // Filtres marques
+    if (advancedFilters.marques.length > 0 && !advancedFilters.marques.includes(vehicle.marque)) return false;
+    
+    // Filtres catégories
+    if (advancedFilters.categories.length > 0 && vehicle.categorie && !advancedFilters.categories.includes(vehicle.categorie)) return false;
+    
+    // Filtre d'assurance
+    if (advancedFilters.assurances.length > 0) {
       const vehicleInsurance = (vehicle as any).vehicle_insurance;
       if (!vehicleInsurance || vehicleInsurance.length === 0) return false;
       
-      const assuranceMatch = assurances.find(a => a.id === advancedFilters.assurance_id);
-      if (!assuranceMatch) return false;
-      
-      const hasMatchingInsurance = vehicleInsurance.some((ins: any) => 
-        ins.assureur === assuranceMatch.nom
-      );
+      const hasMatchingInsurance = advancedFilters.assurances.some(assuranceId => {
+        const assuranceMatch = assurances.find(a => a.id === assuranceId);
+        if (!assuranceMatch) return false;
+        return vehicleInsurance.some((ins: any) => ins.assureur === assuranceMatch.nom);
+      });
       if (!hasMatchingInsurance) return false;
+    }
+    
+    // Filtre kilométrage
+    if (advancedFilters.kmMin && vehicle.kilometrage < parseInt(advancedFilters.kmMin)) return false;
+    if (advancedFilters.kmMax && vehicle.kilometrage > parseInt(advancedFilters.kmMax)) return false;
+    
+    // Filtre prix journalier
+    if (advancedFilters.prixMin && vehicle.tarif_journalier < parseFloat(advancedFilters.prixMin)) return false;
+    if (advancedFilters.prixMax && vehicle.tarif_journalier > parseFloat(advancedFilters.prixMax)) return false;
+    
+    // Filtre date d'ajout
+    if (advancedFilters.dateMin) {
+      const vehicleDate = new Date(vehicle.created_at);
+      const minDate = new Date(advancedFilters.dateMin);
+      if (vehicleDate < minDate) return false;
+    }
+    if (advancedFilters.dateMax) {
+      const vehicleDate = new Date(vehicle.created_at);
+      const maxDate = new Date(advancedFilters.dateMax);
+      maxDate.setHours(23, 59, 59, 999);
+      if (vehicleDate > maxDate) return false;
     }
     
     return true;
@@ -312,13 +352,57 @@ export default function Vehicules() {
 
   const resetAdvancedFilters = () => {
     setAdvancedFilters({
-      marque: 'all',
-      categorie: 'all',
-      assurance_id: 'all'
+      searchText: '',
+      marques: [],
+      categories: [],
+      assurances: [],
+      kmMin: '',
+      kmMax: '',
+      prixMin: '',
+      prixMax: '',
+      dateMin: '',
+      dateMax: ''
     });
   };
 
-  const hasActiveFilters = advancedFilters.marque !== 'all' || advancedFilters.categorie !== 'all' || advancedFilters.assurance_id !== 'all';
+  const hasActiveFilters = 
+    advancedFilters.searchText ||
+    advancedFilters.marques.length > 0 || 
+    advancedFilters.categories.length > 0 || 
+    advancedFilters.assurances.length > 0 ||
+    advancedFilters.kmMin ||
+    advancedFilters.kmMax ||
+    advancedFilters.prixMin ||
+    advancedFilters.prixMax ||
+    advancedFilters.dateMin ||
+    advancedFilters.dateMax;
+
+  const toggleMarque = (marque: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      marques: prev.marques.includes(marque)
+        ? prev.marques.filter(m => m !== marque)
+        : [...prev.marques, marque]
+    }));
+  };
+
+  const toggleCategorie = (categorie: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      categories: prev.categories.includes(categorie)
+        ? prev.categories.filter(c => c !== categorie)
+        : [...prev.categories, categorie]
+    }));
+  };
+
+  const toggleAssurance = (assuranceId: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      assurances: prev.assurances.includes(assuranceId)
+        ? prev.assurances.filter(a => a !== assuranceId)
+        : [...prev.assurances, assuranceId]
+    }));
+  };
 
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
   const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
@@ -348,90 +432,207 @@ export default function Vehicules() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 bg-background" align="start">
+            <PopoverContent className="w-[600px] max-w-[90vw] bg-background p-6" align="start">
               <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-sm mb-3">Filtres avancés</h4>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Affinez votre recherche de véhicules
-                  </p>
-                </div>
-
+                <h3 className="text-lg font-semibold">Filtrer les véhicules</h3>
+                
+                {/* Recherche par mot-clé */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-marque" className="text-xs">Marque</Label>
-                  <Select
-                    value={advancedFilters.marque}
-                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, marque: value })}
-                  >
-                    <SelectTrigger id="filter-marque" className="h-9">
-                      <SelectValue placeholder="Toutes les marques" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">Toutes les marques</SelectItem>
-                      {uniqueMarques.map((marque) => (
-                        <SelectItem key={marque} value={marque}>
-                          {marque}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm text-primary">Recherche par un Mot-clé</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Matricule, Marque, Modèle, Catégorie, ..."
+                      value={advancedFilters.searchText}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, searchText: e.target.value })}
+                      className="pl-10 h-12 border-primary"
+                    />
+                  </div>
                 </div>
 
+                {/* Marques - Multi-select avec checkboxes */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-categorie" className="text-xs">Catégorie</Label>
-                  <Select
-                    value={advancedFilters.categorie}
-                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, categorie: value })}
-                  >
-                    <SelectTrigger id="filter-categorie" className="h-9">
-                      <SelectValue placeholder="Toutes les catégories" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">Toutes les catégories</SelectItem>
-                      {uniqueCategories.map((categorie) => (
-                        <SelectItem key={categorie} value={categorie}>
-                          {categorie}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between h-12 font-normal">
+                        <span className={advancedFilters.marques.length === 0 ? "text-muted-foreground" : ""}>
+                          {advancedFilters.marques.length === 0 
+                            ? "Sélectionnez une ou plusieurs marque" 
+                            : `${advancedFilters.marques.length} marque(s) sélectionnée(s)`}
+                        </span>
+                        <Filter className="w-4 h-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-3 bg-background z-50">
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {uniqueMarques.map((marque) => (
+                          <div key={marque} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`marque-${marque}`}
+                              checked={advancedFilters.marques.includes(marque)}
+                              onCheckedChange={() => toggleMarque(marque)}
+                            />
+                            <label htmlFor={`marque-${marque}`} className="text-sm cursor-pointer flex-1">
+                              {marque}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
+                {/* Catégories - Multi-select avec checkboxes */}
                 <div className="space-y-2">
-                  <Label htmlFor="filter-assurance" className="text-xs">Assurance</Label>
-                  <Select
-                    value={advancedFilters.assurance_id}
-                    onValueChange={(value) => setAdvancedFilters({ ...advancedFilters, assurance_id: value })}
-                  >
-                    <SelectTrigger id="filter-assurance" className="h-9">
-                      <SelectValue placeholder="Toutes les assurances" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="all">Toutes les assurances</SelectItem>
-                      {assurances.map((assurance) => (
-                        <SelectItem key={assurance.id} value={assurance.id}>
-                          {assurance.nom}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between h-12 font-normal">
+                        <span className={advancedFilters.categories.length === 0 ? "text-muted-foreground" : ""}>
+                          {advancedFilters.categories.length === 0 
+                            ? "Sélectionnez une ou plusieurs catégorie" 
+                            : `${advancedFilters.categories.length} catégorie(s) sélectionnée(s)`}
+                        </span>
+                        <Filter className="w-4 h-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-3 bg-background z-50">
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {uniqueCategories.map((categorie) => (
+                          <div key={categorie} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`categorie-${categorie}`}
+                              checked={advancedFilters.categories.includes(categorie)}
+                              onCheckedChange={() => toggleCategorie(categorie)}
+                            />
+                            <label htmlFor={`categorie-${categorie}`} className="text-sm cursor-pointer flex-1">
+                              {categorie}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                {/* Assurances - Multi-select avec checkboxes */}
+                <div className="space-y-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between h-12 font-normal">
+                        <span className={advancedFilters.assurances.length === 0 ? "text-muted-foreground" : ""}>
+                          {advancedFilters.assurances.length === 0 
+                            ? "Sélectionnez une ou plusieurs assurance" 
+                            : `${advancedFilters.assurances.length} assurance(s) sélectionnée(s)`}
+                        </span>
+                        <Filter className="w-4 h-4 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-3 bg-background z-50">
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {assurances.map((assurance) => (
+                          <div key={assurance.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`assurance-${assurance.id}`}
+                              checked={advancedFilters.assurances.includes(assurance.id)}
+                              onCheckedChange={() => toggleAssurance(assurance.id)}
+                            />
+                            <label htmlFor={`assurance-${assurance.id}`} className="text-sm cursor-pointer flex-1">
+                              {assurance.nom}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Kilométrage */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      placeholder="Kilométrage plus de"
+                      value={advancedFilters.kmMin}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, kmMin: e.target.value })}
+                      className="h-12"
+                    />
+                    <span className="text-xs text-muted-foreground ml-2">KM</span>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      placeholder="Kilométrage moins de"
+                      value={advancedFilters.kmMax}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, kmMax: e.target.value })}
+                      className="h-12"
+                    />
+                    <span className="text-xs text-muted-foreground ml-2">KM</span>
+                  </div>
+                </div>
+
+                {/* Prix journalier */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      placeholder="Prix / Jrs plus de"
+                      value={advancedFilters.prixMin}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, prixMin: e.target.value })}
+                      className="h-12"
+                    />
+                    <span className="text-xs text-muted-foreground ml-2">DH</span>
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      placeholder="Prix/Jrs moins de"
+                      value={advancedFilters.prixMax}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, prixMax: e.target.value })}
+                      className="h-12"
+                    />
+                    <span className="text-xs text-muted-foreground ml-2">DH</span>
+                  </div>
+                </div>
+
+                {/* Dates d'ajout */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Input
+                      type="date"
+                      placeholder="Véhicules ajoutés à partir de"
+                      value={advancedFilters.dateMin}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, dateMin: e.target.value })}
+                      className="h-12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="date"
+                      placeholder="Véhicules ajoutés jusqu'au"
+                      value={advancedFilters.dateMax}
+                      onChange={(e) => setAdvancedFilters({ ...advancedFilters, dateMax: e.target.value })}
+                      className="h-12"
+                    />
+                  </div>
+                </div>
+
+                {/* Boutons */}
+                <div className="flex justify-end gap-3 pt-2">
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={resetAdvancedFilters}
+                    variant="ghost"
+                    onClick={() => {
+                      resetAdvancedFilters();
+                      setFilterPopoverOpen(false);
+                    }}
+                    className="text-primary font-semibold"
                   >
-                    Réinitialiser
+                    ANNULER
                   </Button>
                   <Button
-                    size="sm"
-                    className="flex-1"
                     onClick={() => setFilterPopoverOpen(false)}
+                    className="font-semibold"
                   >
-                    Appliquer
+                    APPLIQUER
                   </Button>
                 </div>
               </div>
