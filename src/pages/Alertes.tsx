@@ -16,8 +16,9 @@ interface VehicleAlert {
   vehicleId: string;
   vehicleName: string;
   message: string;
-  severity: "warning" | "critical";
+  severity: "warning" | "critical" | "missing";
   type: "assurance" | "visite_technique" | "vignette" | "vidange";
+  actionText: string;
 }
 
 const Alertes = () => {
@@ -63,7 +64,17 @@ const Alertes = () => {
         .order("date_expiration", { ascending: false })
         .limit(1);
 
-      if (insurances && insurances.length > 0) {
+      if (!insurances || insurances.length === 0) {
+        // No insurance found
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleName,
+          message: "aucune assurance enregistrée",
+          severity: "missing",
+          type: "assurance",
+          actionText: "AJOUTER ASSURANCE",
+        });
+      } else {
         const insurance = insurances[0];
         const daysUntilExpiry = differenceInDays(
           parseISO(insurance.date_expiration),
@@ -77,6 +88,7 @@ const Alertes = () => {
             message: `assurance expirant le ${new Date(insurance.date_expiration).toLocaleDateString("fr-FR")}`,
             severity: daysUntilExpiry <= 7 ? "critical" : "warning",
             type: "assurance",
+            actionText: "RENOUVELER ASSURANCE",
           });
         } else if (daysUntilExpiry < 0) {
           alerts.push({
@@ -85,6 +97,7 @@ const Alertes = () => {
             message: `assurance expirée depuis le ${new Date(insurance.date_expiration).toLocaleDateString("fr-FR")}`,
             severity: "critical",
             type: "assurance",
+            actionText: "RENOUVELER ASSURANCE",
           });
         }
       }
@@ -97,7 +110,17 @@ const Alertes = () => {
         .order("date_expiration", { ascending: false })
         .limit(1);
 
-      if (inspections && inspections.length > 0) {
+      if (!inspections || inspections.length === 0) {
+        // No inspection found
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleName,
+          message: "aucune visite technique enregistrée",
+          severity: "missing",
+          type: "visite_technique",
+          actionText: "AJOUTER VISITE TECHNIQUE",
+        });
+      } else {
         const inspection = inspections[0];
         const daysUntilExpiry = differenceInDays(
           parseISO(inspection.date_expiration),
@@ -111,6 +134,7 @@ const Alertes = () => {
             message: `visite technique expirant le ${new Date(inspection.date_expiration).toLocaleDateString("fr-FR")}`,
             severity: daysUntilExpiry <= 7 ? "critical" : "warning",
             type: "visite_technique",
+            actionText: "RENOUVELER",
           });
         } else if (daysUntilExpiry < 0) {
           alerts.push({
@@ -119,6 +143,7 @@ const Alertes = () => {
             message: `visite technique expirée depuis le ${new Date(inspection.date_expiration).toLocaleDateString("fr-FR")}`,
             severity: "critical",
             type: "visite_technique",
+            actionText: "RENOUVELER",
           });
         }
       }
@@ -131,7 +156,17 @@ const Alertes = () => {
         .order("date_expiration", { ascending: false })
         .limit(1);
 
-      if (vignettes && vignettes.length > 0) {
+      if (!vignettes || vignettes.length === 0) {
+        // No vignette found
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleName,
+          message: "aucune vignette enregistrée",
+          severity: "missing",
+          type: "vignette",
+          actionText: "AJOUTER VIGNETTE",
+        });
+      } else {
         const vignette = vignettes[0];
         const daysUntilExpiry = differenceInDays(
           parseISO(vignette.date_expiration),
@@ -145,6 +180,7 @@ const Alertes = () => {
             message: `vignette expirant le ${new Date(vignette.date_expiration).toLocaleDateString("fr-FR")}`,
             severity: daysUntilExpiry <= 7 ? "critical" : "warning",
             type: "vignette",
+            actionText: "RENOUVELER",
           });
         } else if (daysUntilExpiry < 0) {
           alerts.push({
@@ -153,6 +189,7 @@ const Alertes = () => {
             message: `vignette expirée depuis le ${new Date(vignette.date_expiration).toLocaleDateString("fr-FR")}`,
             severity: "critical",
             type: "vignette",
+            actionText: "RENOUVELER",
           });
         }
       }
@@ -234,21 +271,21 @@ const Alertes = () => {
       </div>
 
       {/* Chèques Section */}
-      <div className="bg-card rounded-lg border">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Chèques</h2>
+      <div className="bg-card rounded-lg border shadow-sm">
+        <div className="p-4 border-b bg-gradient-to-r from-card to-secondary/20">
+          <h2 className="text-lg font-semibold text-foreground">Chèques</h2>
         </div>
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="cheques" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline">
-              <div className="flex items-center gap-2">
+            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
                 {chequeAlerts.length === 0 ? (
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 ) : (
                   <AlertCircle className="w-5 h-5 text-warning" />
                 )}
                 <span className="font-medium">Les alertes chèques</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground ml-auto">
                   {chequeAlerts.length === 0
                     ? "Aucune alerte trouvée"
                     : `${chequeAlerts.length} alerte(s) trouvée(s)`}
@@ -257,20 +294,23 @@ const Alertes = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               {chequeAlerts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucune alerte</p>
+                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <p className="text-sm text-success">Aucune alerte de chèque</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {chequeAlerts.map((alert) => (
                     <div
                       key={alert.id}
-                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20 hover:bg-warning/20 transition-colors"
                     >
-                      <span className="text-sm">
+                      <span className="text-sm font-medium">
                         Chèque n°{alert.numero_cheque} du contrat{" "}
                         {alert.contracts?.numero_contrat}
                       </span>
-                      <Button size="sm" variant="outline">
-                        AGIR
+                      <Button size="sm" className="bg-warning hover:bg-warning/90 text-white">
+                        ENCAISSER
                       </Button>
                     </div>
                   ))}
@@ -282,21 +322,21 @@ const Alertes = () => {
       </div>
 
       {/* Réservations Section */}
-      <div className="bg-card rounded-lg border">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Réservations</h2>
+      <div className="bg-card rounded-lg border shadow-sm">
+        <div className="p-4 border-b bg-gradient-to-r from-card to-secondary/20">
+          <h2 className="text-lg font-semibold text-foreground">Réservations</h2>
         </div>
         <Accordion type="multiple" className="w-full">
           <AccordionItem value="departs" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline">
-              <div className="flex items-center gap-2">
+            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
                 {departAlerts.length === 0 ? (
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 text-warning" />
+                  <AlertCircle className="w-5 h-5 text-info" />
                 )}
-                <span className="font-medium">Les départ prévu ce jour</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="font-medium">Les départs prévus ce jour</span>
+                <span className="text-sm text-muted-foreground ml-auto">
                   {departAlerts.length === 0
                     ? "Aucun départ trouvé pour aujourd'hui"
                     : `${departAlerts.length} départ(s) prévu(s)`}
@@ -305,24 +345,27 @@ const Alertes = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               {departAlerts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucun départ aujourd'hui</p>
+                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <p className="text-sm text-success">Aucun départ prévu aujourd'hui</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {departAlerts.map((contract) => (
                     <div
                       key={contract.id}
-                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-info/10 rounded-lg border border-info/20 hover:bg-info/20 transition-colors"
                     >
-                      <span className="text-sm">
+                      <span className="text-sm font-medium">
                         Contrat {contract.numero_contrat} -{" "}
                         {contract.vehicles?.marque} {contract.vehicles?.modele}
                       </span>
                       <Button
                         size="sm"
-                        variant="outline"
+                        className="bg-info hover:bg-info/90 text-white"
                         onClick={() => navigate(`/locations/${contract.id}`)}
                       >
-                        AGIR
+                        LIVRER
                       </Button>
                     </div>
                   ))}
@@ -332,15 +375,15 @@ const Alertes = () => {
           </AccordionItem>
 
           <AccordionItem value="recuperations" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline">
-              <div className="flex items-center gap-2">
+            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
                 {recuperationAlerts.length === 0 ? (
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 text-warning" />
+                  <AlertCircle className="w-5 h-5 text-info" />
                 )}
-                <span className="font-medium">Les récupérations prévu ce jour</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="font-medium">Les récupérations prévues ce jour</span>
+                <span className="text-sm text-muted-foreground ml-auto">
                   {recuperationAlerts.length === 0
                     ? "Aucune récupération trouvée pour aujourd'hui"
                     : `${recuperationAlerts.length} récupération(s) prévue(s)`}
@@ -349,26 +392,27 @@ const Alertes = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               {recuperationAlerts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Aucune récupération aujourd'hui
-                </p>
+                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <p className="text-sm text-success">Aucune récupération prévue aujourd'hui</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {recuperationAlerts.map((contract) => (
                     <div
                       key={contract.id}
-                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      className="flex items-center justify-between p-4 bg-info/10 rounded-lg border border-info/20 hover:bg-info/20 transition-colors"
                     >
-                      <span className="text-sm">
+                      <span className="text-sm font-medium">
                         Contrat {contract.numero_contrat} -{" "}
                         {contract.vehicles?.marque} {contract.vehicles?.modele}
                       </span>
                       <Button
                         size="sm"
-                        variant="outline"
+                        className="bg-info hover:bg-info/90 text-white"
                         onClick={() => navigate(`/locations/${contract.id}`)}
                       >
-                        AGIR
+                        RÉCUPÉRER
                       </Button>
                     </div>
                   ))}
@@ -380,57 +424,70 @@ const Alertes = () => {
       </div>
 
       {/* Véhicules Section */}
-      <div className="bg-card rounded-lg border">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Véhicules</h2>
+      <div className="bg-card rounded-lg border shadow-sm">
+        <div className="p-4 border-b bg-gradient-to-r from-card to-secondary/20">
+          <h2 className="text-lg font-semibold text-foreground">Véhicules</h2>
         </div>
         <Accordion type="multiple" className="w-full">
           <AccordionItem value="assurances" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline">
-              <div className="flex items-center gap-2">
+            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
                 {assuranceAlerts.length === 0 ? (
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 ) : (
                   <AlertCircle className="w-5 h-5 text-warning" />
                 )}
                 <span className="font-medium">Les alertes assurances</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground ml-auto">
                   {assuranceAlerts.length === 0
-                    ? "Aucune alertes trouvée"
+                    ? "Aucune alerte trouvée"
                     : `${assuranceAlerts.length} alerte(s) trouvée(s)`}
                 </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               {assuranceAlerts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucune alerte</p>
+                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <p className="text-sm text-success">Aucune alerte d'assurance</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {assuranceAlerts.map((alert, index) => (
                     <div
                       key={index}
-                      className={`flex items-center justify-between p-3 rounded-lg ${
+                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
                         alert.severity === "critical"
-                          ? "bg-destructive/10"
-                          : "bg-warning/10"
+                          ? "bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
+                          : alert.severity === "warning"
+                          ? "bg-warning/10 border-warning/20 hover:bg-warning/20"
+                          : "bg-muted/50 border-muted hover:bg-muted"
                       }`}
                     >
-                      <span className="text-sm">
-                        Véhicule{" "}
-                        <button
-                          onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                          className="text-primary hover:underline font-medium"
-                        >
-                          {alert.vehicleName}
-                        </button>{" "}
-                        {alert.message}
-                      </span>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">
+                          Véhicule{" "}
+                          <button
+                            onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
+                            className="text-primary hover:underline"
+                          >
+                            {alert.vehicleName}
+                          </button>
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
+                      </div>
                       <Button
                         size="sm"
-                        variant="outline"
+                        className={`ml-4 ${
+                          alert.severity === "critical"
+                            ? "bg-destructive hover:bg-destructive/90 text-white"
+                            : alert.severity === "warning"
+                            ? "bg-warning hover:bg-warning/90 text-white"
+                            : "bg-primary hover:bg-primary/90"
+                        }`}
                         onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
                       >
-                        AGIR
+                        {alert.actionText}
                       </Button>
                     </div>
                   ))}
@@ -440,51 +497,64 @@ const Alertes = () => {
           </AccordionItem>
 
           <AccordionItem value="visites" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline">
-              <div className="flex items-center gap-2">
+            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
                 {visiteTechniqueAlerts.length === 0 ? (
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 ) : (
                   <AlertCircle className="w-5 h-5 text-warning" />
                 )}
                 <span className="font-medium">Les alertes visites techniques</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground ml-auto">
                   {visiteTechniqueAlerts.length === 0
-                    ? "Aucune alertes trouvée"
+                    ? "Aucune alerte trouvée"
                     : `${visiteTechniqueAlerts.length} alerte(s) trouvée(s)`}
                 </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               {visiteTechniqueAlerts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucune alerte</p>
+                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <p className="text-sm text-success">Aucune alerte de visite technique</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {visiteTechniqueAlerts.map((alert, index) => (
                     <div
                       key={index}
-                      className={`flex items-center justify-between p-3 rounded-lg ${
+                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
                         alert.severity === "critical"
-                          ? "bg-destructive/10"
-                          : "bg-warning/10"
+                          ? "bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
+                          : alert.severity === "warning"
+                          ? "bg-warning/10 border-warning/20 hover:bg-warning/20"
+                          : "bg-muted/50 border-muted hover:bg-muted"
                       }`}
                     >
-                      <span className="text-sm">
-                        Véhicule{" "}
-                        <button
-                          onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                          className="text-primary hover:underline font-medium"
-                        >
-                          {alert.vehicleName}
-                        </button>{" "}
-                        {alert.message}
-                      </span>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">
+                          Véhicule{" "}
+                          <button
+                            onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
+                            className="text-primary hover:underline"
+                          >
+                            {alert.vehicleName}
+                          </button>
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
+                      </div>
                       <Button
                         size="sm"
-                        variant="outline"
+                        className={`ml-4 ${
+                          alert.severity === "critical"
+                            ? "bg-destructive hover:bg-destructive/90 text-white"
+                            : alert.severity === "warning"
+                            ? "bg-warning hover:bg-warning/90 text-white"
+                            : "bg-primary hover:bg-primary/90"
+                        }`}
                         onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
                       >
-                        AGIR
+                        {alert.actionText}
                       </Button>
                     </div>
                   ))}
@@ -494,51 +564,64 @@ const Alertes = () => {
           </AccordionItem>
 
           <AccordionItem value="vignettes" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline">
-              <div className="flex items-center gap-2">
+            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
                 {vignetteAlerts.length === 0 ? (
                   <CheckCircle2 className="w-5 h-5 text-success" />
                 ) : (
                   <AlertCircle className="w-5 h-5 text-warning" />
                 )}
                 <span className="font-medium">Les alertes vignettes</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground ml-auto">
                   {vignetteAlerts.length === 0
-                    ? "Aucune alertes trouvée"
+                    ? "Aucune alerte trouvée"
                     : `${vignetteAlerts.length} alerte(s) trouvée(s)`}
                 </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               {vignetteAlerts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucune alerte</p>
+                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <p className="text-sm text-success">Aucune alerte de vignette</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {vignetteAlerts.map((alert, index) => (
                     <div
                       key={index}
-                      className={`flex items-center justify-between p-3 rounded-lg ${
+                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
                         alert.severity === "critical"
-                          ? "bg-destructive/10"
-                          : "bg-warning/10"
+                          ? "bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
+                          : alert.severity === "warning"
+                          ? "bg-warning/10 border-warning/20 hover:bg-warning/20"
+                          : "bg-muted/50 border-muted hover:bg-muted"
                       }`}
                     >
-                      <span className="text-sm">
-                        Véhicule{" "}
-                        <button
-                          onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                          className="text-primary hover:underline font-medium"
-                        >
-                          {alert.vehicleName}
-                        </button>{" "}
-                        {alert.message}
-                      </span>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium">
+                          Véhicule{" "}
+                          <button
+                            onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
+                            className="text-primary hover:underline"
+                          >
+                            {alert.vehicleName}
+                          </button>
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
+                      </div>
                       <Button
                         size="sm"
-                        variant="outline"
+                        className={`ml-4 ${
+                          alert.severity === "critical"
+                            ? "bg-destructive hover:bg-destructive/90 text-white"
+                            : alert.severity === "warning"
+                            ? "bg-warning hover:bg-warning/90 text-white"
+                            : "bg-primary hover:bg-primary/90"
+                        }`}
                         onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
                       >
-                        AGIR
+                        {alert.actionText}
                       </Button>
                     </div>
                   ))}
