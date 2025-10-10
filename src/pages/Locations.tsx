@@ -171,7 +171,8 @@ export default function Locations() {
         ...a,
         type_contrat: 'assistance' as const,
         numero_contrat: a.num_dossier,
-        statut: a.etat,
+        statut: a.etat_paiement, // Afficher le statut de paiement pour les assistances
+        etat_vehicule: a.etat, // Garder l'état du véhicule séparément
         date_debut: a.date_debut,
         date_fin: a.date_fin,
         total_amount: a.montant_facture || a.montant_total,
@@ -399,6 +400,7 @@ export default function Locations() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
+      // Statuts pour les contrats de location
       brouillon: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100',
       ouvert: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100',
       contrat_valide: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
@@ -407,9 +409,14 @@ export default function Locations() {
       termine: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100',
       cloture: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100',
       annule: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
+      // Statuts de paiement pour les assistances
+      en_attente: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100',
+      paye: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+      partiellement_paye: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100',
     };
 
     const labels: Record<string, string> = {
+      // Labels pour les contrats de location
       brouillon: 'Réservation',
       ouvert: 'Réservation',
       contrat_valide: 'Contrat validé',
@@ -418,6 +425,10 @@ export default function Locations() {
       termine: 'Clôturé',
       cloture: 'Clôturé',
       annule: 'Annulé',
+      // Labels pour les statuts de paiement (assistances)
+      en_attente: 'En attente de paiement',
+      paye: 'Payé',
+      partiellement_paye: 'Partiellement payé',
     };
 
     return (
