@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EditInspectionDialog, EditVignetteDialog } from "@/components/vehicles/EditDialogs";
 
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 
@@ -99,6 +100,11 @@ export default function VehiculeDetails() {
   const [selectedInsurance, setSelectedInsurance] = useState<any>(null);
   const [selectedInspection, setSelectedInspection] = useState<any>(null);
   const [selectedVignette, setSelectedVignette] = useState<any>(null);
+  
+  // Edit dialog states
+  const [editingInsurance, setEditingInsurance] = useState(false);
+  const [editingInspection, setEditingInspection] = useState(false);
+  const [editingVignette, setEditingVignette] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -1937,7 +1943,7 @@ export default function VehiculeDetails() {
       </Dialog>
 
       {/* View Insurance Detail Dialog */}
-      <Dialog open={!!selectedInsurance} onOpenChange={() => setSelectedInsurance(null)}>
+      <Dialog open={!!selectedInsurance && !editingInsurance} onOpenChange={() => setSelectedInsurance(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Détails de l'assurance</DialogTitle>
@@ -2012,11 +2018,214 @@ export default function VehiculeDetails() {
               )}
             </div>
           )}
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setInsuranceForm({
+                  numero_ordre: selectedInsurance.numero_ordre,
+                  numero_police: selectedInsurance.numero_police || '',
+                  assureur: selectedInsurance.assureur,
+                  coordonnees_assureur: selectedInsurance.coordonnees_assureur || '',
+                  date_debut: selectedInsurance.date_debut,
+                  date_expiration: selectedInsurance.date_expiration,
+                  montant: selectedInsurance.montant.toString(),
+                  date_paiement: selectedInsurance.date_paiement || '',
+                  mode_paiement: selectedInsurance.mode_paiement,
+                  numero_cheque: selectedInsurance.numero_cheque || '',
+                  banque: selectedInsurance.banque || '',
+                  remarques: selectedInsurance.remarques || ''
+                });
+                setEditingInsurance(true);
+              }}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Modifier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Insurance Dialog */}
+      <Dialog open={editingInsurance} onOpenChange={(open) => {
+        if (!open) {
+          setEditingInsurance(false);
+          setSelectedInsurance(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier l'assurance</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4">
+            {/* ... keep existing insurance form fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>N° d'ordre *</Label>
+                <Input 
+                  value={insuranceForm.numero_ordre}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, numero_ordre: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>N° de police</Label>
+                <Input 
+                  value={insuranceForm.numero_police}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, numero_police: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Assureur *</Label>
+                <Input 
+                  value={insuranceForm.assureur}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, assureur: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Coordonnées assureur</Label>
+                <Input 
+                  value={insuranceForm.coordonnees_assureur}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, coordonnees_assureur: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Date début *</Label>
+                <Input 
+                  type="date"
+                  value={insuranceForm.date_debut}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, date_debut: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Date d'expiration *</Label>
+                <Input 
+                  type="date"
+                  value={insuranceForm.date_expiration}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, date_expiration: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Montant (DH) *</Label>
+                <Input 
+                  type="number"
+                  value={insuranceForm.montant}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, montant: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Date de paiement</Label>
+                <Input 
+                  type="date"
+                  value={insuranceForm.date_paiement}
+                  onChange={(e) => setInsuranceForm({...insuranceForm, date_paiement: e.target.value})}
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Mode de paiement</Label>
+              <Select 
+                value={insuranceForm.mode_paiement}
+                onValueChange={(value: any) => setInsuranceForm({...insuranceForm, mode_paiement: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="especes">Espèces</SelectItem>
+                  <SelectItem value="cheque">Chèque</SelectItem>
+                  <SelectItem value="virement">Virement</SelectItem>
+                  <SelectItem value="carte">Carte</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {insuranceForm.mode_paiement === 'cheque' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>N° de chèque</Label>
+                  <Input 
+                    value={insuranceForm.numero_cheque}
+                    onChange={(e) => setInsuranceForm({...insuranceForm, numero_cheque: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>Banque</Label>
+                  <Input 
+                    value={insuranceForm.banque}
+                    onChange={(e) => setInsuranceForm({...insuranceForm, banque: e.target.value})}
+                  />
+                </div>
+              </div>
+            )}
+            <div>
+              <Label>Remarques</Label>
+              <Textarea 
+                value={insuranceForm.remarques}
+                onChange={(e) => setInsuranceForm({...insuranceForm, remarques: e.target.value})}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setEditingInsurance(false);
+              setSelectedInsurance(null);
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={async () => {
+              try {
+                if (!insuranceForm.numero_ordre || !insuranceForm.assureur || !insuranceForm.date_debut || !insuranceForm.date_expiration || !insuranceForm.montant) {
+                  toast({
+                    title: "Erreur",
+                    description: "Veuillez remplir tous les champs obligatoires",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
+                const { error } = await supabase
+                  .from('vehicle_insurance')
+                  .update({
+                    ...insuranceForm,
+                    montant: parseFloat(insuranceForm.montant)
+                  })
+                  .eq('id', selectedInsurance.id);
+
+                if (error) throw error;
+
+                // Update vehicle expiration date
+                await supabase.from('vehicles').update({
+                  assurance_expire_le: insuranceForm.date_expiration
+                }).eq('id', vehicle!.id);
+
+                toast({
+                  title: "Succès",
+                  description: "Assurance modifiée avec succès"
+                });
+
+                setEditingInsurance(false);
+                setSelectedInsurance(null);
+                loadVehicle();
+              } catch (error: any) {
+                toast({
+                  title: "Erreur",
+                  description: error.message,
+                  variant: "destructive"
+                });
+              }
+            }}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* View Inspection Detail Dialog */}
-      <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
+      <Dialog open={!!selectedInspection && !editingInspection} onOpenChange={() => setSelectedInspection(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Détails de la visite technique</DialogTitle>
@@ -2085,11 +2294,33 @@ export default function VehiculeDetails() {
               )}
             </div>
           )}
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setInspectionForm({
+                  numero_ordre: selectedInspection.numero_ordre,
+                  centre_controle: selectedInspection.centre_controle || '',
+                  date_visite: selectedInspection.date_visite,
+                  date_expiration: selectedInspection.date_expiration,
+                  montant: selectedInspection.montant?.toString() || '',
+                  date_paiement: selectedInspection.date_paiement || '',
+                  mode_paiement: selectedInspection.mode_paiement || 'especes',
+                  numero_cheque: selectedInspection.numero_cheque || '',
+                  banque: selectedInspection.banque || '',
+                  remarques: selectedInspection.remarques || ''
+                });
+                setEditingInspection(true);
+              }}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Modifier
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* View Vignette Detail Dialog */}
-      <Dialog open={!!selectedVignette} onOpenChange={() => setSelectedVignette(null)}>
+      <Dialog open={!!selectedVignette && !editingVignette} onOpenChange={() => setSelectedVignette(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Détails de la vignette</DialogTitle>
@@ -2154,8 +2385,61 @@ export default function VehiculeDetails() {
               )}
             </div>
           )}
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setVignetteForm({
+                  numero_ordre: selectedVignette.numero_ordre,
+                  annee: selectedVignette.annee.toString(),
+                  date_expiration: selectedVignette.date_expiration,
+                  montant: selectedVignette.montant?.toString() || '',
+                  date_paiement: selectedVignette.date_paiement || '',
+                  mode_paiement: selectedVignette.mode_paiement || 'especes',
+                  numero_cheque: selectedVignette.numero_cheque || '',
+                  banque: selectedVignette.banque || '',
+                  remarques: selectedVignette.remarques || ''
+                });
+                setEditingVignette(true);
+              }}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Modifier
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Inspection Dialog */}
+      <EditInspectionDialog
+        open={editingInspection}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingInspection(false);
+            setSelectedInspection(null);
+          }
+        }}
+        selectedInspection={selectedInspection}
+        inspectionForm={inspectionForm}
+        setInspectionForm={setInspectionForm}
+        vehicleId={vehicle!.id}
+        onSuccess={loadVehicle}
+      />
+
+      {/* Edit Vignette Dialog */}
+      <EditVignetteDialog
+        open={editingVignette}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingVignette(false);
+            setSelectedVignette(null);
+          }
+        }}
+        selectedVignette={selectedVignette}
+        vignetteForm={vignetteForm}
+        setVignetteForm={setVignetteForm}
+        vehicleId={vehicle!.id}
+        onSuccess={loadVehicle}
+      />
 
       {/* Delete Vehicle Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
