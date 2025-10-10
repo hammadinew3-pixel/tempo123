@@ -1275,7 +1275,12 @@ export type Database = {
       sinistre_statut: "ouvert" | "en_cours" | "clos"
       sinistre_type: "accident" | "vol" | "panne_grave" | "autre"
       vehicle_category: "A" | "B" | "C" | "D" | "E"
-      vehicle_status: "disponible" | "reserve" | "loue" | "en_panne"
+      vehicle_status:
+        | "disponible"
+        | "reserve"
+        | "loue"
+        | "en_panne"
+        | "immobilise"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1439,7 +1444,13 @@ export const Constants = {
       sinistre_statut: ["ouvert", "en_cours", "clos"],
       sinistre_type: ["accident", "vol", "panne_grave", "autre"],
       vehicle_category: ["A", "B", "C", "D", "E"],
-      vehicle_status: ["disponible", "reserve", "loue", "en_panne"],
+      vehicle_status: [
+        "disponible",
+        "reserve",
+        "loue",
+        "en_panne",
+        "immobilise",
+      ],
     },
   },
 } as const
