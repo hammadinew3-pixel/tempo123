@@ -105,6 +105,8 @@ export default function VehiculeDetails() {
   const [editingInsurance, setEditingInsurance] = useState(false);
   const [editingInspection, setEditingInspection] = useState(false);
   const [editingVignette, setEditingVignette] = useState(false);
+  const [editInsurancePhoto, setEditInsurancePhoto] = useState<File | null>(null);
+  const [uploadingEditInsurance, setUploadingEditInsurance] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -2168,11 +2170,25 @@ export default function VehiculeDetails() {
                 onChange={(e) => setInsuranceForm({...insuranceForm, remarques: e.target.value})}
               />
             </div>
+            <div>
+              <Label>Photo du document</Label>
+              <div className="mt-2">
+                <Input 
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditInsurancePhoto(e.target.files?.[0] || null)}
+                />
+                {selectedInsurance?.photo_url && !editInsurancePhoto && (
+                  <p className="text-sm text-muted-foreground mt-2">Photo actuelle disponible. Sélectionnez une nouvelle photo pour la remplacer.</p>
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
               setEditingInsurance(false);
               setSelectedInsurance(null);
+              setEditInsurancePhoto(null);
             }}>
               Annuler
             </Button>
@@ -2187,11 +2203,33 @@ export default function VehiculeDetails() {
                   return;
                 }
 
+                setUploadingEditInsurance(true);
+                let photoUrl = selectedInsurance.photo_url;
+
+                // Upload photo if provided
+                if (editInsurancePhoto) {
+                  const fileExt = editInsurancePhoto.name.split('.').pop();
+                  const fileName = `${vehicle!.id}/insurance/${Date.now()}.${fileExt}`;
+                  
+                  const { error: uploadError } = await supabase.storage
+                    .from('vehicle-documents')
+                    .upload(fileName, editInsurancePhoto);
+
+                  if (uploadError) throw uploadError;
+
+                  const { data: { publicUrl } } = supabase.storage
+                    .from('vehicle-documents')
+                    .getPublicUrl(fileName);
+                  
+                  photoUrl = publicUrl;
+                }
+
                 const { error } = await supabase
                   .from('vehicle_insurance')
                   .update({
                     ...insuranceForm,
-                    montant: parseFloat(insuranceForm.montant)
+                    montant: parseFloat(insuranceForm.montant),
+                    photo_url: photoUrl
                   })
                   .eq('id', selectedInsurance.id);
 
@@ -2209,6 +2247,7 @@ export default function VehiculeDetails() {
 
                 setEditingInsurance(false);
                 setSelectedInsurance(null);
+                setEditInsurancePhoto(null);
                 loadVehicle();
               } catch (error: any) {
                 toast({
@@ -2216,9 +2255,11 @@ export default function VehiculeDetails() {
                   description: error.message,
                   variant: "destructive"
                 });
+              } finally {
+                setUploadingEditInsurance(false);
               }
-            }}>
-              Enregistrer
+            }} disabled={uploadingEditInsurance}>
+              {uploadingEditInsurance ? "Upload en cours..." : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>

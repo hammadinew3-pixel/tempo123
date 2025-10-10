@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Upload } from "lucide-react";
+import { useState } from "react";
 
 interface EditInspectionDialogProps {
   open: boolean;
@@ -27,6 +29,8 @@ export function EditInspectionDialog({
   onSuccess
 }: EditInspectionDialogProps) {
   const { toast } = useToast();
+  const [inspectionPhoto, setInspectionPhoto] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleSave = async () => {
     try {
@@ -39,11 +43,33 @@ export function EditInspectionDialog({
         return;
       }
 
+      setUploading(true);
+      let photoUrl = selectedInspection.photo_url;
+
+      // Upload photo if provided
+      if (inspectionPhoto) {
+        const fileExt = inspectionPhoto.name.split('.').pop();
+        const fileName = `${vehicleId}/inspection/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('vehicle-documents')
+          .upload(fileName, inspectionPhoto);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('vehicle-documents')
+          .getPublicUrl(fileName);
+        
+        photoUrl = publicUrl;
+      }
+
       const { error } = await supabase
         .from('vehicle_technical_inspection')
         .update({
           ...inspectionForm,
-          montant: inspectionForm.montant ? parseFloat(inspectionForm.montant) : null
+          montant: inspectionForm.montant ? parseFloat(inspectionForm.montant) : null,
+          photo_url: photoUrl
         })
         .eq('id', selectedInspection.id);
 
@@ -59,6 +85,7 @@ export function EditInspectionDialog({
         description: "Visite technique modifiée avec succès"
       });
 
+      setInspectionPhoto(null);
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -67,6 +94,8 @@ export function EditInspectionDialog({
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -171,13 +200,26 @@ export function EditInspectionDialog({
               onChange={(e) => setInspectionForm({...inspectionForm, remarques: e.target.value})}
             />
           </div>
+          <div>
+            <Label>Photo du document</Label>
+            <div className="mt-2">
+              <Input 
+                type="file"
+                accept="image/*"
+                onChange={(e) => setInspectionPhoto(e.target.files?.[0] || null)}
+              />
+              {selectedInspection.photo_url && !inspectionPhoto && (
+                <p className="text-sm text-muted-foreground mt-2">Photo actuelle disponible. Sélectionnez une nouvelle photo pour la remplacer.</p>
+              )}
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button onClick={handleSave}>
-            Enregistrer
+          <Button onClick={handleSave} disabled={uploading}>
+            {uploading ? "Upload en cours..." : "Enregistrer"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -205,6 +247,8 @@ export function EditVignetteDialog({
   onSuccess
 }: EditVignetteDialogProps) {
   const { toast } = useToast();
+  const [vignettePhoto, setVignettePhoto] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleSave = async () => {
     try {
@@ -217,12 +261,34 @@ export function EditVignetteDialog({
         return;
       }
 
+      setUploading(true);
+      let photoUrl = selectedVignette.photo_url;
+
+      // Upload photo if provided
+      if (vignettePhoto) {
+        const fileExt = vignettePhoto.name.split('.').pop();
+        const fileName = `${vehicleId}/vignette/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('vehicle-documents')
+          .upload(fileName, vignettePhoto);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('vehicle-documents')
+          .getPublicUrl(fileName);
+        
+        photoUrl = publicUrl;
+      }
+
       const { error } = await supabase
         .from('vehicle_vignette')
         .update({
           ...vignetteForm,
           annee: parseInt(vignetteForm.annee),
-          montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null
+          montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null,
+          photo_url: photoUrl
         })
         .eq('id', selectedVignette.id);
 
@@ -238,6 +304,7 @@ export function EditVignetteDialog({
         description: "Vignette modifiée avec succès"
       });
 
+      setVignettePhoto(null);
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -246,6 +313,8 @@ export function EditVignetteDialog({
         description: error.message,
         variant: "destructive"
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -341,13 +410,26 @@ export function EditVignetteDialog({
               onChange={(e) => setVignetteForm({...vignetteForm, remarques: e.target.value})}
             />
           </div>
+          <div>
+            <Label>Photo du document</Label>
+            <div className="mt-2">
+              <Input 
+                type="file"
+                accept="image/*"
+                onChange={(e) => setVignettePhoto(e.target.files?.[0] || null)}
+              />
+              {selectedVignette.photo_url && !vignettePhoto && (
+                <p className="text-sm text-muted-foreground mt-2">Photo actuelle disponible. Sélectionnez une nouvelle photo pour la remplacer.</p>
+              )}
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button onClick={handleSave}>
-            Enregistrer
+          <Button onClick={handleSave} disabled={uploading}>
+            {uploading ? "Upload en cours..." : "Enregistrer"}
           </Button>
         </DialogFooter>
       </DialogContent>
