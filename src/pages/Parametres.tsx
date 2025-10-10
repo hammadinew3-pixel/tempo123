@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Building2, Clock, Bell, Printer, Upload, Loader2 } from "lucide-react";
+import { Settings, Building2, Bell, Printer, Upload, Loader2 } from "lucide-react";
 
 interface AgenceSettings {
   id: string;
@@ -22,9 +22,6 @@ interface AgenceSettings {
   email?: string;
   telephone?: string;
   logo_url?: string;
-  grace_short?: number;
-  grace_medium?: number;
-  grace_long?: number;
   taux_tva?: number;
   alerte_cheque_jours?: number;
   alerte_vidange_kms?: number;
@@ -130,148 +127,7 @@ export default function Parametres() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Informations d'agence */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Informations d'agence
-            </CardTitle>
-            <CardDescription>
-              Ces informations apparaîtront sur vos factures et contrats
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Raison sociale</Label>
-              <Input
-                value={settings?.raison_sociale || ''}
-                onChange={(e) => setSettings(prev => prev ? {...prev, raison_sociale: e.target.value} : null)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>ICE</Label>
-                <Input
-                  value={settings?.ice || ''}
-                  onChange={(e) => setSettings(prev => prev ? {...prev, ice: e.target.value} : null)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>IF</Label>
-                <Input
-                  value={settings?.if_number || ''}
-                  onChange={(e) => setSettings(prev => prev ? {...prev, if_number: e.target.value} : null)}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>RC</Label>
-                <Input
-                  value={settings?.rc || ''}
-                  onChange={(e) => setSettings(prev => prev ? {...prev, rc: e.target.value} : null)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>CNSS</Label>
-                <Input
-                  value={settings?.cnss || ''}
-                  onChange={(e) => setSettings(prev => prev ? {...prev, cnss: e.target.value} : null)}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Patente</Label>
-              <Input
-                value={settings?.patente || ''}
-                onChange={(e) => setSettings(prev => prev ? {...prev, patente: e.target.value} : null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Adresse</Label>
-              <Input
-                value={settings?.adresse || ''}
-                onChange={(e) => setSettings(prev => prev ? {...prev, adresse: e.target.value} : null)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={settings?.email || ''}
-                  onChange={(e) => setSettings(prev => prev ? {...prev, email: e.target.value} : null)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Téléphone</Label>
-                <Input
-                  value={settings?.telephone || ''}
-                  onChange={(e) => setSettings(prev => prev ? {...prev, telephone: e.target.value} : null)}
-                />
-              </div>
-            </div>
-            <Button onClick={() => updateSettings({
-              raison_sociale: settings?.raison_sociale,
-              ice: settings?.ice,
-              if_number: settings?.if_number,
-              rc: settings?.rc,
-              cnss: settings?.cnss,
-              patente: settings?.patente,
-              adresse: settings?.adresse,
-              email: settings?.email,
-              telephone: settings?.telephone,
-            })} disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Enregistrer
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Délais de grâce */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Délais de grâce
-            </CardTitle>
-            <CardDescription>
-              Période supplémentaire accordée après la fin de location
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Courte durée (1-3 jours) - en minutes</Label>
-              <Input
-                type="number"
-                value={settings?.grace_short || 60}
-                onChange={(e) => setSettings(prev => prev ? {...prev, grace_short: parseInt(e.target.value)} : null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Moyenne durée (4-7 jours) - en minutes</Label>
-              <Input
-                type="number"
-                value={settings?.grace_medium || 120}
-                onChange={(e) => setSettings(prev => prev ? {...prev, grace_medium: parseInt(e.target.value)} : null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Longue durée (+7 jours) - en minutes</Label>
-              <Input
-                type="number"
-                value={settings?.grace_long || 180}
-                onChange={(e) => setSettings(prev => prev ? {...prev, grace_long: parseInt(e.target.value)} : null)}
-              />
-            </div>
-            <Button onClick={() => updateSettings({
-              grace_short: settings?.grace_short,
-              grace_medium: settings?.grace_medium,
-              grace_long: settings?.grace_long,
-            })} disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Enregistrer
-            </Button>
-          </CardContent>
+...
         </Card>
 
         {/* Alertes et TVA */}
