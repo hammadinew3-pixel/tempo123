@@ -34,6 +34,7 @@ export default function VehiculeDetails() {
   const [vidanges, setVidanges] = useState<any[]>([]);
   const [showVidangeDialog, setShowVidangeDialog] = useState(false);
   const [prochainKmVidange, setProchainKmVidange] = useState<string>('');
+  const [montantVidange, setMontantVidange] = useState<string>('');
 
   useEffect(() => {
     if (id) {
@@ -127,12 +128,23 @@ export default function VehiculeDetails() {
 
     try {
       const prochainKm = prochainKmVidange ? parseInt(prochainKmVidange) : null;
+      const montant = montantVidange ? parseFloat(montantVidange) : null;
 
       // Validation du prochain kilométrage
       if (prochainKm && prochainKm <= vehicle.kilometrage) {
         toast({
           title: "Erreur",
           description: "Le prochain kilométrage de vidange doit être supérieur au kilométrage actuel",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validation du montant
+      if (montant !== null && montant < 0) {
+        toast({
+          title: "Erreur",
+          description: "Le montant doit être positif",
           variant: "destructive",
         });
         return;
@@ -146,10 +158,26 @@ export default function VehiculeDetails() {
           kilometrage: vehicle.kilometrage,
           date_vidange: new Date().toISOString().split('T')[0],
           type: 'Vidange complète',
+          montant: montant,
           remarques: prochainKm ? `Prochain kilométrage prévu: ${prochainKm} km` : null,
         });
 
       if (vidangeError) throw vidangeError;
+
+      // Si un montant est spécifié, créer une dépense associée
+      if (montant !== null && montant > 0) {
+        const { error: expenseError } = await supabase
+          .from('expenses')
+          .insert([{
+            vehicle_id: vehicle.id,
+            categorie: 'entretien',
+            montant: montant,
+            date_depense: new Date().toISOString().split('T')[0],
+            description: `Vidange complète à ${vehicle.kilometrage.toLocaleString()} km`,
+          }]);
+
+        if (expenseError) throw expenseError;
+      }
 
       // Mettre à jour le véhicule
       const { error: updateError } = await supabase
@@ -165,11 +193,12 @@ export default function VehiculeDetails() {
 
       toast({
         title: "Succès",
-        description: "Vidange enregistrée avec succès",
+        description: montant ? `Vidange enregistrée avec succès. Dépense de ${montant.toFixed(2)} DH ajoutée.` : "Vidange enregistrée avec succès",
       });
 
       setShowVidangeDialog(false);
       setProchainKmVidange('');
+      setMontantVidange('');
       loadVehicle();
     } catch (error: any) {
       toast({
@@ -969,6 +998,26 @@ export default function VehiculeDetails() {
             </p>
 
             <div className="space-y-2">
+              <Label htmlFor="montant-vidange">Montant de la vidange (optionnel)</Label>
+              <div className="relative">
+                <Input
+                  id="montant-vidange"
+                  type="number"
+                  step="0.01"
+                  placeholder="Ex: 500"
+                  value={montantVidange}
+                  onChange={(e) => setMontantVidange(e.target.value)}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  DH
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Le montant sera automatiquement ajouté aux dépenses du véhicule
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="prochain-km">Prochain kilométrage de vidange (optionnel)</Label>
               <Input
                 id="prochain-km"
@@ -986,6 +1035,7 @@ export default function VehiculeDetails() {
               <Button variant="outline" onClick={() => {
                 setShowVidangeDialog(false);
                 setProchainKmVidange('');
+                setMontantVidange('');
               }}>
                 Annuler
               </Button>
