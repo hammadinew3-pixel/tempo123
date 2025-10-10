@@ -35,6 +35,7 @@ export default function Dashboard() {
     outOfServiceVehicles: 0
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
+  const [recentAssistance, setRecentAssistance] = useState<any[]>([]);
   const [departures, setDepartures] = useState<any[]>([]);
   const [returns, setReturns] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'departures' | 'returns'>('departures');
@@ -43,6 +44,7 @@ export default function Dashboard() {
   const [showAlertsDialog, setShowAlertsDialog] = useState(false);
   const [chequeAlertsCount, setChequeAlertsCount] = useState(0);
   const [reservationAlertsCount, setReservationAlertsCount] = useState(0);
+  const [reservationType, setReservationType] = useState<'standard' | 'assistance'>('standard');
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -81,10 +83,21 @@ export default function Dashboard() {
         head: true
       });
 
-      // Load recent reservations
+      // Load recent reservations (contracts)
       const {
         data: reservations
       } = await supabase.from('contracts').select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `).order('created_at', {
+        ascending: false
+      }).limit(4);
+
+      // Load recent assistance
+      const {
+        data: assistance
+      } = await supabase.from('assistance').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
@@ -124,6 +137,7 @@ export default function Dashboard() {
         outOfServiceVehicles
       });
       setRecentReservations(reservations || []);
+      setRecentAssistance(assistance || []);
       setDepartures(todayDepartures || []);
       setReturns(todayReturns || []);
 
@@ -329,7 +343,10 @@ export default function Dashboard() {
       <div className="p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <Card 
+            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/vehicules')}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -348,7 +365,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <Card 
+            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/locations')}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -367,7 +387,10 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <Card 
+            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate('/clients')}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -677,11 +700,21 @@ export default function Dashboard() {
                 <CardDescription>Basé sur le type sélectionné</CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="text-primary">
-                  Courtes
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={reservationType === 'standard' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}
+                  onClick={() => setReservationType('standard')}
+                >
+                  Standard
                 </Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground">
-                  Longues
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={reservationType === 'assistance' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}
+                  onClick={() => setReservationType('assistance')}
+                >
+                  Assurances
                 </Button>
               </div>
             </div>
@@ -704,15 +737,18 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentReservations.length === 0 ? <tr>
+                  {(reservationType === 'standard' ? recentReservations : recentAssistance).length === 0 ? <tr>
                       <td colSpan={10} className="text-center py-8 text-muted-foreground">
                         Aucune réservation
                       </td>
-                    </tr> : recentReservations.map(reservation => <tr key={reservation.id} className="border-b hover:bg-muted/50">
-                        <td className="py-4">{reservation.numero_contrat}</td>
+                    </tr> : (reservationType === 'standard' ? recentReservations : recentAssistance).map(reservation => <tr key={reservation.id} className="border-b hover:bg-muted/50">
+                        <td className="py-4">{reservationType === 'standard' ? reservation.numero_contrat : reservation.num_dossier || 'N/A'}</td>
                         <td className="py-4">
-                          <Badge variant="secondary" className={reservation.statut === 'actif' ? 'bg-primary/10 text-primary border-primary/20' : reservation.statut === 'termine' ? 'bg-muted text-muted-foreground border-muted' : 'bg-warning/10 text-warning border-warning/20'}>
-                            {reservation.statut === 'actif' ? 'Livrée' : reservation.statut}
+                          <Badge variant="secondary" className={reservation.statut === 'actif' || reservation.etat === 'livre' ? 'bg-primary/10 text-primary border-primary/20' : (reservation.statut === 'termine' || reservation.etat === 'cloture') ? 'bg-muted text-muted-foreground border-muted' : 'bg-warning/10 text-warning border-warning/20'}>
+                            {reservationType === 'standard' 
+                              ? (reservation.statut === 'actif' ? 'Livrée' : reservation.statut)
+                              : (reservation.etat === 'livre' ? 'Livrée' : reservation.etat)
+                            }
                           </Badge>
                         </td>
                         <td className="py-4">
@@ -726,28 +762,51 @@ export default function Dashboard() {
                         <td className="py-4">
                           {reservation.clients?.nom} {reservation.clients?.prenom}
                         </td>
-                        <td className="py-4">{reservation.duration || 0} Jrs</td>
+                        <td className="py-4">
+                          {reservationType === 'standard' 
+                            ? `${reservation.duration || 0} Jrs`
+                            : `${reservation.date_debut && reservation.date_fin 
+                                ? Math.ceil((new Date(reservation.date_fin).getTime() - new Date(reservation.date_debut).getTime()) / (1000 * 60 * 60 * 24))
+                                : 0} Jrs`
+                          }
+                        </td>
                         <td className="py-4">
                           {new Date(reservation.date_debut).toLocaleDateString('fr-FR')}
                         </td>
                         <td className="py-4">
-                          {new Date(reservation.date_fin).toLocaleDateString('fr-FR')}
+                          {reservation.date_fin ? new Date(reservation.date_fin).toLocaleDateString('fr-FR') : 'N/A'}
                         </td>
-                        <td className="py-4">{reservation.total_amount?.toFixed(2)} DH</td>
                         <td className="py-4">
-                          <span className={(reservation.remaining_amount || 0) > 0 ? 'text-red-600' : 'text-green-600'}>
-                            {(reservation.remaining_amount || 0) > 0 ? '-' : '+'}
-                            {Math.abs(reservation.remaining_amount || 0).toFixed(2)} DH
+                          {reservationType === 'standard' 
+                            ? `${reservation.total_amount?.toFixed(2) || 0} DH`
+                            : `${reservation.montant_total?.toFixed(2) || 0} DH`
+                          }
+                        </td>
+                        <td className="py-4">
+                          <span className={
+                            reservationType === 'standard'
+                              ? ((reservation.remaining_amount || 0) > 0 ? 'text-red-600' : 'text-green-600')
+                              : ((reservation.montant_total || 0) - (reservation.montant_paye || 0) > 0 ? 'text-red-600' : 'text-green-600')
+                          }>
+                            {reservationType === 'standard' 
+                              ? `${(reservation.remaining_amount || 0) > 0 ? '-' : '+'}${Math.abs(reservation.remaining_amount || 0).toFixed(2)} DH`
+                              : `${((reservation.montant_total || 0) - (reservation.montant_paye || 0)) > 0 ? '-' : '+'}${Math.abs((reservation.montant_total || 0) - (reservation.montant_paye || 0)).toFixed(2)} DH`
+                            }
                           </span>
                         </td>
-                        <td className="py-4">{reservation.daily_rate?.toFixed(2)} DH</td>
+                        <td className="py-4">
+                          {reservationType === 'standard'
+                            ? `${reservation.daily_rate?.toFixed(2) || 0} DH`
+                            : `${reservation.tarif_journalier?.toFixed(2) || 0} DH`
+                          }
+                        </td>
                       </tr>)}
                 </tbody>
               </table>
             </div>
             <div className="text-center mt-4">
-              <Link to="/locations" className="text-primary hover:underline text-sm">
-                Afficher toutes les réservations →
+              <Link to={reservationType === 'standard' ? '/locations' : '/assistance'} className="text-primary hover:underline text-sm">
+                Afficher toutes les {reservationType === 'standard' ? 'réservations' : 'assistances'} →
               </Link>
             </div>
           </CardContent>
