@@ -39,6 +39,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [vehicleAlerts, setVehicleAlerts] = useState<VehicleAlert[]>([]);
   const [showAlertsDialog, setShowAlertsDialog] = useState(false);
+  const [chequeAlertsCount, setChequeAlertsCount] = useState(0);
+  const [reservationAlertsCount, setReservationAlertsCount] = useState(0);
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -255,6 +257,39 @@ export default function Dashboard() {
       }
     }
     setVehicleAlerts(alerts);
+
+    // Count check alerts (chèques older than 30 days)
+    const { data: payments } = await supabase
+      .from("contract_payments")
+      .select("id, date_paiement")
+      .eq("methode", "cheque");
+
+    if (payments) {
+      const oldChecks = payments.filter((payment) => {
+        const daysFromPayment = Math.ceil(
+          (today.getTime() - new Date(payment.date_paiement).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return daysFromPayment > 30;
+      });
+      setChequeAlertsCount(oldChecks.length);
+    }
+
+    // Count reservation alerts (departures and returns today)
+    const todayStr = new Date().toISOString().split("T")[0];
+    
+    const { data: departsToday } = await supabase
+      .from("contracts")
+      .select("id")
+      .eq("date_debut", todayStr)
+      .in("statut", ["contrat_valide", "brouillon"]);
+
+    const { data: returnsToday } = await supabase
+      .from("contracts")
+      .select("id")
+      .eq("date_fin", todayStr)
+      .eq("statut", "livre");
+
+    setReservationAlertsCount((departsToday?.length || 0) + (returnsToday?.length || 0));
   };
   const chartData = [{
     month: 'Août\n2025',
@@ -269,7 +304,7 @@ export default function Dashboard() {
     revenus: 6000,
     charges: 400
   }];
-  const totalAlerts = vehicleAlerts.length;
+  const totalAlerts = vehicleAlerts.length + chequeAlertsCount + reservationAlertsCount;
   const availablePercentage = stats.vehiclesCount > 0 ? (stats.availableVehicles / stats.vehiclesCount * 100).toFixed(2) : '0.00';
 
   // Group alerts by vehicle
@@ -367,17 +402,21 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-4 mt-3">
-                      <div className="flex items-center space-x-2">
-                        <span className="w-3 h-3 rounded-full bg-success"></span>
-                        <span className="text-sm text-foreground">00 Alertes chèques</span>
+                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate("/alertes")}>
+                        <span className={`w-3 h-3 rounded-full ${chequeAlertsCount > 0 ? 'bg-warning' : 'bg-success'}`}></span>
+                        <span className={`text-sm text-foreground ${chequeAlertsCount > 0 ? 'underline' : ''}`}>
+                          {chequeAlertsCount.toString().padStart(2, '0')} Alertes chèques
+                        </span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="w-3 h-3 rounded-full bg-success"></span>
-                        <span className="text-sm text-foreground">00 Alertes réservations</span>
+                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate("/alertes")}>
+                        <span className={`w-3 h-3 rounded-full ${reservationAlertsCount > 0 ? 'bg-info' : 'bg-success'}`}></span>
+                        <span className={`text-sm text-foreground ${reservationAlertsCount > 0 ? 'underline' : ''}`}>
+                          {reservationAlertsCount.toString().padStart(2, '0')} Alertes réservations
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setShowAlertsDialog(true)}>
-                        <span className="w-3 h-3 rounded-full bg-warning"></span>
-                        <span className="text-sm text-foreground underline">
+                        <span className={`w-3 h-3 rounded-full ${vehicleAlerts.length > 0 ? 'bg-warning' : 'bg-success'}`}></span>
+                        <span className={`text-sm text-foreground ${vehicleAlerts.length > 0 ? 'underline' : ''}`}>
                           {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
                         </span>
                       </div>
