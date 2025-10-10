@@ -367,6 +367,87 @@ export default function VehiculeDetails() {
         </Card>
       </div>
 
+      {/* Vidange Status Card */}
+      <Card className={`border-l-4 ${
+        getOilChangeAlertLevel() === 'critical' ? 'border-l-destructive bg-destructive/5' :
+        getOilChangeAlertLevel() === 'warning' ? 'border-l-warning bg-warning/5' :
+        'border-l-success bg-success/5'
+      }`}>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4 flex-1">
+              <div className={`p-3 rounded-lg ${
+                getOilChangeAlertLevel() === 'critical' ? 'bg-destructive/20' :
+                getOilChangeAlertLevel() === 'warning' ? 'bg-warning/20' :
+                'bg-success/20'
+              }`}>
+                <Gauge className={`w-8 h-8 ${
+                  getOilChangeAlertLevel() === 'critical' ? 'text-destructive' :
+                  getOilChangeAlertLevel() === 'warning' ? 'text-warning' :
+                  'text-success'
+                }`} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1">Kilométrage actuel</p>
+                <p className="text-3xl md:text-4xl font-bold">
+                  {vehicle.kilometrage.toLocaleString()} km
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Dernière mise à jour : {format(new Date(vehicle.updated_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                </p>
+                
+                {vehicle.dernier_kilometrage_vidange > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm text-muted-foreground">
+                      Kilométrage depuis dernière vidange : 
+                      <span className={`font-semibold ml-1 ${
+                        getOilChangeAlertLevel() === 'critical' ? 'text-destructive' :
+                        getOilChangeAlertLevel() === 'warning' ? 'text-warning' :
+                        'text-success'
+                      }`}>
+                        {calculateKmDepuisVidange().toLocaleString()} km
+                      </span>
+                    </p>
+                    {vehicle.prochain_kilometrage_vidange && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Prochain kilométrage prévu : <span className="font-semibold">{vehicle.prochain_kilometrage_vidange.toLocaleString()} km</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {getOilChangeAlertLevel() === 'critical' && (
+                <Badge variant="destructive" className="whitespace-nowrap">
+                  Vidange urgente
+                </Badge>
+              )}
+              {getOilChangeAlertLevel() === 'warning' && (
+                <Badge className="bg-warning text-white whitespace-nowrap">
+                  Vidange à prévoir
+                </Badge>
+              )}
+              {getOilChangeAlertLevel() === 'ok' && (
+                <Badge className="bg-success text-white whitespace-nowrap">
+                  Vidange OK
+                </Badge>
+              )}
+              {needsOilChange() && (
+                <Button 
+                  size="sm"
+                  onClick={() => setShowVidangeDialog(true)}
+                  className="whitespace-nowrap"
+                >
+                  <Wrench className="w-4 h-4 mr-2" />
+                  Effectuer vidange
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Informations Section */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
