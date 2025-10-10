@@ -19,6 +19,7 @@ import { Database } from "@/integrations/supabase/types";
 import { useLayoutContext } from "@/components/layout/Layout";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 import { format } from "date-fns";
+import { useRealtime } from "@/hooks/use-realtime";
 
 type Client = Database['public']['Tables']['clients']['Row'];
 type ClientInsert = Database['public']['Tables']['clients']['Insert'];
@@ -59,6 +60,30 @@ export default function Clients() {
   useEffect(() => {
     loadClients();
   }, []);
+
+  // Synchronisation en temps réel
+  useRealtime<Client>({
+    table: 'clients',
+    onInsert: (payload) => {
+      setClients((prev) => [payload, ...prev]);
+      toast({
+        title: 'Nouveau client',
+        description: `${payload.prenom} ${payload.nom} ajouté`,
+      });
+    },
+    onUpdate: (payload) => {
+      setClients((prev) =>
+        prev.map((c) => (c.id === payload.id ? payload : c))
+      );
+    },
+    onDelete: ({ old }) => {
+      setClients((prev) => prev.filter((c) => c.id !== old.id));
+      toast({
+        title: 'Client supprimé',
+        description: `${old.prenom} ${old.nom} a été supprimé`,
+      });
+    },
+  });
 
   const loadClients = async () => {
     try {

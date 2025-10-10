@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
+import { useRealtime } from "@/hooks/use-realtime";
 
 interface Sinistre {
   id: string;
@@ -61,6 +62,28 @@ export default function Sinistres() {
   useEffect(() => {
     loadSinistres();
   }, []);
+
+  // Synchronisation en temps réel
+  useRealtime<Sinistre>({
+    table: 'sinistres',
+    onInsert: (payload) => {
+      loadSinistres(); // Recharger pour avoir les relations
+      toast({
+        title: 'Nouveau sinistre',
+        description: `Sinistre ${payload.reference} créé`,
+      });
+    },
+    onUpdate: (payload) => {
+      loadSinistres();
+    },
+    onDelete: ({ old }) => {
+      setSinistres((prev) => prev.filter((s) => s.id !== old.id));
+      toast({
+        title: 'Sinistre supprimé',
+        description: `Sinistre ${old.reference} supprimé`,
+      });
+    },
+  });
 
   const loadSinistres = async () => {
     try {

@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 import { format } from "date-fns";
+import { useRealtime } from "@/hooks/use-realtime";
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
 export default function Vehicules() {
@@ -70,6 +71,30 @@ export default function Vehicules() {
     loadVehicles();
     loadAssurances();
   }, []);
+
+  // Synchronisation en temps réel
+  useRealtime<Vehicle>({
+    table: 'vehicles',
+    onInsert: (payload) => {
+      setVehicles((prev) => [payload, ...prev]);
+      toast({
+        title: 'Nouveau véhicule',
+        description: `${payload.marque} ${payload.modele} ajouté`,
+      });
+    },
+    onUpdate: (payload) => {
+      setVehicles((prev) =>
+        prev.map((v) => (v.id === payload.id ? payload : v))
+      );
+    },
+    onDelete: ({ old }) => {
+      setVehicles((prev) => prev.filter((v) => v.id !== old.id));
+      toast({
+        title: 'Véhicule supprimé',
+        description: `${old.marque} ${old.modele} a été supprimé`,
+      });
+    },
+  });
   const loadAssurances = async () => {
     try {
       const {

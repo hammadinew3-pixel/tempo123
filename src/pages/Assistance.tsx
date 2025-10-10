@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
+import { useRealtime } from "@/hooks/use-realtime";
 
 type Assistance = Database['public']['Tables']['assistance']['Row'];
 
@@ -34,6 +35,28 @@ export default function Assistance() {
   useEffect(() => {
     loadAssistances();
   }, []);
+
+  // Synchronisation en temps réel
+  useRealtime<Assistance>({
+    table: 'assistance',
+    onInsert: (payload) => {
+      loadAssistances(); // Recharger pour avoir les relations
+      toast({
+        title: 'Nouveau dossier',
+        description: `Dossier ${payload.num_dossier} créé`,
+      });
+    },
+    onUpdate: (payload) => {
+      loadAssistances();
+    },
+    onDelete: ({ old }) => {
+      setAssistances((prev) => prev.filter((a) => a.id !== old.id));
+      toast({
+        title: 'Dossier supprimé',
+        description: `Dossier ${old.num_dossier} supprimé`,
+      });
+    },
+  });
 
   const loadAssistances = async () => {
     try {

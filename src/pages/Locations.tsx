@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
+import { useRealtime } from "@/hooks/use-realtime";
 
 type Contract = Database['public']['Tables']['contracts']['Row'];
 type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
@@ -62,6 +63,50 @@ export default function Locations() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Synchronisation en temps réel pour les contrats
+  useRealtime<any>({
+    table: 'contracts',
+    onInsert: (payload) => {
+      loadData(); // Recharger pour avoir les relations
+      toast({
+        title: 'Nouveau contrat',
+        description: `Contrat ${payload.numero_contrat} créé`,
+      });
+    },
+    onUpdate: (payload) => {
+      loadData();
+    },
+    onDelete: ({ old }) => {
+      setContracts((prev) => prev.filter((c) => c.id !== old.id));
+      toast({
+        title: 'Contrat supprimé',
+        description: `Contrat ${old.numero_contrat} supprimé`,
+      });
+    },
+  });
+
+  // Synchronisation en temps réel pour les assistances
+  useRealtime<any>({
+    table: 'assistance',
+    onInsert: (payload) => {
+      loadData();
+      toast({
+        title: 'Nouveau dossier assistance',
+        description: `Dossier ${payload.num_dossier} créé`,
+      });
+    },
+    onUpdate: (payload) => {
+      loadData();
+    },
+    onDelete: ({ old }) => {
+      loadData();
+      toast({
+        title: 'Dossier supprimé',
+        description: `Dossier ${old.num_dossier} supprimé`,
+      });
+    },
+  });
 
   const loadData = async () => {
     try {
