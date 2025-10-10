@@ -16,10 +16,6 @@ interface DashboardStats {
   rentedVehicles: number;
   maintenanceVehicles: number;
   outOfServiceVehicles: number;
-  sinistresCount: number;
-  sinistresOuvert: number;
-  sinistresCoutTotal: number;
-  topSinistredVehicles: Array<{id: string; immatriculation: string; count: number}>;
 }
 interface VehicleAlert {
   vehicleId: string;
@@ -36,11 +32,7 @@ export default function Dashboard() {
     availableVehicles: 0,
     rentedVehicles: 0,
     maintenanceVehicles: 0,
-    outOfServiceVehicles: 0,
-    sinistresCount: 0,
-    sinistresOuvert: 0,
-    sinistresCoutTotal: 0,
-    topSinistredVehicles: [],
+    outOfServiceVehicles: 0
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
   const [recentAssistance, setRecentAssistance] = useState<any[]>([]);
@@ -57,127 +49,119 @@ export default function Dashboard() {
     loadDashboardData();
 
     // Subscribe to real-time updates for contracts and assistance
-    const contractsChannel = supabase
-      .channel('dashboard-contracts-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contracts'
-        },
-        () => {
-          loadDeparturesAndReturns();
-        }
-      )
-      .subscribe();
-
-    const assistanceChannel = supabase
-      .channel('dashboard-assistance-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'assistance'
-        },
-        () => {
-          loadDeparturesAndReturns();
-        }
-      )
-      .subscribe();
-
+    const contractsChannel = supabase.channel('dashboard-contracts-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'contracts'
+    }, () => {
+      loadDeparturesAndReturns();
+    }).subscribe();
+    const assistanceChannel = supabase.channel('dashboard-assistance-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'assistance'
+    }, () => {
+      loadDeparturesAndReturns();
+    }).subscribe();
     return () => {
       supabase.removeChannel(contractsChannel);
       supabase.removeChannel(assistanceChannel);
     };
   }, []);
-
   const loadDeparturesAndReturns = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       // Load today's departures from contracts
-      const { data: todayDepartures } = await supabase
-        .from('contracts')
-        .select(`
+      const {
+        data: todayDepartures
+      } = await supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_debut', today)
-        .order('start_time', { ascending: true });
+        `).eq('date_debut', today).order('start_time', {
+        ascending: true
+      });
 
       // Load today's departures from assistance
-      const { data: todayAssistanceDepartures } = await supabase
-        .from('assistance')
-        .select(`
+      const {
+        data: todayAssistanceDepartures
+      } = await supabase.from('assistance').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_debut', today);
+        `).eq('date_debut', today);
 
       // Load today's returns from contracts
-      const { data: todayReturns } = await supabase
-        .from('contracts')
-        .select(`
+      const {
+        data: todayReturns
+      } = await supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_fin', today)
-        .order('end_time', { ascending: true });
+        `).eq('date_fin', today).order('end_time', {
+        ascending: true
+      });
 
       // Load today's returns from assistance
-      const { data: todayAssistanceReturns } = await supabase
-        .from('assistance')
-        .select(`
+      const {
+        data: todayAssistanceReturns
+      } = await supabase.from('assistance').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_fin', today);
+        `).eq('date_fin', today);
 
       // Load tomorrow's returns (J+1) from contracts
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
-      
-      const { data: tomorrowReturns } = await supabase
-        .from('contracts')
-        .select(`
+      const {
+        data: tomorrowReturns
+      } = await supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_fin', tomorrowStr)
-        .order('end_time', { ascending: true });
+        `).eq('date_fin', tomorrowStr).order('end_time', {
+        ascending: true
+      });
 
       // Load tomorrow's returns (J+1) from assistance
-      const { data: tomorrowAssistanceReturns } = await supabase
-        .from('assistance')
-        .select(`
+      const {
+        data: tomorrowAssistanceReturns
+      } = await supabase.from('assistance').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_fin', tomorrowStr);
+        `).eq('date_fin', tomorrowStr);
 
       // Combine departures (contracts + assistance)
-      const allDepartures = [
-        ...(todayDepartures || []).map(d => ({ ...d, type: 'contract' })),
-        ...(todayAssistanceDepartures || []).map(d => ({ ...d, type: 'assistance' }))
-      ];
+      const allDepartures = [...(todayDepartures || []).map(d => ({
+        ...d,
+        type: 'contract'
+      })), ...(todayAssistanceDepartures || []).map(d => ({
+        ...d,
+        type: 'assistance'
+      }))];
 
       // Combine returns (today's + tomorrow's, contracts + assistance)
-      const allReturns = [
-        ...(todayReturns || []).map(r => ({ ...r, isJ1: false, type: 'contract' })),
-        ...(todayAssistanceReturns || []).map(r => ({ ...r, isJ1: false, type: 'assistance' })),
-        ...(tomorrowReturns || []).map(r => ({ ...r, isJ1: true, type: 'contract' })),
-        ...(tomorrowAssistanceReturns || []).map(r => ({ ...r, isJ1: true, type: 'assistance' }))
-      ];
-
+      const allReturns = [...(todayReturns || []).map(r => ({
+        ...r,
+        isJ1: false,
+        type: 'contract'
+      })), ...(todayAssistanceReturns || []).map(r => ({
+        ...r,
+        isJ1: false,
+        type: 'assistance'
+      })), ...(tomorrowReturns || []).map(r => ({
+        ...r,
+        isJ1: true,
+        type: 'contract'
+      })), ...(tomorrowAssistanceReturns || []).map(r => ({
+        ...r,
+        isJ1: true,
+        type: 'assistance'
+      }))];
       setDepartures(allDepartures);
       setReturns(allReturns);
     } catch (error) {
@@ -240,31 +224,6 @@ export default function Dashboard() {
         `).order('created_at', {
         ascending: false
       }).limit(4);
-
-      // Load sinistres stats
-      const { data: sinistres } = await supabase.from('sinistres').select('*, vehicles(immatriculation)');
-      const sinistresCount = sinistres?.length || 0;
-      const sinistresOuvert = sinistres?.filter(s => s.statut === 'ouvert').length || 0;
-      const sinistresCoutTotal = sinistres?.reduce((sum, s) => sum + (s.cout_estime || 0), 0) || 0;
-      
-      // Top 3 vehicles with most sinistres
-      const vehicleSinistresCount: Record<string, { id: string; immatriculation: string; count: number }> = {};
-      sinistres?.forEach(s => {
-        if (s.vehicle_id && s.vehicles) {
-          if (!vehicleSinistresCount[s.vehicle_id]) {
-            vehicleSinistresCount[s.vehicle_id] = {
-              id: s.vehicle_id,
-              immatriculation: s.vehicles.immatriculation,
-              count: 0
-            };
-          }
-          vehicleSinistresCount[s.vehicle_id].count++;
-        }
-      });
-      const topSinistredVehicles = Object.values(vehicleSinistresCount)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 3);
-
       setStats({
         vehiclesCount: vehiclesCount || 0,
         reservationsCount: reservationsCount || 0,
@@ -272,11 +231,7 @@ export default function Dashboard() {
         availableVehicles,
         rentedVehicles,
         maintenanceVehicles,
-        outOfServiceVehicles,
-        sinistresCount,
-        sinistresOuvert,
-        sinistresCoutTotal,
-        topSinistredVehicles,
+        outOfServiceVehicles
       });
       setRecentReservations(reservations || []);
       setRecentAssistance(assistance || []);
@@ -420,16 +375,12 @@ export default function Dashboard() {
     setVehicleAlerts(alerts);
 
     // Count check alerts (chèques older than 30 days)
-    const { data: payments } = await supabase
-      .from("contract_payments")
-      .select("id, date_paiement")
-      .eq("methode", "cheque");
-
+    const {
+      data: payments
+    } = await supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque");
     if (payments) {
-      const oldChecks = payments.filter((payment) => {
-        const daysFromPayment = Math.ceil(
-          (today.getTime() - new Date(payment.date_paiement).getTime()) / (1000 * 60 * 60 * 24)
-        );
+      const oldChecks = payments.filter(payment => {
+        const daysFromPayment = Math.ceil((today.getTime() - new Date(payment.date_paiement).getTime()) / (1000 * 60 * 60 * 24));
         return daysFromPayment > 30;
       });
       setChequeAlertsCount(oldChecks.length);
@@ -437,19 +388,12 @@ export default function Dashboard() {
 
     // Count reservation alerts (departures and returns today)
     const todayStr = new Date().toISOString().split("T")[0];
-    
-    const { data: departsToday } = await supabase
-      .from("contracts")
-      .select("id")
-      .eq("date_debut", todayStr)
-      .in("statut", ["contrat_valide", "brouillon"]);
-
-    const { data: returnsToday } = await supabase
-      .from("contracts")
-      .select("id")
-      .eq("date_fin", todayStr)
-      .eq("statut", "livre");
-
+    const {
+      data: departsToday
+    } = await supabase.from("contracts").select("id").eq("date_debut", todayStr).in("statut", ["contrat_valide", "brouillon"]);
+    const {
+      data: returnsToday
+    } = await supabase.from("contracts").select("id").eq("date_fin", todayStr).eq("statut", "livre");
     setReservationAlertsCount((departsToday?.length || 0) + (returnsToday?.length || 0));
   };
   const chartData = [{
@@ -486,10 +430,7 @@ export default function Dashboard() {
       <div className="p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card 
-            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/vehicules')}
-          >
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/vehicules')}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -508,10 +449,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card 
-            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/locations')}
-          >
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/locations')}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -530,10 +468,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card 
-            className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/clients')}
-          >
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/clients')}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -548,73 +483,6 @@ export default function Dashboard() {
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
                   <Users className="w-7 h-7 text-primary" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sinistres KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card 
-            className="border-l-4 border-l-destructive shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate('/sinistres')}
-          >
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Sinistres totaux</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.sinistresCount}</p>
-                </div>
-                <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-destructive" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-orange-500 shadow-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">En cours</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.sinistresOuvert}</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-orange-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-primary shadow-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Coût total estimé</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.sinistresCoutTotal.toFixed(2)} DH</p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-secondary shadow-sm">
-            <CardContent className="pt-6">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Top véhicules touchés</p>
-                {stats.topSinistredVehicles.length > 0 ? (
-                  <div className="space-y-1">
-                    {stats.topSinistredVehicles.map((v, i) => (
-                      <p key={v.id} className="text-xs">
-                        {i + 1}. {v.immatriculation} ({v.count})
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Aucun</p>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -703,19 +571,7 @@ export default function Dashboard() {
                       </td>
                     </tr> : (activeTab === 'departures' ? departures : returns).map(item => <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
                         <td className="py-4 font-medium text-foreground">
-                          <div className="flex items-center gap-2">
-                            {item.type === 'contract' ? item.numero_contrat : item.num_dossier}
-                            {item.type === 'assistance' && (
-                              <Badge variant="outline" className="bg-warning/10 text-warning border-warning text-xs">
-                                ASS
-                              </Badge>
-                            )}
-                            {activeTab === 'returns' && item.isJ1 && (
-                              <Badge variant="outline" className="bg-info/10 text-info border-info text-xs">
-                                J+1
-                              </Badge>
-                            )}
-                          </div>
+                          
                         </td>
                         <td className="py-4 text-foreground">
                           {item.vehicles?.marque} {item.vehicles?.modele}
@@ -751,52 +607,16 @@ export default function Dashboard() {
                     <circle cx="50" cy="50" r="40" stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
                     
                     {/* Available vehicles (green) */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="40" 
-                      stroke="hsl(var(--success))" 
-                      strokeWidth="8" 
-                      fill="none" 
-                      strokeDasharray="251.2" 
-                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * stats.availableVehicles / stats.vehiclesCount) : 251.2} 
-                    />
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--success))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * stats.availableVehicles / stats.vehiclesCount : 251.2} />
                     
                     {/* Rented vehicles (primary) */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="40" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth="8" 
-                      fill="none" 
-                      strokeDasharray="251.2" 
-                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles) / stats.vehiclesCount) : 251.2} 
-                    />
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--primary))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles) / stats.vehiclesCount : 251.2} />
                     
                     {/* Maintenance vehicles (warning) */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="40" 
-                      stroke="hsl(var(--warning))" 
-                      strokeWidth="8" 
-                      fill="none" 
-                      strokeDasharray="251.2" 
-                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles) / stats.vehiclesCount) : 251.2} 
-                    />
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--warning))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles) / stats.vehiclesCount : 251.2} />
                     
                     {/* Out of service vehicles (destructive) */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="40" 
-                      stroke="hsl(var(--destructive))" 
-                      strokeWidth="8" 
-                      fill="none" 
-                      strokeDasharray="251.2" 
-                      strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles + stats.outOfServiceVehicles) / stats.vehiclesCount) : 251.2} 
-                    />
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--destructive))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={stats.vehiclesCount > 0 ? 251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles + stats.maintenanceVehicles + stats.outOfServiceVehicles) / stats.vehiclesCount : 251.2} />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -816,7 +636,7 @@ export default function Dashboard() {
                     <span className="text-sm text-foreground">Disponibles</span>
                   </div>
                   <span className="text-sm font-medium text-foreground">
-                    {stats.availableVehicles} ({stats.vehiclesCount > 0 ? ((stats.availableVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                    {stats.availableVehicles} ({stats.vehiclesCount > 0 ? (stats.availableVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -825,7 +645,7 @@ export default function Dashboard() {
                     <span className="text-sm text-foreground">En circulation</span>
                   </div>
                   <span className="text-sm font-medium text-foreground">
-                    {stats.rentedVehicles} ({stats.vehiclesCount > 0 ? ((stats.rentedVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                    {stats.rentedVehicles} ({stats.vehiclesCount > 0 ? (stats.rentedVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -834,7 +654,7 @@ export default function Dashboard() {
                     <span className="text-sm text-foreground">Maintenance</span>
                   </div>
                   <span className="text-sm font-medium text-foreground">
-                    {stats.maintenanceVehicles} ({stats.vehiclesCount > 0 ? ((stats.maintenanceVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                    {stats.maintenanceVehicles} ({stats.vehiclesCount > 0 ? (stats.maintenanceVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -843,7 +663,7 @@ export default function Dashboard() {
                     <span className="text-sm text-foreground">Hors service</span>
                   </div>
                   <span className="text-sm font-medium text-foreground">
-                    {stats.outOfServiceVehicles} ({stats.vehiclesCount > 0 ? ((stats.outOfServiceVehicles / stats.vehiclesCount) * 100).toFixed(0) : 0}%)
+                    {stats.outOfServiceVehicles} ({stats.vehiclesCount > 0 ? (stats.outOfServiceVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
                   </span>
                 </div>
               </div>
@@ -914,20 +734,10 @@ export default function Dashboard() {
                 <CardDescription>Basé sur le type sélectionné</CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={reservationType === 'standard' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}
-                  onClick={() => setReservationType('standard')}
-                >
+                <Button variant="ghost" size="sm" className={reservationType === 'standard' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'} onClick={() => setReservationType('standard')}>
                   Standard
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={reservationType === 'assistance' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}
-                  onClick={() => setReservationType('assistance')}
-                >
+                <Button variant="ghost" size="sm" className={reservationType === 'assistance' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'} onClick={() => setReservationType('assistance')}>
                   Assurances
                 </Button>
               </div>
@@ -958,11 +768,8 @@ export default function Dashboard() {
                     </tr> : (reservationType === 'standard' ? recentReservations : recentAssistance).map(reservation => <tr key={reservation.id} className="border-b hover:bg-muted/50">
                         <td className="py-4">{reservationType === 'standard' ? reservation.numero_contrat : reservation.num_dossier || 'N/A'}</td>
                         <td className="py-4">
-                          <Badge variant="secondary" className={reservation.statut === 'actif' || reservation.etat === 'livre' ? 'bg-primary/10 text-primary border-primary/20' : (reservation.statut === 'termine' || reservation.etat === 'cloture') ? 'bg-muted text-muted-foreground border-muted' : 'bg-warning/10 text-warning border-warning/20'}>
-                            {reservationType === 'standard' 
-                              ? (reservation.statut === 'actif' ? 'Livrée' : reservation.statut)
-                              : (reservation.etat === 'livre' ? 'Livrée' : reservation.etat)
-                            }
+                          <Badge variant="secondary" className={reservation.statut === 'actif' || reservation.etat === 'livre' ? 'bg-primary/10 text-primary border-primary/20' : reservation.statut === 'termine' || reservation.etat === 'cloture' ? 'bg-muted text-muted-foreground border-muted' : 'bg-warning/10 text-warning border-warning/20'}>
+                            {reservationType === 'standard' ? reservation.statut === 'actif' ? 'Livrée' : reservation.statut : reservation.etat === 'livre' ? 'Livrée' : reservation.etat}
                           </Badge>
                         </td>
                         <td className="py-4">
@@ -977,12 +784,7 @@ export default function Dashboard() {
                           {reservation.clients?.nom} {reservation.clients?.prenom}
                         </td>
                         <td className="py-4">
-                          {reservationType === 'standard' 
-                            ? `${reservation.duration || 0} Jrs`
-                            : `${reservation.date_debut && reservation.date_fin 
-                                ? Math.ceil((new Date(reservation.date_fin).getTime() - new Date(reservation.date_debut).getTime()) / (1000 * 60 * 60 * 24))
-                                : 0} Jrs`
-                          }
+                          {reservationType === 'standard' ? `${reservation.duration || 0} Jrs` : `${reservation.date_debut && reservation.date_fin ? Math.ceil((new Date(reservation.date_fin).getTime() - new Date(reservation.date_debut).getTime()) / (1000 * 60 * 60 * 24)) : 0} Jrs`}
                         </td>
                         <td className="py-4">
                           {new Date(reservation.date_debut).toLocaleDateString('fr-FR')}
@@ -991,28 +793,15 @@ export default function Dashboard() {
                           {reservation.date_fin ? new Date(reservation.date_fin).toLocaleDateString('fr-FR') : 'N/A'}
                         </td>
                         <td className="py-4">
-                          {reservationType === 'standard' 
-                            ? `${reservation.total_amount?.toFixed(2) || 0} DH`
-                            : `${reservation.montant_total?.toFixed(2) || 0} DH`
-                          }
+                          {reservationType === 'standard' ? `${reservation.total_amount?.toFixed(2) || 0} DH` : `${reservation.montant_total?.toFixed(2) || 0} DH`}
                         </td>
                         <td className="py-4">
-                          <span className={
-                            reservationType === 'standard'
-                              ? ((reservation.remaining_amount || 0) > 0 ? 'text-red-600' : 'text-green-600')
-                              : ((reservation.montant_total || 0) - (reservation.montant_paye || 0) > 0 ? 'text-red-600' : 'text-green-600')
-                          }>
-                            {reservationType === 'standard' 
-                              ? `${(reservation.remaining_amount || 0) > 0 ? '-' : '+'}${Math.abs(reservation.remaining_amount || 0).toFixed(2)} DH`
-                              : `${((reservation.montant_total || 0) - (reservation.montant_paye || 0)) > 0 ? '-' : '+'}${Math.abs((reservation.montant_total || 0) - (reservation.montant_paye || 0)).toFixed(2)} DH`
-                            }
+                          <span className={reservationType === 'standard' ? (reservation.remaining_amount || 0) > 0 ? 'text-red-600' : 'text-green-600' : (reservation.montant_total || 0) - (reservation.montant_paye || 0) > 0 ? 'text-red-600' : 'text-green-600'}>
+                            {reservationType === 'standard' ? `${(reservation.remaining_amount || 0) > 0 ? '-' : '+'}${Math.abs(reservation.remaining_amount || 0).toFixed(2)} DH` : `${(reservation.montant_total || 0) - (reservation.montant_paye || 0) > 0 ? '-' : '+'}${Math.abs((reservation.montant_total || 0) - (reservation.montant_paye || 0)).toFixed(2)} DH`}
                           </span>
                         </td>
                         <td className="py-4">
-                          {reservationType === 'standard'
-                            ? `${reservation.daily_rate?.toFixed(2) || 0} DH`
-                            : `${reservation.tarif_journalier?.toFixed(2) || 0} DH`
-                          }
+                          {reservationType === 'standard' ? `${reservation.daily_rate?.toFixed(2) || 0} DH` : `${reservation.tarif_journalier?.toFixed(2) || 0} DH`}
                         </td>
                       </tr>)}
                 </tbody>
