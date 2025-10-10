@@ -54,10 +54,7 @@ export default function ModifierVehicule() {
     tarif_journalier: 0,
     valeur_achat: 0,
     statut: 'disponible' as VehicleStatus,
-    photo_url: '',
-    assurance_expire_le: '',
-    visite_technique_expire_le: '',
-    vignette_expire_le: ''
+    photo_url: ''
   });
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -93,10 +90,7 @@ export default function ModifierVehicule() {
         tarif_journalier: data.tarif_journalier || 0,
         valeur_achat: data.valeur_achat || 0,
         statut: data.statut || 'disponible',
-        photo_url: data.photo_url || '',
-        assurance_expire_le: data.assurance_expire_le || '',
-        visite_technique_expire_le: data.visite_technique_expire_le || '',
-        vignette_expire_le: data.vignette_expire_le || ''
+        photo_url: data.photo_url || ''
       });
 
       setIsInService(data.statut === 'disponible' || data.statut === 'loue' || data.statut === 'reserve');
@@ -351,17 +345,25 @@ export default function ModifierVehicule() {
               </div>
             </div>
 
-            {/* Date de mise en circulation */}
-            <div className="md:col-span-2">
-              <Label htmlFor="annee">Date de mise en circulation</Label>
+            {/* Année de mise en circulation */}
+            <div>
+              <Label htmlFor="annee">Année de mise en circulation</Label>
               <Input
                 id="annee"
                 type="number"
+                min="1900"
+                max={new Date().getFullYear() + 1}
                 value={formData.annee}
                 onChange={(e) => setFormData({...formData, annee: parseInt(e.target.value) || new Date().getFullYear()})}
                 placeholder="YYYY"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Année de la première immatriculation du véhicule
+              </p>
             </div>
+
+            {/* Empty div for grid alignment */}
+            <div></div>
 
             {/* Photo Upload */}
             <div className="md:col-span-2">
@@ -445,37 +447,6 @@ export default function ModifierVehicule() {
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
                 </div>
-              </div>
-
-
-              <div>
-                <Label htmlFor="assurance_expire_le">Date d'expiration assurance</Label>
-                <Input
-                  id="assurance_expire_le"
-                  type="date"
-                  value={formData.assurance_expire_le}
-                  onChange={(e) => setFormData({...formData, assurance_expire_le: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="visite_technique_expire_le">Date d'expiration visite technique</Label>
-                <Input
-                  id="visite_technique_expire_le"
-                  type="date"
-                  value={formData.visite_technique_expire_le}
-                  onChange={(e) => setFormData({...formData, visite_technique_expire_le: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="vignette_expire_le">Date d'expiration vignette</Label>
-                <Input
-                  id="vignette_expire_le"
-                  type="date"
-                  value={formData.vignette_expire_le}
-                  onChange={(e) => setFormData({...formData, vignette_expire_le: e.target.value})}
-                />
               </div>
 
               <div>
