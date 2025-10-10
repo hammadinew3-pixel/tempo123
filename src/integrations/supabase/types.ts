@@ -951,12 +951,14 @@ export type Database = {
           created_at: string
           date_derniere_vidange: string | null
           dernier_kilometrage_vidange: number | null
+          en_service: boolean | null
           id: string
           immatriculation: string
           kilometrage: number
           marque: string
           modele: string
           photo_url: string | null
+          sous_location: boolean | null
           statut: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier: number
           updated_at: string
@@ -971,12 +973,14 @@ export type Database = {
           created_at?: string
           date_derniere_vidange?: string | null
           dernier_kilometrage_vidange?: number | null
+          en_service?: boolean | null
           id?: string
           immatriculation: string
           kilometrage?: number
           marque: string
           modele: string
           photo_url?: string | null
+          sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier: number
           updated_at?: string
@@ -991,12 +995,14 @@ export type Database = {
           created_at?: string
           date_derniere_vidange?: string | null
           dernier_kilometrage_vidange?: number | null
+          en_service?: boolean | null
           id?: string
           immatriculation?: string
           kilometrage?: number
           marque?: string
           modele?: string
           photo_url?: string | null
+          sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier?: number
           updated_at?: string

@@ -23,6 +23,7 @@ export default function Vehicules() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location'>('tous');
   const { toast } = useToast();
 
   // Form state
@@ -232,6 +233,15 @@ export default function Vehicules() {
     return 'ok';
   };
 
+  const filteredVehicles = vehicles.filter((vehicle) => {
+    if (filter === 'hors_service') return vehicle.en_service === false;
+    if (filter === 'sous_location') return vehicle.sous_location === true;
+    return true; // 'tous'
+  });
+
+  const countHorsService = vehicles.filter(v => v.en_service === false).length;
+  const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
+
   return (
     <div className="space-y-4 md:space-y-6 p-3 md:p-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -402,14 +412,35 @@ export default function Vehicules() {
         <CardHeader className="space-y-4 p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 md:gap-6 text-xs md:text-sm font-medium overflow-x-auto">
-              <button className="text-primary border-b-2 border-primary pb-2 transition-colors whitespace-nowrap">
+              <button 
+                onClick={() => setFilter('tous')}
+                className={`pb-2 transition-colors whitespace-nowrap ${
+                  filter === 'tous' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
                 TOUS ({vehicles.length})
               </button>
-              <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
-                HORS SERVICE (0)
+              <button 
+                onClick={() => setFilter('hors_service')}
+                className={`pb-2 transition-colors whitespace-nowrap ${
+                  filter === 'hors_service' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                HORS SERVICE ({countHorsService})
               </button>
-              <button className="text-muted-foreground hover:text-primary pb-2 transition-colors whitespace-nowrap">
-                SOUS LOCATION (0)
+              <button 
+                onClick={() => setFilter('sous_location')}
+                className={`pb-2 transition-colors whitespace-nowrap ${
+                  filter === 'sous_location' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                SOUS LOCATION ({countSousLocation})
               </button>
             </div>
             {selectedIds.size > 0 && (
@@ -435,7 +466,7 @@ export default function Vehicules() {
             <>
               {/* Vue mobile - Cards */}
               <div className="block lg:hidden space-y-3 p-3">
-                {vehicles.map((vehicle) => (
+                {filteredVehicles.map((vehicle) => (
                   <Card 
                     key={vehicle.id}
                     className="cursor-pointer hover:shadow-md transition-shadow"
@@ -532,7 +563,7 @@ export default function Vehicules() {
                     <tr className="text-left text-sm text-muted-foreground border-b">
                       <th className="pb-3 pl-4 font-medium w-12">
                         <Checkbox 
-                          checked={selectedIds.size > 0 && selectedIds.size === vehicles.length}
+                          checked={selectedIds.size > 0 && selectedIds.size === filteredVehicles.length}
                           onCheckedChange={toggleSelectAll}
                         />
                       </th>
@@ -546,7 +577,7 @@ export default function Vehicules() {
                     </tr>
                   </thead>
                   <tbody>
-                    {vehicles.map((vehicle) => (
+                    {filteredVehicles.map((vehicle) => (
                       <tr 
                         key={vehicle.id} 
                         className="border-b last:border-0 cursor-pointer hover:bg-muted/50 transition-colors"

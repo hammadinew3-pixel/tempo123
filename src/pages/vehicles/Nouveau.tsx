@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, Upload, ChevronUp } from "lucide-react";
+import { ChevronRight, Upload, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,8 +19,9 @@ export default function NouveauVehicule() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showMoreFields, setShowMoreFields] = useState(false);
-  const [enService, setEnService] = useState(true);
-  const [sousLocation, setSousLocation] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<VehicleInsert>>({
     marque: '',
@@ -32,7 +33,59 @@ export default function NouveauVehicule() {
     tarif_journalier: 0,
     valeur_achat: 0,
     categorie: undefined,
+    en_service: true,
+    sous_location: false,
   });
+
+  // Mapping marque -> modèles
+  const modelesParMarque: Record<string, string[]> = {
+    BMW: ['Série 1', 'Série 3', 'Série 5', 'Série 7', 'X1', 'X3', 'X5', 'X7'],
+    Mercedes: ['Classe A', 'Classe C', 'Classe E', 'Classe S', 'GLA', 'GLC', 'GLE', 'GLS'],
+    Audi: ['A3', 'A4', 'A6', 'A8', 'Q3', 'Q5', 'Q7', 'Q8'],
+    Volkswagen: ['Golf', 'Polo', 'Passat', 'Tiguan', 'T-Roc', 'Touareg'],
+    Renault: ['Clio', 'Mégane', 'Captur', 'Kadjar', 'Koleos', 'Talisman'],
+    Peugeot: ['208', '308', '508', '2008', '3008', '5008'],
+    Dacia: ['Sandero', 'Logan', 'Duster', 'Lodgy', 'Dokker'],
+    Toyota: ['Yaris', 'Corolla', 'Camry', 'RAV4', 'Land Cruiser', 'Hilux'],
+    Hyundai: ['i10', 'i20', 'Elantra', 'Tucson', 'Santa Fe', 'Kona'],
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const removePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +99,20 @@ export default function NouveauVehicule() {
           description: "Veuillez remplir tous les champs obligatoires",
           variant: "destructive"
         });
+        setLoading(false);
         return;
       }
 
+      // Note: Pour l'instant, nous stockons juste le preview comme photo_url
+      // Dans une implémentation complète, vous devriez uploader vers Supabase Storage
+      const dataToInsert = {
+        ...formData,
+        photo_url: photoPreview || null,
+      };
+
       const { data, error } = await supabase
         .from('vehicles')
-        .insert([formData as VehicleInsert])
+        .insert([dataToInsert as VehicleInsert])
         .select()
         .single();
 
@@ -101,8 +162,8 @@ export default function NouveauVehicule() {
         <div className="grid grid-cols-2 gap-6">
           <div className="flex items-center gap-3">
             <Switch
-              checked={enService}
-              onCheckedChange={setEnService}
+              checked={formData.en_service}
+              onCheckedChange={(checked) => setFormData({ ...formData, en_service: checked })}
               id="en-service"
             />
             <Label htmlFor="en-service" className="text-base font-normal cursor-pointer">
@@ -112,8 +173,8 @@ export default function NouveauVehicule() {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <Switch
-                checked={sousLocation}
-                onCheckedChange={setSousLocation}
+                checked={formData.sous_location}
+                onCheckedChange={(checked) => setFormData({ ...formData, sous_location: checked })}
                 id="sous-location"
               />
               <Label htmlFor="sous-location" className="text-base font-normal cursor-pointer">
@@ -134,7 +195,7 @@ export default function NouveauVehicule() {
               <Label htmlFor="marque">Marque *</Label>
               <Select
                 value={formData.marque}
-                onValueChange={(value) => setFormData({ ...formData, marque: value })}
+                onValueChange={(value) => setFormData({ ...formData, marque: value, modele: '' })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une marque" />
@@ -149,6 +210,26 @@ export default function NouveauVehicule() {
                   <SelectItem value="Dacia">Dacia</SelectItem>
                   <SelectItem value="Toyota">Toyota</SelectItem>
                   <SelectItem value="Hyundai">Hyundai</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modele">Modèle *</Label>
+              <Select
+                value={formData.modele}
+                onValueChange={(value) => setFormData({ ...formData, modele: value })}
+                disabled={!formData.marque}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={formData.marque ? "Sélectionner un modèle" : "Sélectionnez d'abord une marque"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {formData.marque && modelesParMarque[formData.marque]?.map((modele) => (
+                    <SelectItem key={modele} value={modele}>
+                      {modele}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -177,16 +258,6 @@ export default function NouveauVehicule() {
                   <SelectItem value="hybride">Hybride</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="modele">Modèle</Label>
-              <Input
-                id="modele"
-                value={formData.modele}
-                onChange={(e) => setFormData({ ...formData, modele: e.target.value })}
-                placeholder="Ex: Série 3"
-              />
             </div>
 
             <div className="space-y-2">
@@ -357,14 +428,53 @@ export default function NouveauVehicule() {
             </p>
             
             {/* File Upload */}
-            <Card className="border-dashed border-2">
+            <Card 
+              className="border-dashed border-2 cursor-pointer hover:border-primary transition-colors"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Upload className="w-12 h-12 text-primary mb-4" />
-                <p className="text-sm text-muted-foreground">
-                  Glisser-déposer, ou <button type="button" className="text-primary hover:underline">explorer</button> votre fichiers.
-                </p>
+                {photoPreview ? (
+                  <div className="relative">
+                    <img 
+                      src={photoPreview} 
+                      alt="Aperçu" 
+                      className="max-w-full h-48 object-cover rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removePhoto();
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-12 h-12 text-primary mb-4" />
+                    <p className="text-sm text-muted-foreground">
+                      Glisser-déposer, ou <span className="text-primary hover:underline">explorer</span> vos fichiers.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      PNG, JPG jusqu'à 10MB
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </CollapsibleContent>
         </Collapsible>
 
