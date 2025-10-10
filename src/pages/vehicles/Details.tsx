@@ -322,43 +322,55 @@ export default function VehiculeDetails() {
     
     if (insurances.length === 0) {
       alerts.push({ message: "Véhicule sans assurance ajoutée.", action: "CRÉER ASSURANCE", link: "/vehicules", severity: "high" });
-    } else if (vehicle?.assurance_expire_le) {
-      const expirationDate = new Date(vehicle.assurance_expire_le);
-      expirationDate.setHours(0, 0, 0, 0);
-      const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (expirationDate < today) {
-        alerts.push({ message: "Assurance expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
-      } else if (daysUntilExpiration <= 30) {
-        alerts.push({ message: `Assurance expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
+    } else {
+      // Vérifier la date d'expiration de la dernière assurance (la plus récente)
+      const latestInsurance = insurances[0]; // Déjà trié par date_debut desc
+      if (latestInsurance?.date_expiration) {
+        const expirationDate = new Date(latestInsurance.date_expiration);
+        expirationDate.setHours(0, 0, 0, 0);
+        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (expirationDate < today) {
+          alerts.push({ message: "Assurance expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
+        } else if (daysUntilExpiration <= 30) {
+          alerts.push({ message: `Assurance expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
+        }
       }
     }
 
     if (technicalInspections.length === 0) {
       alerts.push({ message: "Véhicule sans visite technique ajoutée.", action: "CRÉER VISITE", link: "/vehicules", severity: "high" });
-    } else if (vehicle?.visite_technique_expire_le) {
-      const expirationDate = new Date(vehicle.visite_technique_expire_le);
-      expirationDate.setHours(0, 0, 0, 0);
-      const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (expirationDate < today) {
-        alerts.push({ message: "Visite technique expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
-      } else if (daysUntilExpiration <= 30) {
-        alerts.push({ message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
+    } else {
+      // Vérifier la date d'expiration de la dernière visite technique
+      const latestInspection = technicalInspections[0]; // Déjà trié par date_visite desc
+      if (latestInspection?.date_expiration) {
+        const expirationDate = new Date(latestInspection.date_expiration);
+        expirationDate.setHours(0, 0, 0, 0);
+        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (expirationDate < today) {
+          alerts.push({ message: "Visite technique expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
+        } else if (daysUntilExpiration <= 30) {
+          alerts.push({ message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
+        }
       }
     }
 
     if (vignettes.length === 0) {
       alerts.push({ message: "Véhicule sans vignette ajoutée.", action: "CRÉER VIGNETTE", link: "/vehicules", severity: "high" });
-    } else if (vehicle?.vignette_expire_le) {
-      const expirationDate = new Date(vehicle.vignette_expire_le);
-      expirationDate.setHours(0, 0, 0, 0);
-      const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (expirationDate < today) {
-        alerts.push({ message: "Vignette expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
-      } else if (daysUntilExpiration <= 30) {
-        alerts.push({ message: `Vignette expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
+    } else {
+      // Vérifier la date d'expiration de la dernière vignette
+      const latestVignette = vignettes[0]; // Déjà trié par annee desc
+      if (latestVignette?.date_expiration) {
+        const expirationDate = new Date(latestVignette.date_expiration);
+        expirationDate.setHours(0, 0, 0, 0);
+        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (expirationDate < today) {
+          alerts.push({ message: "Vignette expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).", action: "RENOUVELER", link: "/vehicules", severity: "critical" });
+        } else if (daysUntilExpiration <= 30) {
+          alerts.push({ message: `Vignette expire dans ${daysUntilExpiration} jour(s).`, action: "RENOUVELER", link: "/vehicules", severity: "warning" });
+        }
       }
     }
 
