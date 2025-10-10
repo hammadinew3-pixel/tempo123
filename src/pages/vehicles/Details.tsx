@@ -92,6 +92,8 @@ export default function VehiculeDetails() {
   });
   const [vignettePhoto, setVignettePhoto] = useState<File | null>(null);
   const [uploadingVignette, setUploadingVignette] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -146,6 +148,49 @@ export default function VehiculeDetails() {
 
   const getTotalReservations = () => {
     return contracts.length + assistances.length;
+  };
+
+  const handleDeleteVehicle = async () => {
+    if (!vehicle) return;
+    
+    setDeleting(true);
+    try {
+      // Check if vehicle has active contracts or assistances
+      const activeContracts = contracts.filter(c => c.statut === 'livre' || c.statut === 'contrat_valide');
+      const activeAssistances = assistances.filter(a => a.etat === 'livre' || a.etat === 'contrat_valide');
+      
+      if (activeContracts.length > 0 || activeAssistances.length > 0) {
+        toast({
+          title: "Impossible de supprimer",
+          description: "Ce véhicule a des contrats ou assistances actifs",
+          variant: "destructive"
+        });
+        setDeleting(false);
+        setShowDeleteDialog(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('vehicles')
+        .delete()
+        .eq('id', vehicle.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Véhicule supprimé avec succès"
+      });
+
+      navigate('/vehicules');
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de supprimer le véhicule",
+        variant: "destructive"
+      });
+      setDeleting(false);
+    }
   };
 
   const calculateKmDepuisVidange = () => {
@@ -357,13 +402,23 @@ export default function VehiculeDetails() {
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Fiche véhicule Mat. N° {vehicle.immatriculation}
         </h1>
-        <Button 
-          onClick={() => navigate(`/vehicules/${id}/modifier`)}
-          className="bg-info hover:bg-info/90 text-white gap-2"
-        >
-          <Edit className="w-4 h-4" />
-          MODIFIER LE VÉHICULE
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={() => navigate(`/vehicules/${id}/modifier`)}
+            className="bg-info hover:bg-info/90 text-white gap-2"
+          >
+            <Edit className="w-4 h-4" />
+            MODIFIER LE VÉHICULE
+          </Button>
+          <Button 
+            onClick={() => setShowDeleteDialog(true)}
+            variant="destructive"
+            className="gap-2"
+          >
+            <AlertCircle className="w-4 h-4" />
+            SUPPRIMER LE VÉHICULE
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -1813,6 +1868,39 @@ export default function VehiculeDetails() {
               disabled={uploadingVignette}
             >
               {uploadingVignette ? "Upload en cours..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Vehicle Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground">
+              Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.
+            </p>
+            <p className="text-sm text-destructive mt-2">
+              Véhicule: {vehicle.marque} {vehicle.modele} - Mat. {vehicle.immatriculation}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteVehicle}
+              disabled={deleting}
+            >
+              {deleting ? "Suppression..." : "Supprimer"}
             </Button>
           </DialogFooter>
         </DialogContent>

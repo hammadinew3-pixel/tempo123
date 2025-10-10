@@ -231,6 +231,24 @@ export default function ModifierVehicule() {
               </div>
               <Switch checked={isSousLocation} onCheckedChange={setIsSousLocation} />
             </div>
+
+            <div>
+              <Label htmlFor="statut">Statut</Label>
+              <Select value={formData.statut} onValueChange={value => setFormData({
+              ...formData,
+              statut: value as VehicleStatus
+            })} disabled={!isInService}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="disponible">Disponible</SelectItem>
+                  <SelectItem value="loue">Loué</SelectItem>
+                  <SelectItem value="reserve">Réservé</SelectItem>
+                  <SelectItem value="en_panne">En panne</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Basic Fields */}
@@ -426,25 +444,6 @@ export default function ModifierVehicule() {
               </Select>
             </div>
 
-            {/* Statut */}
-            <div>
-              <Label htmlFor="statut">Statut</Label>
-              <Select value={formData.statut} onValueChange={value => setFormData({
-              ...formData,
-              statut: value as VehicleStatus
-            })} disabled={!isInService}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="disponible">Disponible</SelectItem>
-                  <SelectItem value="loue">Loué</SelectItem>
-                  <SelectItem value="reserve">Réservé</SelectItem>
-                  <SelectItem value="en_panne">En panne</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Photo Upload */}
             <div className="md:col-span-2">
               <Label>Photo du véhicule</Label>
@@ -477,8 +476,17 @@ export default function ModifierVehicule() {
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-center pt-4">
+          {/* Submit Buttons */}
+          <div className="flex flex-col md:flex-row justify-center gap-3 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="lg" 
+              onClick={() => navigate(`/vehicules/${id}`)}
+              className="w-full md:w-auto"
+            >
+              ANNULER
+            </Button>
             <Button type="submit" size="lg" disabled={saving} className="w-full md:w-auto">
               {saving ? "ENREGISTREMENT..." : "ENREGISTRER LES MODIFICATIONS"}
             </Button>
