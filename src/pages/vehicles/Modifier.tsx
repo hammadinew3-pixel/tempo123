@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleStatus = Database['public']['Enums']['vehicle_status'];
 type VehicleCategory = Database['public']['Enums']['vehicle_category'];
@@ -35,15 +34,17 @@ const MARQUES_MODELES: Record<string, string[]> = {
   Seat: ['Ibiza', 'Leon', 'Arona', 'Ateca', 'Tarraco'],
   Skoda: ['Fabia', 'Scala', 'Octavia', 'Kamiq', 'Karoq', 'Kodiaq', 'Enyaq']
 };
-
 export default function ModifierVehicule() {
-  const { id } = useParams();
+  const {
+    id
+  } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAllFields, setShowAllFields] = useState(false);
-  
   const [formData, setFormData] = useState({
     marque: '',
     modele: '',
@@ -62,30 +63,23 @@ export default function ModifierVehicule() {
     puissance: '',
     couleur: ''
   });
-
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-
   const [isInService, setIsInService] = useState(true);
   const [isSousLocation, setIsSousLocation] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
-
   useEffect(() => {
     if (id) {
       loadVehicle();
     }
   }, [id]);
-
   const loadVehicle = async () => {
     try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('*')
-        .eq('id', id)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('vehicles').select('*').eq('id', id).single();
       if (error) throw error;
-
       setFormData({
         marque: data.marque || '',
         modele: data.modele || '',
@@ -104,15 +98,13 @@ export default function ModifierVehicule() {
         puissance: '',
         couleur: ''
       });
-
       setIsInService(data.en_service ?? true);
       setIsSousLocation(data.sous_location ?? false);
-      
+
       // Set available models based on the vehicle's brand
       if (data.marque && MARQUES_MODELES[data.marque]) {
         setAvailableModels(MARQUES_MODELES[data.marque]);
       }
-      
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -124,7 +116,6 @@ export default function ModifierVehicule() {
       setLoading(false);
     }
   };
-
   const handleMarqueChange = (marque: string) => {
     setFormData({
       ...formData,
@@ -133,23 +124,19 @@ export default function ModifierVehicule() {
     });
     setAvailableModels(MARQUES_MODELES[marque] || []);
   };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setUploadedFile(file);
     }
   };
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
-
   const handleDragLeave = () => {
     setIsDragging(false);
   };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -164,15 +151,12 @@ export default function ModifierVehicule() {
       });
     }
   };
-
   const removeFile = () => {
     setUploadedFile(null);
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-
     try {
       const updateData = {
         marque: formData.marque,
@@ -187,19 +171,14 @@ export default function ModifierVehicule() {
         en_service: isInService,
         sous_location: isSousLocation
       };
-
-      const { error } = await supabase
-        .from('vehicles')
-        .update(updateData)
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('vehicles').update(updateData).eq('id', id);
       if (error) throw error;
-
       toast({
         title: "Succès",
         description: "Véhicule modifié avec succès"
       });
-
       navigate(`/vehicules/${id}`);
     } catch (error: any) {
       toast({
@@ -211,13 +190,10 @@ export default function ModifierVehicule() {
       setSaving(false);
     }
   };
-
   if (loading) {
     return <div className="p-6">Chargement...</div>;
   }
-
-  return (
-    <div className="p-3 md:p-6">
+  return <div className="p-3 md:p-6">
       {/* Header */}
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-foreground mb-2">
@@ -244,10 +220,7 @@ export default function ModifierVehicule() {
               <div>
                 <Label className="text-sm md:text-base font-semibold">Voiture en service</Label>
               </div>
-              <Switch
-                checked={isInService}
-                onCheckedChange={setIsInService}
-              />
+              <Switch checked={isInService} onCheckedChange={setIsInService} />
             </div>
 
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
@@ -257,10 +230,7 @@ export default function ModifierVehicule() {
                   Indiquez si la voiture appartient à une autre agence et que vous utilisez en sous-location
                 </p>
               </div>
-              <Switch
-                checked={isSousLocation}
-                onCheckedChange={setIsSousLocation}
-              />
+              <Switch checked={isSousLocation} onCheckedChange={setIsSousLocation} />
             </div>
           </div>
 
@@ -269,17 +239,12 @@ export default function ModifierVehicule() {
             {/* Marque */}
             <div>
               <Label htmlFor="marque">Marque *</Label>
-              <Select 
-                value={formData.marque} 
-                onValueChange={handleMarqueChange}
-              >
+              <Select value={formData.marque} onValueChange={handleMarqueChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
-                  {Object.keys(MARQUES_MODELES).sort().map((marque) => (
-                    <SelectItem key={marque} value={marque}>{marque}</SelectItem>
-                  ))}
+                  {Object.keys(MARQUES_MODELES).sort().map(marque => <SelectItem key={marque} value={marque}>{marque}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -287,18 +252,15 @@ export default function ModifierVehicule() {
             {/* Modèle */}
             <div>
               <Label htmlFor="modele">Modèle</Label>
-              <Select 
-                value={formData.modele} 
-                onValueChange={(value) => setFormData({...formData, modele: value})}
-                disabled={!formData.marque || availableModels.length === 0}
-              >
+              <Select value={formData.modele} onValueChange={value => setFormData({
+              ...formData,
+              modele: value
+            })} disabled={!formData.marque || availableModels.length === 0}>
                 <SelectTrigger>
                   <SelectValue placeholder={formData.marque ? "Sélectionner un modèle" : "Sélectionnez d'abord une marque"} />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
-                  {availableModels.map((modele) => (
-                    <SelectItem key={modele} value={modele}>{modele}</SelectItem>
-                  ))}
+                  {availableModels.map(modele => <SelectItem key={modele} value={modele}>{modele}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -306,10 +268,10 @@ export default function ModifierVehicule() {
             {/* Catégorie */}
             <div>
               <Label htmlFor="categorie">Catégorie *</Label>
-              <Select 
-                value={formData.categorie} 
-                onValueChange={(value) => setFormData({...formData, categorie: value as VehicleCategory})}
-              >
+              <Select value={formData.categorie} onValueChange={value => setFormData({
+              ...formData,
+              categorie: value as VehicleCategory
+            })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -326,25 +288,20 @@ export default function ModifierVehicule() {
             {/* Matricule */}
             <div>
               <Label htmlFor="immatriculation">Matricule *</Label>
-              <Input
-                id="immatriculation"
-                value={formData.immatriculation}
-                onChange={(e) => setFormData({...formData, immatriculation: e.target.value})}
-                required
-              />
+              <Input id="immatriculation" value={formData.immatriculation} onChange={e => setFormData({
+              ...formData,
+              immatriculation: e.target.value
+            })} required />
             </div>
 
             {/* Dernier kilométrage */}
             <div>
               <Label htmlFor="kilometrage">Dernier kilométrage *</Label>
               <div className="relative">
-                <Input
-                  id="kilometrage"
-                  type="number"
-                  value={formData.kilometrage}
-                  onChange={(e) => setFormData({...formData, kilometrage: parseInt(e.target.value) || 0})}
-                  required
-                />
+                <Input id="kilometrage" type="number" value={formData.kilometrage} onChange={e => setFormData({
+                ...formData,
+                kilometrage: parseInt(e.target.value) || 0
+              })} required />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">KM</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -356,13 +313,10 @@ export default function ModifierVehicule() {
             <div>
               <Label htmlFor="tarif_journalier">Prix location *</Label>
               <div className="relative">
-                <Input
-                  id="tarif_journalier"
-                  type="number"
-                  value={formData.tarif_journalier}
-                  onChange={(e) => setFormData({...formData, tarif_journalier: parseFloat(e.target.value) || 0})}
-                  required
-                />
+                <Input id="tarif_journalier" type="number" value={formData.tarif_journalier} onChange={e => setFormData({
+                ...formData,
+                tarif_journalier: parseFloat(e.target.value) || 0
+              })} required />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
               </div>
             </div>
@@ -370,10 +324,10 @@ export default function ModifierVehicule() {
             {/* Carburant */}
             <div>
               <Label htmlFor="carburant">Carburant *</Label>
-              <Select 
-                value={formData.carburant} 
-                onValueChange={(value) => setFormData({...formData, carburant: value})}
-              >
+              <Select value={formData.carburant} onValueChange={value => setFormData({
+              ...formData,
+              carburant: value
+            })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -389,15 +343,10 @@ export default function ModifierVehicule() {
             {/* Année de mise en circulation */}
             <div>
               <Label htmlFor="annee">Année de mise en circulation</Label>
-              <Input
-                id="annee"
-                type="number"
-                min="1900"
-                max={new Date().getFullYear() + 1}
-                value={formData.annee}
-                onChange={(e) => setFormData({...formData, annee: parseInt(e.target.value) || new Date().getFullYear()})}
-                placeholder="YYYY"
-              />
+              <Input id="annee" type="number" min="1900" max={new Date().getFullYear() + 1} value={formData.annee} onChange={e => setFormData({
+              ...formData,
+              annee: parseInt(e.target.value) || new Date().getFullYear()
+            })} placeholder="YYYY" />
               <p className="text-xs text-muted-foreground mt-1">
                 Année de la première immatriculation du véhicule
               </p>
@@ -407,13 +356,10 @@ export default function ModifierVehicule() {
             <div>
               <Label htmlFor="valeur_achat">Valeur d'achat (Prix TTC)</Label>
               <div className="relative">
-                <Input
-                  id="valeur_achat"
-                  type="number"
-                  step="0.01"
-                  value={formData.valeur_achat}
-                  onChange={(e) => setFormData({...formData, valeur_achat: parseFloat(e.target.value) || 0})}
-                />
+                <Input id="valeur_achat" type="number" step="0.01" value={formData.valeur_achat} onChange={e => setFormData({
+                ...formData,
+                valeur_achat: parseFloat(e.target.value) || 0
+              })} />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
               </div>
             </div>
@@ -421,12 +367,10 @@ export default function ModifierVehicule() {
             {/* N° Châssis */}
             <div>
               <Label htmlFor="chassis">N° Châssis</Label>
-              <Input
-                id="chassis"
-                value={formData.chassis}
-                onChange={(e) => setFormData({...formData, chassis: e.target.value})}
-                placeholder="Code unique de 17 caractères"
-              />
+              <Input id="chassis" value={formData.chassis} onChange={e => setFormData({
+              ...formData,
+              chassis: e.target.value
+            })} placeholder="Code unique de 17 caractères" />
               <p className="text-xs text-muted-foreground mt-1">
                 N° Châssis (VIN) est un code unique de 17 caractères composé de lettres et de chiffres
               </p>
@@ -435,37 +379,29 @@ export default function ModifierVehicule() {
             {/* Nombre de places */}
             <div>
               <Label htmlFor="places">Nombre de places</Label>
-              <Input
-                id="places"
-                type="number"
-                value={formData.places}
-                onChange={(e) => setFormData({...formData, places: parseInt(e.target.value) || 5})}
-                placeholder="Ex: 5"
-              />
+              <Input id="places" type="number" value={formData.places} onChange={e => setFormData({
+              ...formData,
+              places: parseInt(e.target.value) || 5
+            })} placeholder="Ex: 5" />
             </div>
 
             {/* Concessionaire */}
             <div>
               <Label htmlFor="concessionaire">Concessionaire</Label>
-              <Input
-                id="concessionaire"
-                value={formData.concessionaire}
-                onChange={(e) => setFormData({...formData, concessionaire: e.target.value})}
-                placeholder="Nom du concessionaire"
-              />
+              <Input id="concessionaire" value={formData.concessionaire} onChange={e => setFormData({
+              ...formData,
+              concessionaire: e.target.value
+            })} placeholder="Nom du concessionaire" />
             </div>
 
             {/* Puissance fiscale */}
             <div>
               <Label htmlFor="puissance">Puissance fiscale</Label>
               <div className="relative">
-                <Input
-                  id="puissance"
-                  type="number"
-                  value={formData.puissance}
-                  onChange={(e) => setFormData({...formData, puissance: e.target.value})}
-                  placeholder="Ex: 6"
-                />
+                <Input id="puissance" type="number" value={formData.puissance} onChange={e => setFormData({
+                ...formData,
+                puissance: e.target.value
+              })} placeholder="Ex: 6" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">VC</span>
               </div>
             </div>
@@ -473,10 +409,10 @@ export default function ModifierVehicule() {
             {/* Couleur */}
             <div>
               <Label htmlFor="couleur">Couleur</Label>
-              <Select 
-                value={formData.couleur} 
-                onValueChange={(value) => setFormData({...formData, couleur: value})}
-              >
+              <Select value={formData.couleur} onValueChange={value => setFormData({
+              ...formData,
+              couleur: value
+            })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une couleur" />
                 </SelectTrigger>
@@ -497,16 +433,8 @@ export default function ModifierVehicule() {
             {/* Photo Upload */}
             <div className="md:col-span-2">
               <Label>Photo du véhicule</Label>
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`mt-2 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                  isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
-                }`}
-              >
-                {uploadedFile ? (
-                  <div className="flex items-center justify-between bg-muted p-4 rounded">
+              <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} className={`mt-2 border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}`}>
+                {uploadedFile ? <div className="flex items-center justify-between bg-muted p-4 rounded">
                     <div className="flex items-center gap-3">
                       <Upload className="w-5 h-5 text-primary" />
                       <span className="text-sm font-medium">{uploadedFile.name}</span>
@@ -514,46 +442,29 @@ export default function ModifierVehicule() {
                         ({(uploadedFile.size / 1024).toFixed(2)} KB)
                       </span>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={removeFile}
-                    >
+                    <Button type="button" variant="ghost" size="sm" onClick={removeFile}>
                       <X className="w-4 h-4" />
                     </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
+                  </div> : <div className="space-y-2">
                     <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
                     <div className="text-sm text-muted-foreground">
                       Glissez-déposez une image ou un PDF ici
                     </div>
                     <div className="text-xs text-muted-foreground">ou</div>
                     <label className="inline-block">
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
+                      <input type="file" accept="image/*,application/pdf" onChange={handleFileChange} className="hidden" />
                       <Button type="button" variant="outline" size="sm" onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}>
                         Sélectionner un fichier
                       </Button>
                     </label>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
           </div>
 
           {/* Show all fields toggle */}
           <div className="mb-4 md:mb-6">
-            <button
-              type="button"
-              onClick={() => setShowAllFields(!showAllFields)}
-              className="flex items-center gap-2 text-primary hover:underline font-medium text-sm md:text-base"
-            >
+            <button type="button" onClick={() => setShowAllFields(!showAllFields)} className="flex items-center gap-2 text-primary hover:underline font-medium text-sm md:text-base">
               AFFICHER TOUS LES CHAMPS
               {showAllFields ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
@@ -563,28 +474,15 @@ export default function ModifierVehicule() {
           </div>
 
           {/* Advanced Fields */}
-          {showAllFields && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pt-6 border-t">
-              <div>
-                <Label htmlFor="valeur_achat">Valeur d'achat</Label>
-                <div className="relative">
-                  <Input
-                    id="valeur_achat"
-                    type="number"
-                    value={formData.valeur_achat}
-                    onChange={(e) => setFormData({...formData, valeur_achat: parseFloat(e.target.value) || 0})}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
-                </div>
-              </div>
+          {showAllFields && <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pt-6 border-t">
+              
 
               <div>
                 <Label htmlFor="statut">Statut</Label>
-                <Select 
-                  value={formData.statut} 
-                  onValueChange={(value) => setFormData({...formData, statut: value as VehicleStatus})}
-                  disabled={!isInService}
-                >
+                <Select value={formData.statut} onValueChange={value => setFormData({
+              ...formData,
+              statut: value as VehicleStatus
+            })} disabled={!isInService}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -596,22 +494,15 @@ export default function ModifierVehicule() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Submit Button */}
           <div className="flex justify-center pt-4">
-            <Button 
-              type="submit" 
-              size="lg"
-              disabled={saving}
-              className="w-full md:w-auto"
-            >
+            <Button type="submit" size="lg" disabled={saving} className="w-full md:w-auto">
               {saving ? "ENREGISTREMENT..." : "ENREGISTRER LES MODIFICATIONS"}
             </Button>
           </div>
         </Card>
       </form>
-    </div>
-  );
+    </div>;
 }
