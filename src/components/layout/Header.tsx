@@ -11,11 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAlertes } from "@/contexts/AlertesContext";
 import { useNavigate } from "react-router-dom";
 import logoCrsapp from "@/assets/logo-crsapp.png";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
+  const { totalAlerts } = useAlertes();
   const navigate = useNavigate();
 
   return (
@@ -35,6 +37,11 @@ export const Header = () => {
             onClick={() => navigate("/alertes")}
           >
             <Bell className="w-4 h-4 md:w-5 md:h-5" />
+            {totalAlerts > 0 && (
+              <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {totalAlerts > 99 ? "99+" : totalAlerts}
+              </span>
+            )}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

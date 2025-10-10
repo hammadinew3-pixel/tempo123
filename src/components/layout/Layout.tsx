@@ -1,6 +1,7 @@
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { AlertesProvider } from "@/contexts/AlertesContext";
 import { createContext, useContext, useState } from "react";
 
 interface LayoutProps {
@@ -32,17 +33,19 @@ export const Layout = ({ children }: LayoutProps) => {
 
   return (
     <LayoutContext.Provider value={{ openClientDialog, isClientDialogOpen, setIsClientDialogOpen }}>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background">
-          <Sidebar onOpenClientDialog={openClientDialog} />
-          <div className="flex-1 flex flex-col min-w-0">
-            <Header />
-            <main className="flex-1 p-3 md:p-6 overflow-x-hidden">
-              {children}
-            </main>
+      <AlertesProvider>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full bg-background">
+            <Sidebar onOpenClientDialog={openClientDialog} />
+            <div className="flex-1 flex flex-col min-w-0">
+              <Header />
+              <main className="flex-1 p-3 md:p-6 overflow-x-hidden">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
+        </SidebarProvider>
+      </AlertesProvider>
     </LayoutContext.Provider>
   );
 };
