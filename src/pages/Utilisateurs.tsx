@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Users, Loader2, Plus, Trash2 } from "lucide-react";
+import { Shield, Users, Loader2, Plus, Trash2, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { PermissionsDialog } from "@/components/users/PermissionsDialog";
+import { UserRole } from "@/hooks/use-user-role";
 
 interface UserWithRole {
   id: string;
@@ -30,6 +32,8 @@ export default function Utilisateurs() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
+  const [selectedUserRole, setSelectedUserRole] = useState<UserRole>(null);
   const [newUser, setNewUser] = useState({
     email: "",
     password: "",
@@ -97,7 +101,7 @@ export default function Utilisateurs() {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: 'admin' | 'agent') => {
+  const updateUserRole = async (userId: string, newRole: 'admin' | 'agent' | 'comptable') => {
     try {
       // Check if user already has a role
       const { data: existingRole } = await supabase
@@ -362,14 +366,20 @@ export default function Utilisateurs() {
                       </div>
                       {user.role && (
                         <Badge
-                          variant={user.role === 'admin' ? 'default' : 'secondary'}
-                          className={user.role === 'admin' ? 'bg-green-500' : 'bg-blue-500'}
+                          variant="default"
+                          className={
+                            user.role === 'admin' 
+                              ? 'bg-green-500' 
+                              : user.role === 'comptable' 
+                              ? 'bg-purple-500' 
+                              : 'bg-blue-500'
+                          }
                         >
-                          {user.role === 'admin' ? (
+                          {user.role === 'admin' && (
                             <><Shield className="w-3 h-3 mr-1" /> Administrateur</>
-                          ) : (
-                            <>Agent commercial</>
                           )}
+                          {user.role === 'agent' && <>Agent commercial</>}
+                          {user.role === 'comptable' && <>Comptable</>}
                         </Badge>
                       )}
                       {!user.actif && (
@@ -381,11 +391,24 @@ export default function Utilisateurs() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedUserRole(user.role);
+                        setPermissionsDialogOpen(true);
+                      }}
+                      disabled={!user.role}
+                      title="Voir les permissions"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+
                     <Select
                       value={user.role || 'none'}
                       onValueChange={(value) => {
                         if (value !== 'none') {
-                          updateUserRole(user.id, value as 'admin' | 'agent');
+                          updateUserRole(user.id, value as 'admin' | 'agent' | 'comptable');
                         }
                       }}
                     >
@@ -396,6 +419,7 @@ export default function Utilisateurs() {
                         <SelectItem value="none" disabled>Aucun rôle</SelectItem>
                         <SelectItem value="admin">Administrateur</SelectItem>
                         <SelectItem value="agent">Agent commercial</SelectItem>
+                        <SelectItem value="comptable">Comptable</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -424,6 +448,12 @@ export default function Utilisateurs() {
           )}
         </CardContent>
       </Card>
+
+      <PermissionsDialog
+        open={permissionsDialogOpen}
+        onOpenChange={setPermissionsDialogOpen}
+        role={selectedUserRole}
+      />
     </div>
   );
 }
