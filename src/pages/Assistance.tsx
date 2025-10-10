@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Filter, Download, Eye, Edit, Trash2, Columns } from "lucide-react";
+import { Plus, Filter, Download, Eye, Edit, Trash2, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { format } from "date-fns";
+import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 
 type Assistance = Database['public']['Tables']['assistance']['Row'];
 
@@ -162,6 +165,43 @@ export default function Assistance() {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
 
+  const prepareAssistancesExport = () => {
+    return assistances.map(a => ({
+      'N° Dossier': a.num_dossier,
+      'Assurance': a.assureur_nom,
+      'Type': a.type === 'remplacement' ? 'Véhicule de remplacement' : 'Prolongation',
+      'Date début': format(new Date(a.date_debut), 'dd/MM/yyyy'),
+      'Date fin': a.date_fin ? format(new Date(a.date_fin), 'dd/MM/yyyy') : '-',
+      'État': a.etat === 'ouvert' ? 'Ouvert' :
+              a.etat === 'contrat_valide' ? 'Validé' :
+              a.etat === 'livre' ? 'En cours' :
+              a.etat === 'retour_effectue' ? 'Retourné' : 'Clôturé',
+      'Montant total (DH)': a.montant_total || 0,
+      'Montant facturé (DH)': a.montant_facture || 0,
+      'Montant payé (DH)': a.montant_paye || 0,
+      'Franchise (DH)': a.franchise_montant || 0,
+      'État paiement': a.etat_paiement === 'en_attente' ? 'En attente' :
+                       a.etat_paiement === 'paye' ? 'Payé' : 'Partiel',
+      'Créé le': format(new Date(a.created_at), 'dd/MM/yyyy')
+    }));
+  };
+
+  const handleExport = (exportFormat: 'excel' | 'csv') => {
+    const data = prepareAssistancesExport();
+    const filename = `assistances_${format(new Date(), 'yyyy-MM-dd')}`;
+    
+    if (exportFormat === 'excel') {
+      exportToExcel(data, filename);
+    } else {
+      exportToCSV(data, filename);
+    }
+    
+    toast({
+      title: 'Export réussi',
+      description: `${assistances.length} dossier(s) exporté(s) en ${exportFormat.toUpperCase()}`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -245,10 +285,24 @@ export default function Assistance() {
             <Filter className="w-4 h-4 mr-2" />
             FILTRER
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            RAPPORT
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                EXPORTER
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button 
             size="sm"
             onClick={() => navigate('/assistance/nouveau')}

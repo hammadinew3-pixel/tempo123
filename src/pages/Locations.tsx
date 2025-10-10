@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Search, Filter, Download, Plus, Edit, Trash2, FileText, Eye, Car, User, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
+import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 
 type Contract = Database['public']['Tables']['contracts']['Row'];
 type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
@@ -391,6 +393,49 @@ export default function Locations() {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
 
+  const prepareLocationsExport = () => {
+    const filtered = contracts.filter(contract => {
+      if (filterType === 'all') return true;
+      return contract.type_contrat === filterType;
+    });
+    
+    return filtered.map(c => ({
+      'Type': c.type_contrat === 'location' ? 'Location' : 'Assistance',
+      'N° Contrat': c.numero_contrat,
+      'Client': c.clients ? `${c.clients.prenom || ''} ${c.clients.nom}`.trim() : '-',
+      'Véhicule': c.vehicles ? `${c.vehicles.marque} ${c.vehicles.modele} (${c.vehicles.immatriculation})` : '-',
+      'Date début': format(new Date(c.date_debut), 'dd/MM/yyyy'),
+      'Date fin': format(new Date(c.date_fin), 'dd/MM/yyyy'),
+      'Durée (jours)': calculateDuration(c.date_debut, c.date_fin),
+      'Statut': c.statut === 'brouillon' ? 'Brouillon' :
+                c.statut === 'contrat_valide' ? 'Validé' :
+                c.statut === 'livre' ? 'En cours' :
+                c.statut === 'retour_effectue' ? 'Retourné' :
+                c.statut === 'termine' ? 'Terminé' : 'Annulé',
+      'Montant total (DH)': c.total_amount || 0,
+      'Avance (DH)': c.advance_payment || 0,
+      'Reste (DH)': c.remaining_amount || 0,
+      'Caution (DH)': c.caution_montant || 0,
+      'Créé le': format(new Date(c.created_at), 'dd/MM/yyyy')
+    }));
+  };
+
+  const handleExport = (exportFormat: 'excel' | 'csv') => {
+    const data = prepareLocationsExport();
+    const filename = `locations_${format(new Date(), 'yyyy-MM-dd')}`;
+    
+    if (exportFormat === 'excel') {
+      exportToExcel(data, filename);
+    } else {
+      exportToCSV(data, filename);
+    }
+    
+    toast({
+      title: 'Export réussi',
+      description: `${data.length} location(s) exportée(s) en ${exportFormat.toUpperCase()}`,
+    });
+  };
+
   const handleGeneratePDF = async (contractId: string) => {
     try {
       console.log('📄 Génération du PDF pour le contrat:', contractId);
@@ -518,10 +563,24 @@ export default function Locations() {
             <Filter className="w-4 h-4 mr-2" />
             FILTRER
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            IMPORTER
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                EXPORTER
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" size="sm">
             CHECK DISPONIBILITÉ
           </Button>
