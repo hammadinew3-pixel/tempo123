@@ -23,7 +23,7 @@ export default function Vehicules() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location'>('tous');
+  const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location' | 'disponible' | 'loue' | 'reserve' | 'en_panne'>('tous');
   const { toast } = useToast();
 
   // Form state
@@ -249,11 +249,19 @@ export default function Vehicules() {
   const filteredVehicles = vehicles.filter((vehicle) => {
     if (filter === 'hors_service') return vehicle.en_service === false;
     if (filter === 'sous_location') return vehicle.sous_location === true;
+    if (filter === 'disponible') return vehicle.statut === 'disponible';
+    if (filter === 'loue') return vehicle.statut === 'loue';
+    if (filter === 'reserve') return vehicle.statut === 'reserve';
+    if (filter === 'en_panne') return vehicle.statut === 'en_panne';
     return true; // 'tous'
   });
 
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
   const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
+  const countDisponible = vehicles.filter(v => v.statut === 'disponible').length;
+  const countLoue = vehicles.filter(v => v.statut === 'loue').length;
+  const countReserve = vehicles.filter(v => v.statut === 'reserve').length;
+  const countEnPanne = vehicles.filter(v => v.statut === 'en_panne').length;
 
   return (
     <div className="space-y-4 md:space-y-6 p-3 md:p-6">
@@ -434,6 +442,46 @@ export default function Vehicules() {
                 }`}
               >
                 TOUS ({vehicles.length})
+              </button>
+              <button 
+                onClick={() => setFilter('disponible')}
+                className={`pb-2 transition-colors whitespace-nowrap ${
+                  filter === 'disponible' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                DISPONIBLE ({countDisponible})
+              </button>
+              <button 
+                onClick={() => setFilter('loue')}
+                className={`pb-2 transition-colors whitespace-nowrap ${
+                  filter === 'loue' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                LOUÉ ({countLoue})
+              </button>
+              <button 
+                onClick={() => setFilter('reserve')}
+                className={`pb-2 transition-colors whitespace-nowrap ${
+                  filter === 'reserve' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                RÉSERVÉ ({countReserve})
+              </button>
+              <button 
+                onClick={() => setFilter('en_panne')}
+                className={`pb-2 transition-colors whitespace-nowrap ${
+                  filter === 'en_panne' 
+                    ? 'text-primary border-b-2 border-primary' 
+                    : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                EN PANNE ({countEnPanne})
               </button>
               <button 
                 onClick={() => setFilter('hors_service')}
