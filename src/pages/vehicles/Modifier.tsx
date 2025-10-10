@@ -44,7 +44,6 @@ export default function ModifierVehicule() {
   } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showAllFields, setShowAllFields] = useState(false);
   const [formData, setFormData] = useState({
     marque: '',
     modele: '',
@@ -427,8 +426,24 @@ export default function ModifierVehicule() {
               </Select>
             </div>
 
-            {/* Empty div for grid alignment */}
-            <div></div>
+            {/* Statut */}
+            <div>
+              <Label htmlFor="statut">Statut</Label>
+              <Select value={formData.statut} onValueChange={value => setFormData({
+              ...formData,
+              statut: value as VehicleStatus
+            })} disabled={!isInService}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="disponible">Disponible</SelectItem>
+                  <SelectItem value="loue">Loué</SelectItem>
+                  <SelectItem value="reserve">Réservé</SelectItem>
+                  <SelectItem value="en_panne">En panne</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Photo Upload */}
             <div className="md:col-span-2">
@@ -461,40 +476,6 @@ export default function ModifierVehicule() {
               </div>
             </div>
           </div>
-
-          {/* Show all fields toggle */}
-          <div className="mb-4 md:mb-6">
-            <button type="button" onClick={() => setShowAllFields(!showAllFields)} className="flex items-center gap-2 text-primary hover:underline font-medium text-sm md:text-base">
-              AFFICHER TOUS LES CHAMPS
-              {showAllFields ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-            <p className="text-xs md:text-sm text-muted-foreground mt-1">
-              Pièces jointes, Concessionaire, Couleur, Puissance fiscale, Options, ...
-            </p>
-          </div>
-
-          {/* Advanced Fields */}
-          {showAllFields && <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 pt-6 border-t">
-              
-
-              <div>
-                <Label htmlFor="statut">Statut</Label>
-                <Select value={formData.statut} onValueChange={value => setFormData({
-              ...formData,
-              statut: value as VehicleStatus
-            })} disabled={!isInService}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="disponible">Disponible</SelectItem>
-                    <SelectItem value="loue">Loué</SelectItem>
-                    <SelectItem value="reserve">Réservé</SelectItem>
-                    <SelectItem value="en_panne">En panne</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>}
 
           {/* Submit Button */}
           <div className="flex justify-center pt-4">
