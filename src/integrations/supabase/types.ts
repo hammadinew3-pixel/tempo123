@@ -778,6 +778,7 @@ export type Database = {
           numero_cheque: string | null
           numero_ordre: string
           numero_police: string | null
+          photo_url: string | null
           remarques: string | null
           updated_at: string
           vehicle_id: string
@@ -796,6 +797,7 @@ export type Database = {
           numero_cheque?: string | null
           numero_ordre: string
           numero_police?: string | null
+          photo_url?: string | null
           remarques?: string | null
           updated_at?: string
           vehicle_id: string
@@ -814,6 +816,7 @@ export type Database = {
           numero_cheque?: string | null
           numero_ordre?: string
           numero_police?: string | null
+          photo_url?: string | null
           remarques?: string | null
           updated_at?: string
           vehicle_id?: string
@@ -841,6 +844,7 @@ export type Database = {
           montant: number | null
           numero_cheque: string | null
           numero_ordre: string
+          photo_url: string | null
           remarques: string | null
           updated_at: string
           vehicle_id: string
@@ -857,6 +861,7 @@ export type Database = {
           montant?: number | null
           numero_cheque?: string | null
           numero_ordre: string
+          photo_url?: string | null
           remarques?: string | null
           updated_at?: string
           vehicle_id: string
@@ -873,6 +878,7 @@ export type Database = {
           montant?: number | null
           numero_cheque?: string | null
           numero_ordre?: string
+          photo_url?: string | null
           remarques?: string | null
           updated_at?: string
           vehicle_id?: string
@@ -899,6 +905,7 @@ export type Database = {
           montant: number | null
           numero_cheque: string | null
           numero_ordre: string
+          photo_url: string | null
           remarques: string | null
           updated_at: string
           vehicle_id: string
@@ -914,6 +921,7 @@ export type Database = {
           montant?: number | null
           numero_cheque?: string | null
           numero_ordre: string
+          photo_url?: string | null
           remarques?: string | null
           updated_at?: string
           vehicle_id: string
@@ -929,6 +937,7 @@ export type Database = {
           montant?: number | null
           numero_cheque?: string | null
           numero_ordre?: string
+          photo_url?: string | null
           remarques?: string | null
           updated_at?: string
           vehicle_id?: string

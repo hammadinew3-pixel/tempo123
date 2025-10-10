@@ -59,6 +59,8 @@ export default function VehiculeDetails() {
     banque: '',
     remarques: ''
   });
+  const [insurancePhoto, setInsurancePhoto] = useState<File | null>(null);
+  const [uploadingInsurance, setUploadingInsurance] = useState(false);
   
   // Form states for inspection
   const [inspectionForm, setInspectionForm] = useState({
@@ -73,6 +75,8 @@ export default function VehiculeDetails() {
     banque: '',
     remarques: ''
   });
+  const [inspectionPhoto, setInspectionPhoto] = useState<File | null>(null);
+  const [uploadingInspection, setUploadingInspection] = useState(false);
   
   // Form states for vignette
   const [vignetteForm, setVignetteForm] = useState({
@@ -86,6 +90,8 @@ export default function VehiculeDetails() {
     banque: '',
     remarques: ''
   });
+  const [vignettePhoto, setVignettePhoto] = useState<File | null>(null);
+  const [uploadingVignette, setUploadingVignette] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -792,6 +798,7 @@ export default function VehiculeDetails() {
                         <TableHead>Date d'expiration</TableHead>
                         <TableHead className="text-right">Montant</TableHead>
                         <TableHead className="text-right">Date création</TableHead>
+                        <TableHead className="text-center">Photo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -818,6 +825,19 @@ export default function VehiculeDetails() {
                             <TableCell className="text-right">{insurance.montant.toFixed(2)}</TableCell>
                             <TableCell className="text-right text-muted-foreground text-sm">
                               {format(new Date(insurance.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {insurance.photo_url ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(insurance.photo_url, '_blank')}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">-</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
@@ -850,6 +870,7 @@ export default function VehiculeDetails() {
                         <TableHead>Date d'expiration</TableHead>
                         <TableHead className="text-right">Montant</TableHead>
                         <TableHead className="text-right">Date création</TableHead>
+                        <TableHead className="text-center">Photo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -876,6 +897,19 @@ export default function VehiculeDetails() {
                             <TableCell className="text-right">{inspection.montant?.toFixed(2) || '-'}</TableCell>
                             <TableCell className="text-right text-muted-foreground text-sm">
                               {format(new Date(inspection.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {inspection.photo_url ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(inspection.photo_url, '_blank')}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">-</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
@@ -973,6 +1007,7 @@ export default function VehiculeDetails() {
                         <TableHead>Date d'expiration</TableHead>
                         <TableHead className="text-right">Montant</TableHead>
                         <TableHead className="text-right">Date création</TableHead>
+                        <TableHead className="text-center">Photo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -998,6 +1033,19 @@ export default function VehiculeDetails() {
                             <TableCell className="text-right">{vignette.montant?.toFixed(2) || '-'}</TableCell>
                             <TableCell className="text-right text-muted-foreground text-sm">
                               {format(new Date(vignette.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {vignette.photo_url ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(vignette.photo_url, '_blank')}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">-</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
@@ -1258,6 +1306,18 @@ export default function VehiculeDetails() {
                 placeholder="Notes additionnelles..."
               />
             </div>
+            <div className="col-span-2">
+              <Label htmlFor="ins-photo">Photo du document</Label>
+              <Input
+                id="ins-photo"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setInsurancePhoto(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Formats acceptés: JPG, PNG, WEBP
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
@@ -1270,52 +1330,80 @@ export default function VehiculeDetails() {
             }}>
               Annuler
             </Button>
-            <Button onClick={async () => {
-              try {
-                if (!insuranceForm.numero_ordre || !insuranceForm.assureur || !insuranceForm.date_debut || 
-                    !insuranceForm.date_expiration || !insuranceForm.montant || !insuranceForm.date_paiement) {
+            <Button 
+              onClick={async () => {
+                try {
+                  if (!insuranceForm.numero_ordre || !insuranceForm.assureur || !insuranceForm.date_debut || 
+                      !insuranceForm.date_expiration || !insuranceForm.montant || !insuranceForm.date_paiement) {
+                    toast({
+                      title: "Erreur",
+                      description: "Veuillez remplir tous les champs obligatoires",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+
+                  setUploadingInsurance(true);
+                  let photoUrl = null;
+
+                  // Upload photo if provided
+                  if (insurancePhoto) {
+                    const fileExt = insurancePhoto.name.split('.').pop();
+                    const fileName = `${vehicle!.id}/insurance/${Date.now()}.${fileExt}`;
+                    
+                    const { error: uploadError, data } = await supabase.storage
+                      .from('vehicle-documents')
+                      .upload(fileName, insurancePhoto);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('vehicle-documents')
+                      .getPublicUrl(fileName);
+                    
+                    photoUrl = publicUrl;
+                  }
+
+                  const { error } = await supabase.from('vehicle_insurance').insert({
+                    vehicle_id: vehicle!.id,
+                    ...insuranceForm,
+                    montant: parseFloat(insuranceForm.montant),
+                    photo_url: photoUrl
+                  });
+
+                  if (error) throw error;
+
+                  // Update vehicle expiration date
+                  await supabase.from('vehicles').update({
+                    assurance_expire_le: insuranceForm.date_expiration
+                  }).eq('id', vehicle!.id);
+
+                  toast({
+                    title: "Succès",
+                    description: "Assurance ajoutée avec succès"
+                  });
+
+                  setShowInsuranceDialog(false);
+                  setInsuranceForm({
+                    numero_ordre: '', numero_police: '', assureur: '', coordonnees_assureur: '',
+                    date_debut: '', date_expiration: '', montant: '', date_paiement: '',
+                    mode_paiement: 'especes', numero_cheque: '', banque: '', remarques: ''
+                  });
+                  setInsurancePhoto(null);
+                  loadVehicle();
+                } catch (error: any) {
                   toast({
                     title: "Erreur",
-                    description: "Veuillez remplir tous les champs obligatoires",
+                    description: error.message,
                     variant: "destructive"
                   });
-                  return;
+                } finally {
+                  setUploadingInsurance(false);
                 }
-
-                const { error } = await supabase.from('vehicle_insurance').insert({
-                  vehicle_id: vehicle!.id,
-                  ...insuranceForm,
-                  montant: parseFloat(insuranceForm.montant)
-                });
-
-                if (error) throw error;
-
-                // Update vehicle expiration date
-                await supabase.from('vehicles').update({
-                  assurance_expire_le: insuranceForm.date_expiration
-                }).eq('id', vehicle!.id);
-
-                toast({
-                  title: "Succès",
-                  description: "Assurance ajoutée avec succès"
-                });
-
-                setShowInsuranceDialog(false);
-                setInsuranceForm({
-                  numero_ordre: '', numero_police: '', assureur: '', coordonnees_assureur: '',
-                  date_debut: '', date_expiration: '', montant: '', date_paiement: '',
-                  mode_paiement: 'especes', numero_cheque: '', banque: '', remarques: ''
-                });
-                loadVehicle();
-              } catch (error: any) {
-                toast({
-                  title: "Erreur",
-                  description: error.message,
-                  variant: "destructive"
-                });
-              }
-            }}>
-              Enregistrer
+              }}
+              disabled={uploadingInsurance}
+            >
+              {uploadingInsurance ? "Upload en cours..." : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1427,6 +1515,18 @@ export default function VehiculeDetails() {
                 placeholder="Notes additionnelles..."
               />
             </div>
+            <div className="col-span-2">
+              <Label htmlFor="insp-photo">Photo du document</Label>
+              <Input
+                id="insp-photo"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setInspectionPhoto(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Formats acceptés: JPG, PNG, WEBP
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
@@ -1439,51 +1539,79 @@ export default function VehiculeDetails() {
             }}>
               Annuler
             </Button>
-            <Button onClick={async () => {
-              try {
-                if (!inspectionForm.numero_ordre || !inspectionForm.date_visite || !inspectionForm.date_expiration) {
+            <Button 
+              onClick={async () => {
+                try {
+                  if (!inspectionForm.numero_ordre || !inspectionForm.date_visite || !inspectionForm.date_expiration) {
+                    toast({
+                      title: "Erreur",
+                      description: "Veuillez remplir tous les champs obligatoires",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+
+                  setUploadingInspection(true);
+                  let photoUrl = null;
+
+                  // Upload photo if provided
+                  if (inspectionPhoto) {
+                    const fileExt = inspectionPhoto.name.split('.').pop();
+                    const fileName = `${vehicle!.id}/inspection/${Date.now()}.${fileExt}`;
+                    
+                    const { error: uploadError } = await supabase.storage
+                      .from('vehicle-documents')
+                      .upload(fileName, inspectionPhoto);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('vehicle-documents')
+                      .getPublicUrl(fileName);
+                    
+                    photoUrl = publicUrl;
+                  }
+
+                  const { error } = await supabase.from('vehicle_technical_inspection').insert({
+                    vehicle_id: vehicle!.id,
+                    ...inspectionForm,
+                    montant: inspectionForm.montant ? parseFloat(inspectionForm.montant) : null,
+                    photo_url: photoUrl
+                  });
+
+                  if (error) throw error;
+
+                  // Update vehicle expiration date
+                  await supabase.from('vehicles').update({
+                    visite_technique_expire_le: inspectionForm.date_expiration
+                  }).eq('id', vehicle!.id);
+
+                  toast({
+                    title: "Succès",
+                    description: "Visite technique ajoutée avec succès"
+                  });
+
+                  setShowInspectionDialog(false);
+                  setInspectionForm({
+                    numero_ordre: '', centre_controle: '', date_visite: '', date_expiration: '',
+                    montant: '', date_paiement: '', mode_paiement: 'especes',
+                    numero_cheque: '', banque: '', remarques: ''
+                  });
+                  setInspectionPhoto(null);
+                  loadVehicle();
+                } catch (error: any) {
                   toast({
                     title: "Erreur",
-                    description: "Veuillez remplir tous les champs obligatoires",
+                    description: error.message,
                     variant: "destructive"
                   });
-                  return;
+                } finally {
+                  setUploadingInspection(false);
                 }
-
-                const { error } = await supabase.from('vehicle_technical_inspection').insert({
-                  vehicle_id: vehicle!.id,
-                  ...inspectionForm,
-                  montant: inspectionForm.montant ? parseFloat(inspectionForm.montant) : null
-                });
-
-                if (error) throw error;
-
-                // Update vehicle expiration date
-                await supabase.from('vehicles').update({
-                  visite_technique_expire_le: inspectionForm.date_expiration
-                }).eq('id', vehicle!.id);
-
-                toast({
-                  title: "Succès",
-                  description: "Visite technique ajoutée avec succès"
-                });
-
-                setShowInspectionDialog(false);
-                setInspectionForm({
-                  numero_ordre: '', centre_controle: '', date_visite: '', date_expiration: '',
-                  montant: '', date_paiement: '', mode_paiement: 'especes',
-                  numero_cheque: '', banque: '', remarques: ''
-                });
-                loadVehicle();
-              } catch (error: any) {
-                toast({
-                  title: "Erreur",
-                  description: error.message,
-                  variant: "destructive"
-                });
-              }
-            }}>
-              Enregistrer
+              }}
+              disabled={uploadingInspection}
+            >
+              {uploadingInspection ? "Upload en cours..." : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1587,6 +1715,18 @@ export default function VehiculeDetails() {
                 placeholder="Notes additionnelles..."
               />
             </div>
+            <div className="col-span-2">
+              <Label htmlFor="vig-photo">Photo du document</Label>
+              <Input
+                id="vig-photo"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setVignettePhoto(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Formats acceptés: JPG, PNG, WEBP
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
@@ -1599,52 +1739,80 @@ export default function VehiculeDetails() {
             }}>
               Annuler
             </Button>
-            <Button onClick={async () => {
-              try {
-                if (!vignetteForm.numero_ordre || !vignetteForm.annee || !vignetteForm.date_expiration) {
+            <Button 
+              onClick={async () => {
+                try {
+                  if (!vignetteForm.numero_ordre || !vignetteForm.annee || !vignetteForm.date_expiration) {
+                    toast({
+                      title: "Erreur",
+                      description: "Veuillez remplir tous les champs obligatoires",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+
+                  setUploadingVignette(true);
+                  let photoUrl = null;
+
+                  // Upload photo if provided
+                  if (vignettePhoto) {
+                    const fileExt = vignettePhoto.name.split('.').pop();
+                    const fileName = `${vehicle!.id}/vignette/${Date.now()}.${fileExt}`;
+                    
+                    const { error: uploadError } = await supabase.storage
+                      .from('vehicle-documents')
+                      .upload(fileName, vignettePhoto);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('vehicle-documents')
+                      .getPublicUrl(fileName);
+                    
+                    photoUrl = publicUrl;
+                  }
+
+                  const { error } = await supabase.from('vehicle_vignette').insert({
+                    vehicle_id: vehicle!.id,
+                    ...vignetteForm,
+                    annee: parseInt(vignetteForm.annee),
+                    montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null,
+                    photo_url: photoUrl
+                  });
+
+                  if (error) throw error;
+
+                  // Update vehicle expiration date
+                  await supabase.from('vehicles').update({
+                    vignette_expire_le: vignetteForm.date_expiration
+                  }).eq('id', vehicle!.id);
+
+                  toast({
+                    title: "Succès",
+                    description: "Vignette ajoutée avec succès"
+                  });
+
+                  setShowVignetteDialog(false);
+                  setVignetteForm({
+                    numero_ordre: '', annee: new Date().getFullYear().toString(), date_expiration: '',
+                    montant: '', date_paiement: '', mode_paiement: 'especes',
+                    numero_cheque: '', banque: '', remarques: ''
+                  });
+                  setVignettePhoto(null);
+                  loadVehicle();
+                } catch (error: any) {
                   toast({
                     title: "Erreur",
-                    description: "Veuillez remplir tous les champs obligatoires",
+                    description: error.message,
                     variant: "destructive"
                   });
-                  return;
+                } finally {
+                  setUploadingVignette(false);
                 }
-
-                const { error } = await supabase.from('vehicle_vignette').insert({
-                  vehicle_id: vehicle!.id,
-                  ...vignetteForm,
-                  annee: parseInt(vignetteForm.annee),
-                  montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null
-                });
-
-                if (error) throw error;
-
-                // Update vehicle expiration date
-                await supabase.from('vehicles').update({
-                  vignette_expire_le: vignetteForm.date_expiration
-                }).eq('id', vehicle!.id);
-
-                toast({
-                  title: "Succès",
-                  description: "Vignette ajoutée avec succès"
-                });
-
-                setShowVignetteDialog(false);
-                setVignetteForm({
-                  numero_ordre: '', annee: new Date().getFullYear().toString(), date_expiration: '',
-                  montant: '', date_paiement: '', mode_paiement: 'especes',
-                  numero_cheque: '', banque: '', remarques: ''
-                });
-                loadVehicle();
-              } catch (error: any) {
-                toast({
-                  title: "Erreur",
-                  description: error.message,
-                  variant: "destructive"
-                });
-              }
-            }}>
-              Enregistrer
+              }}
+              disabled={uploadingVignette}
+            >
+              {uploadingVignette ? "Upload en cours..." : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>
