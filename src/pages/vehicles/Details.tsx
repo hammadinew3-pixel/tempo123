@@ -1030,7 +1030,7 @@ export default function VehiculeDetails() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contracts.slice(0, 5).map(contract => <TableRow key={contract.id}>
+                    {contracts.slice(0, 5).map(contract => <TableRow key={contract.id} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/locations/${contract.id}`)}>
                         <TableCell>{contract.numero_contrat}</TableCell>
                         <TableCell>
                           {contract.clients?.nom} {contract.clients?.prenom}
@@ -1059,7 +1059,7 @@ export default function VehiculeDetails() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {assistances.slice(0, 5).map(assistance => <TableRow key={assistance.id}>
+                    {assistances.slice(0, 5).map(assistance => <TableRow key={assistance.id} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/assistance/${assistance.id}`)}>
                         <TableCell>{assistance.num_dossier}</TableCell>
                         <TableCell>
                           {assistance.clients?.nom} {assistance.clients?.prenom}
