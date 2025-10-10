@@ -237,8 +237,24 @@ const Alertes = () => {
     setRecuperationAlerts(returnsToday || []);
   };
 
-  const groupAlertsByType = (type: "assurance" | "visite_technique" | "vignette" | "vidange") => {
-    return vehicleAlerts.filter((alert) => alert.type === type);
+  const groupAlertsByVehicle = () => {
+    const grouped = new Map<string, { vehicleName: string; alerts: VehicleAlert[] }>();
+    
+    vehicleAlerts.forEach((alert) => {
+      if (!grouped.has(alert.vehicleId)) {
+        grouped.set(alert.vehicleId, {
+          vehicleName: alert.vehicleName,
+          alerts: []
+        });
+      }
+      grouped.get(alert.vehicleId)!.alerts.push(alert);
+    });
+    
+    return Array.from(grouped.entries()).map(([vehicleId, data]) => ({
+      vehicleId,
+      vehicleName: data.vehicleName,
+      alerts: data.alerts
+    }));
   };
 
   if (loading) {
@@ -249,9 +265,7 @@ const Alertes = () => {
     );
   }
 
-  const assuranceAlerts = groupAlertsByType("assurance");
-  const visiteTechniqueAlerts = groupAlertsByType("visite_technique");
-  const vignetteAlerts = groupAlertsByType("vignette");
+  const groupedVehicles = groupAlertsByVehicle();
 
   return (
     <div className="space-y-6">
@@ -429,206 +443,74 @@ const Alertes = () => {
           <h2 className="text-lg font-semibold text-foreground">Véhicules</h2>
         </div>
         <Accordion type="multiple" className="w-full">
-          <AccordionItem value="assurances" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                {assuranceAlerts.length === 0 ? (
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-warning" />
-                )}
-                <span className="font-medium">Les alertes assurances</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {assuranceAlerts.length === 0
-                    ? "Aucune alerte trouvée"
-                    : `${assuranceAlerts.length} alerte(s) trouvée(s)`}
-                </span>
+          {groupedVehicles.length === 0 ? (
+            <div className="p-4">
+              <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                <CheckCircle2 className="w-4 h-4 text-success" />
+                <p className="text-sm text-success">Aucune alerte de véhicule</p>
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {assuranceAlerts.length === 0 ? (
-                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
-                  <CheckCircle2 className="w-4 h-4 text-success" />
-                  <p className="text-sm text-success">Aucune alerte d'assurance</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {assuranceAlerts.map((alert, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                        alert.severity === "critical"
-                          ? "bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
-                          : alert.severity === "warning"
-                          ? "bg-warning/10 border-warning/20 hover:bg-warning/20"
-                          : "bg-muted/50 border-muted hover:bg-muted"
-                      }`}
-                    >
-                      <div className="flex-1">
-                        <span className="text-sm font-medium">
-                          Véhicule{" "}
-                          <button
-                            onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                            className="text-primary hover:underline"
-                          >
-                            {alert.vehicleName}
-                          </button>
-                        </span>
-                        <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        className={`ml-4 ${
-                          alert.severity === "critical"
-                            ? "bg-destructive hover:bg-destructive/90 text-white"
-                            : alert.severity === "warning"
-                            ? "bg-warning hover:bg-warning/90 text-white"
-                            : "bg-primary hover:bg-primary/90"
-                        }`}
-                        onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                      >
-                        {alert.actionText}
-                      </Button>
+            </div>
+          ) : (
+            groupedVehicles.map((vehicle) => {
+              const hasCritical = vehicle.alerts.some(a => a.severity === "critical");
+              const hasWarning = vehicle.alerts.some(a => a.severity === "warning");
+              const iconColor = hasCritical ? "text-destructive" : hasWarning ? "text-warning" : "text-muted-foreground";
+              
+              return (
+                <AccordionItem key={vehicle.vehicleId} value={vehicle.vehicleId} className="border-0">
+                  <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 w-full">
+                      <AlertCircle className={`w-5 h-5 ${iconColor}`} />
+                      <span className="font-medium flex-1 text-left">{vehicle.vehicleName}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {vehicle.alerts.length} alerte(s)
+                      </span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="visites" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                {visiteTechniqueAlerts.length === 0 ? (
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-warning" />
-                )}
-                <span className="font-medium">Les alertes visites techniques</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {visiteTechniqueAlerts.length === 0
-                    ? "Aucune alerte trouvée"
-                    : `${visiteTechniqueAlerts.length} alerte(s) trouvée(s)`}
-                </span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {visiteTechniqueAlerts.length === 0 ? (
-                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
-                  <CheckCircle2 className="w-4 h-4 text-success" />
-                  <p className="text-sm text-success">Aucune alerte de visite technique</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {visiteTechniqueAlerts.map((alert, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                        alert.severity === "critical"
-                          ? "bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
-                          : alert.severity === "warning"
-                          ? "bg-warning/10 border-warning/20 hover:bg-warning/20"
-                          : "bg-muted/50 border-muted hover:bg-muted"
-                      }`}
-                    >
-                      <div className="flex-1">
-                        <span className="text-sm font-medium">
-                          Véhicule{" "}
-                          <button
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="space-y-2">
+                      {vehicle.alerts.map((alert, index) => (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                            alert.severity === "critical"
+                              ? "bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
+                              : alert.severity === "warning"
+                              ? "bg-warning/10 border-warning/20 hover:bg-warning/20"
+                              : "bg-muted/50 border-muted hover:bg-muted"
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold uppercase text-muted-foreground">
+                                {alert.type === "assurance" && "Assurance"}
+                                {alert.type === "visite_technique" && "Visite technique"}
+                                {alert.type === "vignette" && "Vignette"}
+                              </span>
+                            </div>
+                            <p className="text-sm">{alert.message}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            className={`ml-4 ${
+                              alert.severity === "critical"
+                                ? "bg-destructive hover:bg-destructive/90 text-white"
+                                : alert.severity === "warning"
+                                ? "bg-warning hover:bg-warning/90 text-white"
+                                : "bg-primary hover:bg-primary/90"
+                            }`}
                             onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                            className="text-primary hover:underline"
                           >
-                            {alert.vehicleName}
-                          </button>
-                        </span>
-                        <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        className={`ml-4 ${
-                          alert.severity === "critical"
-                            ? "bg-destructive hover:bg-destructive/90 text-white"
-                            : alert.severity === "warning"
-                            ? "bg-warning hover:bg-warning/90 text-white"
-                            : "bg-primary hover:bg-primary/90"
-                        }`}
-                        onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                      >
-                        {alert.actionText}
-                      </Button>
+                            {alert.actionText}
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="vignettes" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                {vignetteAlerts.length === 0 ? (
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-warning" />
-                )}
-                <span className="font-medium">Les alertes vignettes</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {vignetteAlerts.length === 0
-                    ? "Aucune alerte trouvée"
-                    : `${vignetteAlerts.length} alerte(s) trouvée(s)`}
-                </span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {vignetteAlerts.length === 0 ? (
-                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
-                  <CheckCircle2 className="w-4 h-4 text-success" />
-                  <p className="text-sm text-success">Aucune alerte de vignette</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {vignetteAlerts.map((alert, index) => (
-                    <div
-                      key={index}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                        alert.severity === "critical"
-                          ? "bg-destructive/10 border-destructive/20 hover:bg-destructive/20"
-                          : alert.severity === "warning"
-                          ? "bg-warning/10 border-warning/20 hover:bg-warning/20"
-                          : "bg-muted/50 border-muted hover:bg-muted"
-                      }`}
-                    >
-                      <div className="flex-1">
-                        <span className="text-sm font-medium">
-                          Véhicule{" "}
-                          <button
-                            onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                            className="text-primary hover:underline"
-                          >
-                            {alert.vehicleName}
-                          </button>
-                        </span>
-                        <p className="text-xs text-muted-foreground mt-1">{alert.message}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        className={`ml-4 ${
-                          alert.severity === "critical"
-                            ? "bg-destructive hover:bg-destructive/90 text-white"
-                            : alert.severity === "warning"
-                            ? "bg-warning hover:bg-warning/90 text-white"
-                            : "bg-primary hover:bg-primary/90"
-                        }`}
-                        onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                      >
-                        {alert.actionText}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })
+          )}
         </Accordion>
       </div>
     </div>
