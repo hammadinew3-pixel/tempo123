@@ -94,6 +94,11 @@ export default function VehiculeDetails() {
   const [uploadingVignette, setUploadingVignette] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // View detail states
+  const [selectedInsurance, setSelectedInsurance] = useState<any>(null);
+  const [selectedInspection, setSelectedInspection] = useState<any>(null);
+  const [selectedVignette, setSelectedVignette] = useState<any>(null);
 
   useEffect(() => {
     if (id) {
@@ -420,6 +425,52 @@ export default function VehiculeDetails() {
           </Button>
         </div>
       </div>
+
+      {/* Alertes Documents */}
+      {alerts.length > 0 && (
+        <Card className="border-l-4 border-l-warning bg-warning/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-warning">
+              <AlertCircle className="w-5 h-5" />
+              Alertes Documents
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {alerts.map((alert, index) => (
+              <Alert 
+                key={index} 
+                className={`cursor-pointer hover:bg-accent/50 transition-colors ${
+                  alert.severity === 'critical' ? 'border-destructive bg-destructive/5' : 
+                  alert.severity === 'warning' ? 'border-warning bg-warning/5' : 
+                  'border-info bg-info/5'
+                }`}
+                onClick={() => {
+                  if (alert.message.includes('Assurance')) {
+                    setShowInsuranceDialog(true);
+                  } else if (alert.message.includes('Visite technique')) {
+                    setShowInspectionDialog(true);
+                  } else if (alert.message.includes('Vignette')) {
+                    setShowVignetteDialog(true);
+                  } else if (alert.message.includes('Vidange')) {
+                    setShowVidangeDialog(true);
+                  }
+                }}
+              >
+                <AlertDescription className="flex items-center justify-between">
+                  <span className="font-medium">{alert.message}</span>
+                  <Button 
+                    size="sm" 
+                    variant={alert.severity === 'critical' ? 'destructive' : 'default'}
+                    className="text-xs"
+                  >
+                    {alert.action}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -863,7 +914,11 @@ export default function VehiculeDetails() {
                         const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                         
                         return (
-                          <TableRow key={insurance.id}>
+                          <TableRow 
+                            key={insurance.id}
+                            className="cursor-pointer hover:bg-accent/50"
+                            onClick={() => setSelectedInsurance(insurance)}
+                          >
                             <TableCell>{insurance.numero_ordre}</TableCell>
                             <TableCell>{insurance.assureur}</TableCell>
                             <TableCell>{format(new Date(insurance.date_debut), 'dd/MM/yyyy', { locale: fr })}</TableCell>
@@ -881,7 +936,7 @@ export default function VehiculeDetails() {
                             <TableCell className="text-right text-muted-foreground text-sm">
                               {format(new Date(insurance.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                               {insurance.photo_url ? (
                                 <Button
                                   variant="ghost"
@@ -935,7 +990,11 @@ export default function VehiculeDetails() {
                         const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                         
                         return (
-                          <TableRow key={inspection.id}>
+                          <TableRow 
+                            key={inspection.id}
+                            className="cursor-pointer hover:bg-accent/50"
+                            onClick={() => setSelectedInspection(inspection)}
+                          >
                             <TableCell>{inspection.numero_ordre}</TableCell>
                             <TableCell>{inspection.centre_controle || '-'}</TableCell>
                             <TableCell>{format(new Date(inspection.date_visite), 'dd/MM/yyyy', { locale: fr })}</TableCell>
@@ -953,7 +1012,7 @@ export default function VehiculeDetails() {
                             <TableCell className="text-right text-muted-foreground text-sm">
                               {format(new Date(inspection.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                               {inspection.photo_url ? (
                                 <Button
                                   variant="ghost"
@@ -1072,7 +1131,11 @@ export default function VehiculeDetails() {
                         const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                         
                         return (
-                          <TableRow key={vignette.id}>
+                          <TableRow 
+                            key={vignette.id}
+                            className="cursor-pointer hover:bg-accent/50"
+                            onClick={() => setSelectedVignette(vignette)}
+                          >
                             <TableCell>{vignette.numero_ordre}</TableCell>
                             <TableCell>{vignette.annee}</TableCell>
                             <TableCell>
@@ -1089,7 +1152,7 @@ export default function VehiculeDetails() {
                             <TableCell className="text-right text-muted-foreground text-sm">
                               {format(new Date(vignette.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
-                            <TableCell className="text-center">
+                            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                               {vignette.photo_url ? (
                                 <Button
                                   variant="ghost"
@@ -1870,6 +1933,227 @@ export default function VehiculeDetails() {
               {uploadingVignette ? "Upload en cours..." : "Enregistrer"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Insurance Detail Dialog */}
+      <Dialog open={!!selectedInsurance} onOpenChange={() => setSelectedInsurance(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Détails de l'assurance</DialogTitle>
+          </DialogHeader>
+          {selectedInsurance && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">N° d'ordre</Label>
+                  <p className="font-medium">{selectedInsurance.numero_ordre}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">N° de police</Label>
+                  <p className="font-medium">{selectedInsurance.numero_police || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Assureur</Label>
+                  <p className="font-medium">{selectedInsurance.assureur}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Coordonnées assureur</Label>
+                  <p className="font-medium">{selectedInsurance.coordonnees_assureur || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date début</Label>
+                  <p className="font-medium">{format(new Date(selectedInsurance.date_debut), 'dd/MM/yyyy', { locale: fr })}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date d'expiration</Label>
+                  <p className="font-medium">{format(new Date(selectedInsurance.date_expiration), 'dd/MM/yyyy', { locale: fr })}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Montant</Label>
+                  <p className="font-medium">{selectedInsurance.montant.toFixed(2)} DH</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date de paiement</Label>
+                  <p className="font-medium">{selectedInsurance.date_paiement ? format(new Date(selectedInsurance.date_paiement), 'dd/MM/yyyy', { locale: fr }) : '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Mode de paiement</Label>
+                  <p className="font-medium capitalize">{selectedInsurance.mode_paiement}</p>
+                </div>
+                {selectedInsurance.numero_cheque && (
+                  <div>
+                    <Label className="text-muted-foreground">N° de chèque</Label>
+                    <p className="font-medium">{selectedInsurance.numero_cheque}</p>
+                  </div>
+                )}
+                {selectedInsurance.banque && (
+                  <div>
+                    <Label className="text-muted-foreground">Banque</Label>
+                    <p className="font-medium">{selectedInsurance.banque}</p>
+                  </div>
+                )}
+              </div>
+              {selectedInsurance.remarques && (
+                <div>
+                  <Label className="text-muted-foreground">Remarques</Label>
+                  <p className="font-medium">{selectedInsurance.remarques}</p>
+                </div>
+              )}
+              {selectedInsurance.photo_url && (
+                <div>
+                  <Label className="text-muted-foreground">Photo du document</Label>
+                  <img 
+                    src={selectedInsurance.photo_url} 
+                    alt="Document d'assurance" 
+                    className="w-full mt-2 rounded-lg border"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Inspection Detail Dialog */}
+      <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Détails de la visite technique</DialogTitle>
+          </DialogHeader>
+          {selectedInspection && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">N° d'ordre</Label>
+                  <p className="font-medium">{selectedInspection.numero_ordre}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Centre de contrôle</Label>
+                  <p className="font-medium">{selectedInspection.centre_controle || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date de visite</Label>
+                  <p className="font-medium">{format(new Date(selectedInspection.date_visite), 'dd/MM/yyyy', { locale: fr })}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date d'expiration</Label>
+                  <p className="font-medium">{format(new Date(selectedInspection.date_expiration), 'dd/MM/yyyy', { locale: fr })}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Montant</Label>
+                  <p className="font-medium">{selectedInspection.montant?.toFixed(2) || '-'} DH</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date de paiement</Label>
+                  <p className="font-medium">{selectedInspection.date_paiement ? format(new Date(selectedInspection.date_paiement), 'dd/MM/yyyy', { locale: fr }) : '-'}</p>
+                </div>
+                {selectedInspection.mode_paiement && (
+                  <div>
+                    <Label className="text-muted-foreground">Mode de paiement</Label>
+                    <p className="font-medium capitalize">{selectedInspection.mode_paiement}</p>
+                  </div>
+                )}
+                {selectedInspection.numero_cheque && (
+                  <div>
+                    <Label className="text-muted-foreground">N° de chèque</Label>
+                    <p className="font-medium">{selectedInspection.numero_cheque}</p>
+                  </div>
+                )}
+                {selectedInspection.banque && (
+                  <div>
+                    <Label className="text-muted-foreground">Banque</Label>
+                    <p className="font-medium">{selectedInspection.banque}</p>
+                  </div>
+                )}
+              </div>
+              {selectedInspection.remarques && (
+                <div>
+                  <Label className="text-muted-foreground">Remarques</Label>
+                  <p className="font-medium">{selectedInspection.remarques}</p>
+                </div>
+              )}
+              {selectedInspection.photo_url && (
+                <div>
+                  <Label className="text-muted-foreground">Photo du document</Label>
+                  <img 
+                    src={selectedInspection.photo_url} 
+                    alt="Document de visite technique" 
+                    className="w-full mt-2 rounded-lg border"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Vignette Detail Dialog */}
+      <Dialog open={!!selectedVignette} onOpenChange={() => setSelectedVignette(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Détails de la vignette</DialogTitle>
+          </DialogHeader>
+          {selectedVignette && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">N° d'ordre</Label>
+                  <p className="font-medium">{selectedVignette.numero_ordre}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Année</Label>
+                  <p className="font-medium">{selectedVignette.annee}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date d'expiration</Label>
+                  <p className="font-medium">{format(new Date(selectedVignette.date_expiration), 'dd/MM/yyyy', { locale: fr })}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Montant</Label>
+                  <p className="font-medium">{selectedVignette.montant?.toFixed(2) || '-'} DH</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date de paiement</Label>
+                  <p className="font-medium">{selectedVignette.date_paiement ? format(new Date(selectedVignette.date_paiement), 'dd/MM/yyyy', { locale: fr }) : '-'}</p>
+                </div>
+                {selectedVignette.mode_paiement && (
+                  <div>
+                    <Label className="text-muted-foreground">Mode de paiement</Label>
+                    <p className="font-medium capitalize">{selectedVignette.mode_paiement}</p>
+                  </div>
+                )}
+                {selectedVignette.numero_cheque && (
+                  <div>
+                    <Label className="text-muted-foreground">N° de chèque</Label>
+                    <p className="font-medium">{selectedVignette.numero_cheque}</p>
+                  </div>
+                )}
+                {selectedVignette.banque && (
+                  <div>
+                    <Label className="text-muted-foreground">Banque</Label>
+                    <p className="font-medium">{selectedVignette.banque}</p>
+                  </div>
+                )}
+              </div>
+              {selectedVignette.remarques && (
+                <div>
+                  <Label className="text-muted-foreground">Remarques</Label>
+                  <p className="font-medium">{selectedVignette.remarques}</p>
+                </div>
+              )}
+              {selectedVignette.photo_url && (
+                <div>
+                  <Label className="text-muted-foreground">Photo du document</Label>
+                  <img 
+                    src={selectedVignette.photo_url} 
+                    alt="Document de vignette" 
+                    className="w-full mt-2 rounded-lg border"
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
