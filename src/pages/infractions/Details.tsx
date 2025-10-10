@@ -11,11 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function InfractionDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasPermission, isAdmin } = usePermissions();
   const [infraction, setInfraction] = useState<any>(null);
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -201,26 +203,30 @@ export default function InfractionDetails() {
         </div>
         <div className="flex gap-2">
           {getStatutBadge(infraction.statut_traitement)}
-          {infraction.statut_traitement === "nouveau" && (
+          {hasPermission('infractions.mark_transmitted') && infraction.statut_traitement === "nouveau" && (
             <Button onClick={() => setShowTransmitDialog(true)} className="gap-2">
               <Send className="w-4 h-4" />
               Transmettre au client
             </Button>
           )}
-          {infraction.statut_traitement === "transmis" && (
+          {isAdmin && infraction.statut_traitement === "transmis" && (
             <Button onClick={() => setShowCloseDialog(true)} variant="outline" className="gap-2">
               <CheckCircle2 className="w-4 h-4" />
               Clôturer le dossier
             </Button>
           )}
-          <Button variant="outline" onClick={() => navigate(`/infractions/${id}/modifier`)}>
-            <Edit className="w-4 h-4 mr-2" />
-            Modifier
-          </Button>
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Supprimer
-          </Button>
+          {hasPermission('infractions.update') && (
+            <Button variant="outline" onClick={() => navigate(`/infractions/${id}/modifier`)}>
+              <Edit className="w-4 h-4 mr-2" />
+              Modifier
+            </Button>
+          )}
+          {isAdmin && (
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Supprimer
+            </Button>
+          )}
         </div>
       </div>
 

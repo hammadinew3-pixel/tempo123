@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Expense = {
   id: string;
@@ -29,6 +30,7 @@ type Expense = {
 
 export default function Charges() {
   const { toast } = useToast();
+  const { canCreate, canDelete } = usePermissions();
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -193,9 +195,10 @@ export default function Charges() {
             Gestion des dépenses et charges
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
+        {canCreate('expenses') && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle charge
             </Button>
@@ -289,6 +292,7 @@ export default function Charges() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Statistiques */}
@@ -363,13 +367,15 @@ export default function Charges() {
                 </div>
                 <div className="flex items-center gap-3">
                   <p className="text-lg font-bold text-red-600">{expense.montant.toFixed(2)} DH</p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(expense.id)}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
+                  {canDelete('expenses') && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(expense.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
