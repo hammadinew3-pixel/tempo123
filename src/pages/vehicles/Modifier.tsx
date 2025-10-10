@@ -54,7 +54,13 @@ export default function ModifierVehicule() {
     tarif_journalier: 0,
     valeur_achat: 0,
     statut: 'disponible' as VehicleStatus,
-    photo_url: ''
+    photo_url: '',
+    carburant: 'diesel',
+    chassis: '',
+    places: 5,
+    concessionaire: '',
+    puissance: '',
+    couleur: ''
   });
 
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -90,10 +96,17 @@ export default function ModifierVehicule() {
         tarif_journalier: data.tarif_journalier || 0,
         valeur_achat: data.valeur_achat || 0,
         statut: data.statut || 'disponible',
-        photo_url: data.photo_url || ''
+        photo_url: data.photo_url || '',
+        carburant: 'diesel',
+        chassis: '',
+        places: 5,
+        concessionaire: '',
+        puissance: '',
+        couleur: ''
       });
 
-      setIsInService(data.statut === 'disponible' || data.statut === 'loue' || data.statut === 'reserve');
+      setIsInService(data.en_service ?? true);
+      setIsSousLocation(data.sous_location ?? false);
       
       // Set available models based on the vehicle's brand
       if (data.marque && MARQUES_MODELES[data.marque]) {
@@ -162,8 +175,17 @@ export default function ModifierVehicule() {
 
     try {
       const updateData = {
-        ...formData,
-        statut: isInService ? formData.statut : 'en_panne' as VehicleStatus
+        marque: formData.marque,
+        modele: formData.modele,
+        immatriculation: formData.immatriculation,
+        annee: formData.annee,
+        categorie: formData.categorie,
+        kilometrage: formData.kilometrage,
+        tarif_journalier: formData.tarif_journalier,
+        valeur_achat: formData.valeur_achat,
+        statut: isInService ? formData.statut : 'en_panne' as VehicleStatus,
+        en_service: isInService,
+        sous_location: isSousLocation
       };
 
       const { error } = await supabase
@@ -345,6 +367,25 @@ export default function ModifierVehicule() {
               </div>
             </div>
 
+            {/* Carburant */}
+            <div>
+              <Label htmlFor="carburant">Carburant *</Label>
+              <Select 
+                value={formData.carburant} 
+                onValueChange={(value) => setFormData({...formData, carburant: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="diesel">Diesel</SelectItem>
+                  <SelectItem value="essence">Essence</SelectItem>
+                  <SelectItem value="electrique">Électrique</SelectItem>
+                  <SelectItem value="hybride">Hybride</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Année de mise en circulation */}
             <div>
               <Label htmlFor="annee">Année de mise en circulation</Label>
@@ -360,6 +401,94 @@ export default function ModifierVehicule() {
               <p className="text-xs text-muted-foreground mt-1">
                 Année de la première immatriculation du véhicule
               </p>
+            </div>
+
+            {/* Valeur d'achat */}
+            <div>
+              <Label htmlFor="valeur_achat">Valeur d'achat (Prix TTC)</Label>
+              <div className="relative">
+                <Input
+                  id="valeur_achat"
+                  type="number"
+                  step="0.01"
+                  value={formData.valeur_achat}
+                  onChange={(e) => setFormData({...formData, valeur_achat: parseFloat(e.target.value) || 0})}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
+              </div>
+            </div>
+
+            {/* N° Châssis */}
+            <div>
+              <Label htmlFor="chassis">N° Châssis</Label>
+              <Input
+                id="chassis"
+                value={formData.chassis}
+                onChange={(e) => setFormData({...formData, chassis: e.target.value})}
+                placeholder="Code unique de 17 caractères"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                N° Châssis (VIN) est un code unique de 17 caractères composé de lettres et de chiffres
+              </p>
+            </div>
+
+            {/* Nombre de places */}
+            <div>
+              <Label htmlFor="places">Nombre de places</Label>
+              <Input
+                id="places"
+                type="number"
+                value={formData.places}
+                onChange={(e) => setFormData({...formData, places: parseInt(e.target.value) || 5})}
+                placeholder="Ex: 5"
+              />
+            </div>
+
+            {/* Concessionaire */}
+            <div>
+              <Label htmlFor="concessionaire">Concessionaire</Label>
+              <Input
+                id="concessionaire"
+                value={formData.concessionaire}
+                onChange={(e) => setFormData({...formData, concessionaire: e.target.value})}
+                placeholder="Nom du concessionaire"
+              />
+            </div>
+
+            {/* Puissance fiscale */}
+            <div>
+              <Label htmlFor="puissance">Puissance fiscale</Label>
+              <div className="relative">
+                <Input
+                  id="puissance"
+                  type="number"
+                  value={formData.puissance}
+                  onChange={(e) => setFormData({...formData, puissance: e.target.value})}
+                  placeholder="Ex: 6"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">VC</span>
+              </div>
+            </div>
+
+            {/* Couleur */}
+            <div>
+              <Label htmlFor="couleur">Couleur</Label>
+              <Select 
+                value={formData.couleur} 
+                onValueChange={(value) => setFormData({...formData, couleur: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une couleur" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="blanc">Blanc</SelectItem>
+                  <SelectItem value="noir">Noir</SelectItem>
+                  <SelectItem value="gris">Gris</SelectItem>
+                  <SelectItem value="bleu">Bleu</SelectItem>
+                  <SelectItem value="rouge">Rouge</SelectItem>
+                  <SelectItem value="argent">Argent</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Empty div for grid alignment */}
