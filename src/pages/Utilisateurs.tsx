@@ -164,28 +164,17 @@ export default function Utilisateurs() {
 
   const createUser = async () => {
     try {
-      // Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: newUser.email,
-        password: newUser.password,
-        email_confirm: true,
-        user_metadata: {
-          nom: newUser.nom
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: newUser.email,
+          password: newUser.password,
+          nom: newUser.nom,
+          role: newUser.role
         }
       });
 
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error("Utilisateur non créé");
-      }
-
-      // Assign role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: authData.user.id, role: newUser.role });
-
-      if (roleError) throw roleError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Utilisateur créé",
@@ -208,9 +197,12 @@ export default function Utilisateurs() {
     if (!userToDelete) return;
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userToDelete);
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: userToDelete }
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Utilisateur supprimé",
