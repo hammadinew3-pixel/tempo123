@@ -127,6 +127,26 @@ export default function Dashboard() {
         `).eq('date_fin', today).order('end_time', {
         ascending: true
       });
+
+      // Load tomorrow's returns (J+1)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      const {
+        data: tomorrowReturns
+      } = await supabase.from('contracts').select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `).eq('date_fin', tomorrowStr).order('end_time', {
+        ascending: true
+      });
+
+      // Combine today's and tomorrow's returns with a flag
+      const allReturns = [
+        ...(todayReturns || []).map(r => ({ ...r, isJ1: false })),
+        ...(tomorrowReturns || []).map(r => ({ ...r, isJ1: true }))
+      ];
       setStats({
         vehiclesCount: vehiclesCount || 0,
         reservationsCount: reservationsCount || 0,
@@ -139,7 +159,7 @@ export default function Dashboard() {
       setRecentReservations(reservations || []);
       setRecentAssistance(assistance || []);
       setDepartures(todayDepartures || []);
-      setReturns(todayReturns || []);
+      setReturns(allReturns || []);
 
       // Calculate alerts for all vehicles
       if (vehicles) {
@@ -616,7 +636,16 @@ export default function Dashboard() {
                         </div>
                       </td>
                     </tr> : (activeTab === 'departures' ? departures : returns).map(contract => <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
+                        <td className="py-4 font-medium text-foreground">
+                          <div className="flex items-center gap-2">
+                            {contract.numero_contrat}
+                            {activeTab === 'returns' && contract.isJ1 && (
+                              <Badge variant="outline" className="bg-info/10 text-info border-info text-xs">
+                                J+1
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
                         <td className="py-4 text-foreground">
                           {contract.vehicles?.marque} {contract.vehicles?.modele}
                           <div className="text-xs text-muted-foreground">{contract.vehicles?.immatriculation}</div>
