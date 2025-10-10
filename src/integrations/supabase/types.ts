@@ -958,6 +958,7 @@ export type Database = {
           marque: string
           modele: string
           photo_url: string | null
+          prochain_kilometrage_vidange: number | null
           sous_location: boolean | null
           statut: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier: number
@@ -980,6 +981,7 @@ export type Database = {
           marque: string
           modele: string
           photo_url?: string | null
+          prochain_kilometrage_vidange?: number | null
           sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier: number
@@ -1002,6 +1004,7 @@ export type Database = {
           marque?: string
           modele?: string
           photo_url?: string | null
+          prochain_kilometrage_vidange?: number | null
           sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"]
           tarif_journalier?: number

@@ -222,11 +222,24 @@ export default function Vehicules() {
   };
 
   const needsOilChange = (vehicle: Vehicle) => {
+    // Si un prochain kilométrage est défini, utiliser celui-ci
+    if (vehicle.prochain_kilometrage_vidange) {
+      return vehicle.kilometrage >= vehicle.prochain_kilometrage_vidange;
+    }
+    // Sinon, utiliser le calcul automatique (8000 km)
     const kmDepuis = vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
     return kmDepuis > 8000;
   };
 
   const getOilChangeAlertLevel = (vehicle: Vehicle) => {
+    // Si un prochain kilométrage est défini, utiliser celui-ci
+    if (vehicle.prochain_kilometrage_vidange) {
+      const kmRestants = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+      if (kmRestants <= 0) return 'critical'; // Dépassé
+      if (kmRestants <= 1000) return 'warning'; // Moins de 1000 km
+      return 'ok';
+    }
+    // Sinon, utiliser le calcul automatique
     const kmDepuis = vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
     if (kmDepuis > 10000) return 'critical';
     if (kmDepuis > 8000) return 'warning';

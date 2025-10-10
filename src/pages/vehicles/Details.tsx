@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -31,6 +33,7 @@ export default function VehiculeDetails() {
   const [showContractsList, setShowContractsList] = useState(false);
   const [vidanges, setVidanges] = useState<any[]>([]);
   const [showVidangeDialog, setShowVidangeDialog] = useState(false);
+  const [prochainKmVidange, setProchainKmVidange] = useState<string>('');
 
   useEffect(() => {
     if (id) {
@@ -93,11 +96,26 @@ export default function VehiculeDetails() {
   };
 
   const needsOilChange = () => {
+    if (!vehicle) return false;
+    // Si un prochain kilométrage est défini, utiliser celui-ci
+    if (vehicle.prochain_kilometrage_vidange) {
+      return vehicle.kilometrage >= vehicle.prochain_kilometrage_vidange;
+    }
+    // Sinon, utiliser le calcul automatique (8000 km)
     const kmDepuis = calculateKmDepuisVidange();
     return kmDepuis > 8000;
   };
 
   const getOilChangeAlertLevel = () => {
+    if (!vehicle) return 'ok';
+    // Si un prochain kilométrage est défini, utiliser celui-ci
+    if (vehicle.prochain_kilometrage_vidange) {
+      const kmRestants = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+      if (kmRestants <= 0) return 'critical'; // Dépassé
+      if (kmRestants <= 1000) return 'warning'; // Moins de 1000 km
+      return 'ok';
+    }
+    // Sinon, utiliser le calcul automatique
     const kmDepuis = calculateKmDepuisVidange();
     if (kmDepuis > 10000) return 'critical'; // Rouge
     if (kmDepuis > 8000) return 'warning'; // Orange
@@ -105,9 +123,21 @@ export default function VehiculeDetails() {
   };
 
   const handleMarkOilChangeDone = async () => {
-    if (!vehicle || !confirm('Confirmer que la vidange a été effectuée ?')) return;
+    if (!vehicle) return;
 
     try {
+      const prochainKm = prochainKmVidange ? parseInt(prochainKmVidange) : null;
+
+      // Validation du prochain kilométrage
+      if (prochainKm && prochainKm <= vehicle.kilometrage) {
+        toast({
+          title: "Erreur",
+          description: "Le prochain kilométrage de vidange doit être supérieur au kilométrage actuel",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Créer un enregistrement dans la table vidanges
       const { error: vidangeError } = await supabase
         .from('vidanges')
@@ -116,6 +146,7 @@ export default function VehiculeDetails() {
           kilometrage: vehicle.kilometrage,
           date_vidange: new Date().toISOString().split('T')[0],
           type: 'Vidange complète',
+          remarques: prochainKm ? `Prochain kilométrage prévu: ${prochainKm} km` : null,
         });
 
       if (vidangeError) throw vidangeError;
@@ -126,6 +157,7 @@ export default function VehiculeDetails() {
         .update({
           dernier_kilometrage_vidange: vehicle.kilometrage,
           date_derniere_vidange: new Date().toISOString().split('T')[0],
+          prochain_kilometrage_vidange: prochainKm,
         })
         .eq('id', vehicle.id);
 
@@ -137,6 +169,7 @@ export default function VehiculeDetails() {
       });
 
       setShowVidangeDialog(false);
+      setProchainKmVidange('');
       loadVehicle();
     } catch (error: any) {
       toast({
@@ -322,6 +355,14 @@ export default function VehiculeDetails() {
                         à {vehicle.dernier_kilometrage_vidange.toLocaleString()} km
                       </p>
                     )}
+                    {vehicle.prochain_kilometrage_vidange && (
+                      <p className="text-xs font-medium mt-1">
+                        Prochaine vidange prévue à {vehicle.prochain_kilometrage_vidange.toLocaleString()} km
+                        <span className="text-muted-foreground ml-1">
+                          ({(vehicle.prochain_kilometrage_vidange - vehicle.kilometrage).toLocaleString()} km restants)
+                        </span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -344,7 +385,9 @@ export default function VehiculeDetails() {
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {vehicle.dernier_kilometrage_vidange > 0
+                    {vehicle.prochain_kilometrage_vidange
+                      ? `Prochaine vidange prévue à ${vehicle.prochain_kilometrage_vidange.toLocaleString()} km`
+                      : vehicle.dernier_kilometrage_vidange > 0
                       ? `Dernière vidange à ${vehicle.dernier_kilometrage_vidange.toLocaleString()} km`
                       : 'Aucune vidange enregistrée'}
                   </p>
@@ -925,8 +968,25 @@ export default function VehiculeDetails() {
               à la date d'aujourd'hui.
             </p>
 
+            <div className="space-y-2">
+              <Label htmlFor="prochain-km">Prochain kilométrage de vidange (optionnel)</Label>
+              <Input
+                id="prochain-km"
+                type="number"
+                placeholder={`Ex: ${(vehicle.kilometrage + 10000).toLocaleString()}`}
+                value={prochainKmVidange}
+                onChange={(e) => setProchainKmVidange(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Définissez le kilométrage auquel vous souhaitez être notifié pour la prochaine vidange
+              </p>
+            </div>
+
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowVidangeDialog(false)}>
+              <Button variant="outline" onClick={() => {
+                setShowVidangeDialog(false);
+                setProchainKmVidange('');
+              }}>
                 Annuler
               </Button>
               <Button onClick={handleMarkOilChangeDone}>
