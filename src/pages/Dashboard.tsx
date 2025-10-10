@@ -48,8 +48,8 @@ export default function Dashboard() {
   useEffect(() => {
     loadDashboardData();
 
-    // Subscribe to real-time updates for contracts
-    const channel = supabase
+    // Subscribe to real-time updates for contracts and assistance
+    const contractsChannel = supabase
       .channel('dashboard-contracts-changes')
       .on(
         'postgres_changes',
@@ -59,14 +59,29 @@ export default function Dashboard() {
           table: 'contracts'
         },
         () => {
-          // Reload departures and returns when contracts change
+          loadDeparturesAndReturns();
+        }
+      )
+      .subscribe();
+
+    const assistanceChannel = supabase
+      .channel('dashboard-assistance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assistance'
+        },
+        () => {
           loadDeparturesAndReturns();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(contractsChannel);
+      supabase.removeChannel(assistanceChannel);
     };
   }, []);
 
@@ -74,7 +89,7 @@ export default function Dashboard() {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Load today's departures
+      // Load today's departures from contracts
       const { data: todayDepartures } = await supabase
         .from('contracts')
         .select(`
@@ -85,7 +100,17 @@ export default function Dashboard() {
         .eq('date_debut', today)
         .order('start_time', { ascending: true });
 
-      // Load today's returns
+      // Load today's departures from assistance
+      const { data: todayAssistanceDepartures } = await supabase
+        .from('assistance')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_debut', today);
+
+      // Load today's returns from contracts
       const { data: todayReturns } = await supabase
         .from('contracts')
         .select(`
@@ -96,7 +121,17 @@ export default function Dashboard() {
         .eq('date_fin', today)
         .order('end_time', { ascending: true });
 
-      // Load tomorrow's returns (J+1)
+      // Load today's returns from assistance
+      const { data: todayAssistanceReturns } = await supabase
+        .from('assistance')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_fin', today);
+
+      // Load tomorrow's returns (J+1) from contracts
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
@@ -111,14 +146,32 @@ export default function Dashboard() {
         .eq('date_fin', tomorrowStr)
         .order('end_time', { ascending: true });
 
-      // Combine today's and tomorrow's returns with a flag
-      const allReturns = [
-        ...(todayReturns || []).map(r => ({ ...r, isJ1: false })),
-        ...(tomorrowReturns || []).map(r => ({ ...r, isJ1: true }))
+      // Load tomorrow's returns (J+1) from assistance
+      const { data: tomorrowAssistanceReturns } = await supabase
+        .from('assistance')
+        .select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `)
+        .eq('date_fin', tomorrowStr);
+
+      // Combine departures (contracts + assistance)
+      const allDepartures = [
+        ...(todayDepartures || []).map(d => ({ ...d, type: 'contract' })),
+        ...(todayAssistanceDepartures || []).map(d => ({ ...d, type: 'assistance' }))
       ];
 
-      setDepartures(todayDepartures || []);
-      setReturns(allReturns || []);
+      // Combine returns (today's + tomorrow's, contracts + assistance)
+      const allReturns = [
+        ...(todayReturns || []).map(r => ({ ...r, isJ1: false, type: 'contract' })),
+        ...(todayAssistanceReturns || []).map(r => ({ ...r, isJ1: false, type: 'assistance' })),
+        ...(tomorrowReturns || []).map(r => ({ ...r, isJ1: true, type: 'contract' })),
+        ...(tomorrowAssistanceReturns || []).map(r => ({ ...r, isJ1: true, type: 'assistance' }))
+      ];
+
+      setDepartures(allDepartures);
+      setReturns(allReturns);
     } catch (error) {
       console.error('Error loading departures and returns:', error);
     }
@@ -180,48 +233,6 @@ export default function Dashboard() {
         ascending: false
       }).limit(4);
 
-      // Load today's departures
-      const today = new Date().toISOString().split('T')[0];
-      const {
-        data: todayDepartures
-      } = await supabase.from('contracts').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_debut', today).order('start_time', {
-        ascending: true
-      });
-
-      // Load today's returns
-      const {
-        data: todayReturns
-      } = await supabase.from('contracts').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_fin', today).order('end_time', {
-        ascending: true
-      });
-
-      // Load tomorrow's returns (J+1)
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = tomorrow.toISOString().split('T')[0];
-      const {
-        data: tomorrowReturns
-      } = await supabase.from('contracts').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_fin', tomorrowStr).order('end_time', {
-        ascending: true
-      });
-
-      // Combine today's and tomorrow's returns with a flag
-      const allReturns = [
-        ...(todayReturns || []).map(r => ({ ...r, isJ1: false })),
-        ...(tomorrowReturns || []).map(r => ({ ...r, isJ1: true }))
-      ];
       setStats({
         vehiclesCount: vehiclesCount || 0,
         reservationsCount: reservationsCount || 0,
@@ -233,8 +244,9 @@ export default function Dashboard() {
       });
       setRecentReservations(reservations || []);
       setRecentAssistance(assistance || []);
-      setDepartures(todayDepartures || []);
-      setReturns(allReturns || []);
+
+      // Load departures and returns (contracts + assistance)
+      await loadDeparturesAndReturns();
 
       // Calculate alerts for all vehicles
       if (vehicles) {
@@ -586,11 +598,16 @@ export default function Dashboard() {
                           <p className="text-muted-foreground">Aucun résultat</p>
                         </div>
                       </td>
-                    </tr> : (activeTab === 'departures' ? departures : returns).map(contract => <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
+                    </tr> : (activeTab === 'departures' ? departures : returns).map(item => <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
                         <td className="py-4 font-medium text-foreground">
                           <div className="flex items-center gap-2">
-                            {contract.numero_contrat}
-                            {activeTab === 'returns' && contract.isJ1 && (
+                            {item.type === 'contract' ? item.numero_contrat : item.num_dossier}
+                            {item.type === 'assistance' && (
+                              <Badge variant="outline" className="bg-warning/10 text-warning border-warning text-xs">
+                                ASS
+                              </Badge>
+                            )}
+                            {activeTab === 'returns' && item.isJ1 && (
                               <Badge variant="outline" className="bg-info/10 text-info border-info text-xs">
                                 J+1
                               </Badge>
@@ -598,11 +615,11 @@ export default function Dashboard() {
                           </div>
                         </td>
                         <td className="py-4 text-foreground">
-                          {contract.vehicles?.marque} {contract.vehicles?.modele}
-                          <div className="text-xs text-muted-foreground">{contract.vehicles?.immatriculation}</div>
+                          {item.vehicles?.marque} {item.vehicles?.modele}
+                          <div className="text-xs text-muted-foreground">{item.vehicles?.immatriculation}</div>
                         </td>
                         <td className="py-4 text-foreground">
-                          {contract.clients?.nom} {contract.clients?.prenom}
+                          {item.clients?.nom} {item.clients?.prenom}
                         </td>
                       </tr>)}
                 </tbody>
