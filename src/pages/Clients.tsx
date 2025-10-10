@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar, Eye, Columns } from "lucide-react";
+import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar, Eye, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { useLayoutContext } from "@/components/layout/Layout";
+import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
+import { format } from "date-fns";
 
 type Client = Database['public']['Tables']['clients']['Row'];
 type ClientInsert = Database['public']['Tables']['clients']['Insert'];
@@ -236,6 +239,36 @@ export default function Clients() {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
 
+  const prepareClientsExport = () => {
+    return filteredClients.map(c => ({
+      'Type': c.type === 'particulier' ? 'Particulier' : 'Entreprise',
+      'Prénom': c.prenom || '-',
+      'Nom': c.nom,
+      'CIN': c.cin || '-',
+      'Permis': c.permis_conduire || '-',
+      'Téléphone': c.telephone,
+      'Email': c.email || '-',
+      'Adresse': c.adresse || '-',
+      'Créé le': format(new Date(c.created_at), 'dd/MM/yyyy')
+    }));
+  };
+
+  const handleExport = (exportFormat: 'excel' | 'csv') => {
+    const data = prepareClientsExport();
+    const filename = `clients_${format(new Date(), 'yyyy-MM-dd')}`;
+    
+    if (exportFormat === 'excel') {
+      exportToExcel(data, filename);
+    } else {
+      exportToCSV(data, filename);
+    }
+    
+    toast({
+      title: 'Export réussi',
+      description: `${filteredClients.length} client(s) exporté(s) en ${exportFormat.toUpperCase()}`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -311,10 +344,24 @@ export default function Clients() {
             <Filter className="w-4 h-4 mr-2" />
             FILTRER
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            IMPORTER
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                EXPORTER
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Dialog open={isClientDialogOpen} onOpenChange={(open) => { setIsClientDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button size="sm">

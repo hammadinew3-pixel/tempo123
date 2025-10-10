@@ -27,6 +27,8 @@ import Revenus from "./pages/Revenus";
 import Charges from "./pages/Charges";
 import Cheques from "./pages/Cheques";
 import Alertes from "./pages/Alertes";
+import Historique from "./pages/Historique";
+import Rapports from "./pages/Rapports";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -236,6 +238,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Alertes /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/historique"
+              element={
+                <ProtectedRoute>
+                  <Layout><Historique /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rapports"
+              element={
+                <ProtectedRoute>
+                  <Layout><Rapports /></Layout>
                 </ProtectedRoute>
               }
             />
