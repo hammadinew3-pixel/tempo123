@@ -400,11 +400,13 @@ export default function VehiculeDetails() {
   const totalReservations = getTotalReservations();
   const netProfit = totalRevenue - totalExpenses;
 
-  const statusBadge = vehicle.statut === 'disponible' ? 'Disponible' :
+  const statusBadge = !vehicle.en_service ? 'Hors service' :
+                     vehicle.statut === 'disponible' ? 'Disponible' :
                      vehicle.statut === 'loue' ? 'Loué' : 
                      vehicle.statut === 'reserve' ? 'Réservé' : 'En panne';
   
-  const statusVariant = vehicle.statut === 'disponible' ? 'default' : 
+  const statusVariant = !vehicle.en_service ? 'destructive' :
+                       vehicle.statut === 'disponible' ? 'default' : 
                        vehicle.statut === 'loue' ? 'secondary' : 
                        vehicle.statut === 'reserve' ? 'outline' : 'destructive';
 
@@ -654,7 +656,7 @@ export default function VehiculeDetails() {
                 {/* Vehicle Name */}
                 <div className="text-center">
                   <h3 className="text-xl font-bold">{vehicle.marque} / {vehicle.modele}</h3>
-                  <Badge variant="secondary" className="mt-2">En circulation</Badge>
+                  <Badge variant={statusVariant} className="mt-2">{statusBadge}</Badge>
                 </div>
 
                 {/* Vehicle Stats */}
