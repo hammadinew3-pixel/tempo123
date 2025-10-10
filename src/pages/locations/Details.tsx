@@ -33,6 +33,7 @@ export default function LocationDetails() {
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
   const [showCautionDialog, setShowCautionDialog] = useState(false);
   const [showChangeVehicleDialog, setShowChangeVehicleDialog] = useState(false);
+  const [showProlongationDialog, setShowProlongationDialog] = useState(false);
   
   const [contractEditData, setContractEditData] = useState({
     date_debut: '',
@@ -56,6 +57,7 @@ export default function LocationDetails() {
     conducteurs: true,
     paiements: true,
     vehicleHistory: true,
+    prolongations: true,
   });
 
   const [changeVehicleData, setChangeVehicleData] = useState({
@@ -97,6 +99,11 @@ export default function LocationDetails() {
     numero_cheque: '',
     banque: '',
     remarques: '',
+  });
+
+  const [prolongationData, setProlongationData] = useState({
+    nouvelle_date_fin: '',
+    raison: '',
   });
 
   useEffect(() => {
@@ -526,6 +533,76 @@ export default function LocationDetails() {
         notes: '',
         change_date: '',
       });
+      loadContractData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleProlongation = async () => {
+    try {
+      if (!prolongationData.nouvelle_date_fin) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Veuillez entrer une nouvelle date de fin",
+        });
+        return;
+      }
+
+      const nouvelleDateFin = new Date(prolongationData.nouvelle_date_fin);
+      const dateActuelle = new Date(contract.date_fin);
+
+      if (nouvelleDateFin <= dateActuelle) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "La nouvelle date doit être postérieure à la date de fin actuelle",
+        });
+        return;
+      }
+
+      // Recalculer la durée et le montant total
+      const dateDebut = new Date(contract.date_debut);
+      const newDuration = Math.ceil((nouvelleDateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24));
+      const dailyRate = contract.daily_rate || 0;
+      const nouveauMontantTotal = newDuration * dailyRate;
+
+      // Get current prolongations array
+      const currentProlongations = contract.prolongations || [];
+      
+      // Add new prolongation to the array
+      const newProlongation = {
+        date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+        ancienne_date_fin: format(dateActuelle, 'yyyy-MM-dd'),
+        nouvelle_date_fin: format(nouvelleDateFin, 'yyyy-MM-dd'),
+        raison: prolongationData.raison || 'Non spécifiée'
+      };
+
+      const { error } = await supabase
+        .from("contracts")
+        .update({
+          date_fin: format(nouvelleDateFin, 'yyyy-MM-dd'),
+          duration: newDuration,
+          total_amount: nouveauMontantTotal,
+          remaining_amount: nouveauMontantTotal - (contract.advance_payment || 0),
+          prolongations: [...currentProlongations, newProlongation],
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Location prolongée",
+        description: `La location a été prolongée jusqu'au ${format(nouvelleDateFin, 'dd/MM/yyyy', { locale: fr })}. Nouveau montant: ${nouveauMontantTotal.toFixed(2)} DH`,
+      });
+
+      setShowProlongationDialog(false);
+      setProlongationData({ nouvelle_date_fin: '', raison: '' });
       loadContractData();
     } catch (error: any) {
       toast({
@@ -1041,6 +1118,19 @@ export default function LocationDetails() {
                   <span className="text-muted-foreground">Caution</span>
                   <span className="font-medium">{contract.caution_montant?.toFixed(2)} DH</span>
                 </div>
+                {(contract.statut === 'livre' || contract.statut === 'contrat_valide') && (
+                  <div className="pt-3 border-t">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full" 
+                      onClick={() => setShowProlongationDialog(true)}
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Prolonger la location
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </CollapsibleContent>
           </Collapsible>
@@ -1354,6 +1444,106 @@ export default function LocationDetails() {
           </Collapsible>
         </Card>
       )}
+
+      {/* Historique des prolongations */}
+      {contract.prolongations && contract.prolongations.length > 0 && (
+        <Card>
+          <Collapsible open={openSections.prolongations} onOpenChange={() => toggleSection("prolongations")}>
+            <CollapsibleTrigger className="w-full">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm font-medium">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <span>Historique des prolongations</span>
+                  <Badge variant="outline" className="ml-2">
+                    {contract.prolongations.length}
+                  </Badge>
+                </div>
+                {openSections.prolongations ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </CardContent>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="px-4 pb-4 space-y-4">
+                {contract.prolongations.map((prolongation: any, index: number) => (
+                  <div key={index} className="p-3 bg-muted/50 rounded-lg space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Prolongation #{index + 1}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(prolongation.date), "dd/MM/yyyy 'à' HH:mm", { locale: fr })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ancienne date de fin</span>
+                      <span className="font-medium">
+                        {format(new Date(prolongation.ancienne_date_fin), "dd/MM/yyyy", { locale: fr })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Nouvelle date de fin</span>
+                      <span className="font-medium text-primary">
+                        {format(new Date(prolongation.nouvelle_date_fin), "dd/MM/yyyy", { locale: fr })}
+                      </span>
+                    </div>
+                    {prolongation.raison && (
+                      <div>
+                        <span className="text-muted-foreground">Raison:</span>
+                        <p className="text-sm mt-1">{prolongation.raison}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
+        </Card>
+      )}
+
+      {/* Dialog Prolongation */}
+      <Dialog open={showProlongationDialog} onOpenChange={setShowProlongationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Prolonger la location</DialogTitle>
+            <DialogDescription>
+              Date de fin actuelle: {format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nouvelle date de fin *</Label>
+              <Input
+                type="date"
+                value={prolongationData.nouvelle_date_fin}
+                onChange={(e) => setProlongationData({ ...prolongationData, nouvelle_date_fin: e.target.value })}
+                min={contract.date_fin}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                La date doit être postérieure à la date de fin actuelle
+              </p>
+            </div>
+            <div>
+              <Label>Raison de la prolongation</Label>
+              <Textarea
+                value={prolongationData.raison}
+                onChange={(e) => setProlongationData({ ...prolongationData, raison: e.target.value })}
+                placeholder="Ex: Client a demandé une prolongation..."
+                rows={3}
+              />
+            </div>
+            <div className="bg-blue-50 border border-blue-200 p-3 rounded-md">
+              <p className="text-sm text-blue-900">
+                Le montant total sera recalculé automatiquement en fonction de la nouvelle durée et du tarif journalier actuel ({contract.daily_rate?.toFixed(2)} DH/jour).
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowProlongationDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleProlongation}>
+                Prolonger
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog Livraison */}
       <Dialog open={showDeliveryDialog} onOpenChange={setShowDeliveryDialog}>

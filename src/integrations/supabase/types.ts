@@ -378,6 +378,7 @@ export type Database = {
           payment_method: string | null
           pdf_url: string | null
           pickup_branch_id: number | null
+          prolongations: Json | null
           remaining_amount: number | null
           return_date: string | null
           return_fuel_level: string | null
@@ -421,6 +422,7 @@ export type Database = {
           payment_method?: string | null
           pdf_url?: string | null
           pickup_branch_id?: number | null
+          prolongations?: Json | null
           remaining_amount?: number | null
           return_date?: string | null
           return_fuel_level?: string | null
@@ -464,6 +466,7 @@ export type Database = {
           payment_method?: string | null
           pdf_url?: string | null
           pickup_branch_id?: number | null
+          prolongations?: Json | null
           remaining_amount?: number | null
           return_date?: string | null
           return_fuel_level?: string | null
