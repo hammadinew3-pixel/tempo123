@@ -432,8 +432,9 @@ export default function Dashboard() {
 
         {/* Alerts and Fleet Status in one row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Alerts Section */}
-          <div className="lg:col-span-2">
+          {/* Left column: Alerts and Departures-Returns */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Alerts Section */}
             <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-4">
@@ -472,6 +473,68 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Departures - Returns Section */}
+            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <CardTitle>Départs - Récupérations</CardTitle>
+            </div>
+            <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
+            <div className="flex space-x-8 mt-4">
+              <button onClick={() => setActiveTab('departures')} className={`pb-2 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <span className="text-sm font-medium">{departures.length.toString().padStart(2, '0')} Départs</span>
+              </button>
+              <button onClick={() => setActiveTab('returns')} className={`pb-2 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <span className="text-sm font-medium">{returns.length.toString().padStart(2, '0')} Récupérations</span>
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-muted-foreground border-b">
+                    <th className="pb-3 font-medium">Rés. N°</th>
+                    <th className="pb-3 font-medium">Véhicule</th>
+                    <th className="pb-3 font-medium">Locataire</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(activeTab === 'departures' ? departures : returns).length === 0 ? <tr>
+                      <td colSpan={3} className="text-center py-12">
+                        <div className="flex flex-col items-center">
+                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
+                            <Calendar className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                          <p className="text-muted-foreground">Aucun résultat</p>
+                        </div>
+                      </td>
+                    </tr> : (activeTab === 'departures' ? departures : returns).map(contract => <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
+                        <td className="py-4 font-medium text-foreground">
+                          <div className="flex items-center gap-2">
+                            {contract.numero_contrat}
+                            {activeTab === 'returns' && contract.isJ1 && (
+                              <Badge variant="outline" className="bg-info/10 text-info border-info text-xs">
+                                J+1
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {contract.vehicles?.marque} {contract.vehicles?.modele}
+                          <div className="text-xs text-muted-foreground">{contract.vehicles?.immatriculation}</div>
+                        </td>
+                        <td className="py-4 text-foreground">
+                          {contract.clients?.nom} {contract.clients?.prenom}
+                        </td>
+                      </tr>)}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
           </div>
 
           {/* Fleet Status */}
@@ -591,72 +654,6 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Departures - Returns Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              <CardTitle>Départs - Récupérations</CardTitle>
-            </div>
-            <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
-            <div className="flex space-x-8 mt-4">
-              <button onClick={() => setActiveTab('departures')} className={`pb-2 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-                <span className="text-sm font-medium">{departures.length.toString().padStart(2, '0')} Départs</span>
-              </button>
-              <button onClick={() => setActiveTab('returns')} className={`pb-2 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-                <span className="text-sm font-medium">{returns.length.toString().padStart(2, '0')} Récupérations</span>
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="pb-3 font-medium">Rés. N°</th>
-                    <th className="pb-3 font-medium">Véhicule</th>
-                    <th className="pb-3 font-medium">Locataire</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(activeTab === 'departures' ? departures : returns).length === 0 ? <tr>
-                      <td colSpan={3} className="text-center py-12">
-                        <div className="flex flex-col items-center">
-                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
-                            <Calendar className="w-8 h-8 text-muted-foreground" />
-                          </div>
-                          <p className="text-muted-foreground">Aucun résultat</p>
-                        </div>
-                      </td>
-                    </tr> : (activeTab === 'departures' ? departures : returns).map(contract => <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="py-4 font-medium text-foreground">
-                          <div className="flex items-center gap-2">
-                            {contract.numero_contrat}
-                            {activeTab === 'returns' && contract.isJ1 && (
-                              <Badge variant="outline" className="bg-info/10 text-info border-info text-xs">
-                                J+1
-                              </Badge>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-4 text-foreground">
-                          {contract.vehicles?.marque} {contract.vehicles?.modele}
-                          <div className="text-xs text-muted-foreground">{contract.vehicles?.immatriculation}</div>
-                        </td>
-                        <td className="py-4 text-foreground">
-                          {contract.clients?.nom} {contract.clients?.prenom}
-                        </td>
-                      </tr>)}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-          </div>
         </div>
 
         {/* Volume de transactions - Full Width */}
