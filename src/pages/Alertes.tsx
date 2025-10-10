@@ -284,57 +284,6 @@ const Alertes = () => {
         </Breadcrumb>
       </div>
 
-      {/* Chèques Section */}
-      <div className="bg-card rounded-lg border shadow-sm">
-        <div className="p-4 border-b bg-gradient-to-r from-card to-secondary/20">
-          <h2 className="text-lg font-semibold text-foreground">Chèques</h2>
-        </div>
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="cheques" className="border-0">
-            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-3">
-                {chequeAlerts.length === 0 ? (
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                ) : (
-                  <AlertCircle className="w-5 h-5 text-warning" />
-                )}
-                <span className="font-medium">Les alertes chèques</span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {chequeAlerts.length === 0
-                    ? "Aucune alerte trouvée"
-                    : `${chequeAlerts.length} alerte(s) trouvée(s)`}
-                </span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {chequeAlerts.length === 0 ? (
-                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
-                  <CheckCircle2 className="w-4 h-4 text-success" />
-                  <p className="text-sm text-success">Aucune alerte de chèque</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {chequeAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20 hover:bg-warning/20 transition-colors"
-                    >
-                      <span className="text-sm font-medium">
-                        Chèque n°{alert.numero_cheque} du contrat{" "}
-                        {alert.contracts?.numero_contrat}
-                      </span>
-                      <Button size="sm" className="bg-warning hover:bg-warning/90 text-white">
-                        ENCAISSER
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
-
       {/* Réservations Section */}
       <div className="bg-card rounded-lg border shadow-sm">
         <div className="p-4 border-b bg-gradient-to-r from-card to-secondary/20">
@@ -511,6 +460,57 @@ const Alertes = () => {
               );
             })
           )}
+        </Accordion>
+      </div>
+
+      {/* Chèques Section */}
+      <div className="bg-card rounded-lg border shadow-sm">
+        <div className="p-4 border-b bg-gradient-to-r from-card to-secondary/20">
+          <h2 className="text-lg font-semibold text-foreground">Chèques</h2>
+        </div>
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="cheques" className="border-0">
+            <AccordionTrigger className="px-4 hover:no-underline hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                {chequeAlerts.length === 0 ? (
+                  <CheckCircle2 className="w-5 h-5 text-success" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-warning" />
+                )}
+                <span className="font-medium">Les alertes chèques</span>
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {chequeAlerts.length === 0
+                    ? "Aucune alerte trouvée"
+                    : `${chequeAlerts.length} alerte(s) trouvée(s)`}
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              {chequeAlerts.length === 0 ? (
+                <div className="flex items-center gap-2 p-4 bg-success/10 rounded-lg border border-success/20">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <p className="text-sm text-success">Aucune alerte de chèque</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {chequeAlerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20 hover:bg-warning/20 transition-colors"
+                    >
+                      <span className="text-sm font-medium">
+                        Chèque n°{alert.numero_cheque} du contrat{" "}
+                        {alert.contracts?.numero_contrat}
+                      </span>
+                      <Button size="sm" className="bg-warning hover:bg-warning/90 text-white">
+                        ENCAISSER
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
         </Accordion>
       </div>
     </div>
