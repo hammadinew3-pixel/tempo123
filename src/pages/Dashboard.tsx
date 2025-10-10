@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Car, Calendar, Users, TrendingUp, AlertCircle, FileText } from "lucide-react";
+import { Car, Calendar, Users, TrendingUp, AlertCircle, FileText, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,10 @@ interface DashboardStats {
   rentedVehicles: number;
   maintenanceVehicles: number;
   outOfServiceVehicles: number;
+  sinistresTotal: number;
+  sinistresOuverts: number;
+  sinistresEnCours: number;
+  sinistresClos: number;
 }
 interface VehicleAlert {
   vehicleId: string;
@@ -32,7 +36,11 @@ export default function Dashboard() {
     availableVehicles: 0,
     rentedVehicles: 0,
     maintenanceVehicles: 0,
-    outOfServiceVehicles: 0
+    outOfServiceVehicles: 0,
+    sinistresTotal: 0,
+    sinistresOuverts: 0,
+    sinistresEnCours: 0,
+    sinistresClos: 0
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
   const [recentAssistance, setRecentAssistance] = useState<any[]>([]);
@@ -224,6 +232,17 @@ export default function Dashboard() {
         `).order('created_at', {
         ascending: false
       }).limit(4);
+
+      // Load sinistres statistics
+      const { data: sinistres } = await supabase
+        .from('sinistres')
+        .select('statut');
+      
+      const sinistresTotal = sinistres?.length || 0;
+      const sinistresOuverts = sinistres?.filter(s => s.statut === 'ouvert').length || 0;
+      const sinistresEnCours = sinistres?.filter(s => s.statut === 'en_cours').length || 0;
+      const sinistresClos = sinistres?.filter(s => s.statut === 'clos').length || 0;
+
       setStats({
         vehiclesCount: vehiclesCount || 0,
         reservationsCount: reservationsCount || 0,
@@ -231,7 +250,11 @@ export default function Dashboard() {
         availableVehicles,
         rentedVehicles,
         maintenanceVehicles,
-        outOfServiceVehicles
+        outOfServiceVehicles,
+        sinistresTotal,
+        sinistresOuverts,
+        sinistresEnCours,
+        sinistresClos
       });
       setRecentReservations(reservations || []);
       setRecentAssistance(assistance || []);
@@ -429,7 +452,7 @@ export default function Dashboard() {
   return <div className="w-full">
       <div className="p-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/vehicules')}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -482,6 +505,30 @@ export default function Dashboard() {
                 </div>
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
                   <Users className="w-7 h-7 text-primary" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/sinistres')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <AlertTriangle className="w-4 h-4 text-warning" />
+                    <span>SINISTRES</span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground">
+                    {stats.sinistresTotal.toString().padStart(2, '0')}
+                  </p>
+                  <div className="flex gap-2 mt-2 text-xs">
+                    <span className="text-destructive">{stats.sinistresOuverts} ouverts</span>
+                    <span className="text-warning">{stats.sinistresEnCours} en cours</span>
+                    <span className="text-success">{stats.sinistresClos} clos</span>
+                  </div>
+                </div>
+                <div className="w-14 h-14 bg-warning/10 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-7 h-7 text-warning" />
                 </div>
               </div>
             </CardContent>
