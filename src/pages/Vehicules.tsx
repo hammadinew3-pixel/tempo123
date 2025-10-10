@@ -27,8 +27,8 @@ export default function Vehicules() {
   const [filter, setFilter] = useState<'tous' | 'hors_service' | 'sous_location' | 'disponible' | 'loue' | 'reserve' | 'en_panne'>('tous');
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({
-    marque: '',
-    categorie: '',
+    marque: 'all',
+    categorie: 'all',
     assurance: 'tous' as 'tous' | 'expiree' | 'proche' | 'valide'
   });
   const { toast } = useToast();
@@ -263,8 +263,8 @@ export default function Vehicules() {
     if (filter === 'en_panne' && vehicle.statut !== 'en_panne') return false;
     
     // Filtres avancés
-    if (advancedFilters.marque && vehicle.marque !== advancedFilters.marque) return false;
-    if (advancedFilters.categorie && vehicle.categorie !== advancedFilters.categorie) return false;
+    if (advancedFilters.marque && advancedFilters.marque !== 'all' && vehicle.marque !== advancedFilters.marque) return false;
+    if (advancedFilters.categorie && advancedFilters.categorie !== 'all' && vehicle.categorie !== advancedFilters.categorie) return false;
     
     // Filtre d'assurance
     if (advancedFilters.assurance !== 'tous') {
@@ -288,13 +288,13 @@ export default function Vehicules() {
 
   const resetAdvancedFilters = () => {
     setAdvancedFilters({
-      marque: '',
-      categorie: '',
+      marque: 'all',
+      categorie: 'all',
       assurance: 'tous'
     });
   };
 
-  const hasActiveFilters = advancedFilters.marque || advancedFilters.categorie || advancedFilters.assurance !== 'tous';
+  const hasActiveFilters = advancedFilters.marque !== 'all' || advancedFilters.categorie !== 'all' || advancedFilters.assurance !== 'tous';
 
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
   const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
@@ -342,7 +342,7 @@ export default function Vehicules() {
                       <SelectValue placeholder="Toutes les marques" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Toutes les marques</SelectItem>
+                      <SelectItem value="all">Toutes les marques</SelectItem>
                       {uniqueMarques.map((marque) => (
                         <SelectItem key={marque} value={marque}>
                           {marque}
@@ -362,7 +362,7 @@ export default function Vehicules() {
                       <SelectValue placeholder="Toutes les catégories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Toutes les catégories</SelectItem>
+                      <SelectItem value="all">Toutes les catégories</SelectItem>
                       {uniqueCategories.map((categorie) => (
                         <SelectItem key={categorie} value={categorie}>
                           {categorie}
