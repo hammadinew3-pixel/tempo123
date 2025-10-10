@@ -1230,11 +1230,11 @@ export default function LocationDetails() {
                 ) : (
                   <div className="text-center py-4">
                     <p className="text-muted-foreground mb-4">
-                      {contract.statut === 'actif' ? 'Véhicule en circulation' : 'En attente de retour'}
+                      {contract.statut === 'livre' ? 'Véhicule en circulation' : 'En attente de retour'}
                     </p>
-                    {contract.statut === 'actif' && (
+                    {contract.statut === 'livre' && (
                       <Button size="sm" onClick={openReturnDialog}>
-                        <Check className="w-4 h-4 mr-2" />
+                        <RotateCcw className="w-4 h-4 mr-2" />
                         Marquer comme retourné
                       </Button>
                     )}
