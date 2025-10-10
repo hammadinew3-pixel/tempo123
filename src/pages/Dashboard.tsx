@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface DashboardStats {
   vehiclesCount: number;
@@ -40,6 +41,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'departures' | 'returns'>('departures');
   const [loading, setLoading] = useState(true);
   const [vehicleAlerts, setVehicleAlerts] = useState<VehicleAlert[]>([]);
+  const [showAlertsDialog, setShowAlertsDialog] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -273,6 +275,18 @@ export default function Dashboard() {
     ? ((stats.availableVehicles / stats.vehiclesCount) * 100).toFixed(2)
     : '0.00';
 
+  // Group alerts by vehicle
+  const groupedAlerts = vehicleAlerts.reduce((acc, alert) => {
+    if (!acc[alert.vehicleId]) {
+      acc[alert.vehicleId] = {
+        vehicleInfo: alert.vehicleInfo,
+        alerts: []
+      };
+    }
+    acc[alert.vehicleId].alerts.push(alert);
+    return acc;
+  }, {} as Record<string, { vehicleInfo: string; alerts: VehicleAlert[] }>);
+
   return (
     <div className="w-full">
       <div className="p-6">
@@ -363,9 +377,12 @@ export default function Dashboard() {
                         <span className="w-3 h-3 rounded-full bg-success"></span>
                         <span className="text-sm text-foreground">00 Alertes réservations</span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div 
+                        className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setShowAlertsDialog(true)}
+                      >
                         <span className="w-3 h-3 rounded-full bg-warning"></span>
-                        <span className="text-sm text-foreground">
+                        <span className="text-sm text-foreground underline">
                           {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
                         </span>
                       </div>
@@ -739,6 +756,58 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Vehicle Alerts Dialog */}
+      <Dialog open={showAlertsDialog} onOpenChange={setShowAlertsDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-warning">
+              <AlertCircle className="w-5 h-5" />
+              {vehicleAlerts.length.toString().padStart(2, '0')} alertes véhicules
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 mt-4">
+            {Object.entries(groupedAlerts).map(([vehicleId, { vehicleInfo, alerts }]) => (
+              <div key={vehicleId} className="space-y-3">
+                <div 
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => {
+                    setShowAlertsDialog(false);
+                    navigate(`/vehicules/${vehicleId}`);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <Car className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">{vehicleInfo}</h3>
+                  </div>
+                  <Badge variant="outline" className="bg-warning/10 text-warning border-warning">
+                    {alerts.length} alerte{alerts.length > 1 ? 's' : ''}
+                  </Badge>
+                </div>
+                <div className="pl-8 space-y-2">
+                  {alerts.map((alert, index) => (
+                    <Alert 
+                      key={index} 
+                      className={`border-l-4 ${
+                        alert.severity === 'critical' 
+                          ? 'border-l-destructive bg-destructive/5' 
+                          : alert.severity === 'high' 
+                          ? 'border-l-warning bg-warning/5' 
+                          : 'border-l-warning bg-warning/5'
+                      }`}
+                    >
+                      <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
+                      <AlertDescription className="text-sm">
+                        {alert.message}
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
