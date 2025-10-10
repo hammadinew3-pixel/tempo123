@@ -439,22 +439,11 @@ export default function VehiculeDetails() {
             {alerts.map((alert, index) => (
               <Alert 
                 key={index} 
-                className={`cursor-pointer hover:bg-accent/50 transition-colors ${
+                className={`${
                   alert.severity === 'critical' ? 'border-destructive bg-destructive/5' : 
                   alert.severity === 'warning' ? 'border-warning bg-warning/5' : 
                   'border-info bg-info/5'
                 }`}
-                onClick={() => {
-                  if (alert.message.includes('Assurance')) {
-                    setShowInsuranceDialog(true);
-                  } else if (alert.message.includes('Visite technique')) {
-                    setShowInspectionDialog(true);
-                  } else if (alert.message.includes('Vignette')) {
-                    setShowVignetteDialog(true);
-                  } else if (alert.message.includes('Vidange')) {
-                    setShowVidangeDialog(true);
-                  }
-                }}
               >
                 <AlertDescription className="flex items-center justify-between">
                   <span className="font-medium">{alert.message}</span>
@@ -462,6 +451,17 @@ export default function VehiculeDetails() {
                     size="sm" 
                     variant={alert.severity === 'critical' ? 'destructive' : 'default'}
                     className="text-xs"
+                    onClick={() => {
+                      if (alert.action.includes('ASSURANCE') || alert.message.includes('Assurance')) {
+                        setShowInsuranceDialog(true);
+                      } else if (alert.action.includes('VISITE') || alert.message.includes('Visite technique')) {
+                        setShowInspectionDialog(true);
+                      } else if (alert.action.includes('VIGNETTE') || alert.message.includes('Vignette')) {
+                        setShowVignetteDialog(true);
+                      } else if (alert.action.includes('VIDANGE') || alert.message.includes('Vidange')) {
+                        setShowVidangeDialog(true);
+                      }
+                    }}
                   >
                     {alert.action}
                   </Button>
