@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
 interface DashboardStats {
   vehiclesCount: number;
   reservationsCount: number;
@@ -17,14 +16,12 @@ interface DashboardStats {
   rentedVehicles: number;
   maintenanceVehicles: number;
 }
-
 interface VehicleAlert {
   vehicleId: string;
   vehicleInfo: string;
   message: string;
   severity: 'critical' | 'warning' | 'high';
 }
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
@@ -33,7 +30,7 @@ export default function Dashboard() {
     clientsCount: 0,
     availableVehicles: 0,
     rentedVehicles: 0,
-    maintenanceVehicles: 0,
+    maintenanceVehicles: 0
   });
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
   const [departures, setDepartures] = useState<any[]>([]);
@@ -42,80 +39,84 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [vehicleAlerts, setVehicleAlerts] = useState<VehicleAlert[]>([]);
   const [showAlertsDialog, setShowAlertsDialog] = useState(false);
-
   useEffect(() => {
     loadDashboardData();
   }, []);
-
   const loadDashboardData = async () => {
     try {
       // Load vehicles count
-      const { count: vehiclesCount } = await supabase
-        .from('vehicles')
-        .select('*', { count: 'exact', head: true });
+      const {
+        count: vehiclesCount
+      } = await supabase.from('vehicles').select('*', {
+        count: 'exact',
+        head: true
+      });
 
       // Load all vehicles with related data for alerts
-      const { data: vehicles } = await supabase
-        .from('vehicles')
-        .select('*');
-
+      const {
+        data: vehicles
+      } = await supabase.from('vehicles').select('*');
       const availableVehicles = vehicles?.filter(v => v.statut === 'disponible').length || 0;
       const rentedVehicles = vehicles?.filter(v => v.statut === 'loue').length || 0;
       const maintenanceVehicles = vehicles?.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length || 0;
 
       // Load contracts count
-      const { count: reservationsCount } = await supabase
-        .from('contracts')
-        .select('*', { count: 'exact', head: true });
+      const {
+        count: reservationsCount
+      } = await supabase.from('contracts').select('*', {
+        count: 'exact',
+        head: true
+      });
 
       // Load clients count
-      const { count: clientsCount } = await supabase
-        .from('clients')
-        .select('*', { count: 'exact', head: true });
+      const {
+        count: clientsCount
+      } = await supabase.from('clients').select('*', {
+        count: 'exact',
+        head: true
+      });
 
       // Load recent reservations
-      const { data: reservations } = await supabase
-        .from('contracts')
-        .select(`
+      const {
+        data: reservations
+      } = await supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(4);
+        `).order('created_at', {
+        ascending: false
+      }).limit(4);
 
       // Load today's departures
       const today = new Date().toISOString().split('T')[0];
-      const { data: todayDepartures } = await supabase
-        .from('contracts')
-        .select(`
+      const {
+        data: todayDepartures
+      } = await supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_debut', today)
-        .order('start_time', { ascending: true });
+        `).eq('date_debut', today).order('start_time', {
+        ascending: true
+      });
 
       // Load today's returns
-      const { data: todayReturns } = await supabase
-        .from('contracts')
-        .select(`
+      const {
+        data: todayReturns
+      } = await supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `)
-        .eq('date_fin', today)
-        .order('end_time', { ascending: true });
-
+        `).eq('date_fin', today).order('end_time', {
+        ascending: true
+      });
       setStats({
         vehiclesCount: vehiclesCount || 0,
         reservationsCount: reservationsCount || 0,
         clientsCount: clientsCount || 0,
         availableVehicles,
         rentedVehicles,
-        maintenanceVehicles,
+        maintenanceVehicles
       });
-
       setRecentReservations(reservations || []);
       setDepartures(todayDepartures || []);
       setReturns(todayReturns || []);
@@ -130,34 +131,31 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
   const calculateVehicleAlerts = async (vehicles: any[]) => {
     const alerts: VehicleAlert[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     for (const vehicle of vehicles) {
       // Load insurance data
-      const { data: insurances } = await supabase
-        .from('vehicle_insurance')
-        .select('*')
-        .eq('vehicle_id', vehicle.id)
-        .order('date_debut', { ascending: false });
+      const {
+        data: insurances
+      } = await supabase.from('vehicle_insurance').select('*').eq('vehicle_id', vehicle.id).order('date_debut', {
+        ascending: false
+      });
 
       // Load technical inspection data
-      const { data: technicalInspections } = await supabase
-        .from('vehicle_technical_inspection')
-        .select('*')
-        .eq('vehicle_id', vehicle.id)
-        .order('date_visite', { ascending: false });
+      const {
+        data: technicalInspections
+      } = await supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', vehicle.id).order('date_visite', {
+        ascending: false
+      });
 
       // Load vignette data
-      const { data: vignettes } = await supabase
-        .from('vehicle_vignette')
-        .select('*')
-        .eq('vehicle_id', vehicle.id)
-        .order('annee', { ascending: false });
-
+      const {
+        data: vignettes
+      } = await supabase.from('vehicle_vignette').select('*').eq('vehicle_id', vehicle.id).order('annee', {
+        ascending: false
+      });
       const vehicleInfo = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation})`;
 
       // Check insurance alerts
@@ -174,7 +172,6 @@ export default function Dashboard() {
           const expirationDate = new Date(latestInsurance.date_expiration);
           expirationDate.setHours(0, 0, 0, 0);
           const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
           if (expirationDate < today) {
             alerts.push({
               vehicleId: vehicle.id,
@@ -207,7 +204,6 @@ export default function Dashboard() {
           const expirationDate = new Date(latestInspection.date_expiration);
           expirationDate.setHours(0, 0, 0, 0);
           const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
           if (expirationDate < today) {
             alerts.push({
               vehicleId: vehicle.id,
@@ -240,7 +236,6 @@ export default function Dashboard() {
           const expirationDate = new Date(latestVignette.date_expiration);
           expirationDate.setHours(0, 0, 0, 0);
           const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
           if (expirationDate < today) {
             alerts.push({
               vehicleId: vehicle.id,
@@ -259,21 +254,23 @@ export default function Dashboard() {
         }
       }
     }
-
     setVehicleAlerts(alerts);
   };
-
-  const chartData = [
-    { month: 'Août\n2025', revenus: 1500, charges: 200 },
-    { month: 'Sept.\n2025', revenus: 4500, charges: 300 },
-    { month: 'Oct.\n2025', revenus: 6000, charges: 400 },
-  ];
-
+  const chartData = [{
+    month: 'Août\n2025',
+    revenus: 1500,
+    charges: 200
+  }, {
+    month: 'Sept.\n2025',
+    revenus: 4500,
+    charges: 300
+  }, {
+    month: 'Oct.\n2025',
+    revenus: 6000,
+    charges: 400
+  }];
   const totalAlerts = vehicleAlerts.length;
-
-  const availablePercentage = stats.vehiclesCount > 0 
-    ? ((stats.availableVehicles / stats.vehiclesCount) * 100).toFixed(2)
-    : '0.00';
+  const availablePercentage = stats.vehiclesCount > 0 ? (stats.availableVehicles / stats.vehiclesCount * 100).toFixed(2) : '0.00';
 
   // Group alerts by vehicle
   const groupedAlerts = vehicleAlerts.reduce((acc, alert) => {
@@ -285,10 +282,11 @@ export default function Dashboard() {
     }
     acc[alert.vehicleId].alerts.push(alert);
     return acc;
-  }, {} as Record<string, { vehicleInfo: string; alerts: VehicleAlert[] }>);
-
-  return (
-    <div className="w-full">
+  }, {} as Record<string, {
+    vehicleInfo: string;
+    alerts: VehicleAlert[];
+  }>);
+  return <div className="w-full">
       <div className="p-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -377,10 +375,7 @@ export default function Dashboard() {
                         <span className="w-3 h-3 rounded-full bg-success"></span>
                         <span className="text-sm text-foreground">00 Alertes réservations</span>
                       </div>
-                      <div 
-                        className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => setShowAlertsDialog(true)}
-                      >
+                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setShowAlertsDialog(true)}>
                         <span className="w-3 h-3 rounded-full bg-warning"></span>
                         <span className="text-sm text-foreground underline">
                           {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
@@ -408,36 +403,9 @@ export default function Dashboard() {
               <div className="flex items-center justify-center mb-6">
                 <div className="relative w-48 h-48">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="#e5e7eb"
-                      strokeWidth="8"
-                      fill="none"
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="hsl(var(--success))"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray="251.2"
-                      strokeDashoffset={251.2 - (251.2 * stats.availableVehicles) / stats.vehiclesCount}
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray="251.2"
-                      strokeDashoffset={
-                        251.2 - (251.2 * (stats.availableVehicles + stats.rentedVehicles)) / stats.vehiclesCount
-                      }
-                    />
+                    <circle cx="50" cy="50" r="40" stroke="#e5e7eb" strokeWidth="8" fill="none" />
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--success))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={251.2 - 251.2 * stats.availableVehicles / stats.vehiclesCount} />
+                    <circle cx="50" cy="50" r="40" stroke="hsl(var(--primary))" strokeWidth="8" fill="none" strokeDasharray="251.2" strokeDashoffset={251.2 - 251.2 * (stats.availableVehicles + stats.rentedVehicles) / stats.vehiclesCount} />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -472,52 +440,7 @@ export default function Dashboard() {
         </div>
 
         {/* Vehicle Alerts Section */}
-        {vehicleAlerts.length > 0 && (
-          <Card className="mb-6 border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-warning">
-                  <AlertCircle className="w-5 h-5" />
-                  {vehicleAlerts.length.toString().padStart(2, '0')} alertes véhicules
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {vehicleAlerts.map((alert, index) => (
-                <Alert 
-                  key={index} 
-                  className={`border-l-4 cursor-pointer hover:bg-accent/50 ${
-                    alert.severity === 'critical' 
-                      ? 'border-l-destructive bg-destructive/5' 
-                      : alert.severity === 'high' 
-                      ? 'border-l-warning bg-warning/5' 
-                      : 'border-l-warning bg-warning/5'
-                  }`}
-                  onClick={() => navigate(`/vehicules/${alert.vehicleId}`)}
-                >
-                  <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
-                  <AlertDescription className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-sm">{alert.vehicleInfo}</p>
-                      <p className="text-sm text-muted-foreground">{alert.message}</p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={`ml-4 ${
-                        alert.severity === 'critical' 
-                          ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' 
-                          : 'border-warning text-warning hover:bg-warning hover:text-white'
-                      }`}
-                    >
-                      VOIR DÉTAILS
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+        {vehicleAlerts.length > 0}
 
         {/* Departures - Returns Section */}
         <Card className="mb-6 border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
@@ -528,16 +451,10 @@ export default function Dashboard() {
             </div>
             <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
             <div className="flex space-x-8 mt-4">
-              <button 
-                onClick={() => setActiveTab('departures')}
-                className={`pb-2 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              >
+              <button onClick={() => setActiveTab('departures')} className={`pb-2 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
                 <span className="text-sm font-medium">{departures.length.toString().padStart(2, '0')} Départs</span>
               </button>
-              <button 
-                onClick={() => setActiveTab('returns')}
-                className={`pb-2 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              >
+              <button onClick={() => setActiveTab('returns')} className={`pb-2 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
                 <span className="text-sm font-medium">{returns.length.toString().padStart(2, '0')} Récupérations</span>
               </button>
             </div>
@@ -555,8 +472,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(activeTab === 'departures' ? departures : returns).length === 0 ? (
-                    <tr>
+                  {(activeTab === 'departures' ? departures : returns).length === 0 ? <tr>
                       <td colSpan={5} className="text-center py-12">
                         <div className="flex flex-col items-center">
                           <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
@@ -565,10 +481,7 @@ export default function Dashboard() {
                           <p className="text-muted-foreground">Aucun résultat</p>
                         </div>
                       </td>
-                    </tr>
-                  ) : (
-                    (activeTab === 'departures' ? departures : returns).map((contract) => (
-                      <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
+                    </tr> : (activeTab === 'departures' ? departures : returns).map(contract => <tr key={contract.id} className="border-b last:border-0 hover:bg-muted/50">
                         <td className="py-4 font-medium text-foreground">{contract.numero_contrat}</td>
                         <td className="py-4 text-foreground">
                           {contract.vehicles?.marque} {contract.vehicles?.modele}
@@ -583,9 +496,7 @@ export default function Dashboard() {
                         <td className="py-4 text-foreground">
                           {new Date(activeTab === 'departures' ? contract.date_fin : contract.date_debut).toLocaleDateString('fr-FR')}
                         </td>
-                      </tr>
-                    ))
-                  )}
+                      </tr>)}
                 </tbody>
               </table>
             </div>
@@ -617,26 +528,22 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <XAxis dataKey="month" tick={{
+                fontSize: 12
+              }} />
+                <YAxis tick={{
+                fontSize: 12
+              }} />
                 <Tooltip />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenus"
-                  stroke="hsl(var(--success))"
-                  strokeWidth={2}
-                  name="Revenus"
-                  dot={{ fill: 'hsl(var(--success))', r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="charges"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  name="Charges"
-                  dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-                />
+                <Line type="monotone" dataKey="revenus" stroke="hsl(var(--success))" strokeWidth={2} name="Revenus" dot={{
+                fill: 'hsl(var(--success))',
+                r: 4
+              }} />
+                <Line type="monotone" dataKey="charges" stroke="hsl(var(--primary))" strokeWidth={2} name="Charges" dot={{
+                fill: 'hsl(var(--primary))',
+                r: 4
+              }} />
               </LineChart>
             </ResponsiveContainer>
             <div className="text-center mt-4">
@@ -686,27 +593,14 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentReservations.length === 0 ? (
-                    <tr>
+                  {recentReservations.length === 0 ? <tr>
                       <td colSpan={10} className="text-center py-8 text-muted-foreground">
                         Aucune réservation
                       </td>
-                    </tr>
-                  ) : (
-                    recentReservations.map((reservation) => (
-                      <tr key={reservation.id} className="border-b hover:bg-muted/50">
+                    </tr> : recentReservations.map(reservation => <tr key={reservation.id} className="border-b hover:bg-muted/50">
                         <td className="py-4">{reservation.numero_contrat}</td>
                         <td className="py-4">
-                          <Badge
-                            variant="secondary"
-                            className={
-                              reservation.statut === 'actif'
-                                ? 'bg-primary/10 text-primary border-primary/20'
-                                : reservation.statut === 'termine'
-                                ? 'bg-muted text-muted-foreground border-muted'
-                                : 'bg-warning/10 text-warning border-warning/20'
-                            }
-                          >
+                          <Badge variant="secondary" className={reservation.statut === 'actif' ? 'bg-primary/10 text-primary border-primary/20' : reservation.statut === 'termine' ? 'bg-muted text-muted-foreground border-muted' : 'bg-warning/10 text-warning border-warning/20'}>
                             {reservation.statut === 'actif' ? 'Livrée' : reservation.statut}
                           </Badge>
                         </td>
@@ -730,21 +624,13 @@ export default function Dashboard() {
                         </td>
                         <td className="py-4">{reservation.total_amount?.toFixed(2)} DH</td>
                         <td className="py-4">
-                          <span
-                            className={
-                              (reservation.remaining_amount || 0) > 0
-                                ? 'text-red-600'
-                                : 'text-green-600'
-                            }
-                          >
+                          <span className={(reservation.remaining_amount || 0) > 0 ? 'text-red-600' : 'text-green-600'}>
                             {(reservation.remaining_amount || 0) > 0 ? '-' : '+'}
                             {Math.abs(reservation.remaining_amount || 0).toFixed(2)} DH
                           </span>
                         </td>
                         <td className="py-4">{reservation.daily_rate?.toFixed(2)} DH</td>
-                      </tr>
-                    ))
-                  )}
+                      </tr>)}
                 </tbody>
               </table>
             </div>
@@ -767,15 +653,14 @@ export default function Dashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-6 mt-4">
-            {Object.entries(groupedAlerts).map(([vehicleId, { vehicleInfo, alerts }]) => (
-              <div key={vehicleId} className="space-y-3">
-                <div 
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
-                  onClick={() => {
-                    setShowAlertsDialog(false);
-                    navigate(`/vehicules/${vehicleId}`);
-                  }}
-                >
+            {Object.entries(groupedAlerts).map(([vehicleId, {
+            vehicleInfo,
+            alerts
+          }]) => <div key={vehicleId} className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors" onClick={() => {
+              setShowAlertsDialog(false);
+              navigate(`/vehicules/${vehicleId}`);
+            }}>
                   <div className="flex items-center gap-3">
                     <Car className="w-5 h-5 text-primary" />
                     <h3 className="font-semibold text-foreground">{vehicleInfo}</h3>
@@ -785,29 +670,16 @@ export default function Dashboard() {
                   </Badge>
                 </div>
                 <div className="pl-8 space-y-2">
-                  {alerts.map((alert, index) => (
-                    <Alert 
-                      key={index} 
-                      className={`border-l-4 ${
-                        alert.severity === 'critical' 
-                          ? 'border-l-destructive bg-destructive/5' 
-                          : alert.severity === 'high' 
-                          ? 'border-l-warning bg-warning/5' 
-                          : 'border-l-warning bg-warning/5'
-                      }`}
-                    >
+                  {alerts.map((alert, index) => <Alert key={index} className={`border-l-4 ${alert.severity === 'critical' ? 'border-l-destructive bg-destructive/5' : alert.severity === 'high' ? 'border-l-warning bg-warning/5' : 'border-l-warning bg-warning/5'}`}>
                       <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
                       <AlertDescription className="text-sm">
                         {alert.message}
                       </AlertDescription>
-                    </Alert>
-                  ))}
+                    </Alert>)}
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
