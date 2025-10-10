@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Building2, Clock, Bell, Printer, Upload, Loader2 } from "lucide-react";
+import { Settings, Building2, Bell, Printer, Upload, Loader2 } from "lucide-react";
 
 interface AgenceSettings {
   id: string;
@@ -22,9 +22,6 @@ interface AgenceSettings {
   email?: string;
   telephone?: string;
   logo_url?: string;
-  grace_short?: number;
-  grace_medium?: number;
-  grace_long?: number;
   taux_tva?: number;
   alerte_cheque_jours?: number;
   alerte_vidange_kms?: number;
@@ -220,53 +217,6 @@ export default function Parametres() {
               adresse: settings?.adresse,
               email: settings?.email,
               telephone: settings?.telephone,
-            })} disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Enregistrer
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Délais de grâce */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Délais de grâce
-            </CardTitle>
-            <CardDescription>
-              Période supplémentaire accordée après la fin de location
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Courte durée (1-3 jours) - en minutes</Label>
-              <Input
-                type="number"
-                value={settings?.grace_short || 60}
-                onChange={(e) => setSettings(prev => prev ? {...prev, grace_short: parseInt(e.target.value)} : null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Moyenne durée (4-7 jours) - en minutes</Label>
-              <Input
-                type="number"
-                value={settings?.grace_medium || 120}
-                onChange={(e) => setSettings(prev => prev ? {...prev, grace_medium: parseInt(e.target.value)} : null)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Longue durée (+7 jours) - en minutes</Label>
-              <Input
-                type="number"
-                value={settings?.grace_long || 180}
-                onChange={(e) => setSettings(prev => prev ? {...prev, grace_long: parseInt(e.target.value)} : null)}
-              />
-            </div>
-            <Button onClick={() => updateSettings({
-              grace_short: settings?.grace_short,
-              grace_medium: settings?.grace_medium,
-              grace_long: settings?.grace_long,
             })} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Enregistrer
