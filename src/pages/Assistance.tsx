@@ -200,8 +200,8 @@ export default function Assistance() {
   };
 
   const filteredAssistances = assistances.filter(a => {
-    if (filters.type && a.type !== filters.type) return false;
-    if (filters.etat && a.etat !== filters.etat) return false;
+    if (filters.type && filters.type.trim() !== '' && a.type !== filters.type) return false;
+    if (filters.etat && filters.etat.trim() !== '' && a.etat !== filters.etat) return false;
     if (filters.dateDebut && a.date_debut < filters.dateDebut) return false;
     if (filters.dateFin && a.date_debut > filters.dateFin) return false;
     return true;

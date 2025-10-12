@@ -231,8 +231,8 @@ export default function Sinistres() {
   };
 
   const filteredSinistres = sinistres.filter(s => {
-    if (filters.type && s.type_sinistre !== filters.type) return false;
-    if (filters.statut && s.statut !== filters.statut) return false;
+    if (filters.type && filters.type.trim() !== '' && s.type_sinistre !== filters.type) return false;
+    if (filters.statut && filters.statut.trim() !== '' && s.statut !== filters.statut) return false;
     if (filters.dateDebut && s.date_sinistre < filters.dateDebut) return false;
     if (filters.dateFin && s.date_sinistre > filters.dateFin) return false;
     return true;

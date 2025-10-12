@@ -460,7 +460,7 @@ export default function Locations() {
 
   const filteredContracts = contracts.filter(contract => {
     if (filterType !== 'all' && contract.type_contrat !== filterType) return false;
-    if (filters.statut && contract.statut !== filters.statut) return false;
+    if (filters.statut && filters.statut.trim() !== '' && contract.statut !== filters.statut) return false;
     if (filters.dateDebut && contract.date_debut < filters.dateDebut) return false;
     if (filters.dateFin && contract.date_debut > filters.dateFin) return false;
     return true;
