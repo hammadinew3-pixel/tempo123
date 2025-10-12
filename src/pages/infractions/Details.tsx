@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUserRole } from "@/hooks/use-user-role";
+import html2pdf from "html2pdf.js";
 
 export default function InfractionDetails() {
   const { id } = useParams();
@@ -123,6 +124,61 @@ export default function InfractionDetails() {
 
   const handleDownloadFile = async (file: any) => {
     try {
+      // Si c'est un contrat, convertir la page HTML en PDF
+      if (file.file_type === 'contrat' && file.file_url) {
+        toast({
+          title: "Génération en cours",
+          description: "Veuillez patienter pendant la génération du PDF...",
+        });
+
+        // Créer un iframe invisible pour charger la page
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.left = '-9999px';
+        iframe.style.width = '210mm';
+        iframe.style.height = '297mm';
+        document.body.appendChild(iframe);
+
+        // Charger la page du contrat
+        iframe.src = file.file_url;
+
+        // Attendre que la page soit chargée
+        await new Promise((resolve) => {
+          iframe.onload = resolve;
+        });
+
+        // Attendre un peu plus pour que tout soit rendu
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Récupérer le contenu de l'iframe
+        const content = iframe.contentDocument?.body;
+
+        if (!content) {
+          throw new Error("Impossible de charger le contenu du contrat");
+        }
+
+        // Options pour html2pdf
+        const options = {
+          margin: 10,
+          filename: `contrat_${infraction.contracts?.numero_contrat || 'document'}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+        };
+
+        // Générer et télécharger le PDF
+        await html2pdf().set(options).from(content).save();
+
+        // Nettoyer l'iframe
+        document.body.removeChild(iframe);
+
+        toast({
+          title: "Succès",
+          description: "Contrat téléchargé avec succès",
+        });
+        return;
+      }
+
       const urlParts = file.file_url.split('/storage/v1/object/public/');
       const urlPath = file.file_url.split('/').pop() || '';
       const extension = urlPath.includes('.') ? '.' + urlPath.split('.').pop() : '';
