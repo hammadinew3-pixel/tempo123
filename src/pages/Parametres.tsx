@@ -24,7 +24,6 @@ interface AgenceSettings {
   logo_url?: string;
   taux_tva?: number;
   alerte_cheque_jours?: number;
-  alerte_vidange_kms?: number;
   alerte_visite_jours?: number;
   alerte_assurance_jours?: number;
   alerte_autorisation_jours?: number;
@@ -253,14 +252,6 @@ export default function Parametres() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Alerte vidange (km)</Label>
-              <Input
-                type="number"
-                value={settings?.alerte_vidange_kms || 5000}
-                onChange={(e) => setSettings(prev => prev ? {...prev, alerte_vidange_kms: parseInt(e.target.value)} : null)}
-              />
-            </div>
-            <div className="space-y-2">
               <Label>Alerte visite technique (jours)</Label>
               <Input
                 type="number"
@@ -287,7 +278,6 @@ export default function Parametres() {
             <Button onClick={() => updateSettings({
               taux_tva: settings?.taux_tva,
               alerte_cheque_jours: settings?.alerte_cheque_jours,
-              alerte_vidange_kms: settings?.alerte_vidange_kms,
               alerte_visite_jours: settings?.alerte_visite_jours,
               alerte_assurance_jours: settings?.alerte_assurance_jours,
               alerte_autorisation_jours: settings?.alerte_autorisation_jours,
