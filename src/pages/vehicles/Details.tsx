@@ -378,7 +378,7 @@ export default function VehiculeDetails() {
       }
 
       // Insert traite
-      const { error } = await supabase.from('vehicules_traite').insert({
+      const { data: traiteData, error } = await supabase.from('vehicules_traite').insert({
         vehicle_id: vehicle.id,
         organisme: traiteForm.organisme,
         concessionaire: traiteForm.concessionaire || null,
@@ -390,9 +390,36 @@ export default function VehiculeDetails() {
         avance_paye: avance,
         duree_deja_paye: dureeDejaPaye,
         notes: traiteForm.plus_infos || null
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Generate échéances
+      const echeancesToInsert = [];
+      const startDate = new Date(traiteForm.date_debut);
+      
+      for (let i = 0; i < nombreMois; i++) {
+        const echeanceDate = new Date(startDate);
+        echeanceDate.setMonth(echeanceDate.getMonth() + i);
+        
+        const isPaid = i < dureeDejaPaye;
+        
+        echeancesToInsert.push({
+          traite_id: traiteData.id,
+          vehicle_id: vehicle.id,
+          date_echeance: echeanceDate.toISOString().split('T')[0],
+          montant: montantMensuel,
+          statut: isPaid ? 'Payée' : 'À payer',
+          date_paiement: isPaid ? echeanceDate.toISOString().split('T')[0] : null,
+          notes: isPaid ? `Mois déjà payé (${i + 1}/${dureeDejaPaye})` : null
+        });
+      }
+
+      const { error: echeancesError } = await supabase
+        .from('vehicules_traites_echeances')
+        .insert(echeancesToInsert);
+
+      if (echeancesError) throw echeancesError;
 
       // Update vehicle valeur_achat with prix_achat
       const { error: updateError } = await supabase
