@@ -49,10 +49,8 @@ export default function VehiculeDetails() {
   const [traites, setTraites] = useState<any[]>([]);
   const [echeances, setEcheances] = useState<any[]>([]);
   const [showTraiteDialog, setShowTraiteDialog] = useState(false);
-  const [showEditTraiteDialog, setShowEditTraiteDialog] = useState(false);
   const [showPayEcheanceDialog, setShowPayEcheanceDialog] = useState(false);
   const [selectedEcheance, setSelectedEcheance] = useState<any>(null);
-  const [selectedTraite, setSelectedTraite] = useState<any>(null);
   const [traiteForm, setTraiteForm] = useState({
     concessionaire: '',
     organisme: '',
@@ -1266,10 +1264,10 @@ export default function VehiculeDetails() {
                           <span className="text-muted-foreground">Durée</span>
                           <span className="font-semibold">{traites[0].nombre_traites} mois</span>
                         </div>
-          <div className="flex justify-between py-2 border-b">
-            <span className="text-muted-foreground">Mois payés</span>
-            <span className="font-semibold">
-              {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length} mois
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Durée déjà payé</span>
+                          <span className="font-semibold">
+                            {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length} mois
                           </span>
                         </div>
                         <div className="flex justify-between py-2 border-b">
@@ -1463,15 +1461,11 @@ export default function VehiculeDetails() {
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Avance payé</span>
-                            <span className="font-medium">{parseFloat(traites[0].avance_paye || 0).toFixed(2)} DH</span>
+                            <span className="font-medium">{parseFloat(traites[0].avance_paye || 0).toFixed(2)}</span>
                           </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Mois payés</span>
-              <span className="font-medium">{traites[0].duree_deja_paye || 0} mois</span>
-            </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Prix/Mois</span>
-                            <span className="font-medium">{parseFloat(traites[0].montant_mensuel).toFixed(2)} DH</span>
+                            <span className="font-medium">{parseFloat(traites[0].montant_mensuel).toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Mois payés</span>
@@ -1772,7 +1766,7 @@ export default function VehiculeDetails() {
             )}
 
             <div>
-              <Label htmlFor="duree_deja_paye">Mois payés</Label>
+              <Label htmlFor="duree_deja_paye">Durée déjà payé</Label>
               <Input 
                 id="duree_deja_paye" 
                 type="number"
@@ -1898,304 +1892,6 @@ export default function VehiculeDetails() {
             </Button>
             <Button onClick={handlePayEcheance}>
               Confirmer le paiement
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog for editing traite bancaire */}
-      <Dialog open={showEditTraiteDialog} onOpenChange={setShowEditTraiteDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Modifier la traite bancaire</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4 overflow-y-auto flex-1 px-1">
-            <div>
-              <Label htmlFor="edit_concessionaire">Concessionaire / Maison d'achat</Label>
-              <Input 
-                id="edit_concessionaire" 
-                value={traiteForm.concessionaire}
-                onChange={(e) => setTraiteForm({...traiteForm, concessionaire: e.target.value})}
-                placeholder="Ex: Auto Hall"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_organisme">Organisme de crédit *</Label>
-              <Input 
-                id="edit_organisme" 
-                value={traiteForm.organisme}
-                onChange={(e) => setTraiteForm({...traiteForm, organisme: e.target.value})}
-                placeholder="Ex: Wafasalaf"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_date_achat">Date d'achat</Label>
-              <Input 
-                id="edit_date_achat" 
-                type="date"
-                value={traiteForm.date_achat}
-                onChange={(e) => setTraiteForm({...traiteForm, date_achat: e.target.value})}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_prix_achat">Prix d'achat *</Label>
-              <div className="relative">
-                <Input 
-                  id="edit_prix_achat" 
-                  type="number"
-                  step="0.01"
-                  value={traiteForm.prix_achat}
-                  onChange={(e) => setTraiteForm({...traiteForm, prix_achat: e.target.value})}
-                  placeholder="0.00"
-                  className="pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  DH
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="edit_avance">Avance</Label>
-              <div className="relative">
-                <Input 
-                  id="edit_avance" 
-                  type="number"
-                  step="0.01"
-                  value={traiteForm.avance}
-                  onChange={(e) => setTraiteForm({...traiteForm, avance: e.target.value})}
-                  placeholder="0.00"
-                  className="pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  DH
-                </span>
-              </div>
-            </div>
-
-            {resteAPayer > 0 && (
-              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-sm">
-                  Reste à payer: <span className="font-bold text-primary text-lg">
-                    {resteAPayer.toFixed(2)} DH
-                  </span>
-                </p>
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="edit_montant_mensuel">Montant de la mensualité *</Label>
-              <div className="relative">
-                <Input 
-                  id="edit_montant_mensuel" 
-                  type="number"
-                  step="0.01"
-                  value={traiteForm.montant_mensuel}
-                  onChange={(e) => setTraiteForm({...traiteForm, montant_mensuel: e.target.value})}
-                  placeholder="0.00"
-                  className="pr-12"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  DH
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit_date_debut">Date début mensualité *</Label>
-                <Input 
-                  id="edit_date_debut" 
-                  type="date"
-                  value={traiteForm.date_debut}
-                  onChange={(e) => setTraiteForm({...traiteForm, date_debut: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_duree_mois">Durée (mois) *</Label>
-                <Input 
-                  id="edit_duree_mois" 
-                  type="number"
-                  value={traiteForm.duree_mois}
-                  onChange={(e) => setTraiteForm({...traiteForm, duree_mois: e.target.value})}
-                  placeholder="Ex: 36"
-                />
-              </div>
-            </div>
-
-            {dateFinCalculee && (
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Date fin mensualité calculée:</p>
-                <p className="font-semibold text-lg">
-                  {format(new Date(dateFinCalculee), 'dd MMMM yyyy', { locale: fr })}
-                </p>
-              </div>
-            )}
-
-            {nombreMois > 0 && traiteForm.montant_mensuel && (
-              <div className={`p-4 rounded-lg border ${
-                isValidAmount 
-                  ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800' 
-                  : 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
-              }`}>
-                <div className="space-y-2 text-sm">
-                  <p>Nombre de mois: <span className="font-semibold">{nombreMois}</span></p>
-                  <p>Total des mensualités: <span className="font-semibold">{montantTotalMensualites.toFixed(2)} DH</span></p>
-                  <p className={`font-bold ${isValidAmount ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
-                    {isValidAmount 
-                      ? '✓ Montant correct !' 
-                      : `✗ Différence: ${Math.abs(montantTotalMensualites - resteAPayer).toFixed(2)} DH`
-                    }
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="edit_duree_deja_paye">Mois payés</Label>
-              <Input 
-                id="edit_duree_deja_paye" 
-                type="number"
-                value={traiteForm.duree_deja_paye}
-                onChange={(e) => setTraiteForm({...traiteForm, duree_deja_paye: e.target.value})}
-                placeholder="0"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Nombre de mois déjà payés. Les premières échéances seront automatiquement marquées comme payées.
-              </p>
-            </div>
-
-            <div>
-              <Label htmlFor="edit_plus_infos">Plus d'informations</Label>
-              <Textarea 
-                id="edit_plus_infos"
-                value={traiteForm.plus_infos}
-                onChange={(e) => setTraiteForm({...traiteForm, plus_infos: e.target.value})}
-                placeholder="Informations complémentaires..."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowEditTraiteDialog(false);
-              setSelectedTraite(null);
-              setTraiteForm({
-                concessionaire: '',
-                organisme: '',
-                date_achat: '',
-                prix_achat: '',
-                avance: '',
-                montant_mensuel: '',
-                date_debut: '',
-                duree_mois: '',
-                duree_deja_paye: '0',
-                plus_infos: ''
-              });
-            }}>
-              Annuler
-            </Button>
-            <Button onClick={async () => {
-              if (!selectedTraite) return;
-              
-              const prixAchat = parseFloat(traiteForm.prix_achat);
-              const avance = parseFloat(traiteForm.avance) || 0;
-              const montantMensuel = parseFloat(traiteForm.montant_mensuel);
-              const dureeDejaPaye = parseInt(traiteForm.duree_deja_paye) || 0;
-
-              if (!traiteForm.organisme || !traiteForm.date_debut || !traiteForm.duree_mois || !prixAchat || !montantMensuel) {
-                toast({
-                  title: "Erreur",
-                  description: "Veuillez remplir tous les champs obligatoires (*)",
-                  variant: "destructive",
-                });
-                return;
-              }
-
-              if (!isValidAmount) {
-                toast({
-                  title: "Erreur",
-                  description: "Le montant total des mensualités ne correspond pas au reste à payer",
-                  variant: "destructive",
-                });
-                return;
-              }
-
-              try {
-                const { error } = await supabase.from('vehicules_traite').update({
-                  organisme: traiteForm.organisme,
-                  concessionaire: traiteForm.concessionaire || null,
-                  date_achat: traiteForm.date_achat || null,
-                  montant_total: prixAchat,
-                  montant_mensuel: montantMensuel,
-                  date_debut: traiteForm.date_debut,
-                  nombre_traites: nombreMois,
-                  avance_paye: avance,
-                  duree_deja_paye: dureeDejaPaye,
-                  notes: traiteForm.plus_infos || null,
-                }).eq('id', selectedTraite.id);
-
-                if (error) throw error;
-
-                // Update vehicle valeur_achat
-                await supabase
-                  .from('vehicles')
-                  .update({ valeur_achat: prixAchat })
-                  .eq('id', vehicle!.id);
-
-                // Mark first X echeances as paid based on duree_deja_paye
-                if (dureeDejaPaye > 0) {
-                  const echeancesToPay = echeances
-                    .filter(e => e.traite_id === selectedTraite.id)
-                    .sort((a, b) => new Date(a.date_echeance).getTime() - new Date(b.date_echeance).getTime())
-                    .slice(0, dureeDejaPaye);
-
-                  for (const echeance of echeancesToPay) {
-                    if (echeance.statut !== 'Payée') {
-                      await supabase
-                        .from('vehicules_traites_echeances')
-                        .update({
-                        statut: 'Payée',
-                        date_paiement: traiteForm.date_debut,
-                        notes: 'Marquée automatiquement comme payée (mois payés)'
-                      })
-                      .eq('id', echeance.id);
-                    }
-                  }
-                }
-
-                toast({
-                  title: "Succès",
-                  description: `Traite bancaire modifiée avec succès.${dureeDejaPaye > 0 ? ` ${dureeDejaPaye} mois marqués comme payés.` : ''}`
-                });
-
-                setShowEditTraiteDialog(false);
-                setSelectedTraite(null);
-                setTraiteForm({
-                  concessionaire: '',
-                  organisme: '',
-                  date_achat: '',
-                  prix_achat: '',
-                  avance: '',
-                  montant_mensuel: '',
-                  date_debut: '',
-                  duree_mois: '',
-                  duree_deja_paye: '0',
-                  plus_infos: ''
-                });
-                loadVehicle();
-              } catch (error: any) {
-                toast({
-                  title: "Erreur",
-                  description: error.message,
-                  variant: "destructive",
-                });
-              }
-            }} disabled={!isValidAmount && nombreMois > 0}>
-              Enregistrer
             </Button>
           </DialogFooter>
         </DialogContent>
