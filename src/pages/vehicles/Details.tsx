@@ -54,29 +54,28 @@ export default function VehiculeDetails() {
   const [traiteForm, setTraiteForm] = useState({
     concessionaire: '',
     organisme: '',
+    date_achat: '',
     prix_achat: '',
     avance: '',
     montant_mensuel: '',
     date_debut: '',
-    date_fin: '',
+    duree_mois: '',
     duree_deja_paye: '0',
-    date_achat: '',
     plus_infos: ''
   });
 
   // Calculate remaining amount and validation
   const resteAPayer = parseFloat(traiteForm.prix_achat || '0') - parseFloat(traiteForm.avance || '0');
   
-  const calculateMonthsBetween = (start: string, end: string) => {
-    if (!start || !end) return 0;
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                   (endDate.getMonth() - startDate.getMonth()) + 1;
-    return months > 0 ? months : 0;
+  const calculateEndDate = (startDate: string, months: number) => {
+    if (!startDate || !months) return '';
+    const start = new Date(startDate);
+    start.setMonth(start.getMonth() + months - 1);
+    return start.toISOString().split('T')[0];
   };
 
-  const nombreMois = calculateMonthsBetween(traiteForm.date_debut, traiteForm.date_fin);
+  const nombreMois = parseInt(traiteForm.duree_mois || '0');
+  const dateFinCalculee = calculateEndDate(traiteForm.date_debut, nombreMois);
   const montantTotalMensualites = parseFloat(traiteForm.montant_mensuel || '0') * nombreMois;
   const isValidAmount = nombreMois > 0 && Math.abs(montantTotalMensualites - resteAPayer) < 0.01;
   const [echeancePaymentForm, setEcheancePaymentForm] = useState({
@@ -360,7 +359,7 @@ export default function VehiculeDetails() {
       const montantMensuel = parseFloat(traiteForm.montant_mensuel);
       const dureeDejaPaye = parseInt(traiteForm.duree_deja_paye) || 0;
 
-      if (!traiteForm.organisme || !traiteForm.date_debut || !traiteForm.date_fin || !prixAchat || !montantMensuel) {
+      if (!traiteForm.organisme || !traiteForm.date_debut || !traiteForm.duree_mois || !prixAchat || !montantMensuel) {
         toast({
           title: "Erreur",
           description: "Veuillez remplir tous les champs obligatoires (*)",
@@ -412,13 +411,13 @@ export default function VehiculeDetails() {
       setTraiteForm({
         concessionaire: '',
         organisme: '',
+        date_achat: '',
         prix_achat: '',
         avance: '',
         montant_mensuel: '',
         date_debut: '',
-        date_fin: '',
+        duree_mois: '',
         duree_deja_paye: '0',
-        date_achat: '',
         plus_infos: ''
       });
       loadVehicle();
@@ -1643,6 +1642,16 @@ export default function VehiculeDetails() {
             </div>
 
             <div>
+              <Label htmlFor="date_achat">Date d'achat</Label>
+              <Input 
+                id="date_achat" 
+                type="date"
+                value={traiteForm.date_achat}
+                onChange={(e) => setTraiteForm({...traiteForm, date_achat: e.target.value})}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="prix_achat">Prix d'achat *</Label>
               <div className="relative">
                 <Input 
@@ -1717,15 +1726,25 @@ export default function VehiculeDetails() {
                 />
               </div>
               <div>
-                <Label htmlFor="date_fin">Date fin mensualité *</Label>
+                <Label htmlFor="duree_mois">Durée (mois) *</Label>
                 <Input 
-                  id="date_fin" 
-                  type="date"
-                  value={traiteForm.date_fin}
-                  onChange={(e) => setTraiteForm({...traiteForm, date_fin: e.target.value})}
+                  id="duree_mois" 
+                  type="number"
+                  value={traiteForm.duree_mois}
+                  onChange={(e) => setTraiteForm({...traiteForm, duree_mois: e.target.value})}
+                  placeholder="Ex: 36"
                 />
               </div>
             </div>
+
+            {dateFinCalculee && (
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">Date fin mensualité calculée:</p>
+                <p className="font-semibold text-lg">
+                  {format(new Date(dateFinCalculee), 'dd MMMM yyyy', { locale: fr })}
+                </p>
+              </div>
+            )}
 
             {nombreMois > 0 && traiteForm.montant_mensuel && (
               <div className={`p-4 rounded-lg border ${
@@ -1761,16 +1780,6 @@ export default function VehiculeDetails() {
             </div>
 
             <div>
-              <Label htmlFor="date_achat">Date d'achat</Label>
-              <Input 
-                id="date_achat" 
-                type="date"
-                value={traiteForm.date_achat}
-                onChange={(e) => setTraiteForm({...traiteForm, date_achat: e.target.value})}
-              />
-            </div>
-
-            <div>
               <Label htmlFor="plus_infos">Plus d'informations</Label>
               <Textarea 
                 id="plus_infos"
@@ -1787,13 +1796,13 @@ export default function VehiculeDetails() {
               setTraiteForm({
                 concessionaire: '',
                 organisme: '',
+                date_achat: '',
                 prix_achat: '',
                 avance: '',
                 montant_mensuel: '',
                 date_debut: '',
-                date_fin: '',
+                duree_mois: '',
                 duree_deja_paye: '0',
-                date_achat: '',
                 plus_infos: ''
               });
             }}>
