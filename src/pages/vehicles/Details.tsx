@@ -49,8 +49,10 @@ export default function VehiculeDetails() {
   const [traites, setTraites] = useState<any[]>([]);
   const [echeances, setEcheances] = useState<any[]>([]);
   const [showTraiteDialog, setShowTraiteDialog] = useState(false);
+  const [showEditTraiteDialog, setShowEditTraiteDialog] = useState(false);
   const [showPayEcheanceDialog, setShowPayEcheanceDialog] = useState(false);
   const [selectedEcheance, setSelectedEcheance] = useState<any>(null);
+  const [selectedTraite, setSelectedTraite] = useState<any>(null);
   const [traiteForm, setTraiteForm] = useState({
     concessionaire: '',
     organisme: '',
@@ -1274,8 +1276,31 @@ export default function VehiculeDetails() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Colonne gauche: Les infos d'achat */}
                   <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle className="text-lg">Les infos d'achat</CardTitle>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedTraite(traites[0]);
+                          setTraiteForm({
+                            concessionaire: traites[0].concessionaire || '',
+                            organisme: traites[0].organisme || '',
+                            date_achat: traites[0].date_achat || '',
+                            prix_achat: traites[0].montant_total?.toString() || '',
+                            avance: traites[0].avance_paye?.toString() || '0',
+                            montant_mensuel: traites[0].montant_mensuel?.toString() || '',
+                            date_debut: traites[0].date_debut || '',
+                            duree_mois: traites[0].nombre_traites?.toString() || '',
+                            duree_deja_paye: echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length.toString(),
+                            plus_infos: traites[0].notes || ''
+                          });
+                          setShowEditTraiteDialog(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Modifier
+                      </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-3">
@@ -2976,6 +3001,275 @@ export default function VehiculeDetails() {
         setSelectedVignette(null);
       }
     }} selectedVignette={selectedVignette} vignetteForm={vignetteForm} setVignetteForm={setVignetteForm} vehicleId={vehicle!.id} onSuccess={loadVehicle} />
+
+      {/* Edit Traite Dialog */}
+      <Dialog open={showEditTraiteDialog} onOpenChange={setShowEditTraiteDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Modifier les informations d'achat</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto flex-1 px-1">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_concessionaire">Concessionaire</Label>
+                <Input
+                  id="edit_concessionaire"
+                  value={traiteForm.concessionaire}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, concessionaire: e.target.value })}
+                  placeholder="Nom du concessionaire"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_organisme">Organisme de crédit *</Label>
+                <Input
+                  id="edit_organisme"
+                  value={traiteForm.organisme}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, organisme: e.target.value })}
+                  placeholder="Wafasal, Maroc Leasing..."
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_date_achat">Date d'achat</Label>
+                <Input
+                  id="edit_date_achat"
+                  type="date"
+                  value={traiteForm.date_achat}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, date_achat: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_prix_achat">Prix d'achat *</Label>
+                <Input
+                  id="edit_prix_achat"
+                  type="number"
+                  step="0.01"
+                  value={traiteForm.prix_achat}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, prix_achat: e.target.value })}
+                  placeholder="250000.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_avance">Avance payée</Label>
+                <Input
+                  id="edit_avance"
+                  type="number"
+                  step="0.01"
+                  value={traiteForm.avance}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, avance: e.target.value })}
+                  placeholder="50000.00"
+                />
+              </div>
+
+              <div>
+                <Label>Reste à payer</Label>
+                <Input
+                  type="text"
+                  value={`${(parseFloat(traiteForm.prix_achat || '0') - parseFloat(traiteForm.avance || '0')).toFixed(2)} DH`}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_montant_mensuel">Montant mensuel *</Label>
+                <Input
+                  id="edit_montant_mensuel"
+                  type="number"
+                  step="0.01"
+                  value={traiteForm.montant_mensuel}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, montant_mensuel: e.target.value })}
+                  placeholder="4000.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_date_debut">Date de début *</Label>
+                <Input
+                  id="edit_date_debut"
+                  type="date"
+                  value={traiteForm.date_debut}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, date_debut: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_duree_mois">Durée (mois) *</Label>
+                <Input
+                  id="edit_duree_mois"
+                  type="number"
+                  min="1"
+                  value={traiteForm.duree_mois}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, duree_mois: e.target.value })}
+                  placeholder="50"
+                />
+              </div>
+
+              <div>
+                <Label>Date de fin calculée</Label>
+                <Input
+                  type="text"
+                  value={dateFinCalculee || '—'}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit_duree_deja_paye">Mois payés</Label>
+                <Input
+                  id="edit_duree_deja_paye"
+                  type="number"
+                  min="0"
+                  value={traiteForm.duree_deja_paye}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, duree_deja_paye: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="col-span-2">
+                <Label>Total des mensualités</Label>
+                <Input
+                  type="text"
+                  value={`${montantTotalMensualites.toFixed(2)} DH`}
+                  disabled
+                  className={cn("bg-gray-50", !isValidAmount && "border-red-500")}
+                />
+                {!isValidAmount && nombreMois > 0 && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Le montant total des mensualités doit correspondre au reste à payer
+                  </p>
+                )}
+              </div>
+
+              <div className="col-span-2">
+                <Label htmlFor="edit_plus_infos">Plus d'infos</Label>
+                <Textarea
+                  id="edit_plus_infos"
+                  value={traiteForm.plus_infos}
+                  onChange={(e) => setTraiteForm({ ...traiteForm, plus_infos: e.target.value })}
+                  placeholder="Notes supplémentaires..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditTraiteDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={async () => {
+              if (!selectedTraite) return;
+              
+              try {
+                const prixAchat = parseFloat(traiteForm.prix_achat);
+                const avance = parseFloat(traiteForm.avance) || 0;
+                const montantMensuel = parseFloat(traiteForm.montant_mensuel);
+                const dureeDejaPaye = parseInt(traiteForm.duree_deja_paye) || 0;
+
+                if (!traiteForm.organisme || !traiteForm.date_debut || !traiteForm.duree_mois || !prixAchat || !montantMensuel) {
+                  toast({
+                    title: "Erreur",
+                    description: "Veuillez remplir tous les champs obligatoires (*)",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
+                if (!isValidAmount) {
+                  toast({
+                    title: "Erreur",
+                    description: "Le montant total des mensualités ne correspond pas au reste à payer",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+
+                // Update traite
+                const { error: traiteError } = await supabase
+                  .from('vehicules_traite')
+                  .update({
+                    organisme: traiteForm.organisme,
+                    concessionaire: traiteForm.concessionaire || null,
+                    date_achat: traiteForm.date_achat || null,
+                    montant_total: prixAchat,
+                    montant_mensuel: montantMensuel,
+                    date_debut: traiteForm.date_debut,
+                    nombre_traites: nombreMois,
+                    avance_paye: avance,
+                    duree_deja_paye: dureeDejaPaye,
+                    notes: traiteForm.plus_infos || null
+                  })
+                  .eq('id', selectedTraite.id);
+
+                if (traiteError) throw traiteError;
+
+                // Delete existing echeances
+                const { error: deleteError } = await supabase
+                  .from('vehicules_traites_echeances')
+                  .delete()
+                  .eq('traite_id', selectedTraite.id);
+
+                if (deleteError) throw deleteError;
+
+                // Generate new echeances
+                const echeancesToInsert = [];
+                const startDate = new Date(traiteForm.date_debut);
+                
+                for (let i = 0; i < nombreMois; i++) {
+                  const echeanceDate = new Date(startDate);
+                  echeanceDate.setMonth(echeanceDate.getMonth() + i);
+                  
+                  const isPaid = i < dureeDejaPaye;
+                  
+                  echeancesToInsert.push({
+                    traite_id: selectedTraite.id,
+                    vehicle_id: vehicle!.id,
+                    date_echeance: echeanceDate.toISOString().split('T')[0],
+                    montant: montantMensuel,
+                    statut: isPaid ? 'Payée' : 'À payer',
+                    date_paiement: isPaid ? echeanceDate.toISOString().split('T')[0] : null,
+                    notes: isPaid ? `Mois déjà payé (${i + 1}/${dureeDejaPaye})` : null
+                  });
+                }
+
+                const { error: echeancesError } = await supabase
+                  .from('vehicules_traites_echeances')
+                  .insert(echeancesToInsert);
+
+                if (echeancesError) throw echeancesError;
+
+                // Update vehicle valeur_achat
+                const { error: updateError } = await supabase
+                  .from('vehicles')
+                  .update({ valeur_achat: prixAchat })
+                  .eq('id', vehicle!.id);
+
+                if (updateError) throw updateError;
+
+                toast({
+                  title: "Succès",
+                  description: "Informations d'achat modifiées avec succès"
+                });
+
+                setShowEditTraiteDialog(false);
+                loadVehicle();
+              } catch (error: any) {
+                toast({
+                  title: "Erreur",
+                  description: error.message,
+                  variant: "destructive"
+                });
+              }
+            }}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Vehicle Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
