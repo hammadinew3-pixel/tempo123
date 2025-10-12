@@ -1266,10 +1266,10 @@ export default function VehiculeDetails() {
                           <span className="text-muted-foreground">Durée</span>
                           <span className="font-semibold">{traites[0].nombre_traites} mois</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b">
-                          <span className="text-muted-foreground">Durée déjà payé</span>
-                          <span className="font-semibold">
-                            {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length} mois
+          <div className="flex justify-between py-2 border-b">
+            <span className="text-muted-foreground">Mois payés</span>
+            <span className="font-semibold">
+              {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length} mois
                           </span>
                         </div>
                         <div className="flex justify-between py-2 border-b">
@@ -1465,10 +1465,10 @@ export default function VehiculeDetails() {
                             <span className="text-muted-foreground">Avance payé</span>
                             <span className="font-medium">{parseFloat(traites[0].avance_paye || 0).toFixed(2)} DH</span>
                           </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Durée déjà payé</span>
-                            <span className="font-medium">{traites[0].duree_deja_paye || 0} mois</span>
-                          </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Mois payés</span>
+              <span className="font-medium">{traites[0].duree_deja_paye || 0} mois</span>
+            </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Prix/Mois</span>
                             <span className="font-medium">{parseFloat(traites[0].montant_mensuel).toFixed(2)} DH</span>
@@ -1772,7 +1772,7 @@ export default function VehiculeDetails() {
             )}
 
             <div>
-              <Label htmlFor="duree_deja_paye">Durée déjà payé</Label>
+              <Label htmlFor="duree_deja_paye">Mois payés</Label>
               <Input 
                 id="duree_deja_paye" 
                 type="number"
@@ -2055,7 +2055,7 @@ export default function VehiculeDetails() {
             )}
 
             <div>
-              <Label htmlFor="edit_duree_deja_paye">Durée déjà payé (mois)</Label>
+              <Label htmlFor="edit_duree_deja_paye">Mois payés</Label>
               <Input 
                 id="edit_duree_deja_paye" 
                 type="number"
@@ -2158,11 +2158,11 @@ export default function VehiculeDetails() {
                       await supabase
                         .from('vehicules_traites_echeances')
                         .update({
-                          statut: 'Payée',
-                          date_paiement: traiteForm.date_debut,
-                          notes: 'Marquée automatiquement comme payée (durée déjà payé)'
-                        })
-                        .eq('id', echeance.id);
+                        statut: 'Payée',
+                        date_paiement: traiteForm.date_debut,
+                        notes: 'Marquée automatiquement comme payée (mois payés)'
+                      })
+                      .eq('id', echeance.id);
                     }
                   }
                 }
