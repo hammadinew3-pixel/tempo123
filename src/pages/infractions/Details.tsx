@@ -141,6 +141,17 @@ export default function InfractionDetails() {
         try {
           // Extract bucket and path from the file URL
           const urlParts = file.file_url.split('/storage/v1/object/public/');
+          
+          // Extract file extension from URL
+          const urlPath = file.file_url.split('/').pop() || '';
+          const extension = urlPath.includes('.') ? '.' + urlPath.split('.').pop() : '';
+          
+          // Add extension to filename if not already present
+          let fileName = file.file_name;
+          if (extension && !fileName.endsWith(extension)) {
+            fileName = fileName + extension;
+          }
+          
           if (urlParts.length === 2) {
             const [bucket, ...pathParts] = urlParts[1].split('/');
             const filePath = pathParts.join('/');
@@ -151,18 +162,18 @@ export default function InfractionDetails() {
               .download(filePath);
             
             if (error) {
-              console.error(`Error downloading ${file.file_name}:`, error);
+              console.error(`Error downloading ${fileName}:`, error);
               continue;
             }
             
             if (data) {
-              zip.file(file.file_name, data);
+              zip.file(fileName, data);
             }
           } else {
             // Fallback to direct fetch if URL format is different
             const response = await fetch(file.file_url);
             const blob = await response.blob();
-            zip.file(file.file_name, blob);
+            zip.file(fileName, blob);
           }
         } catch (err) {
           console.error(`Error processing ${file.file_name}:`, err);
