@@ -23,6 +23,7 @@ import {
   Building2,
   AlertTriangle,
   Settings,
+  Shield,
 } from "lucide-react";
 import {
   Sidebar as SidebarUI,
@@ -108,6 +109,7 @@ const mainNavItems: NavItem[] = [
 const adminNavItems: NavItem[] = [
   { title: "Utilisateurs", href: "/utilisateurs", icon: Users },
   { title: "Paramètres", href: "/parametres", icon: Settings },
+  { title: "Permissions", href: "/gestion-permissions", icon: Shield },
 ];
 
 interface SidebarProps {

@@ -40,6 +40,7 @@ import ModifierInfraction from "./pages/infractions/Modifier";
 import Auth from "./pages/Auth";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
+import GestionPermissions from "./pages/GestionPermissions";
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
 import AssistanceContractTemplate from "./pages/AssistanceContractTemplate";
@@ -344,6 +345,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Parametres /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestion-permissions"
+              element={
+                <ProtectedRoute>
+                  <Layout><GestionPermissions /></Layout>
                 </ProtectedRoute>
               }
             />
