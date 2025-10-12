@@ -19,7 +19,7 @@ interface UserWithRole {
   id: string;
   email: string;
   nom: string;
-  role: 'admin' | 'agent' | 'comptable' | null;
+  role: 'admin' | null;
   actif: boolean;
 }
 
@@ -36,7 +36,7 @@ export default function Utilisateurs() {
     email: "",
     password: "",
     nom: "",
-    role: "agent" as 'admin' | 'agent' | 'comptable'
+    role: "admin" as 'admin'
   });
 
   useEffect(() => {
@@ -75,17 +75,18 @@ export default function Utilisateurs() {
 
       if (rolesError) throw rolesError;
 
-      // Combine data
+      // Combine data - filter only admins
       const usersWithRoles: UserWithRole[] = profiles?.map(profile => {
         const userRole = roles?.find(r => r.user_id === profile.id);
+        const roleValue = userRole?.role === 'admin' ? ('admin' as const) : null;
         return {
           id: profile.id,
           email: profile.email,
           nom: profile.nom,
-          role: userRole?.role || null,
+          role: roleValue,
           actif: profile.actif,
         };
-      }) || [];
+      }).filter(u => u.role === 'admin') || [];
 
       setUsers(usersWithRoles);
     } catch (error: any) {
@@ -99,7 +100,7 @@ export default function Utilisateurs() {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: 'admin' | 'agent' | 'comptable') => {
+  const updateUserRole = async (userId: string, newRole: 'admin') => {
     try {
       // Check if user already has a role
       const { data: existingRole } = await supabase
@@ -184,7 +185,7 @@ export default function Utilisateurs() {
       });
 
       setCreateDialogOpen(false);
-      setNewUser({ email: "", password: "", nom: "", role: "agent" });
+      setNewUser({ email: "", password: "", nom: "", role: "admin" });
       loadUsers();
     } catch (error: any) {
       toast({
@@ -240,7 +241,7 @@ export default function Utilisateurs() {
             Gestion des utilisateurs
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gérez les utilisateurs et leurs permissions
+            Gérez les administrateurs du système
           </p>
         </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -252,9 +253,9 @@ export default function Utilisateurs() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
+              <DialogTitle>Créer un nouvel administrateur</DialogTitle>
               <DialogDescription>
-                Entrez les informations du nouvel utilisateur
+                Entrez les informations du nouvel administrateur
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -286,24 +287,6 @@ export default function Utilisateurs() {
                   onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                   placeholder="Mot de passe"
                 />
-              </div>
-              <div>
-                <Label htmlFor="role">Rôle</Label>
-                <Select
-                  value={newUser.role}
-                  onValueChange={(value: 'admin' | 'agent' | 'comptable') => 
-                    setNewUser({ ...newUser, role: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Administrateur</SelectItem>
-                    <SelectItem value="agent">Agent commercial</SelectItem>
-                    <SelectItem value="comptable">Comptable</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <DialogFooter>
@@ -339,9 +322,9 @@ export default function Utilisateurs() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Utilisateurs du système</CardTitle>
+          <CardTitle>Administrateurs</CardTitle>
           <CardDescription>
-            Attribuez des rôles et gérez les accès utilisateurs
+            Liste des administrateurs du système
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -363,21 +346,8 @@ export default function Utilisateurs() {
                         <p className="text-sm text-muted-foreground">{user.email}</p>
                       </div>
                       {user.role && (
-                        <Badge
-                          variant="default"
-                          className={
-                            user.role === 'admin' 
-                              ? 'bg-green-500' 
-                              : user.role === 'comptable' 
-                              ? 'bg-purple-500' 
-                              : 'bg-blue-500'
-                          }
-                        >
-                          {user.role === 'admin' && (
-                            <><Shield className="w-3 h-3 mr-1" /> Administrateur</>
-                          )}
-                          {user.role === 'agent' && <>Agent commercial</>}
-                          {user.role === 'comptable' && <>Comptable</>}
+                        <Badge variant="default" className="bg-green-500">
+                          <Shield className="w-3 h-3 mr-1" /> Administrateur
                         </Badge>
                       )}
                       {!user.actif && (
@@ -389,24 +359,10 @@ export default function Utilisateurs() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Select
-                      value={user.role || 'none'}
-                      onValueChange={(value) => {
-                        if (value !== 'none') {
-                          updateUserRole(user.id, value as 'admin' | 'agent' | 'comptable');
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Sélectionner un rôle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none" disabled>Aucun rôle</SelectItem>
-                        <SelectItem value="admin">Administrateur</SelectItem>
-                        <SelectItem value="agent">Agent commercial</SelectItem>
-                        <SelectItem value="comptable">Comptable</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Badge variant="outline" className="bg-green-500/10 text-green-600">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Administrateur
+                    </Badge>
 
                     <Button
                       variant={user.actif ? "outline" : "default"}
