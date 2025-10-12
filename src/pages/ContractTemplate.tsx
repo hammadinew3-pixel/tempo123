@@ -10,6 +10,7 @@ export default function ContractTemplate() {
   const [contract, setContract] = useState<any>(null);
   const [vehicleChanges, setVehicleChanges] = useState<any[]>([]);
   const [secondaryDrivers, setSecondaryDrivers] = useState<any[]>([]);
+  const [agenceSettings, setAgenceSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function ContractTemplate() {
 
   const loadContractData = async () => {
     try {
-      const [contractRes, changesRes, driversRes] = await Promise.all([
+      const [contractRes, changesRes, driversRes, settingsRes] = await Promise.all([
         supabase
           .from('contracts')
           .select(`
@@ -40,7 +41,11 @@ export default function ContractTemplate() {
         supabase
           .from('secondary_drivers')
           .select('*')
-          .eq('contract_id', contractId)
+          .eq('contract_id', contractId),
+        supabase
+          .from('agence_settings')
+          .select('*')
+          .single()
       ]);
 
       if (contractRes.error) throw contractRes.error;
@@ -48,6 +53,7 @@ export default function ContractTemplate() {
       setContract(contractRes.data);
       setVehicleChanges(changesRes.data || []);
       setSecondaryDrivers(driversRes.data || []);
+      setAgenceSettings(settingsRes.data);
     } catch (error) {
       console.error('Error loading contract:', error);
     } finally {
@@ -258,8 +264,12 @@ export default function ContractTemplate() {
 
       {/* Company info */}
       <div className="text-center text-[9pt] text-gray-600 mt-6">
-        Luxeauto | ICE: 344569385000157<br/>
-        Adresse: Casablanca, Maroc
+        {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
+        {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
+        <br/>
+        {agenceSettings?.adresse && <>Adresse: {agenceSettings.adresse}</>}
+        {agenceSettings?.telephone && <> | Tél: {agenceSettings.telephone}</>}
+        {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
       </div>
     </div>
   );

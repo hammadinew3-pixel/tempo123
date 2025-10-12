@@ -8,6 +8,7 @@ export default function AssistanceContractTemplate() {
   const [searchParams] = useSearchParams();
   const assistanceId = searchParams.get("id");
   const [assistance, setAssistance] = useState<any>(null);
+  const [agenceSettings, setAgenceSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,22 +18,33 @@ export default function AssistanceContractTemplate() {
   const loadData = async () => {
     if (!assistanceId) return;
 
-    const { data, error } = await supabase
-      .from("assistance")
-      .select(`
-        *,
-        clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
-        vehicles (immatriculation, marque, modele, annee, categorie),
-        assurances (nom, contact_nom, contact_telephone, contact_email, adresse)
-      `)
-      .eq("id", assistanceId)
-      .single();
+    const [assistanceRes, settingsRes] = await Promise.all([
+      supabase
+        .from("assistance")
+        .select(`
+          *,
+          clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
+          vehicles (immatriculation, marque, modele, annee, categorie),
+          assurances (nom, contact_nom, contact_telephone, contact_email, adresse)
+        `)
+        .eq("id", assistanceId)
+        .single(),
+      supabase
+        .from('agence_settings')
+        .select('*')
+        .single()
+    ]);
 
-    if (error) {
-      console.error("Error loading assistance:", error);
+    if (assistanceRes.error) {
+      console.error("Error loading assistance:", assistanceRes.error);
     } else {
-      setAssistance(data);
+      setAssistance(assistanceRes.data);
     }
+    
+    if (!settingsRes.error) {
+      setAgenceSettings(settingsRes.data);
+    }
+    
     setLoading(false);
   };
 
@@ -86,8 +98,9 @@ export default function AssistanceContractTemplate() {
         
         <div className="mb-4">
           <p className="font-semibold">LE LOUEUR :</p>
-          <p className="ml-4">SEACAR LOCATION</p>
-          <p className="ml-4 text-sm">Adresse : [Votre adresse]</p>
+          <p className="ml-4">{agenceSettings?.raison_sociale || 'SEACAR LOCATION'}</p>
+          {agenceSettings?.adresse && <p className="ml-4 text-sm">Adresse : {agenceSettings.adresse}</p>}
+          {agenceSettings?.ice && <p className="ml-4 text-sm">ICE : {agenceSettings.ice}</p>}
         </div>
 
         <div className="mb-4">
@@ -266,6 +279,14 @@ export default function AssistanceContractTemplate() {
       <div className="mt-8 text-center text-xs text-gray-500 border-t pt-4">
         <p>Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
         <p>Dossier N° {assistance.num_dossier}</p>
+        {agenceSettings && (
+          <p className="mt-2">
+            {agenceSettings.raison_sociale}
+            {agenceSettings.ice && <> | ICE: {agenceSettings.ice}</>}
+            {agenceSettings.adresse && <> | {agenceSettings.adresse}</>}
+            {agenceSettings.telephone && <> | Tél: {agenceSettings.telephone}</>}
+          </p>
+        )}
       </div>
     </div>
   );
