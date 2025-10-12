@@ -50,7 +50,7 @@ interface NavItem {
   action?: string;
 }
 
-const mainNavItems: NavItem[] = [
+const getMainNavItems = (isAdmin: boolean): NavItem[] => [
   { title: "Tableau de bord", href: "/", icon: BarChart3 },
   { title: "Calendrier", href: "/calendrier", icon: Calendar },
   { 
@@ -76,7 +76,7 @@ const mainNavItems: NavItem[] = [
     icon: Car,
     submenu: [
       { title: "Voir les véhicules", href: "/vehicules", icon: List },
-      { title: "Ajouter véhicule", href: "/vehicules/nouveau", icon: Plus },
+      ...(isAdmin ? [{ title: "Ajouter véhicule", href: "/vehicules/nouveau", icon: Plus }] : []),
     ]
   },
   { 
@@ -120,6 +120,8 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const { state } = useSidebar();
   const { isAdmin } = useUserRole();
   const collapsed = state === "collapsed";
+  
+  const mainNavItems = getMainNavItems(isAdmin);
   
   // Track which groups are open
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
