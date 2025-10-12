@@ -17,7 +17,7 @@ interface VehicleAlert {
   vehicleName: string;
   message: string;
   severity: "warning" | "critical" | "missing";
-  type: "assurance" | "visite_technique" | "vignette" | "vidange";
+  type: "assurance" | "visite_technique" | "vignette" | "vidange" | "traite";
   actionText: string;
 }
 
@@ -191,6 +191,45 @@ const Alertes = () => {
             type: "vignette",
             actionText: "RENOUVELER",
           });
+        }
+      }
+
+      // Traite bancaire alerts
+      const { data: echeances } = await supabase
+        .from("vehicules_traites_echeances")
+        .select("*")
+        .eq("vehicle_id", vehicle.id)
+        .eq("statut", "À payer")
+        .order("date_echeance", { ascending: true });
+
+      if (echeances && echeances.length > 0) {
+        for (const echeance of echeances) {
+          const daysUntilEcheance = differenceInDays(
+            parseISO(echeance.date_echeance),
+            new Date()
+          );
+
+          if (daysUntilEcheance < 0) {
+            // Échéance en retard
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleName,
+              message: `traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+              severity: "critical",
+              type: "traite",
+              actionText: "PAYER TRAITE",
+            });
+          } else if (daysUntilEcheance <= 7) {
+            // Échéance dans moins de 7 jours
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleName,
+              message: `traite à payer dans ${daysUntilEcheance} jour(s) - ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+              severity: "warning",
+              type: "traite",
+              actionText: "PAYER TRAITE",
+            });
+          }
         }
       }
     }

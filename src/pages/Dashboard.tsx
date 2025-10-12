@@ -398,6 +398,40 @@ export default function Dashboard() {
           }
         }
       }
+
+      // Check traite bancaire alerts
+      const { data: echeances } = await supabase
+        .from('vehicules_traites_echeances')
+        .select('*')
+        .eq('vehicle_id', vehicle.id)
+        .eq('statut', 'À payer')
+        .order('date_echeance', { ascending: true });
+
+      if (echeances && echeances.length > 0) {
+        for (const echeance of echeances) {
+          const echeanceDate = new Date(echeance.date_echeance);
+          echeanceDate.setHours(0, 0, 0, 0);
+          const daysUntilEcheance = Math.ceil((echeanceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          
+          if (echeanceDate < today) {
+            // Échéance en retard
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+              severity: "critical"
+            });
+          } else if (daysUntilEcheance <= 7) {
+            // Échéance dans moins de 7 jours
+            alerts.push({
+              vehicleId: vehicle.id,
+              vehicleInfo,
+              message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+              severity: "warning"
+            });
+          }
+        }
+      }
     }
     setVehicleAlerts(alerts);
 
