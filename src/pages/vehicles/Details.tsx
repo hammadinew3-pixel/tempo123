@@ -52,16 +52,15 @@ export default function VehiculeDetails() {
   const [showPayEcheanceDialog, setShowPayEcheanceDialog] = useState(false);
   const [selectedEcheance, setSelectedEcheance] = useState<any>(null);
   const [traiteForm, setTraiteForm] = useState({
-    organisme: '',
     concessionaire: '',
+    organisme: '',
+    prix_achat: '',
+    avance: '',
+    duree_mois: '',
+    date_premier_traite: '',
+    duree_deja_paye: '0',
     date_achat: '',
-    montant_total: '',
-    montant_mensuel: '',
-    date_debut: '',
-    nombre_traites: '',
-    mode_paiement: '',
-    avance_paye: '',
-    notes: ''
+    plus_infos: ''
   });
   const [echeancePaymentForm, setEcheancePaymentForm] = useState({
     date_paiement: new Date().toISOString().split('T')[0],
@@ -142,6 +141,16 @@ export default function VehiculeDetails() {
       loadVehicle();
     }
   }, [id]);
+
+  // Pre-fill traite form with vehicle valeur_achat
+  useEffect(() => {
+    if (vehicle?.valeur_achat && vehicle.valeur_achat > 0) {
+      setTraiteForm(prev => ({
+        ...prev,
+        prix_achat: vehicle.valeur_achat.toString()
+      }));
+    }
+  }, [vehicle]);
   const loadVehicle = async () => {
     try {
       const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, vidangesRes, traitesRes, echeancesRes] = await Promise.all([supabase.from('vehicles').select('*').eq('id', id).single(), supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
@@ -329,18 +338,22 @@ export default function VehiculeDetails() {
   const handleAddTraite = async () => {
     if (!vehicle) return;
     try {
-      const montantTotal = parseFloat(traiteForm.montant_total);
-      const montantMensuel = parseFloat(traiteForm.montant_mensuel);
-      const nombreTraites = parseInt(traiteForm.nombre_traites);
+      const prixAchat = parseFloat(traiteForm.prix_achat);
+      const avance = parseFloat(traiteForm.avance) || 0;
+      const dureeMois = parseInt(traiteForm.duree_mois);
+      const dureeDejaPaye = parseInt(traiteForm.duree_deja_paye) || 0;
 
-      if (!traiteForm.organisme || !traiteForm.date_debut || !nombreTraites || !montantMensuel || !montantTotal) {
+      if (!traiteForm.organisme || !traiteForm.date_premier_traite || !dureeMois || !prixAchat) {
         toast({
           title: "Erreur",
-          description: "Veuillez remplir tous les champs obligatoires",
+          description: "Veuillez remplir tous les champs obligatoires (*)",
           variant: "destructive"
         });
         return;
       }
+
+      // Calculate montant mensuel: (Prix d'achat - Avance) / Durée
+      const montantMensuel = (prixAchat - avance) / dureeMois;
 
       // Insert traite
       const { error } = await supabase.from('vehicules_traite').insert({
@@ -348,42 +361,41 @@ export default function VehiculeDetails() {
         organisme: traiteForm.organisme,
         concessionaire: traiteForm.concessionaire || null,
         date_achat: traiteForm.date_achat || null,
-        montant_total: montantTotal,
+        montant_total: prixAchat,
         montant_mensuel: montantMensuel,
-        date_debut: traiteForm.date_debut,
-        nombre_traites: nombreTraites,
-        mode_paiement: traiteForm.mode_paiement || null,
-        avance_paye: parseFloat(traiteForm.avance_paye) || 0,
-        notes: traiteForm.notes || null
+        date_debut: traiteForm.date_premier_traite,
+        nombre_traites: dureeMois,
+        avance_paye: avance,
+        duree_deja_paye: dureeDejaPaye,
+        notes: traiteForm.plus_infos || null
       });
 
       if (error) throw error;
 
-      // Update vehicle valeur_achat with montant_total
+      // Update vehicle valeur_achat with prix_achat
       const { error: updateError } = await supabase
         .from('vehicles')
-        .update({ valeur_achat: montantTotal })
+        .update({ valeur_achat: prixAchat })
         .eq('id', vehicle.id);
 
       if (updateError) throw updateError;
 
       toast({
         title: "Succès",
-        description: "Traite bancaire ajoutée avec succès. Le prix d'achat du véhicule a été mis à jour."
+        description: `Traite bancaire ajoutée avec succès. Montant mensuel: ${montantMensuel.toFixed(2)} DH`
       });
 
       setShowTraiteDialog(false);
       setTraiteForm({
-        organisme: '',
         concessionaire: '',
+        organisme: '',
+        prix_achat: '',
+        avance: '',
+        duree_mois: '',
+        date_premier_traite: '',
+        duree_deja_paye: '0',
         date_achat: '',
-        montant_total: '',
-        montant_mensuel: '',
-        date_debut: '',
-        nombre_traites: '',
-        mode_paiement: '',
-        avance_paye: '',
-        notes: ''
+        plus_infos: ''
       });
       loadVehicle();
     } catch (error: any) {
@@ -1585,18 +1597,9 @@ export default function VehiculeDetails() {
           <DialogHeader>
             <DialogTitle>Ajouter une traite bancaire</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="col-span-2">
-              <Label htmlFor="organisme">Organisme / Banque *</Label>
-              <Input 
-                id="organisme" 
-                value={traiteForm.organisme}
-                onChange={(e) => setTraiteForm({...traiteForm, organisme: e.target.value})}
-                placeholder="Ex: Banque Populaire"
-              />
-            </div>
+          <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="concessionaire">Concessionaire</Label>
+              <Label htmlFor="concessionaire">Concessionaire / Maison d'achat</Label>
               <Input 
                 id="concessionaire" 
                 value={traiteForm.concessionaire}
@@ -1604,6 +1607,88 @@ export default function VehiculeDetails() {
                 placeholder="Ex: Auto Hall"
               />
             </div>
+
+            <div>
+              <Label htmlFor="organisme">Organisme de crédit</Label>
+              <Input 
+                id="organisme" 
+                value={traiteForm.organisme}
+                onChange={(e) => setTraiteForm({...traiteForm, organisme: e.target.value})}
+                placeholder="Ex: Wafasalaf"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="prix_achat">Prix d'achat *</Label>
+              <div className="relative">
+                <Input 
+                  id="prix_achat" 
+                  type="number"
+                  step="0.01"
+                  value={traiteForm.prix_achat}
+                  onChange={(e) => setTraiteForm({...traiteForm, prix_achat: e.target.value})}
+                  placeholder="0.00"
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  DH
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="avance">Avance</Label>
+              <div className="relative">
+                <Input 
+                  id="avance" 
+                  type="number"
+                  step="0.01"
+                  value={traiteForm.avance}
+                  onChange={(e) => setTraiteForm({...traiteForm, avance: e.target.value})}
+                  placeholder="0.00"
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  DH
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="duree_mois">Durée/Mois *</Label>
+              <Input 
+                id="duree_mois" 
+                type="number"
+                value={traiteForm.duree_mois}
+                onChange={(e) => setTraiteForm({...traiteForm, duree_mois: e.target.value})}
+                placeholder="Ex: 36"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="date_premier_traite">Date premier traite *</Label>
+              <Input 
+                id="date_premier_traite" 
+                type="date"
+                value={traiteForm.date_premier_traite}
+                onChange={(e) => setTraiteForm({...traiteForm, date_premier_traite: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="duree_deja_paye">Durée déjà payé</Label>
+              <Input 
+                id="duree_deja_paye" 
+                type="number"
+                value={traiteForm.duree_deja_paye}
+                onChange={(e) => setTraiteForm({...traiteForm, duree_deja_paye: e.target.value})}
+                placeholder="0"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Nombre de mois déjà payés jusqu'à présent
+              </p>
+            </div>
+
             <div>
               <Label htmlFor="date_achat">Date d'achat</Label>
               <Input 
@@ -1613,78 +1698,13 @@ export default function VehiculeDetails() {
                 onChange={(e) => setTraiteForm({...traiteForm, date_achat: e.target.value})}
               />
             </div>
+
             <div>
-              <Label htmlFor="montant_total">Montant Total *</Label>
-              <Input 
-                id="montant_total" 
-                type="number"
-                step="0.01"
-                value={traiteForm.montant_total}
-                onChange={(e) => setTraiteForm({...traiteForm, montant_total: e.target.value})}
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="avance_paye">Avance payée</Label>
-              <Input 
-                id="avance_paye" 
-                type="number"
-                step="0.01"
-                value={traiteForm.avance_paye}
-                onChange={(e) => setTraiteForm({...traiteForm, avance_paye: e.target.value})}
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="montant_mensuel">Montant Mensuel *</Label>
-              <Input 
-                id="montant_mensuel" 
-                type="number"
-                step="0.01"
-                value={traiteForm.montant_mensuel}
-                onChange={(e) => setTraiteForm({...traiteForm, montant_mensuel: e.target.value})}
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="date_debut">Date de début *</Label>
-              <Input 
-                id="date_debut" 
-                type="date"
-                value={traiteForm.date_debut}
-                onChange={(e) => setTraiteForm({...traiteForm, date_debut: e.target.value})}
-              />
-            </div>
-            <div>
-              <Label htmlFor="nombre_traites">Nombre de traites *</Label>
-              <Input 
-                id="nombre_traites" 
-                type="number"
-                value={traiteForm.nombre_traites}
-                onChange={(e) => setTraiteForm({...traiteForm, nombre_traites: e.target.value})}
-                placeholder="Ex: 36"
-              />
-            </div>
-            <div className="col-span-2">
-              <Label htmlFor="mode_paiement">Mode de paiement</Label>
-              <Select value={traiteForm.mode_paiement} onValueChange={(value) => setTraiteForm({...traiteForm, mode_paiement: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="prelevement">Prélèvement automatique</SelectItem>
-                  <SelectItem value="cheque">Chèque</SelectItem>
-                  <SelectItem value="virement">Virement</SelectItem>
-                  <SelectItem value="especes">Espèces</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="plus_infos">Plus d'informations</Label>
               <Textarea 
-                id="notes"
-                value={traiteForm.notes}
-                onChange={(e) => setTraiteForm({...traiteForm, notes: e.target.value})}
+                id="plus_infos"
+                value={traiteForm.plus_infos}
+                onChange={(e) => setTraiteForm({...traiteForm, plus_infos: e.target.value})}
                 placeholder="Informations complémentaires..."
                 rows={3}
               />
@@ -1694,16 +1714,15 @@ export default function VehiculeDetails() {
             <Button variant="outline" onClick={() => {
               setShowTraiteDialog(false);
               setTraiteForm({
-                organisme: '',
                 concessionaire: '',
+                organisme: '',
+                prix_achat: '',
+                avance: '',
+                duree_mois: '',
+                date_premier_traite: '',
+                duree_deja_paye: '0',
                 date_achat: '',
-                montant_total: '',
-                montant_mensuel: '',
-                date_debut: '',
-                nombre_traites: '',
-                mode_paiement: '',
-                avance_paye: '',
-                notes: ''
+                plus_infos: ''
               });
             }}>
               Annuler

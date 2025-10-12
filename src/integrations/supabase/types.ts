@@ -1421,6 +1421,7 @@ export type Database = {
           created_at: string
           date_achat: string | null
           date_debut: string
+          duree_deja_paye: number | null
           id: string
           mode_paiement: string | null
           montant_mensuel: number
@@ -1438,6 +1439,7 @@ export type Database = {
           created_at?: string
           date_achat?: string | null
           date_debut: string
+          duree_deja_paye?: number | null
           id?: string
           mode_paiement?: string | null
           montant_mensuel: number
@@ -1455,6 +1457,7 @@ export type Database = {
           created_at?: string
           date_achat?: string | null
           date_debut?: string
+          duree_deja_paye?: number | null
           id?: string
           mode_paiement?: string | null
           montant_mensuel?: number
