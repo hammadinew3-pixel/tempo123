@@ -12,6 +12,7 @@ export default function AssistanceFactureTemplate() {
   const [assistances, setAssistances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGrouped, setIsGrouped] = useState(false);
+  const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
     loadData();
@@ -19,6 +20,13 @@ export default function AssistanceFactureTemplate() {
 
   const loadData = async () => {
     try {
+      // Load settings
+      const { data: settingsData } = await supabase
+        .from("agence_settings")
+        .select("*")
+        .single();
+      setSettings(settingsData);
+
       if (assistanceIds) {
         // Multiple IDs for grouped invoice
         const ids = assistanceIds.split(',');
@@ -130,11 +138,10 @@ export default function AssistanceFactureTemplate() {
             </p>
           </div>
           <div className="text-right">
-            <p className="font-bold text-lg">SEACAR LOCATION</p>
-            <p className="text-sm">Adresse de l'entreprise</p>
-            <p className="text-sm">Code postal Ville</p>
-            <p className="text-sm">Téléphone : +212 XXX XXX XXX</p>
-            <p className="text-sm">Email : contact@seacar.com</p>
+            <p className="font-bold text-lg">{settings?.raison_sociale || "Nom de l'entreprise"}</p>
+            {settings?.adresse && <p className="text-sm">{settings.adresse}</p>}
+            {settings?.telephone && <p className="text-sm">Téléphone : {settings.telephone}</p>}
+            {settings?.email && <p className="text-sm">Email : {settings.email}</p>}
           </div>
         </div>
 
@@ -280,8 +287,15 @@ export default function AssistanceFactureTemplate() {
 
       {/* Footer */}
       <div className="border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
-        <p>SEACAR LOCATION - RC N° XXXXX - IF N° XXXXX - ICE N° XXXXX</p>
-        <p>Siège social : Adresse complète de l'entreprise</p>
+        <p>
+          {settings?.raison_sociale || "Nom de l'entreprise"}
+          {settings?.rc && ` - RC: ${settings.rc}`}
+          {settings?.if_number && ` - IF: ${settings.if_number}`}
+          {settings?.ice && ` - ICE: ${settings.ice}`}
+          {settings?.cnss && ` - CNSS: ${settings.cnss}`}
+          {settings?.patente && ` - Patente: ${settings.patente}`}
+        </p>
+        {settings?.adresse && <p>Siège social : {settings.adresse}</p>}
         <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
       </div>
     </div>

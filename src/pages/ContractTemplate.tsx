@@ -266,6 +266,10 @@ export default function ContractTemplate() {
       <div className="text-center text-[9pt] text-gray-600 mt-6">
         {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
         {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
+        {agenceSettings?.rc && <> | RC: {agenceSettings.rc}</>}
+        {agenceSettings?.cnss && <> | CNSS: {agenceSettings.cnss}</>}
+        {agenceSettings?.patente && <> | Patente: {agenceSettings.patente}</>}
+        {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
         <br/>
         {agenceSettings?.adresse && <>Adresse: {agenceSettings.adresse}</>}
         {agenceSettings?.telephone && <> | Tél: {agenceSettings.telephone}</>}

@@ -9,6 +9,7 @@ export default function AssistanceDossierTemplate() {
   const assistanceId = searchParams.get("id");
   const [assistance, setAssistance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
     loadData();
@@ -16,6 +17,13 @@ export default function AssistanceDossierTemplate() {
 
   const loadData = async () => {
     if (!assistanceId) return;
+
+    // Load settings
+    const { data: settingsData } = await supabase
+      .from("agence_settings")
+      .select("*")
+      .single();
+    setSettings(settingsData);
 
     const { data, error } = await supabase
       .from("assistance")
@@ -389,7 +397,16 @@ export default function AssistanceDossierTemplate() {
 
       {/* Footer */}
       <div className="mt-8 text-center text-xs text-gray-500 border-t pt-4">
-        <p>Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
+        <p>
+          {settings?.raison_sociale || "Nom de l'entreprise"}
+          {settings?.rc && ` - RC: ${settings.rc}`}
+          {settings?.if_number && ` - IF: ${settings.if_number}`}
+          {settings?.ice && ` - ICE: ${settings.ice}`}
+          {settings?.cnss && ` - CNSS: ${settings.cnss}`}
+          {settings?.patente && ` - Patente: ${settings.patente}`}
+        </p>
+        {settings?.adresse && <p>{settings.adresse}</p>}
+        <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
         <p>Dossier N° {assistance.num_dossier}</p>
       </div>
     </div>

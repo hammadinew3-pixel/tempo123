@@ -283,6 +283,10 @@ export default function AssistanceContractTemplate() {
           <p className="mt-2">
             {agenceSettings.raison_sociale}
             {agenceSettings.ice && <> | ICE: {agenceSettings.ice}</>}
+            {agenceSettings.rc && <> | RC: {agenceSettings.rc}</>}
+            {agenceSettings.cnss && <> | CNSS: {agenceSettings.cnss}</>}
+            {agenceSettings.patente && <> | Patente: {agenceSettings.patente}</>}
+            {agenceSettings.if_number && <> | IF: {agenceSettings.if_number}</>}
             {agenceSettings.adresse && <> | {agenceSettings.adresse}</>}
             {agenceSettings.telephone && <> | Tél: {agenceSettings.telephone}</>}
           </p>
