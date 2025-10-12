@@ -86,11 +86,13 @@ export default function AssistanceContractTemplate() {
       `}</style>
 
       {/* Header */}
-      <div className="text-center border-b-2 border-black pb-4 mb-6">
-        <h1 className="text-2xl font-bold mb-2">CONTRAT DE LOCATION</h1>
-        <h2 className="text-xl font-bold">VÉHICULE DE REMPLACEMENT</h2>
-        <p className="text-sm mt-2">N° {assistance.num_dossier}</p>
-      </div>
+      {!agenceSettings?.masquer_entete && (
+        <div className="text-center border-b-2 border-black pb-4 mb-6">
+          <h1 className="text-2xl font-bold mb-2">CONTRAT DE LOCATION</h1>
+          <h2 className="text-xl font-bold">VÉHICULE DE REMPLACEMENT</h2>
+          <p className="text-sm mt-2">N° {assistance.num_dossier}</p>
+        </div>
+      )}
 
       {/* Parties */}
       <div className="mb-6">
@@ -276,22 +278,24 @@ export default function AssistanceContractTemplate() {
       </div>
 
       {/* Footer */}
-      <div className="mt-8 text-center text-xs text-gray-500 border-t pt-4">
-        <p>Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
-        <p>Dossier N° {assistance.num_dossier}</p>
-        {agenceSettings && (
-          <p className="mt-2">
-            {agenceSettings.raison_sociale}
-            {agenceSettings.ice && <> | ICE: {agenceSettings.ice}</>}
-            {agenceSettings.rc && <> | RC: {agenceSettings.rc}</>}
-            {agenceSettings.cnss && <> | CNSS: {agenceSettings.cnss}</>}
-            {agenceSettings.patente && <> | Patente: {agenceSettings.patente}</>}
-            {agenceSettings.if_number && <> | IF: {agenceSettings.if_number}</>}
-            {agenceSettings.adresse && <> | {agenceSettings.adresse}</>}
-            {agenceSettings.telephone && <> | Tél: {agenceSettings.telephone}</>}
-          </p>
-        )}
-      </div>
+      {!agenceSettings?.masquer_pied_page && (
+        <div className="mt-8 text-center text-xs text-gray-500 border-t pt-4">
+          <p>Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
+          <p>Dossier N° {assistance.num_dossier}</p>
+          {agenceSettings && (
+            <p className="mt-2">
+              {agenceSettings.raison_sociale}
+              {agenceSettings.ice && <> | ICE: {agenceSettings.ice}</>}
+              {agenceSettings.rc && <> | RC: {agenceSettings.rc}</>}
+              {agenceSettings.cnss && <> | CNSS: {agenceSettings.cnss}</>}
+              {agenceSettings.patente && <> | Patente: {agenceSettings.patente}</>}
+              {agenceSettings.if_number && <> | IF: {agenceSettings.if_number}</>}
+              {agenceSettings.adresse && <> | {agenceSettings.adresse}</>}
+              {agenceSettings.telephone && <> | Tél: {agenceSettings.telephone}</>}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

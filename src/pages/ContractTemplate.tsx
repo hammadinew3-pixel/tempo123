@@ -92,12 +92,14 @@ export default function ContractTemplate() {
   return (
     <div className="p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6 pb-3 border-b-2 border-black">
-        <h1 className="text-[18pt] font-bold">CONTRAT DE LOCATION N° {contract.numero_contrat}</h1>
-        <div className="text-[10pt] text-gray-600">
-          Édité le {format(new Date(), 'dd/MM/yyyy')}
+      {!agenceSettings?.masquer_entete && (
+        <div className="flex justify-between items-center mb-6 pb-3 border-b-2 border-black">
+          <h1 className="text-[18pt] font-bold">CONTRAT DE LOCATION N° {contract.numero_contrat}</h1>
+          <div className="text-[10pt] text-gray-600">
+            Édité le {format(new Date(), 'dd/MM/yyyy')}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table 1: Locataire & Deuxième conducteur */}
       <table className="w-full border-collapse mb-5">
@@ -263,18 +265,20 @@ export default function ContractTemplate() {
       </div>
 
       {/* Company info */}
-      <div className="text-center text-[9pt] text-gray-600 mt-6">
-        {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
-        {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
-        {agenceSettings?.rc && <> | RC: {agenceSettings.rc}</>}
-        {agenceSettings?.cnss && <> | CNSS: {agenceSettings.cnss}</>}
-        {agenceSettings?.patente && <> | Patente: {agenceSettings.patente}</>}
-        {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
-        <br/>
-        {agenceSettings?.adresse && <>Adresse: {agenceSettings.adresse}</>}
-        {agenceSettings?.telephone && <> | Tél: {agenceSettings.telephone}</>}
-        {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
-      </div>
+      {!agenceSettings?.masquer_pied_page && (
+        <div className="text-center text-[9pt] text-gray-600 mt-6">
+          {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
+          {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
+          {agenceSettings?.rc && <> | RC: {agenceSettings.rc}</>}
+          {agenceSettings?.cnss && <> | CNSS: {agenceSettings.cnss}</>}
+          {agenceSettings?.patente && <> | Patente: {agenceSettings.patente}</>}
+          {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
+          <br/>
+          {agenceSettings?.adresse && <>Adresse: {agenceSettings.adresse}</>}
+          {agenceSettings?.telephone && <> | Tél: {agenceSettings.telephone}</>}
+          {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
+        </div>
+      )}
     </div>
   );
 }

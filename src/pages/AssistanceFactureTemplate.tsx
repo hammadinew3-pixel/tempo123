@@ -128,56 +128,58 @@ export default function AssistanceFactureTemplate() {
       `}</style>
 
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
-            <p className="text-sm text-gray-600">N° {invoiceNumber}</p>
-            <p className="text-sm text-gray-600">
-              Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
-            </p>
+      {!settings?.masquer_entete && (
+        <div className="mb-8">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
+              <p className="text-sm text-gray-600">N° {invoiceNumber}</p>
+              <p className="text-sm text-gray-600">
+                Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-bold text-lg">{settings?.raison_sociale || "Nom de l'entreprise"}</p>
+              {settings?.adresse && <p className="text-sm">{settings.adresse}</p>}
+              {settings?.telephone && <p className="text-sm">Téléphone : {settings.telephone}</p>}
+              {settings?.email && <p className="text-sm">Email : {settings.email}</p>}
+            </div>
           </div>
-          <div className="text-right">
-            <p className="font-bold text-lg">{settings?.raison_sociale || "Nom de l'entreprise"}</p>
-            {settings?.adresse && <p className="text-sm">{settings.adresse}</p>}
-            {settings?.telephone && <p className="text-sm">Téléphone : {settings.telephone}</p>}
-            {settings?.email && <p className="text-sm">Email : {settings.email}</p>}
-          </div>
-        </div>
 
-        <div className="border-t-2 border-gray-300 pt-4">
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <h3 className="font-bold mb-2">FACTURÉ À :</h3>
-              <p className="font-semibold">{assuranceInfo.nom}</p>
-              {assuranceInfo.adresse && (
-                <p className="text-sm">{assuranceInfo.adresse}</p>
-              )}
-              {assuranceInfo.contact_telephone && (
-                <p className="text-sm">Tél : {assuranceInfo.contact_telephone}</p>
-              )}
-            </div>
-            <div>
-              <h3 className="font-bold mb-2">{isGrouped ? 'FACTURE GROUPÉE' : 'CLIENT BÉNÉFICIAIRE'} :</h3>
-              {isGrouped ? (
-                <p className="text-sm">{assistances.length} dossier(s) d'assistance</p>
-              ) : (
-                <>
-                  <p className="font-semibold">
-                    {firstAssistance.clients?.nom} {firstAssistance.clients?.prenom}
-                  </p>
-                  {firstAssistance.clients?.cin && (
-                    <p className="text-sm">CIN : {firstAssistance.clients.cin}</p>
-                  )}
-                  {firstAssistance.clients?.telephone && (
-                    <p className="text-sm">Tél : {firstAssistance.clients.telephone}</p>
-                  )}
-                </>
-              )}
+          <div className="border-t-2 border-gray-300 pt-4">
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <h3 className="font-bold mb-2">FACTURÉ À :</h3>
+                <p className="font-semibold">{assuranceInfo.nom}</p>
+                {assuranceInfo.adresse && (
+                  <p className="text-sm">{assuranceInfo.adresse}</p>
+                )}
+                {assuranceInfo.contact_telephone && (
+                  <p className="text-sm">Tél : {assuranceInfo.contact_telephone}</p>
+                )}
+              </div>
+              <div>
+                <h3 className="font-bold mb-2">{isGrouped ? 'FACTURE GROUPÉE' : 'CLIENT BÉNÉFICIAIRE'} :</h3>
+                {isGrouped ? (
+                  <p className="text-sm">{assistances.length} dossier(s) d'assistance</p>
+                ) : (
+                  <>
+                    <p className="font-semibold">
+                      {firstAssistance.clients?.nom} {firstAssistance.clients?.prenom}
+                    </p>
+                    {firstAssistance.clients?.cin && (
+                      <p className="text-sm">CIN : {firstAssistance.clients.cin}</p>
+                    )}
+                    {firstAssistance.clients?.telephone && (
+                      <p className="text-sm">Tél : {firstAssistance.clients.telephone}</p>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Dossier information */}
       {!isGrouped && (
@@ -286,18 +288,20 @@ export default function AssistanceFactureTemplate() {
       </div>
 
       {/* Footer */}
-      <div className="border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
-        <p>
-          {settings?.raison_sociale || "Nom de l'entreprise"}
-          {settings?.rc && ` - RC: ${settings.rc}`}
-          {settings?.if_number && ` - IF: ${settings.if_number}`}
-          {settings?.ice && ` - ICE: ${settings.ice}`}
-          {settings?.cnss && ` - CNSS: ${settings.cnss}`}
-          {settings?.patente && ` - Patente: ${settings.patente}`}
-        </p>
-        {settings?.adresse && <p>Siège social : {settings.adresse}</p>}
-        <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
-      </div>
+      {!settings?.masquer_pied_page && (
+        <div className="border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
+          <p>
+            {settings?.raison_sociale || "Nom de l'entreprise"}
+            {settings?.rc && ` - RC: ${settings.rc}`}
+            {settings?.if_number && ` - IF: ${settings.if_number}`}
+            {settings?.ice && ` - ICE: ${settings.ice}`}
+            {settings?.cnss && ` - CNSS: ${settings.cnss}`}
+            {settings?.patente && ` - Patente: ${settings.patente}`}
+          </p>
+          {settings?.adresse && <p>Siège social : {settings.adresse}</p>}
+          <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
+        </div>
+      )}
     </div>
   );
 }

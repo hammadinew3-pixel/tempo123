@@ -102,13 +102,15 @@ export default function AssistanceDossierTemplate() {
       `}</style>
 
       {/* Header */}
-      <div className="text-center border-b-2 border-black pb-4 mb-6">
-        <h1 className="text-2xl font-bold mb-2">DOSSIER D'ASSISTANCE</h1>
-        <p className="text-lg">N° {assistance.num_dossier}</p>
-        <p className="text-sm text-gray-600 mt-2">
-          Date d'émission : {format(new Date(assistance.created_at), 'dd MMMM yyyy', { locale: fr })}
-        </p>
-      </div>
+      {!settings?.masquer_entete && (
+        <div className="text-center border-b-2 border-black pb-4 mb-6">
+          <h1 className="text-2xl font-bold mb-2">DOSSIER D'ASSISTANCE</h1>
+          <p className="text-lg">N° {assistance.num_dossier}</p>
+          <p className="text-sm text-gray-600 mt-2">
+            Date d'émission : {format(new Date(assistance.created_at), 'dd MMMM yyyy', { locale: fr })}
+          </p>
+        </div>
+      )}
 
       {/* Informations générales */}
       <div className="mb-6">
@@ -396,19 +398,21 @@ export default function AssistanceDossierTemplate() {
       )}
 
       {/* Footer */}
-      <div className="mt-8 text-center text-xs text-gray-500 border-t pt-4">
-        <p>
-          {settings?.raison_sociale || "Nom de l'entreprise"}
-          {settings?.rc && ` - RC: ${settings.rc}`}
-          {settings?.if_number && ` - IF: ${settings.if_number}`}
-          {settings?.ice && ` - ICE: ${settings.ice}`}
-          {settings?.cnss && ` - CNSS: ${settings.cnss}`}
-          {settings?.patente && ` - Patente: ${settings.patente}`}
-        </p>
-        {settings?.adresse && <p>{settings.adresse}</p>}
-        <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
-        <p>Dossier N° {assistance.num_dossier}</p>
-      </div>
+      {!settings?.masquer_pied_page && (
+        <div className="mt-8 text-center text-xs text-gray-500 border-t pt-4">
+          <p>
+            {settings?.raison_sociale || "Nom de l'entreprise"}
+            {settings?.rc && ` - RC: ${settings.rc}`}
+            {settings?.if_number && ` - IF: ${settings.if_number}`}
+            {settings?.ice && ` - ICE: ${settings.ice}`}
+            {settings?.cnss && ` - CNSS: ${settings.cnss}`}
+            {settings?.patente && ` - Patente: ${settings.patente}`}
+          </p>
+          {settings?.adresse && <p>{settings.adresse}</p>}
+          <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
+          <p>Dossier N° {assistance.num_dossier}</p>
+        </div>
+      )}
     </div>
   );
 }
