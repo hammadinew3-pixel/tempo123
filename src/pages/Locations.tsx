@@ -646,11 +646,12 @@ export default function Locations() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value=" ">Tous</SelectItem>
-                        <SelectItem value="brouillon">Brouillon</SelectItem>
+                        <SelectItem value="ouvert">Réservation</SelectItem>
                         <SelectItem value="contrat_valide">Contrat validé</SelectItem>
                         <SelectItem value="livre">En cours</SelectItem>
-                        <SelectItem value="retour_effectue">Retourné</SelectItem>
+                        <SelectItem value="retour_effectue">Retour effectué</SelectItem>
                         <SelectItem value="termine">Terminé</SelectItem>
+                        <SelectItem value="annule">Annulé</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
