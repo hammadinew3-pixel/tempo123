@@ -17,12 +17,14 @@ import { useUserRole } from "@/hooks/use-user-role";
 import { Badge } from "@/components/ui/badge";
 import { Shield } from "lucide-react";
 import logoCrsapp from "@/assets/logo-crsapp.png";
+import { useLayoutContext } from "@/components/layout/Layout";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
   const { totalAlerts } = useAlertes();
   const { role } = useUserRole();
   const navigate = useNavigate();
+  const { setIsClientDialogOpen } = useLayoutContext();
 
   return (
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-10">
@@ -47,7 +49,10 @@ export const Header = () => {
             <DropdownMenuContent align="end" className="z-50 bg-card">
               <DropdownMenuLabel>Création rapide</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/clients/nouveau")}>
+              <DropdownMenuItem onClick={() => {
+                navigate("/clients");
+                setTimeout(() => setIsClientDialogOpen(true), 100);
+              }}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Nouveau client
               </DropdownMenuItem>
