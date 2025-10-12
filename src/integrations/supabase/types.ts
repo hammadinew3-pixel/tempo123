@@ -1414,6 +1414,122 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicules_traite: {
+        Row: {
+          created_at: string
+          date_debut: string
+          id: string
+          mode_paiement: string | null
+          montant_mensuel: number
+          montant_total: number
+          nombre_traites: number
+          notes: string | null
+          organisme: string
+          statut: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_debut: string
+          id?: string
+          mode_paiement?: string | null
+          montant_mensuel: number
+          montant_total: number
+          nombre_traites: number
+          notes?: string | null
+          organisme: string
+          statut?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          date_debut?: string
+          id?: string
+          mode_paiement?: string | null
+          montant_mensuel?: number
+          montant_total?: number
+          nombre_traites?: number
+          notes?: string | null
+          organisme?: string
+          statut?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicules_traite_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicules_traites_echeances: {
+        Row: {
+          created_at: string
+          date_echeance: string
+          date_paiement: string | null
+          document_url: string | null
+          id: string
+          mode_paiement: string | null
+          montant: number
+          notes: string | null
+          ref_paiement: string | null
+          statut: string
+          traite_id: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_echeance: string
+          date_paiement?: string | null
+          document_url?: string | null
+          id?: string
+          mode_paiement?: string | null
+          montant: number
+          notes?: string | null
+          ref_paiement?: string | null
+          statut?: string
+          traite_id: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          date_echeance?: string
+          date_paiement?: string | null
+          document_url?: string | null
+          id?: string
+          mode_paiement?: string | null
+          montant?: number
+          notes?: string | null
+          ref_paiement?: string | null
+          statut?: string
+          traite_id?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicules_traites_echeances_traite_id_fkey"
+            columns: ["traite_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules_traite"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicules_traites_echeances_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vidanges: {
         Row: {
           created_at: string

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, TrendingUp, TrendingDown, Calendar, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload } from "lucide-react";
+import { Edit, TrendingUp, TrendingDown, Calendar, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,28 @@ export default function VehiculeDetails() {
   const [showVidangeDialog, setShowVidangeDialog] = useState(false);
   const [prochainKmVidange, setProchainKmVidange] = useState<string>('');
   const [montantVidange, setMontantVidange] = useState<string>('');
+
+  // Traite bancaire states
+  const [traites, setTraites] = useState<any[]>([]);
+  const [echeances, setEcheances] = useState<any[]>([]);
+  const [showTraiteDialog, setShowTraiteDialog] = useState(false);
+  const [showPayEcheanceDialog, setShowPayEcheanceDialog] = useState(false);
+  const [selectedEcheance, setSelectedEcheance] = useState<any>(null);
+  const [traiteForm, setTraiteForm] = useState({
+    organisme: '',
+    montant_total: '',
+    montant_mensuel: '',
+    date_debut: '',
+    nombre_traites: '',
+    mode_paiement: '',
+    notes: ''
+  });
+  const [echeancePaymentForm, setEcheancePaymentForm] = useState({
+    date_paiement: new Date().toISOString().split('T')[0],
+    mode_paiement: '',
+    ref_paiement: '',
+    notes: ''
+  });
 
   // Dialog states for adding documents
   const [showInsuranceDialog, setShowInsuranceDialog] = useState(false);
@@ -118,7 +140,7 @@ export default function VehiculeDetails() {
   }, [id]);
   const loadVehicle = async () => {
     try {
-      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, vidangesRes] = await Promise.all([supabase.from('vehicles').select('*').eq('id', id).single(), supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, vidangesRes, traitesRes, echeancesRes] = await Promise.all([supabase.from('vehicles').select('*').eq('id', id).single(), supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
         ascending: false
       }), supabase.from('assistance').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
         ascending: false
@@ -132,6 +154,10 @@ export default function VehiculeDetails() {
         ascending: false
       }), supabase.from('vidanges').select('*').eq('vehicle_id', id).order('date_vidange', {
         ascending: false
+      }), supabase.from('vehicules_traite').select('*').eq('vehicle_id', id).order('created_at', {
+        ascending: false
+      }), supabase.from('vehicules_traites_echeances').select('*').eq('vehicle_id', id).order('date_echeance', {
+        ascending: true
       })]);
       if (vehicleRes.error) throw vehicleRes.error;
       setVehicle(vehicleRes.data);
@@ -142,6 +168,8 @@ export default function VehiculeDetails() {
       setTechnicalInspections(inspectionsRes.data || []);
       setVignettes(vignettesRes.data || []);
       setVidanges(vidangesRes.data || []);
+      setTraites(traitesRes.data || []);
+      setEcheances(echeancesRes.data || []);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -292,6 +320,135 @@ export default function VehiculeDetails() {
       });
     }
   };
+
+  // Traite bancaire functions
+  const handleAddTraite = async () => {
+    if (!vehicle) return;
+    try {
+      const montantTotal = parseFloat(traiteForm.montant_total);
+      const montantMensuel = parseFloat(traiteForm.montant_mensuel);
+      const nombreTraites = parseInt(traiteForm.nombre_traites);
+
+      if (!traiteForm.organisme || !traiteForm.date_debut || !nombreTraites || !montantMensuel || !montantTotal) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez remplir tous les champs obligatoires",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { error } = await supabase.from('vehicules_traite').insert({
+        vehicle_id: vehicle.id,
+        organisme: traiteForm.organisme,
+        montant_total: montantTotal,
+        montant_mensuel: montantMensuel,
+        date_debut: traiteForm.date_debut,
+        nombre_traites: nombreTraites,
+        mode_paiement: traiteForm.mode_paiement || null,
+        notes: traiteForm.notes || null
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Traite bancaire ajoutée avec succès"
+      });
+
+      setShowTraiteDialog(false);
+      setTraiteForm({
+        organisme: '',
+        montant_total: '',
+        montant_mensuel: '',
+        date_debut: '',
+        nombre_traites: '',
+        mode_paiement: '',
+        notes: ''
+      });
+      loadVehicle();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePayEcheance = async () => {
+    if (!selectedEcheance) return;
+    try {
+      const { error } = await supabase
+        .from('vehicules_traites_echeances')
+        .update({
+          statut: 'Payée',
+          date_paiement: echeancePaymentForm.date_paiement,
+          mode_paiement: echeancePaymentForm.mode_paiement || null,
+          ref_paiement: echeancePaymentForm.ref_paiement || null,
+          notes: echeancePaymentForm.notes || null
+        })
+        .eq('id', selectedEcheance.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Échéance marquée comme payée"
+      });
+
+      setShowPayEcheanceDialog(false);
+      setSelectedEcheance(null);
+      setEcheancePaymentForm({
+        date_paiement: new Date().toISOString().split('T')[0],
+        mode_paiement: '',
+        ref_paiement: '',
+        notes: ''
+      });
+      loadVehicle();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getTraiteStats = () => {
+    if (!traites.length || !echeances.length) return { totalPaye: 0, totalRestant: 0, pourcentage: 0 };
+
+    const currentTraite = traites[0];
+    const traiteEcheances = echeances.filter(e => e.traite_id === currentTraite.id);
+    const totalPaye = traiteEcheances
+      .filter(e => e.statut === 'Payée')
+      .reduce((sum, e) => sum + parseFloat(e.montant), 0);
+    const totalRestant = currentTraite.montant_total - totalPaye;
+    const pourcentage = (totalPaye / currentTraite.montant_total) * 100;
+
+    return { totalPaye, totalRestant, pourcentage };
+  };
+
+  const getEcheanceIcon = (statut: string) => {
+    switch (statut) {
+      case 'Payée':
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+      case 'En retard':
+        return <XCircle className="h-5 w-5 text-red-500" />;
+      default:
+        return <Clock className="h-5 w-5 text-orange-500" />;
+    }
+  };
+
+  const getEcheanceStatusBadge = (statut: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      'Payée': 'default',
+      'À payer': 'secondary',
+      'En retard': 'destructive'
+    };
+    return <Badge variant={variants[statut] || 'outline'}>{statut}</Badge>;
+  };
+
   const getAlerts = () => {
     const alerts = [];
     const today = new Date();
@@ -783,6 +940,9 @@ export default function VehiculeDetails() {
               <TabsTrigger value="vignette" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
                 VIGNETTE
               </TabsTrigger>
+              <TabsTrigger value="traite" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                TRAITE BANCAIRE
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="assurance" className="mt-6">
@@ -1010,6 +1170,167 @@ export default function VehiculeDetails() {
                   </div>}
               </div>
             </TabsContent>
+
+            <TabsContent value="traite" className="mt-6">
+              <div className="space-y-4">
+                {traites.length > 0 ? (
+                  <>
+                    {/* Carte d'informations du financement */}
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <Landmark className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg">{traites[0].organisme}</CardTitle>
+                              <p className="text-sm text-muted-foreground">
+                                {traites[0].nombre_traites} mensualités de {parseFloat(traites[0].montant_mensuel).toFixed(2)} DH
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant={
+                            traites[0].statut === 'Terminé' ? 'default' :
+                            traites[0].statut === 'En retard' ? 'destructive' : 'secondary'
+                          }>
+                            {traites[0].statut}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Montant Total</p>
+                            <p className="text-2xl font-bold">{parseFloat(traites[0].montant_total).toFixed(2)} DH</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Total Payé</p>
+                            <p className="text-2xl font-bold text-green-600">{getTraiteStats().totalPaye.toFixed(2)} DH</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Reste à Payer</p>
+                            <p className="text-2xl font-bold text-orange-600">{getTraiteStats().totalRestant.toFixed(2)} DH</p>
+                          </div>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Progression</span>
+                            <span className="font-medium">{getTraiteStats().pourcentage.toFixed(1)}%</span>
+                          </div>
+                          <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary transition-all duration-500"
+                              style={{ width: `${getTraiteStats().pourcentage}%` }}
+                            />
+                          </div>
+                        </div>
+                        {traites[0].notes && (
+                          <div className="pt-3 border-t">
+                            <p className="text-sm text-muted-foreground">{traites[0].notes}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Tableau des échéances */}
+                    <div className="space-y-2">
+                      <h3 className="font-semibold">Échéances mensuelles</h3>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead className="text-right">Montant</TableHead>
+                            <TableHead className="text-center">Statut</TableHead>
+                            <TableHead>Date Paiement</TableHead>
+                            <TableHead>Mode</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {echeances
+                            .filter(e => e.traite_id === traites[0].id)
+                            .map((echeance) => {
+                              const today = new Date();
+                              const echeanceDate = new Date(echeance.date_echeance);
+                              const isOverdue = echeanceDate < today && echeance.statut !== 'Payée';
+
+                              return (
+                                <TableRow key={echeance.id} className={isOverdue ? 'bg-destructive/5' : ''}>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      {getEcheanceIcon(echeance.statut)}
+                                      {format(new Date(echeance.date_echeance), 'dd/MM/yyyy', { locale: fr })}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right font-medium">
+                                    {parseFloat(echeance.montant).toFixed(2)} DH
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    {getEcheanceStatusBadge(echeance.statut)}
+                                  </TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">
+                                    {echeance.date_paiement 
+                                      ? format(new Date(echeance.date_paiement), 'dd/MM/yyyy', { locale: fr })
+                                      : '-'
+                                    }
+                                  </TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">
+                                    {echeance.mode_paiement || '-'}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {echeance.statut !== 'Payée' && (
+                                      <Button 
+                                        size="sm" 
+                                        variant="outline"
+                                        onClick={() => {
+                                          setSelectedEcheance(echeance);
+                                          setShowPayEcheanceDialog(true);
+                                        }}
+                                      >
+                                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                                        Marquer payée
+                                      </Button>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="p-4 bg-muted rounded-full">
+                        <Landmark className="w-12 h-12 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-medium">Aucune traite bancaire</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Ajoutez un plan de financement pour ce véhicule
+                        </p>
+                      </div>
+                      <Button onClick={() => setShowTraiteDialog(true)} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Ajouter une traite bancaire
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {traites.length > 0 && (
+                  <div className="flex justify-end">
+                    <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowTraiteDialog(true)}>
+                      <Plus className="w-4 h-4" />
+                      Nouvelle traite
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -1115,6 +1436,192 @@ export default function VehiculeDetails() {
             </Button>
             <Button onClick={handleMarkOilChangeDone}>
               Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for adding traite bancaire */}
+      <Dialog open={showTraiteDialog} onOpenChange={setShowTraiteDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Ajouter une traite bancaire</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="col-span-2">
+              <Label htmlFor="organisme">Organisme / Banque *</Label>
+              <Input 
+                id="organisme" 
+                value={traiteForm.organisme}
+                onChange={(e) => setTraiteForm({...traiteForm, organisme: e.target.value})}
+                placeholder="Ex: Banque Populaire"
+              />
+            </div>
+            <div>
+              <Label htmlFor="montant_total">Montant Total *</Label>
+              <Input 
+                id="montant_total" 
+                type="number"
+                step="0.01"
+                value={traiteForm.montant_total}
+                onChange={(e) => setTraiteForm({...traiteForm, montant_total: e.target.value})}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="montant_mensuel">Montant Mensuel *</Label>
+              <Input 
+                id="montant_mensuel" 
+                type="number"
+                step="0.01"
+                value={traiteForm.montant_mensuel}
+                onChange={(e) => setTraiteForm({...traiteForm, montant_mensuel: e.target.value})}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="date_debut">Date de début *</Label>
+              <Input 
+                id="date_debut" 
+                type="date"
+                value={traiteForm.date_debut}
+                onChange={(e) => setTraiteForm({...traiteForm, date_debut: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="nombre_traites">Nombre de traites *</Label>
+              <Input 
+                id="nombre_traites" 
+                type="number"
+                value={traiteForm.nombre_traites}
+                onChange={(e) => setTraiteForm({...traiteForm, nombre_traites: e.target.value})}
+                placeholder="Ex: 36"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="mode_paiement">Mode de paiement</Label>
+              <Select value={traiteForm.mode_paiement} onValueChange={(value) => setTraiteForm({...traiteForm, mode_paiement: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="prelevement">Prélèvement automatique</SelectItem>
+                  <SelectItem value="cheque">Chèque</SelectItem>
+                  <SelectItem value="virement">Virement</SelectItem>
+                  <SelectItem value="especes">Espèces</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea 
+                id="notes"
+                value={traiteForm.notes}
+                onChange={(e) => setTraiteForm({...traiteForm, notes: e.target.value})}
+                placeholder="Informations complémentaires..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowTraiteDialog(false);
+              setTraiteForm({
+                organisme: '',
+                montant_total: '',
+                montant_mensuel: '',
+                date_debut: '',
+                nombre_traites: '',
+                mode_paiement: '',
+                notes: ''
+              });
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={handleAddTraite}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for paying echeance */}
+      <Dialog open={showPayEcheanceDialog} onOpenChange={setShowPayEcheanceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Marquer l'échéance comme payée</DialogTitle>
+          </DialogHeader>
+          {selectedEcheance && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">Échéance du</p>
+                <p className="font-semibold">
+                  {format(new Date(selectedEcheance.date_echeance), 'dd MMMM yyyy', { locale: fr })}
+                </p>
+                <p className="text-lg font-bold mt-2">{parseFloat(selectedEcheance.montant).toFixed(2)} DH</p>
+              </div>
+              <div>
+                <Label htmlFor="date_paiement">Date de paiement *</Label>
+                <Input 
+                  id="date_paiement" 
+                  type="date"
+                  value={echeancePaymentForm.date_paiement}
+                  onChange={(e) => setEcheancePaymentForm({...echeancePaymentForm, date_paiement: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="mode_paiement_echeance">Mode de paiement</Label>
+                <Select 
+                  value={echeancePaymentForm.mode_paiement} 
+                  onValueChange={(value) => setEcheancePaymentForm({...echeancePaymentForm, mode_paiement: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="prelevement">Prélèvement automatique</SelectItem>
+                    <SelectItem value="cheque">Chèque</SelectItem>
+                    <SelectItem value="virement">Virement</SelectItem>
+                    <SelectItem value="especes">Espèces</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ref_paiement">Référence de paiement</Label>
+                <Input 
+                  id="ref_paiement"
+                  value={echeancePaymentForm.ref_paiement}
+                  onChange={(e) => setEcheancePaymentForm({...echeancePaymentForm, ref_paiement: e.target.value})}
+                  placeholder="N° de chèque, référence..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="notes_paiement">Notes</Label>
+                <Textarea 
+                  id="notes_paiement"
+                  value={echeancePaymentForm.notes}
+                  onChange={(e) => setEcheancePaymentForm({...echeancePaymentForm, notes: e.target.value})}
+                  placeholder="Informations complémentaires..."
+                  rows={2}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowPayEcheanceDialog(false);
+              setSelectedEcheance(null);
+              setEcheancePaymentForm({
+                date_paiement: new Date().toISOString().split('T')[0],
+                mode_paiement: '',
+                ref_paiement: '',
+                notes: ''
+              });
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={handlePayEcheance}>
+              Confirmer le paiement
             </Button>
           </DialogFooter>
         </DialogContent>
