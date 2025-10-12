@@ -123,6 +123,36 @@ export default function InfractionDetails() {
 
   const handleDownloadFile = async (file: any) => {
     try {
+      // Si c'est un contrat, générer le PDF via l'edge function
+      if (file.file_type === 'contrat' && infraction.contract_id) {
+        const { data: pdfData, error: pdfError } = await supabase.functions.invoke(
+          'generate-contract-pdf',
+          {
+            body: { contractId: infraction.contract_id }
+          }
+        );
+
+        if (pdfError) throw pdfError;
+
+        // Créer un blob à partir des données PDF
+        const pdfBlob = new Blob([pdfData], { type: 'application/pdf' });
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `contrat_${infraction.contracts?.numero_contrat || 'document'}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast({
+          title: "Succès",
+          description: "Contrat téléchargé avec succès",
+        });
+        return;
+      }
+
+      // Pour les autres fichiers (CIN, permis, etc.)
       const urlParts = file.file_url.split('/storage/v1/object/public/');
       const urlPath = file.file_url.split('/').pop() || '';
       const extension = urlPath.includes('.') ? '.' + urlPath.split('.').pop() : '';
