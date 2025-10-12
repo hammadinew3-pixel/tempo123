@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2, Eye, Send, CheckCircle2, Upload, X } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Eye, Send, CheckCircle2, Upload, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,6 +121,54 @@ export default function InfractionDetails() {
     }
   };
 
+  const handleDownloadAllFiles = async () => {
+    try {
+      if (files.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Aucun document à télécharger",
+        });
+        return;
+      }
+
+      // Import JSZip dynamically
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+
+      // Download all files and add to zip
+      for (const file of files) {
+        const response = await fetch(file.file_url);
+        const blob = await response.blob();
+        zip.file(file.file_name, blob);
+      }
+
+      // Generate zip file
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      
+      // Create download link
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `infraction_${infraction.reference}_documents.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Succès",
+        description: "Documents téléchargés avec succès",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Erreur lors du téléchargement des documents",
+      });
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm("Voulez-vous vraiment supprimer cette infraction ?")) return;
 
@@ -206,7 +254,7 @@ export default function InfractionDetails() {
           {isAdmin && infraction.statut_traitement === "nouveau" && (
             <Button onClick={() => setShowTransmitDialog(true)} className="gap-2">
               <Send className="w-4 h-4" />
-              Transmettre au client
+              Transmettre à NARSA
             </Button>
           )}
           {isAdmin && infraction.statut_traitement === "transmis" && (
@@ -342,7 +390,15 @@ export default function InfractionDetails() {
       {/* Files */}
       <Card>
         <CardHeader>
-          <CardTitle>Documents</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Documents</CardTitle>
+            {files.length > 0 && (
+              <Button onClick={handleDownloadAllFiles} variant="outline" size="sm" className="gap-2">
+                <Download className="w-4 h-4" />
+                Télécharger tout en ZIP
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {files.length === 0 ? (
@@ -375,11 +431,11 @@ export default function InfractionDetails() {
       <Dialog open={showTransmitDialog} onOpenChange={setShowTransmitDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Transmettre au client</DialogTitle>
+            <DialogTitle>Transmettre à NARSA</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Confirmez la transmission de cette infraction au client{" "}
+              Confirmez la transmission de cette infraction à NARSA pour le client{" "}
               <span className="font-medium text-foreground">
                 {infraction.clients?.nom} {infraction.clients?.prenom}
               </span>

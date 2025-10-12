@@ -556,21 +556,110 @@ export default function Clients() {
                   </div>
                 </div>
 
-                {/* Permis et Téléphone */}
-                <div className="grid grid-cols-2 gap-4">
-                  {formData.type === 'particulier' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="permis">N° permis</Label>
-                      <Input
-                        id="permis"
-                        value={formData.permis_conduire || ''}
-                        onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
-                        placeholder="N° permis"
-                        className="border-input focus:border-primary transition-colors"
-                      />
-                      <p className="text-xs text-muted-foreground">10/8 chiffres de format xx/xxxxxxxx, exemple: 01/123456</p>
+                {/* CIN */}
+                {formData.type === 'particulier' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cin">
+                      N° CIN <span className="text-primary">*</span>
+                    </Label>
+                    <Input
+                      id="cin"
+                      value={formData.cin || ''}
+                      onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
+                      placeholder="N° CIN"
+                      required
+                      className="border-input focus:border-primary transition-colors"
+                    />
+                    <p className="text-xs text-muted-foreground">Exemple: AB123456</p>
+                  </div>
+                )}
+
+                {/* Photo CIN */}
+                {formData.type === 'particulier' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cin-photo">
+                      Photo CIN {!editingClient && <span className="text-primary">*</span>}
+                    </Label>
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                      <label htmlFor="cin-photo" className="cursor-pointer block">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Upload className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              {cinFile ? cinFile.name : "Ajouter la photo de la CIN"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Format: JPG, PNG, PDF (max 5MB)
+                            </p>
+                          </div>
+                        </div>
+                        <input
+                          id="cin-photo"
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={(e) => setCinFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
-                  )}
+                  </div>
+                )}
+
+                {/* Permis */}
+                {formData.type === 'particulier' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="permis">
+                      N° permis <span className="text-primary">*</span>
+                    </Label>
+                    <Input
+                      id="permis"
+                      value={formData.permis_conduire || ''}
+                      onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
+                      placeholder="N° permis"
+                      required
+                      className="border-input focus:border-primary transition-colors"
+                    />
+                    <p className="text-xs text-muted-foreground">10/8 chiffres de format xx/xxxxxxxx, exemple: 01/123456</p>
+                  </div>
+                )}
+
+                {/* Photo Permis */}
+                {formData.type === 'particulier' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="permis-photo">
+                      Photo permis de conduire {!editingClient && <span className="text-primary">*</span>}
+                    </Label>
+                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                      <label htmlFor="permis-photo" className="cursor-pointer block">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Upload className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              {permisFile ? permisFile.name : "Ajouter la photo du permis"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Format: JPG, PNG, PDF (max 5MB)
+                            </p>
+                          </div>
+                        </div>
+                        <input
+                          id="permis-photo"
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Téléphone et Client fiable */}
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="telephone">
                       N° Tél <span className="text-primary">*</span>
@@ -584,23 +673,6 @@ export default function Clients() {
                       className="border-input focus:border-primary transition-colors"
                     />
                   </div>
-                </div>
-
-                {/* CIN et Client fiable */}
-                <div className="grid grid-cols-2 gap-4">
-                  {formData.type === 'particulier' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="cin">N° CIN</Label>
-                      <Input
-                        id="cin"
-                        value={formData.cin || ''}
-                        onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
-                        placeholder="N° CIN"
-                        className="border-input focus:border-primary transition-colors"
-                      />
-                      <p className="text-xs text-muted-foreground">Exemple: AB123456</p>
-                    </div>
-                  )}
                   <div className="space-y-3">
                     <Label className="text-sm text-muted-foreground">Client fiable</Label>
                     <RadioGroup
@@ -723,67 +795,6 @@ export default function Clients() {
                       />
                     </div>
 
-                    {/* Photo CIN */}
-                    <div className="space-y-2">
-                      <Label htmlFor="cin-photo">
-                        Photo CIN {!editingClient && <span className="text-primary">*</span>}
-                      </Label>
-                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
-                        <label htmlFor="cin-photo" className="cursor-pointer block">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Upload className="w-5 h-5 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">
-                                {cinFile ? cinFile.name : "Ajouter la photo de la CIN"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Format: JPG, PNG, PDF (max 5MB)
-                              </p>
-                            </div>
-                          </div>
-                          <input
-                            id="cin-photo"
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => setCinFile(e.target.files?.[0] || null)}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Photo Permis */}
-                    <div className="space-y-2">
-                      <Label htmlFor="permis-photo">
-                        Photo permis de conduire {!editingClient && <span className="text-primary">*</span>}
-                      </Label>
-                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
-                        <label htmlFor="permis-photo" className="cursor-pointer block">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Upload className="w-5 h-5 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">
-                                {permisFile ? permisFile.name : "Ajouter la photo du permis"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Format: JPG, PNG, PDF (max 5MB)
-                              </p>
-                            </div>
-                          </div>
-                          <input
-                            id="permis-photo"
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    </div>
                   </CollapsibleContent>
                 </Collapsible>
 
