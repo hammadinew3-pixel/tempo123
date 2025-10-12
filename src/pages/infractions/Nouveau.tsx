@@ -65,7 +65,7 @@ export default function NouvelleInfraction() {
     try {
       const { data, error } = await supabase
         .from("contracts")
-        .select("*, clients(id, nom, prenom, telephone)")
+        .select("*, clients(id, nom, prenom, telephone, cin_url, permis_url)")
         .eq("vehicle_id", formData.vehicle_id)
         .lte("date_debut", formData.date_infraction)
         .gte("date_fin", formData.date_infraction)
@@ -170,6 +170,50 @@ export default function NouvelleInfraction() {
               file_name: file.name,
               file_url: urlData.publicUrl,
               file_type: "pv",
+            },
+          ]);
+        }
+      }
+
+      // Automatically add client documents (CIN and Permis) and contract PDF if contract exists
+      if (formData.contract_id && contracts.length > 0) {
+        const contract = contracts[0];
+        const client = contract.clients;
+
+        if (client) {
+          // Add CIN if available
+          if (client.cin_url) {
+            await supabase.from("infraction_files").insert([
+              {
+                infraction_id: infractionData.id,
+                file_name: `CIN_${client.nom}_${client.prenom || ''}`.trim(),
+                file_url: client.cin_url,
+                file_type: "cin",
+              },
+            ]);
+          }
+
+          // Add Permis if available
+          if (client.permis_url) {
+            await supabase.from("infraction_files").insert([
+              {
+                infraction_id: infractionData.id,
+                file_name: `Permis_${client.nom}_${client.prenom || ''}`.trim(),
+                file_url: client.permis_url,
+                file_type: "permis",
+              },
+            ]);
+          }
+        }
+
+        // Add contract PDF if available
+        if (contract.pdf_url) {
+          await supabase.from("infraction_files").insert([
+            {
+              infraction_id: infractionData.id,
+              file_name: `Contrat_${contract.numero_contrat}`,
+              file_url: contract.pdf_url,
+              file_type: "contrat",
             },
           ]);
         }

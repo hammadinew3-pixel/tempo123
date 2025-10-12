@@ -59,6 +59,9 @@ export default function Clients() {
     adresse: '',
   });
 
+  const [cinFile, setCinFile] = useState<File | null>(null);
+  const [permisFile, setPermisFile] = useState<File | null>(null);
+
   useEffect(() => {
     loadClients();
   }, []);
@@ -109,13 +112,57 @@ export default function Clients() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation des fichiers obligatoires pour les nouveaux clients
+    if (!editingClient && (!cinFile || !permisFile)) {
+      toast({
+        title: 'Documents requis',
+        description: 'Veuillez ajouter la photo de la CIN et du permis avant d\'enregistrer.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      let clientData = { ...formData };
+
       if (editingClient) {
+        // Upload des nouveaux fichiers si fournis
+        if (cinFile) {
+          const cinPath = `clients/${editingClient.id}/cin_${Date.now()}.${cinFile.name.split('.').pop()}`;
+          const { error: uploadError } = await supabase.storage
+            .from('client-documents')
+            .upload(cinPath, cinFile);
+          
+          if (uploadError) throw uploadError;
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('client-documents')
+            .getPublicUrl(cinPath);
+          
+          clientData.cin_url = publicUrl;
+        }
+
+        if (permisFile) {
+          const permisPath = `clients/${editingClient.id}/permis_${Date.now()}.${permisFile.name.split('.').pop()}`;
+          const { error: uploadError } = await supabase.storage
+            .from('client-documents')
+            .upload(permisPath, permisFile);
+          
+          if (uploadError) throw uploadError;
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('client-documents')
+            .getPublicUrl(permisPath);
+          
+          clientData.permis_url = publicUrl;
+        }
+
         const { error } = await supabase
           .from('clients')
-          .update(formData)
+          .update(clientData)
           .eq('id', editingClient.id);
 
         if (error) throw error;
@@ -125,11 +172,42 @@ export default function Clients() {
           description: 'Client modifié avec succès',
         });
       } else {
-        const { error } = await supabase
+        // Création du client d'abord pour obtenir l'ID
+        const { data: newClient, error: insertError } = await supabase
           .from('clients')
-          .insert([formData as ClientInsert]);
+          .insert([clientData as ClientInsert])
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+
+        // Upload des fichiers avec l'ID du client
+        const cinPath = `clients/${newClient.id}/cin_${Date.now()}.${cinFile!.name.split('.').pop()}`;
+        const permisPath = `clients/${newClient.id}/permis_${Date.now()}.${permisFile!.name.split('.').pop()}`;
+
+        const [cinUpload, permisUpload] = await Promise.all([
+          supabase.storage.from('client-documents').upload(cinPath, cinFile!),
+          supabase.storage.from('client-documents').upload(permisPath, permisFile!)
+        ]);
+
+        if (cinUpload.error) throw cinUpload.error;
+        if (permisUpload.error) throw permisUpload.error;
+
+        const { data: { publicUrl: cinUrl } } = supabase.storage
+          .from('client-documents')
+          .getPublicUrl(cinPath);
+        
+        const { data: { publicUrl: permisUrl } } = supabase.storage
+          .from('client-documents')
+          .getPublicUrl(permisPath);
+
+        // Mise à jour avec les URLs
+        const { error: updateError } = await supabase
+          .from('clients')
+          .update({ cin_url: cinUrl, permis_url: permisUrl })
+          .eq('id', newClient.id);
+
+        if (updateError) throw updateError;
 
         toast({
           title: 'Succès',
@@ -239,6 +317,8 @@ export default function Clients() {
     setSexe('homme');
     setClientFiable('nouveau');
     setShowAllFields(false);
+    setCinFile(null);
+    setPermisFile(null);
   };
 
   const openEditDialog = (client: Client) => {
@@ -643,17 +723,65 @@ export default function Clients() {
                       />
                     </div>
 
-                    {/* File upload area */}
+                    {/* Photo CIN */}
                     <div className="space-y-2">
-                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Upload className="w-6 h-6 text-primary" />
+                      <Label htmlFor="cin-photo">
+                        Photo CIN {!editingClient && <span className="text-primary">*</span>}
+                      </Label>
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                        <label htmlFor="cin-photo" className="cursor-pointer block">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Upload className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">
+                                {cinFile ? cinFile.name : "Ajouter la photo de la CIN"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Format: JPG, PNG, PDF (max 5MB)
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            Glisser-déposer, ou <span className="text-primary">explorer</span> votre fichiers.
-                          </p>
-                        </div>
+                          <input
+                            id="cin-photo"
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => setCinFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Photo Permis */}
+                    <div className="space-y-2">
+                      <Label htmlFor="permis-photo">
+                        Photo permis de conduire {!editingClient && <span className="text-primary">*</span>}
+                      </Label>
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                        <label htmlFor="permis-photo" className="cursor-pointer block">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Upload className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">
+                                {permisFile ? permisFile.name : "Ajouter la photo du permis"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Format: JPG, PNG, PDF (max 5MB)
+                              </p>
+                            </div>
+                          </div>
+                          <input
+                            id="permis-photo"
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                          />
+                        </label>
                       </div>
                     </div>
                   </CollapsibleContent>

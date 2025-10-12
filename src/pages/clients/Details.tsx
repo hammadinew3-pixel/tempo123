@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle } from 'lucide-react';
+import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -303,8 +303,34 @@ export default function ClientDetails() {
                     </p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-sm text-muted-foreground mb-1">Pièces jointes</p>
-                    <p className="font-medium">—</p>
+                    <p className="text-sm text-muted-foreground mb-3">Pièces jointes</p>
+                    <div className="flex gap-3">
+                      {client.cin_url && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(client.cin_url, '_blank')}
+                          className="gap-2"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Voir CIN
+                        </Button>
+                      )}
+                      {client.permis_url && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(client.permis_url, '_blank')}
+                          className="gap-2"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Voir Permis
+                        </Button>
+                      )}
+                      {!client.cin_url && !client.permis_url && (
+                        <p className="text-sm text-muted-foreground">Aucun document</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </TabsContent>

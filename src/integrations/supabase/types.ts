@@ -1505,7 +1505,14 @@ export type Database = {
         | "marketing"
         | "salaires"
         | "autres"
-      infraction_file_type: "pv" | "photo" | "recu" | "autre"
+      infraction_file_type:
+        | "pv"
+        | "photo"
+        | "recu"
+        | "autre"
+        | "cin"
+        | "permis"
+        | "contrat"
       infraction_statut: "nouveau" | "transmis" | "clos"
       infraction_type:
         | "exces_vitesse"
@@ -1682,7 +1689,15 @@ export const Constants = {
         "salaires",
         "autres",
       ],
-      infraction_file_type: ["pv", "photo", "recu", "autre"],
+      infraction_file_type: [
+        "pv",
+        "photo",
+        "recu",
+        "autre",
+        "cin",
+        "permis",
+        "contrat",
+      ],
       infraction_statut: ["nouveau", "transmis", "clos"],
       infraction_type: [
         "exces_vitesse",
