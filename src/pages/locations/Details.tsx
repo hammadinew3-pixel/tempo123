@@ -919,7 +919,7 @@ export default function LocationDetails() {
           {contract.pdf_url && (
             <Button variant="outline" size="sm" onClick={() => window.open(contract.pdf_url, '_blank')}>
               <Download className="w-4 h-4 mr-2" />
-              Télécharger PDF
+              Télécharger contrat
             </Button>
           )}
           {!contract.pdf_url && contract.statut !== 'brouillon' && (
