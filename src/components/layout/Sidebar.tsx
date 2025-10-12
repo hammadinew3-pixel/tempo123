@@ -118,7 +118,7 @@ interface SidebarProps {
 export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const location = useLocation();
   const { state } = useSidebar();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isAgent } = useUserRole();
   const collapsed = state === "collapsed";
   
   // Track which groups are open
@@ -193,27 +193,34 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
-                            {item.submenu?.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.href || subItem.action}>
-                                <SidebarMenuSubButton
-                                  asChild={!!subItem.href}
-                                  className={getNavCls(isActive(subItem.href))}
-                                  onClick={() => !subItem.href && handleItemClick(subItem)}
-                                >
-                                  {subItem.href ? (
-                                    <NavLink to={subItem.href}>
-                                      <subItem.icon className="h-4 w-4" />
-                                      <span>{subItem.title}</span>
-                                    </NavLink>
-                                  ) : (
-                                    <div className="flex items-center gap-2 cursor-pointer">
-                                      <subItem.icon className="h-4 w-4" />
-                                      <span>{subItem.title}</span>
-                                    </div>
-                                  )}
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
+                            {item.submenu?.map((subItem) => {
+                              // Cacher "Ajouter véhicule" pour les agents
+                              if (isAgent && item.title === "Véhicules" && subItem.title === "Ajouter véhicule") {
+                                return null;
+                              }
+                              
+                              return (
+                                <SidebarMenuSubItem key={subItem.href || subItem.action}>
+                                  <SidebarMenuSubButton
+                                    asChild={!!subItem.href}
+                                    className={getNavCls(isActive(subItem.href))}
+                                    onClick={() => !subItem.href && handleItemClick(subItem)}
+                                  >
+                                    {subItem.href ? (
+                                      <NavLink to={subItem.href}>
+                                        <subItem.icon className="h-4 w-4" />
+                                        <span>{subItem.title}</span>
+                                      </NavLink>
+                                    ) : (
+                                      <div className="flex items-center gap-2 cursor-pointer">
+                                        <subItem.icon className="h-4 w-4" />
+                                        <span>{subItem.title}</span>
+                                      </div>
+                                    )}
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
                           </SidebarMenuSub>
                         </CollapsibleContent>
                       </SidebarMenuItem>

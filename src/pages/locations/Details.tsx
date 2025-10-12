@@ -15,11 +15,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ContractWorkflow } from "@/components/workflow/ContractWorkflow";
+import { useUserRole } from "@/hooks/use-user-role";
 
 export default function LocationDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin } = useUserRole();
   const [contract, setContract] = useState<any>(null);
   const [secondaryDrivers, setSecondaryDrivers] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
@@ -1240,14 +1242,16 @@ export default function LocationDetails() {
                 </div>
                 {secondaryDrivers.map((driver, index) => (
                   <div key={driver.id} className="bg-muted/50 p-3 rounded-md relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2 h-6 w-6 p-0"
-                      onClick={() => handleDeleteDriver(driver.id)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2 h-6 w-6 p-0"
+                        onClick={() => handleDeleteDriver(driver.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
                     <div className="text-sm font-medium">{index + 2}ème conducteur</div>
                     <div className="text-sm">{driver.nom} {driver.prenom}</div>
                     <div className="text-xs text-muted-foreground">
