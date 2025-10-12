@@ -56,12 +56,29 @@ export default function VehiculeDetails() {
     organisme: '',
     prix_achat: '',
     avance: '',
-    duree_mois: '',
-    date_premier_traite: '',
+    montant_mensuel: '',
+    date_debut: '',
+    date_fin: '',
     duree_deja_paye: '0',
     date_achat: '',
     plus_infos: ''
   });
+
+  // Calculate remaining amount and validation
+  const resteAPayer = parseFloat(traiteForm.prix_achat || '0') - parseFloat(traiteForm.avance || '0');
+  
+  const calculateMonthsBetween = (start: string, end: string) => {
+    if (!start || !end) return 0;
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                   (endDate.getMonth() - startDate.getMonth()) + 1;
+    return months > 0 ? months : 0;
+  };
+
+  const nombreMois = calculateMonthsBetween(traiteForm.date_debut, traiteForm.date_fin);
+  const montantTotalMensualites = parseFloat(traiteForm.montant_mensuel || '0') * nombreMois;
+  const isValidAmount = nombreMois > 0 && Math.abs(montantTotalMensualites - resteAPayer) < 0.01;
   const [echeancePaymentForm, setEcheancePaymentForm] = useState({
     date_paiement: new Date().toISOString().split('T')[0],
     mode_paiement: '',
@@ -340,10 +357,10 @@ export default function VehiculeDetails() {
     try {
       const prixAchat = parseFloat(traiteForm.prix_achat);
       const avance = parseFloat(traiteForm.avance) || 0;
-      const dureeMois = parseInt(traiteForm.duree_mois);
+      const montantMensuel = parseFloat(traiteForm.montant_mensuel);
       const dureeDejaPaye = parseInt(traiteForm.duree_deja_paye) || 0;
 
-      if (!traiteForm.organisme || !traiteForm.date_premier_traite || !dureeMois || !prixAchat) {
+      if (!traiteForm.organisme || !traiteForm.date_debut || !traiteForm.date_fin || !prixAchat || !montantMensuel) {
         toast({
           title: "Erreur",
           description: "Veuillez remplir tous les champs obligatoires (*)",
@@ -352,8 +369,14 @@ export default function VehiculeDetails() {
         return;
       }
 
-      // Calculate montant mensuel: (Prix d'achat - Avance) / Durée
-      const montantMensuel = (prixAchat - avance) / dureeMois;
+      if (!isValidAmount) {
+        toast({
+          title: "Erreur",
+          description: "Le montant total des mensualités ne correspond pas au reste à payer",
+          variant: "destructive"
+        });
+        return;
+      }
 
       // Insert traite
       const { error } = await supabase.from('vehicules_traite').insert({
@@ -363,8 +386,8 @@ export default function VehiculeDetails() {
         date_achat: traiteForm.date_achat || null,
         montant_total: prixAchat,
         montant_mensuel: montantMensuel,
-        date_debut: traiteForm.date_premier_traite,
-        nombre_traites: dureeMois,
+        date_debut: traiteForm.date_debut,
+        nombre_traites: nombreMois,
         avance_paye: avance,
         duree_deja_paye: dureeDejaPaye,
         notes: traiteForm.plus_infos || null
@@ -382,7 +405,7 @@ export default function VehiculeDetails() {
 
       toast({
         title: "Succès",
-        description: `Traite bancaire ajoutée avec succès. Montant mensuel: ${montantMensuel.toFixed(2)} DH`
+        description: `Traite bancaire ajoutée avec succès. ${nombreMois} mensualités de ${montantMensuel.toFixed(2)} DH`
       });
 
       setShowTraiteDialog(false);
@@ -391,8 +414,9 @@ export default function VehiculeDetails() {
         organisme: '',
         prix_achat: '',
         avance: '',
-        duree_mois: '',
-        date_premier_traite: '',
+        montant_mensuel: '',
+        date_debut: '',
+        date_fin: '',
         duree_deja_paye: '0',
         date_achat: '',
         plus_infos: ''
@@ -1654,26 +1678,73 @@ export default function VehiculeDetails() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="duree_mois">Durée/Mois *</Label>
-              <Input 
-                id="duree_mois" 
-                type="number"
-                value={traiteForm.duree_mois}
-                onChange={(e) => setTraiteForm({...traiteForm, duree_mois: e.target.value})}
-                placeholder="Ex: 36"
-              />
-            </div>
+            {resteAPayer > 0 && (
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm">
+                  Reste à payer: <span className="font-bold text-primary text-lg">
+                    {resteAPayer.toFixed(2)} DH
+                  </span>
+                </p>
+              </div>
+            )}
 
             <div>
-              <Label htmlFor="date_premier_traite">Date premier traite *</Label>
-              <Input 
-                id="date_premier_traite" 
-                type="date"
-                value={traiteForm.date_premier_traite}
-                onChange={(e) => setTraiteForm({...traiteForm, date_premier_traite: e.target.value})}
-              />
+              <Label htmlFor="montant_mensuel">Montant de la mensualité *</Label>
+              <div className="relative">
+                <Input 
+                  id="montant_mensuel" 
+                  type="number"
+                  step="0.01"
+                  value={traiteForm.montant_mensuel}
+                  onChange={(e) => setTraiteForm({...traiteForm, montant_mensuel: e.target.value})}
+                  placeholder="0.00"
+                  className="pr-12"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  DH
+                </span>
+              </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="date_debut">Date début mensualité *</Label>
+                <Input 
+                  id="date_debut" 
+                  type="date"
+                  value={traiteForm.date_debut}
+                  onChange={(e) => setTraiteForm({...traiteForm, date_debut: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="date_fin">Date fin mensualité *</Label>
+                <Input 
+                  id="date_fin" 
+                  type="date"
+                  value={traiteForm.date_fin}
+                  onChange={(e) => setTraiteForm({...traiteForm, date_fin: e.target.value})}
+                />
+              </div>
+            </div>
+
+            {nombreMois > 0 && traiteForm.montant_mensuel && (
+              <div className={`p-4 rounded-lg border ${
+                isValidAmount 
+                  ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800' 
+                  : 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
+              }`}>
+                <div className="space-y-2 text-sm">
+                  <p>Nombre de mois: <span className="font-semibold">{nombreMois}</span></p>
+                  <p>Total des mensualités: <span className="font-semibold">{montantTotalMensualites.toFixed(2)} DH</span></p>
+                  <p className={`font-bold ${isValidAmount ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                    {isValidAmount 
+                      ? '✓ Montant correct !' 
+                      : `✗ Différence: ${Math.abs(montantTotalMensualites - resteAPayer).toFixed(2)} DH`
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div>
               <Label htmlFor="duree_deja_paye">Durée déjà payé</Label>
@@ -1718,8 +1789,9 @@ export default function VehiculeDetails() {
                 organisme: '',
                 prix_achat: '',
                 avance: '',
-                duree_mois: '',
-                date_premier_traite: '',
+                montant_mensuel: '',
+                date_debut: '',
+                date_fin: '',
                 duree_deja_paye: '0',
                 date_achat: '',
                 plus_infos: ''
@@ -1727,7 +1799,7 @@ export default function VehiculeDetails() {
             }}>
               Annuler
             </Button>
-            <Button onClick={handleAddTraite}>
+            <Button onClick={handleAddTraite} disabled={!isValidAmount && nombreMois > 0}>
               Enregistrer
             </Button>
           </DialogFooter>
