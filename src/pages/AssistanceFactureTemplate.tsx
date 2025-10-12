@@ -130,6 +130,15 @@ export default function AssistanceFactureTemplate() {
       {/* Header */}
       {!settings?.masquer_entete && (
         <div className="mb-8">
+          {!settings?.masquer_logo && settings?.logo_url && (
+            <div className="flex justify-center mb-4">
+              <img 
+                src={settings.logo_url} 
+                alt="Logo" 
+                className="h-16 w-auto object-contain"
+              />
+            </div>
+          )}
           <div className="flex justify-between items-start mb-6">
             <div>
               <h1 className="text-3xl font-bold mb-2">FACTURE</h1>

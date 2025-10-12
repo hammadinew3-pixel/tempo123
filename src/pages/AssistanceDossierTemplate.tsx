@@ -103,12 +103,23 @@ export default function AssistanceDossierTemplate() {
 
       {/* Header */}
       {!settings?.masquer_entete && (
-        <div className="text-center border-b-2 border-black pb-4 mb-6">
-          <h1 className="text-2xl font-bold mb-2">DOSSIER D'ASSISTANCE</h1>
-          <p className="text-lg">N° {assistance.num_dossier}</p>
-          <p className="text-sm text-gray-600 mt-2">
-            Date d'émission : {format(new Date(assistance.created_at), 'dd MMMM yyyy', { locale: fr })}
-          </p>
+        <div className="border-b-2 border-black pb-4 mb-6">
+          {!settings?.masquer_logo && settings?.logo_url && (
+            <div className="flex justify-center mb-4">
+              <img 
+                src={settings.logo_url} 
+                alt="Logo" 
+                className="h-16 w-auto object-contain"
+              />
+            </div>
+          )}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">DOSSIER D'ASSISTANCE</h1>
+            <p className="text-lg">N° {assistance.num_dossier}</p>
+            <p className="text-sm text-gray-600 mt-2">
+              Date d'émission : {format(new Date(assistance.created_at), 'dd MMMM yyyy', { locale: fr })}
+            </p>
+          </div>
         </div>
       )}
 

@@ -93,10 +93,21 @@ export default function ContractTemplate() {
     <div className="p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto">
       {/* Header */}
       {!agenceSettings?.masquer_entete && (
-        <div className="flex justify-between items-center mb-6 pb-3 border-b-2 border-black">
-          <h1 className="text-[18pt] font-bold">CONTRAT DE LOCATION N° {contract.numero_contrat}</h1>
-          <div className="text-[10pt] text-gray-600">
-            Édité le {format(new Date(), 'dd/MM/yyyy')}
+        <div className="mb-6 pb-3 border-b-2 border-black">
+          <div className="flex justify-between items-center">
+            {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
+              <img 
+                src={agenceSettings.logo_url} 
+                alt="Logo" 
+                className="h-16 w-auto object-contain"
+              />
+            )}
+            <div className="flex-1 text-center">
+              <h1 className="text-[18pt] font-bold">CONTRAT DE LOCATION N° {contract.numero_contrat}</h1>
+            </div>
+            <div className="text-[10pt] text-gray-600">
+              Édité le {format(new Date(), 'dd/MM/yyyy')}
+            </div>
           </div>
         </div>
       )}

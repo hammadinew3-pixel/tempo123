@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Building2, Bell, Printer, Upload, Loader2 } from "lucide-react";
+import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon } from "lucide-react";
 
 interface AgenceSettings {
   id: string;
@@ -41,6 +41,7 @@ export default function Parametres() {
   const [settings, setSettings] = useState<AgenceSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -103,6 +104,112 @@ export default function Parametres() {
     }
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une image (PNG, JPG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Erreur",
+        description: "L'image ne doit pas dépasser 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploadingLogo(true);
+
+      // Delete old logo if exists
+      if (settings?.logo_url) {
+        const oldPath = settings.logo_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage
+            .from('agency-logos')
+            .remove([oldPath]);
+        }
+      }
+
+      // Upload new logo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const { error: uploadError, data } = await supabase.storage
+        .from('agency-logos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('agency-logos')
+        .getPublicUrl(fileName);
+
+      // Update settings
+      await updateSettings({ logo_url: publicUrl });
+
+      toast({
+        title: "Logo mis à jour",
+        description: "Votre logo a été enregistré avec succès.",
+      });
+    } catch (error: any) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger le logo.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!settings?.logo_url) return;
+
+    try {
+      setUploadingLogo(true);
+
+      // Delete from storage
+      const oldPath = settings.logo_url.split('/').pop();
+      if (oldPath) {
+        await supabase.storage
+          .from('agency-logos')
+          .remove([oldPath]);
+      }
+
+      // Update settings
+      await updateSettings({ logo_url: null });
+
+      toast({
+        title: "Logo supprimé",
+        description: "Le logo a été retiré.",
+      });
+    } catch (error: any) {
+      console.error('Error removing logo:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le logo.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   if (roleLoading || !isAdmin || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -136,6 +243,51 @@ export default function Parametres() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Logo Upload */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Logo de l'agence
+              </Label>
+              <div className="flex items-center gap-4">
+                {settings?.logo_url ? (
+                  <div className="relative">
+                    <img 
+                      src={settings.logo_url} 
+                      alt="Logo" 
+                      className="h-20 w-auto object-contain border rounded p-2"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={handleRemoveLogo}
+                      disabled={uploadingLogo}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="h-20 w-20 border-2 border-dashed rounded flex items-center justify-center text-muted-foreground">
+                    <ImageIcon className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={uploadingLogo}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG, JPG ou WEBP (max 2MB)
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Raison sociale</Label>
               <Input

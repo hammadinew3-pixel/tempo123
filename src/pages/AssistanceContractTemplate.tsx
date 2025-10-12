@@ -87,10 +87,21 @@ export default function AssistanceContractTemplate() {
 
       {/* Header */}
       {!agenceSettings?.masquer_entete && (
-        <div className="text-center border-b-2 border-black pb-4 mb-6">
-          <h1 className="text-2xl font-bold mb-2">CONTRAT DE LOCATION</h1>
-          <h2 className="text-xl font-bold">VÉHICULE DE REMPLACEMENT</h2>
-          <p className="text-sm mt-2">N° {assistance.num_dossier}</p>
+        <div className="border-b-2 border-black pb-4 mb-6">
+          {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
+            <div className="flex justify-center mb-4">
+              <img 
+                src={agenceSettings.logo_url} 
+                alt="Logo" 
+                className="h-16 w-auto object-contain"
+              />
+            </div>
+          )}
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">CONTRAT DE LOCATION</h1>
+            <h2 className="text-xl font-bold">VÉHICULE DE REMPLACEMENT</h2>
+            <p className="text-sm mt-2">N° {assistance.num_dossier}</p>
+          </div>
         </div>
       )}
 
