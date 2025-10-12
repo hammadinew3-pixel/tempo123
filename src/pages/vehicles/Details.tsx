@@ -1616,11 +1616,11 @@ export default function VehiculeDetails() {
 
       {/* Dialog for adding traite bancaire */}
       <Dialog open={showTraiteDialog} onOpenChange={setShowTraiteDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Ajouter une traite bancaire</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1 px-1">
             <div>
               <Label htmlFor="concessionaire">Concessionaire / Maison d'achat</Label>
               <Input 
