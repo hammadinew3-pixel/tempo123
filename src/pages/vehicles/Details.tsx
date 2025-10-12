@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Edit, TrendingUp, TrendingDown, Calendar as CalendarIcon, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -647,7 +646,7 @@ export default function VehiculeDetails() {
                 </Button>
               </div>
               <div className="p-3 rounded-lg bg-info/20">
-                <Calendar className="w-8 h-8 text-info" />
+                <CalendarIcon className="w-8 h-8 text-info" />
               </div>
             </div>
           </CardContent>
