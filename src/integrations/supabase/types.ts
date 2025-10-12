@@ -1416,7 +1416,10 @@ export type Database = {
       }
       vehicules_traite: {
         Row: {
+          avance_paye: number | null
+          concessionaire: string | null
           created_at: string
+          date_achat: string | null
           date_debut: string
           id: string
           mode_paiement: string | null
@@ -1430,7 +1433,10 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          avance_paye?: number | null
+          concessionaire?: string | null
           created_at?: string
+          date_achat?: string | null
           date_debut: string
           id?: string
           mode_paiement?: string | null
@@ -1444,7 +1450,10 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          avance_paye?: number | null
+          concessionaire?: string | null
           created_at?: string
+          date_achat?: string | null
           date_debut?: string
           id?: string
           mode_paiement?: string | null
