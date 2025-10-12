@@ -11,11 +11,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AuditTimeline } from '@/components/audit/AuditTimeline';
+import { useUserRole } from '@/hooks/use-user-role';
 
 export default function SinistreDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin } = useUserRole();
   const [sinistre, setSinistre] = useState<any>(null);
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,10 +171,12 @@ export default function SinistreDetails() {
             <Edit className="w-4 h-4 mr-2" />
             Modifier
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Supprimer
-          </Button>
+          {isAdmin && (
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Supprimer
+            </Button>
+          )}
         </div>
       </div>
 

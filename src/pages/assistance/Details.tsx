@@ -14,11 +14,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useUserRole } from "@/hooks/use-user-role";
 
 export default function AssistanceDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin } = useUserRole();
   const [assistance, setAssistance] = useState<any>(null);
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

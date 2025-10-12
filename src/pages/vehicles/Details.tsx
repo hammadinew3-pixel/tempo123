@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditInspectionDialog, EditVignetteDialog } from "@/components/vehicles/EditDialogs";
+import { useUserRole } from "@/hooks/use-user-role";
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 export default function VehiculeDetails() {
   const {
@@ -28,6 +29,7 @@ export default function VehiculeDetails() {
   const {
     toast
   } = useToast();
+  const { isAdmin } = useUserRole();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [assistances, setAssistances] = useState<any[]>([]);
@@ -415,10 +417,12 @@ export default function VehiculeDetails() {
             <Edit className="w-4 h-4" />
             MODIFIER LE VÉHICULE
           </Button>
-          <Button onClick={() => setShowDeleteDialog(true)} variant="destructive" className="gap-2">
-            <AlertCircle className="w-4 h-4" />
-            SUPPRIMER LE VÉHICULE
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => setShowDeleteDialog(true)} variant="destructive" className="gap-2">
+              <AlertCircle className="w-4 h-4" />
+              SUPPRIMER LE VÉHICULE
+            </Button>
+          )}
         </div>
       </div>
 

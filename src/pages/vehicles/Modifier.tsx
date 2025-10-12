@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { useUserRole } from "@/hooks/use-user-role";
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleStatus = Database['public']['Enums']['vehicle_status'];
 type VehicleCategory = Database['public']['Enums']['vehicle_category'];
@@ -42,6 +43,7 @@ export default function ModifierVehicule() {
   const {
     toast
   } = useToast();
+  const { isAdmin, isAgent } = useUserRole();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -219,7 +221,7 @@ export default function ModifierVehicule() {
               <div>
                 <Label className="text-sm md:text-base font-semibold">Voiture en service</Label>
               </div>
-              <Switch checked={isInService} onCheckedChange={setIsInService} />
+              <Switch checked={isInService} onCheckedChange={setIsInService} disabled={isAgent} />
             </div>
 
             <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
@@ -229,7 +231,7 @@ export default function ModifierVehicule() {
                   Indiquez si la voiture appartient à une autre agence et que vous utilisez en sous-location
                 </p>
               </div>
-              <Switch checked={isSousLocation} onCheckedChange={setIsSousLocation} />
+              <Switch checked={isSousLocation} onCheckedChange={setIsSousLocation} disabled={isAgent} />
             </div>
 
             <div>
@@ -256,7 +258,7 @@ export default function ModifierVehicule() {
             {/* Marque */}
             <div>
               <Label htmlFor="marque">Marque *</Label>
-              <Select value={formData.marque} onValueChange={handleMarqueChange}>
+              <Select value={formData.marque} onValueChange={handleMarqueChange} disabled={isAgent}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
@@ -272,7 +274,7 @@ export default function ModifierVehicule() {
               <Select value={formData.modele} onValueChange={value => setFormData({
               ...formData,
               modele: value
-            })} disabled={!formData.marque || availableModels.length === 0}>
+            })} disabled={isAgent || !formData.marque || availableModels.length === 0}>
                 <SelectTrigger>
                   <SelectValue placeholder={formData.marque ? "Sélectionner un modèle" : "Sélectionnez d'abord une marque"} />
                 </SelectTrigger>
@@ -288,7 +290,7 @@ export default function ModifierVehicule() {
               <Select value={formData.categorie} onValueChange={value => setFormData({
               ...formData,
               categorie: value as VehicleCategory
-            })}>
+            })} disabled={isAgent}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -308,7 +310,7 @@ export default function ModifierVehicule() {
               <Input id="immatriculation" value={formData.immatriculation} onChange={e => setFormData({
               ...formData,
               immatriculation: e.target.value
-            })} required />
+            })} required disabled={isAgent} />
             </div>
 
             {/* Dernier kilométrage */}
@@ -333,7 +335,7 @@ export default function ModifierVehicule() {
                 <Input id="tarif_journalier" type="number" value={formData.tarif_journalier} onChange={e => setFormData({
                 ...formData,
                 tarif_journalier: parseFloat(e.target.value) || 0
-              })} required />
+              })} required disabled={isAgent} />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
               </div>
             </div>
@@ -344,7 +346,7 @@ export default function ModifierVehicule() {
               <Select value={formData.carburant} onValueChange={value => setFormData({
               ...formData,
               carburant: value
-            })}>
+            })} disabled={isAgent}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -363,7 +365,7 @@ export default function ModifierVehicule() {
               <Input id="annee" type="number" min="1900" max={new Date().getFullYear() + 1} value={formData.annee} onChange={e => setFormData({
               ...formData,
               annee: parseInt(e.target.value) || new Date().getFullYear()
-            })} placeholder="YYYY" />
+            })} placeholder="YYYY" disabled={isAgent} />
               <p className="text-xs text-muted-foreground mt-1">
                 Année de la première immatriculation du véhicule
               </p>
@@ -376,7 +378,7 @@ export default function ModifierVehicule() {
                 <Input id="valeur_achat" type="number" step="0.01" value={formData.valeur_achat} onChange={e => setFormData({
                 ...formData,
                 valeur_achat: parseFloat(e.target.value) || 0
-              })} />
+              })} disabled={isAgent} />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
               </div>
             </div>

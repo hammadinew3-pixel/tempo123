@@ -10,11 +10,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useUserRole } from '@/hooks/use-user-role';
 
 export default function ClientDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAdmin } = useUserRole();
   const [client, setClient] = useState<any>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -553,14 +555,16 @@ export default function ClientDetails() {
 
       {/* Delete Button */}
       <div className="flex justify-start">
-        <Button
-          variant="destructive"
-          onClick={handleDeleteClient}
-          disabled={contracts.length > 0}
-          className="bg-gray-300 text-gray-500 hover:bg-gray-400 disabled:opacity-50"
-        >
-          SUPPRIMER CE CLIENT
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="destructive"
+            onClick={handleDeleteClient}
+            disabled={contracts.length > 0}
+            className="bg-gray-300 text-gray-500 hover:bg-gray-400 disabled:opacity-50"
+          >
+            SUPPRIMER CE CLIENT
+          </Button>
+        )}
         {contracts.length > 0 && (
           <p className="ml-4 text-sm text-muted-foreground flex items-center gap-2 mt-2">
             <AlertCircle className="w-4 h-4" />
