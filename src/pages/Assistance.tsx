@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, Download, Eye, Edit, Trash2, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePermissions } from "@/hooks/use-permissions";
+import { useUserRole } from "@/hooks/use-user-role";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ type Assistance = Database['public']['Tables']['assistance']['Row'];
 
 export default function Assistance() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
+  const { isAdmin } = useUserRole();
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -328,7 +328,7 @@ export default function Assistance() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {hasPermission('assistance.create') && (
+          {isAdmin && (
             <Button 
               size="sm"
               onClick={() => navigate('/assistance/nouveau')}
@@ -421,7 +421,7 @@ export default function Assistance() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {hasPermission('assistance.delete') && (
+                          {isAdmin && (
                             <Button
                               variant="ghost"
                               size="sm"

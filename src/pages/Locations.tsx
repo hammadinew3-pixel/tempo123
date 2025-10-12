@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Search, Filter, Download, Plus, Edit, Trash2, FileText, Eye, Car, User, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePermissions } from "@/hooks/use-permissions";
+import { useUserRole } from "@/hooks/use-user-role";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +24,7 @@ type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
 
 export default function Locations() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
+  const { isAdmin } = useUserRole();
   const [contracts, setContracts] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -642,7 +642,7 @@ export default function Locations() {
           <Button variant="outline" size="sm">
             CHECK DISPONIBILITÉ
           </Button>
-          {hasPermission('contracts.create') && (
+          {isAdmin && (
             <Button size="sm" onClick={() => navigate('/locations/nouveau')}>
               <Plus className="w-4 h-4 mr-2" />
               Nouveau contrat

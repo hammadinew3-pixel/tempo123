@@ -11,13 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { usePermissions } from "@/hooks/use-permissions";
+import { useUserRole } from "@/hooks/use-user-role";
 
 export default function InfractionDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { hasPermission, isAdmin } = usePermissions();
+  const { isAdmin } = useUserRole();
   const [infraction, setInfraction] = useState<any>(null);
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,7 +203,7 @@ export default function InfractionDetails() {
         </div>
         <div className="flex gap-2">
           {getStatutBadge(infraction.statut_traitement)}
-          {hasPermission('infractions.mark_transmitted') && infraction.statut_traitement === "nouveau" && (
+          {isAdmin && infraction.statut_traitement === "nouveau" && (
             <Button onClick={() => setShowTransmitDialog(true)} className="gap-2">
               <Send className="w-4 h-4" />
               Transmettre au client
@@ -215,7 +215,7 @@ export default function InfractionDetails() {
               Clôturer le dossier
             </Button>
           )}
-          {hasPermission('infractions.update') && (
+          {isAdmin && (
             <Button variant="outline" onClick={() => navigate(`/infractions/${id}/modifier`)}>
               <Edit className="w-4 h-4 mr-2" />
               Modifier

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar, Eye, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePermissions } from "@/hooks/use-permissions";
+import { useUserRole } from "@/hooks/use-user-role";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +28,7 @@ type ClientInsert = Database['public']['Tables']['clients']['Insert'];
 export default function Clients() {
   const navigate = useNavigate();
   const { isClientDialogOpen, setIsClientDialogOpen } = useLayoutContext();
-  const { hasPermission } = usePermissions();
+  const { isAdmin } = useUserRole();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -389,7 +389,7 @@ export default function Clients() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {hasPermission('clients.create') && (
+          {isAdmin && (
             <Dialog open={isClientDialogOpen} onOpenChange={(open) => { setIsClientDialogOpen(open); if (!open) resetForm(); }}>
               <DialogTrigger asChild>
                 <Button size="sm">
@@ -767,7 +767,7 @@ export default function Clients() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {hasPermission('clients.update') && (
+                          {isAdmin && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -776,7 +776,7 @@ export default function Clients() {
                               <Edit className="w-4 h-4" />
                             </Button>
                           )}
-                          {hasPermission('clients.delete') && (
+                          {isAdmin && (
                             <Button
                               variant="ghost"
                               size="sm"

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PermissionsDialog } from "@/components/users/PermissionsDialog";
+
 import { UserRole } from "@/hooks/use-user-role";
 
 interface UserWithRole {
@@ -32,8 +32,6 @@ export default function Utilisateurs() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
-  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
-  const [selectedUserRole, setSelectedUserRole] = useState<UserRole>(null);
   const [newUser, setNewUser] = useState({
     email: "",
     password: "",
@@ -391,19 +389,6 @@ export default function Utilisateurs() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedUserRole(user.role);
-                        setPermissionsDialogOpen(true);
-                      }}
-                      disabled={!user.role}
-                      title="Voir les permissions"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-
                     <Select
                       value={user.role || 'none'}
                       onValueChange={(value) => {
@@ -449,11 +434,6 @@ export default function Utilisateurs() {
         </CardContent>
       </Card>
 
-      <PermissionsDialog
-        open={permissionsDialogOpen}
-        onOpenChange={setPermissionsDialogOpen}
-        role={selectedUserRole}
-      />
     </div>
   );
 }

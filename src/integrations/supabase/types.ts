@@ -859,42 +859,6 @@ export type Database = {
           },
         ]
       }
-      permissions: {
-        Row: {
-          can_create: boolean
-          can_delete: boolean
-          can_edit: boolean
-          can_view: boolean
-          created_at: string
-          id: string
-          module: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
-        }
-        Insert: {
-          can_create?: boolean
-          can_delete?: boolean
-          can_edit?: boolean
-          can_view?: boolean
-          created_at?: string
-          id?: string
-          module: string
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-        }
-        Update: {
-          can_create?: boolean
-          can_delete?: boolean
-          can_edit?: boolean
-          can_view?: boolean
-          created_at?: string
-          id?: string
-          module?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           actif: boolean
@@ -1499,22 +1463,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_create_module: {
-        Args: { _module: string; _user_id: string }
-        Returns: boolean
-      }
-      can_delete_module: {
-        Args: { _module: string; _user_id: string }
-        Returns: boolean
-      }
-      can_edit_module: {
-        Args: { _module: string; _user_id: string }
-        Returns: boolean
-      }
-      can_view_module: {
-        Args: { _module: string; _user_id: string }
-        Returns: boolean
-      }
       generate_infraction_reference: {
         Args: Record<PropertyKey, never>
         Returns: string

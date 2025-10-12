@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { usePermissions } from "@/hooks/use-permissions";
+import { useUserRole } from "@/hooks/use-user-role";
 
 type Expense = {
   id: string;
@@ -30,7 +30,7 @@ type Expense = {
 
 export default function Charges() {
   const { toast } = useToast();
-  const { canCreate, canDelete } = usePermissions();
+  const { isAdmin } = useUserRole();
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -195,7 +195,7 @@ export default function Charges() {
             Gestion des dépenses et charges
           </p>
         </div>
-        {canCreate('expenses') && (
+        {isAdmin && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -367,7 +367,7 @@ export default function Charges() {
                 </div>
                 <div className="flex items-center gap-3">
                   <p className="text-lg font-bold text-red-600">{expense.montant.toFixed(2)} DH</p>
-                  {canDelete('expenses') && (
+                  {isAdmin && (
                     <Button
                       variant="ghost"
                       size="icon"

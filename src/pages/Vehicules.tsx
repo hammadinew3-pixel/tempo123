@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Download, Plus, Edit, Trash2, Eye, X, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePermissions } from "@/hooks/use-permissions";
+import { useUserRole } from "@/hooks/use-user-role";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
 export default function Vehicules() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
+  const { isAdmin } = useUserRole();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [assurances, setAssurances] = useState<Array<{
     id: string;
@@ -653,7 +653,7 @@ export default function Vehicules() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {hasPermission('vehicles.create') && (
+          {isAdmin && (
             <Button size="sm" onClick={() => navigate('/vehicules/nouveau')} className="w-full sm:w-auto text-xs md:text-sm">
               <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
               <span className="hidden sm:inline">Nouveau véhicule</span>
@@ -862,7 +862,7 @@ export default function Vehicules() {
                           <Eye className="w-3 h-3 mr-1" />
                           Voir
                         </Button>
-                        {hasPermission('vehicles.update_status') && (
+                        {isAdmin && (
                           <Button variant="outline" size="sm" onClick={e => {
                       e.stopPropagation();
                       navigate(`/vehicules/${vehicle.id}/modifier`);
@@ -871,7 +871,7 @@ export default function Vehicules() {
                             Modifier
                           </Button>
                         )}
-                        {hasPermission('vehicles.delete') && (
+                        {isAdmin && (
                           <Button variant="outline" size="sm" onClick={e => {
                       e.stopPropagation();
                       handleDelete(vehicle.id);
@@ -914,7 +914,7 @@ export default function Vehicules() {
                       }} className="hover:bg-accent transition-colors" title="Afficher les détails">
                               <Eye className="w-4 h-4" />
                             </Button>
-                            {hasPermission('vehicles.update_status') && (
+                            {isAdmin && (
                               <Button variant="ghost" size="sm" onClick={e => {
                           e.stopPropagation();
                           navigate(`/vehicules/${vehicle.id}/modifier`);
@@ -922,7 +922,7 @@ export default function Vehicules() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             )}
-                            {hasPermission('vehicles.delete') && (
+                            {isAdmin && (
                               <Button variant="ghost" size="sm" onClick={e => {
                           e.stopPropagation();
                           handleDelete(vehicle.id);
