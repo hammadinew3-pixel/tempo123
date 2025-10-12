@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2, Eye, Send, CheckCircle2, Upload, X, Download } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Eye, Send, CheckCircle2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,87 +121,59 @@ export default function InfractionDetails() {
     }
   };
 
-  const handleDownloadAllFiles = async () => {
+  const handleDownloadFile = async (file: any) => {
     try {
-      if (files.length === 0) {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Aucun document à télécharger",
-        });
-        return;
-      }
-
-      // Import JSZip dynamically
-      const JSZip = (await import("jszip")).default;
-      const zip = new JSZip();
-
-      // Download all files and add to zip
-      for (const file of files) {
-        try {
-          // Extract bucket and path from the file URL
-          const urlParts = file.file_url.split('/storage/v1/object/public/');
-          
-          // Extract file extension from URL
-          const urlPath = file.file_url.split('/').pop() || '';
-          const extension = urlPath.includes('.') ? '.' + urlPath.split('.').pop() : '';
-          
-          // Add extension to filename if not already present
-          let fileName = file.file_name;
-          if (extension && !fileName.endsWith(extension)) {
-            fileName = fileName + extension;
-          }
-          
-          if (urlParts.length === 2) {
-            const [bucket, ...pathParts] = urlParts[1].split('/');
-            const filePath = pathParts.join('/');
-            
-            // Download from Supabase Storage
-            const { data, error } = await supabase.storage
-              .from(bucket)
-              .download(filePath);
-            
-            if (error) {
-              console.error(`Error downloading ${fileName}:`, error);
-              continue;
-            }
-            
-            if (data) {
-              zip.file(fileName, data);
-            }
-          } else {
-            // Fallback to direct fetch if URL format is different
-            const response = await fetch(file.file_url);
-            const blob = await response.blob();
-            zip.file(fileName, blob);
-          }
-        } catch (err) {
-          console.error(`Error processing ${file.file_name}:`, err);
-        }
-      }
-
-      // Generate zip file
-      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const urlParts = file.file_url.split('/storage/v1/object/public/');
+      const urlPath = file.file_url.split('/').pop() || '';
+      const extension = urlPath.includes('.') ? '.' + urlPath.split('.').pop() : '';
       
-      // Create download link
-      const url = URL.createObjectURL(zipBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `infraction_${infraction.reference}_documents.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      let fileName = file.file_name;
+      if (extension && !fileName.endsWith(extension)) {
+        fileName = fileName + extension;
+      }
+
+      if (urlParts.length === 2) {
+        const [bucket, ...pathParts] = urlParts[1].split('/');
+        const filePath = pathParts.join('/');
+        
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .download(filePath);
+        
+        if (error) throw error;
+        
+        if (data) {
+          const url = URL.createObjectURL(data);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      } else {
+        const response = await fetch(file.file_url);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
 
       toast({
         title: "Succès",
-        description: "Documents téléchargés avec succès",
+        description: "Document téléchargé avec succès",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Erreur lors du téléchargement des documents",
+        description: "Erreur lors du téléchargement",
       });
     }
   };
@@ -427,15 +399,7 @@ export default function InfractionDetails() {
       {/* Files */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Documents</CardTitle>
-            {files.length > 0 && (
-              <Button onClick={handleDownloadAllFiles} variant="outline" size="sm" className="gap-2">
-                <Download className="w-4 h-4" />
-                Télécharger tout en ZIP
-              </Button>
-            )}
-          </div>
+          <CardTitle>Documents</CardTitle>
         </CardHeader>
         <CardContent>
           {files.length === 0 ? (
@@ -448,15 +412,26 @@ export default function InfractionDetails() {
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(file.uploaded_at), "dd/MM/yyyy HH:mm", { locale: fr })}
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => window.open(file.file_url, "_blank")}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Voir
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => window.open(file.file_url, "_blank")}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Voir
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleDownloadFile(file)}
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2 rotate-90" />
+                      Télécharger
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
