@@ -1,4 +1,4 @@
-import { Bell, LogOut, User } from "lucide-react";
+import { Bell, LogOut, User, Plus, UserPlus, Car, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -34,6 +34,33 @@ export const Header = () => {
           </div>
         </div>
         <div className="flex items-center space-x-1 md:space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-foreground h-8 w-8 md:h-10 md:w-10"
+              >
+                <Plus className="w-4 h-4 md:w-5 md:h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="z-50 bg-card">
+              <DropdownMenuLabel>Création rapide</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/clients")}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Nouveau client
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/vehicules/nouveau")}>
+                <Car className="mr-2 h-4 w-4" />
+                Nouveau véhicule
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/locations/nouveau")}>
+                <FileText className="mr-2 h-4 w-4" />
+                Nouvelle location
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button 
             variant="ghost" 
             size="icon" 
