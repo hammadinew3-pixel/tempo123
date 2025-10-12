@@ -33,6 +33,13 @@ export default function Locations() {
   const [editingContract, setEditingContract] = useState<any>(null);
   const [filterType, setFilterType] = useState<'all' | 'location' | 'assistance'>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState({
+    statut: '',
+    dateDebut: '',
+    dateFin: '',
+    client: '',
+    vehicule: '',
+  });
   const [visibleColumns, setVisibleColumns] = useState({
     type: true,
     numeroContrat: true,
@@ -451,13 +458,16 @@ export default function Locations() {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
 
+  const filteredContracts = contracts.filter(contract => {
+    if (filterType !== 'all' && contract.type_contrat !== filterType) return false;
+    if (filters.statut && contract.statut !== filters.statut) return false;
+    if (filters.dateDebut && contract.date_debut < filters.dateDebut) return false;
+    if (filters.dateFin && contract.date_debut > filters.dateFin) return false;
+    return true;
+  });
+
   const prepareLocationsExport = () => {
-    const filtered = contracts.filter(contract => {
-      if (filterType === 'all') return true;
-      return contract.type_contrat === filterType;
-    });
-    
-    return filtered.map(c => ({
+    return filteredContracts.map(c => ({
       'Type': c.type_contrat === 'location' ? 'Location' : 'Assistance',
       'N° Contrat': c.numero_contrat,
       'Client': c.clients ? `${c.clients.prenom || ''} ${c.clients.nom}`.trim() : '-',
@@ -617,10 +627,61 @@ export default function Locations() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            FILTRER
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="w-4 h-4 mr-2" />
+                FILTRER
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-4">
+                <h4 className="font-medium">Filtres</h4>
+                <div className="space-y-3">
+                  <div>
+                    <Label>Statut</Label>
+                    <Select value={filters.statut} onValueChange={(v) => setFilters({ ...filters, statut: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tous" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">Tous</SelectItem>
+                        <SelectItem value="brouillon">Brouillon</SelectItem>
+                        <SelectItem value="contrat_valide">Contrat validé</SelectItem>
+                        <SelectItem value="livre">En cours</SelectItem>
+                        <SelectItem value="retour_effectue">Retourné</SelectItem>
+                        <SelectItem value="termine">Terminé</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Date début</Label>
+                    <Input
+                      type="date"
+                      value={filters.dateDebut}
+                      onChange={(e) => setFilters({ ...filters, dateDebut: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Date fin</Label>
+                    <Input
+                      type="date"
+                      value={filters.dateFin}
+                      onChange={(e) => setFilters({ ...filters, dateFin: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setFilters({ statut: '', dateDebut: '', dateFin: '', client: '', vehicule: '' })}
+                >
+                  Réinitialiser
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -701,9 +762,9 @@ export default function Locations() {
         </CardHeader>
         <CardContent>{loading ? (
             <p className="text-center text-muted-foreground py-8">Chargement...</p>
-          ) : contracts.length === 0 ? (
+          ) : filteredContracts.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Aucun contrat. Cliquez sur "Nouveau contrat" pour commencer.
+              Aucun contrat trouvé. Ajustez vos filtres ou cliquez sur "Nouveau contrat" pour commencer.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -712,10 +773,7 @@ export default function Locations() {
                   <tr className="text-left text-sm text-muted-foreground border-b">
                     <th className="pb-3 pl-4 font-medium w-12">
                       <Checkbox 
-                        checked={selectedIds.size > 0 && selectedIds.size === contracts.filter(contract => {
-                          if (filterType === 'all') return true;
-                          return contract.type_contrat === filterType;
-                        }).length}
+                        checked={selectedIds.size > 0 && selectedIds.size === filteredContracts.length}
                         onCheckedChange={toggleSelectAll}
                       />
                     </th>
@@ -732,12 +790,7 @@ export default function Locations() {
                   </tr>
                 </thead>
                 <tbody>
-                  {contracts
-                    .filter(contract => {
-                      if (filterType === 'all') return true;
-                      return contract.type_contrat === filterType;
-                    })
-                    .map((contract) => {
+                  {filteredContracts.map((contract) => {
                     const isAssistance = contract.type_contrat === 'assistance';
                     const detailsUrl = isAssistance ? `/assistance/${contract.id}` : `/locations/${contract.id}`;
                     

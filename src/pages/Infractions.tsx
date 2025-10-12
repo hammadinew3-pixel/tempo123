@@ -1,16 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, Eye, Edit, Trash2, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { Plus, Search, Filter, Eye, Edit, Trash2, AlertTriangle, CheckCircle2, Clock, Download, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 import { useRealtime } from "@/hooks/use-realtime";
 import { useUserRole } from "@/hooks/use-user-role";
 
@@ -23,6 +28,15 @@ export default function Infractions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("tous");
   const [filterStatut, setFilterStatut] = useState<string>("tous");
+  const [visibleColumns, setVisibleColumns] = useState({
+    reference: true,
+    date: true,
+    vehicule: true,
+    client: true,
+    type: true,
+    montant: true,
+    statut: true,
+  });
 
   useEffect(() => {
     loadInfractions();
@@ -126,6 +140,40 @@ export default function Infractions() {
     clos: infractions.filter((i) => i.statut_traitement === "clos").length,
   };
 
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
+  };
+
+  const prepareInfractionsExport = () => {
+    return filteredInfractions.map(i => ({
+      'Référence': i.reference,
+      'Date': format(new Date(i.date_infraction), 'dd/MM/yyyy', { locale: fr }),
+      'Véhicule': i.vehicles ? `${i.vehicles.marque} ${i.vehicles.modele} (${i.vehicles.immatriculation})` : '-',
+      'Client': i.clients ? `${i.clients.nom} ${i.clients.prenom}`.trim() : '-',
+      'Type': getTypeLabel(i.type_infraction),
+      'Lieu': i.lieu,
+      'Montant (DH)': i.montant,
+      'Statut': i.statut_traitement === 'nouveau' ? 'Nouveau' : i.statut_traitement === 'transmis' ? 'Transmis' : 'Clos',
+      'Créé le': format(new Date(i.created_at), 'dd/MM/yyyy', { locale: fr })
+    }));
+  };
+
+  const handleExport = (exportFormat: 'excel' | 'csv') => {
+    const data = prepareInfractionsExport();
+    const filename = `infractions_${format(new Date(), 'yyyy-MM-dd')}`;
+    
+    if (exportFormat === 'excel') {
+      exportToExcel(data, filename);
+    } else {
+      exportToCSV(data, filename);
+    }
+    
+    toast({
+      title: 'Export réussi',
+      description: `${filteredInfractions.length} infraction(s) exportée(s) en ${exportFormat.toUpperCase()}`,
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -142,10 +190,57 @@ export default function Infractions() {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Infractions</h1>
           <p className="text-muted-foreground">Gestion des contraventions</p>
         </div>
-        <Button onClick={() => navigate("/infractions/nouveau")} className="gap-2">
-          <Plus className="w-4 h-4" />
-          NOUVELLE INFRACTION
-        </Button>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Columns className="w-4 h-4 mr-2" />
+                COLONNES
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Afficher les colonnes</h4>
+                <div className="space-y-2">
+                  {Object.entries(visibleColumns).map(([key, value]) => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`col-${key}`}
+                        checked={value}
+                        onCheckedChange={() => toggleColumn(key as keyof typeof visibleColumns)}
+                      />
+                      <label htmlFor={`col-${key}`} className="text-sm cursor-pointer capitalize">
+                        {key === 'reference' ? 'Référence' : key === 'date' ? 'Date' : key === 'vehicule' ? 'Véhicule' : key === 'client' ? 'Client' : key === 'type' ? 'Type' : key === 'montant' ? 'Montant' : 'Statut'}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                EXPORTER
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Exporter en CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={() => navigate("/infractions/nouveau")} className="gap-2">
+            <Plus className="w-4 h-4" />
+            NOUVELLE INFRACTION
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

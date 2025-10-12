@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, Download, Eye, Edit, Trash2, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserRole } from "@/hooks/use-user-role";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -23,6 +26,12 @@ export default function Assistance() {
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState({
+    type: '',
+    etat: '',
+    dateDebut: '',
+    dateFin: '',
+  });
   const [visibleColumns, setVisibleColumns] = useState({
     numeroDossier: true,
     assurance: true,
@@ -190,8 +199,16 @@ export default function Assistance() {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
 
+  const filteredAssistances = assistances.filter(a => {
+    if (filters.type && a.type !== filters.type) return false;
+    if (filters.etat && a.etat !== filters.etat) return false;
+    if (filters.dateDebut && a.date_debut < filters.dateDebut) return false;
+    if (filters.dateFin && a.date_debut > filters.dateFin) return false;
+    return true;
+  });
+
   const prepareAssistancesExport = () => {
-    return assistances.map(a => ({
+    return filteredAssistances.map(a => ({
       'N° Dossier': a.num_dossier,
       'Assurance': a.assureur_nom,
       'Type': a.type === 'remplacement' ? 'Véhicule de remplacement' : 'Prolongation',
@@ -223,7 +240,7 @@ export default function Assistance() {
     
     toast({
       title: 'Export réussi',
-      description: `${assistances.length} dossier(s) exporté(s) en ${exportFormat.toUpperCase()}`,
+      description: `${filteredAssistances.length} dossier(s) exporté(s) en ${exportFormat.toUpperCase()}`,
     });
   };
 
@@ -306,10 +323,75 @@ export default function Assistance() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            FILTRER
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Filter className="w-4 h-4 mr-2" />
+                FILTRER
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-4">
+                <h4 className="font-medium">Filtres</h4>
+                <div className="space-y-3">
+                  <div>
+                    <Label>Type</Label>
+                    <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tous" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">Tous</SelectItem>
+                        <SelectItem value="remplacement">Véhicule de remplacement</SelectItem>
+                        <SelectItem value="panne">Panne</SelectItem>
+                        <SelectItem value="accident">Accident</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>État</Label>
+                    <Select value={filters.etat} onValueChange={(v) => setFilters({ ...filters, etat: v })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tous" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value=" ">Tous</SelectItem>
+                        <SelectItem value="ouvert">Ouvert</SelectItem>
+                        <SelectItem value="contrat_valide">Validé</SelectItem>
+                        <SelectItem value="livre">En cours</SelectItem>
+                        <SelectItem value="retour_effectue">Retourné</SelectItem>
+                        <SelectItem value="cloture">Clôturé</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Date début</Label>
+                    <Input
+                      type="date"
+                      value={filters.dateDebut}
+                      onChange={(e) => setFilters({ ...filters, dateDebut: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Date fin</Label>
+                    <Input
+                      type="date"
+                      value={filters.dateFin}
+                      onChange={(e) => setFilters({ ...filters, dateFin: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setFilters({ type: '', etat: '', dateDebut: '', dateFin: '' })}
+                >
+                  Réinitialiser
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -369,9 +451,9 @@ export default function Assistance() {
         <CardContent>
           {loading ? (
             <p className="text-center text-muted-foreground py-8">Chargement...</p>
-          ) : assistances.length === 0 ? (
+          ) : filteredAssistances.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Aucun dossier d'assistance. Cliquez sur "Nouveau dossier" pour commencer.
+              Aucun dossier trouvé. Ajustez vos filtres ou cliquez sur "Nouveau dossier" pour commencer.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -380,7 +462,7 @@ export default function Assistance() {
                   <tr className="text-left text-sm text-muted-foreground border-b">
                     <th className="pb-3 pl-4 font-medium w-12">
                       <Checkbox 
-                        checked={selectedIds.size > 0 && selectedIds.size === assistances.length}
+                        checked={selectedIds.size > 0 && selectedIds.size === filteredAssistances.length}
                         onCheckedChange={toggleSelectAll}
                       />
                     </th>
@@ -395,7 +477,7 @@ export default function Assistance() {
                   </tr>
                 </thead>
                 <tbody>
-                  {assistances.map((assistance) => (
+                  {filteredAssistances.map((assistance) => (
                     <tr 
                       key={assistance.id} 
                       className="border-b last:border-0 cursor-pointer group"
