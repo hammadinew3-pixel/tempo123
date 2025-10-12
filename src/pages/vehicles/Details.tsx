@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, TrendingUp, TrendingDown, Calendar, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Edit, TrendingUp, TrendingDown, Calendar as CalendarIcon, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditInspectionDialog, EditVignetteDialog } from "@/components/vehicles/EditDialogs";
 import { useUserRole } from "@/hooks/use-user-role";
@@ -1234,71 +1236,138 @@ export default function VehiculeDetails() {
                       </CardContent>
                     </Card>
 
-                    {/* Tableau des échéances */}
-                    <div className="space-y-2">
-                      <h3 className="font-semibold">Échéances mensuelles</h3>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead className="text-right">Montant</TableHead>
-                            <TableHead className="text-center">Statut</TableHead>
-                            <TableHead>Date Paiement</TableHead>
-                            <TableHead>Mode</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {echeances
-                            .filter(e => e.traite_id === traites[0].id)
-                            .map((echeance) => {
-                              const today = new Date();
-                              const echeanceDate = new Date(echeance.date_echeance);
-                              const isOverdue = echeanceDate < today && echeance.statut !== 'Payée';
+                    {/* Calendrier des échéances */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">Échéances mensuelles</h3>
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500" />
+                            <span className="text-muted-foreground">Payée</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-orange-500" />
+                            <span className="text-muted-foreground">À payer</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-500" />
+                            <span className="text-muted-foreground">En retard</span>
+                          </div>
+                        </div>
+                      </div>
 
-                              return (
-                                <TableRow key={echeance.id} className={isOverdue ? 'bg-destructive/5' : ''}>
-                                  <TableCell>
-                                    <div className="flex items-center gap-2">
-                                      {getEcheanceIcon(echeance.statut)}
-                                      {format(new Date(echeance.date_echeance), 'dd/MM/yyyy', { locale: fr })}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="text-right font-medium">
-                                    {parseFloat(echeance.montant).toFixed(2)} DH
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    {getEcheanceStatusBadge(echeance.statut)}
-                                  </TableCell>
-                                  <TableCell className="text-sm text-muted-foreground">
-                                    {echeance.date_paiement 
-                                      ? format(new Date(echeance.date_paiement), 'dd/MM/yyyy', { locale: fr })
-                                      : '-'
-                                    }
-                                  </TableCell>
-                                  <TableCell className="text-sm text-muted-foreground">
-                                    {echeance.mode_paiement || '-'}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    {echeance.statut !== 'Payée' && (
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline"
-                                        onClick={() => {
-                                          setSelectedEcheance(echeance);
-                                          setShowPayEcheanceDialog(true);
-                                        }}
-                                      >
-                                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                                        Marquer payée
-                                      </Button>
-                                    )}
-                                  </TableCell>
-                                </TableRow>
+                      <Card>
+                        <CardContent className="p-6">
+                          <Calendar
+                            mode="single"
+                            className={cn("pointer-events-auto")}
+                            modifiers={{
+                              echeance: echeances
+                                .filter(e => e.traite_id === traites[0].id)
+                                .map(e => new Date(e.date_echeance)),
+                              payee: echeances
+                                .filter(e => e.traite_id === traites[0].id && e.statut === 'Payée')
+                                .map(e => new Date(e.date_echeance)),
+                              aPayer: echeances
+                                .filter(e => e.traite_id === traites[0].id && e.statut === 'À payer')
+                                .map(e => new Date(e.date_echeance)),
+                              enRetard: echeances
+                                .filter(e => e.traite_id === traites[0].id && e.statut === 'En retard')
+                                .map(e => new Date(e.date_echeance))
+                            }}
+                            modifiersClassNames={{
+                              payee: "bg-green-500 text-white hover:bg-green-600 font-bold",
+                              aPayer: "bg-orange-500 text-white hover:bg-orange-600 font-bold",
+                              enRetard: "bg-red-500 text-white hover:bg-red-600 font-bold"
+                            }}
+                            onDayClick={(date) => {
+                              const echeance = echeances.find(e => 
+                                e.traite_id === traites[0].id && 
+                                format(new Date(e.date_echeance), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
                               );
-                            })}
-                        </TableBody>
-                      </Table>
+                              if (echeance && echeance.statut !== 'Payée') {
+                                setSelectedEcheance(echeance);
+                                setShowPayEcheanceDialog(true);
+                              } else if (echeance) {
+                                setSelectedEcheance(echeance);
+                              }
+                            }}
+                          />
+                        </CardContent>
+                      </Card>
+
+                      {/* Détails de l'échéance sélectionnée */}
+                      {selectedEcheance && (
+                        <Card>
+                          <CardHeader>
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-base">Détails de l'échéance</CardTitle>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setSelectedEcheance(null)}
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Date d'échéance</p>
+                                <p className="font-medium">
+                                  {format(new Date(selectedEcheance.date_echeance), 'dd MMMM yyyy', { locale: fr })}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Montant</p>
+                                <p className="font-bold text-lg">{parseFloat(selectedEcheance.montant).toFixed(2)} DH</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Statut</p>
+                                {getEcheanceStatusBadge(selectedEcheance.statut)}
+                              </div>
+                              {selectedEcheance.date_paiement && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Date de paiement</p>
+                                  <p className="font-medium">
+                                    {format(new Date(selectedEcheance.date_paiement), 'dd/MM/yyyy', { locale: fr })}
+                                  </p>
+                                </div>
+                              )}
+                              {selectedEcheance.mode_paiement && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Mode de paiement</p>
+                                  <p className="font-medium">{selectedEcheance.mode_paiement}</p>
+                                </div>
+                              )}
+                              {selectedEcheance.ref_paiement && (
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Référence</p>
+                                  <p className="font-medium">{selectedEcheance.ref_paiement}</p>
+                                </div>
+                              )}
+                            </div>
+                            {selectedEcheance.notes && (
+                              <div className="pt-3 border-t">
+                                <p className="text-sm text-muted-foreground mb-1">Notes</p>
+                                <p className="text-sm">{selectedEcheance.notes}</p>
+                              </div>
+                            )}
+                            {selectedEcheance.statut !== 'Payée' && (
+                              <div className="pt-3 border-t">
+                                <Button 
+                                  className="w-full gap-2"
+                                  onClick={() => setShowPayEcheanceDialog(true)}
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                  Marquer comme payée
+                                </Button>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
                   </>
                 ) : (
