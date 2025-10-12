@@ -959,9 +959,6 @@ export default function VehiculeDetails() {
               <TabsTrigger value="vignette" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
                 VIGNETTE
               </TabsTrigger>
-              <TabsTrigger value="traite" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                TRAITE BANCAIRE
-              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="assurance" className="mt-6">
@@ -1189,284 +1186,290 @@ export default function VehiculeDetails() {
                   </div>}
               </div>
             </TabsContent>
-
-            <TabsContent value="traite" className="mt-6">
-              <div className="space-y-4">
-                {traites.length > 0 ? (
-                  <>
-                    {/* Layout en deux colonnes */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Colonne gauche: Les infos d'achat */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Les infos d'achat</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-3">
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Prix d'achat</span>
-                              <span className="font-semibold">{parseFloat(traites[0].montant_total).toFixed(2)} Dh</span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Avance</span>
-                              <span className="font-semibold">{parseFloat(traites[0].avance_paye || 0).toFixed(2)} Dh</span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Durée</span>
-                              <span className="font-semibold">{traites[0].nombre_traites} mois</span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Durée déjà payé</span>
-                              <span className="font-semibold">
-                                {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length} mois
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Concessionaire</span>
-                              <span className="font-semibold">{traites[0].concessionaire || '—'}</span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Organisme de crédit</span>
-                              <span className="font-semibold">{traites[0].organisme}</span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Date du 1ère traite</span>
-                              <span className="font-semibold">
-                                {format(new Date(traites[0].date_debut), 'dd/MM/yyyy', { locale: fr })}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Date d'achat</span>
-                              <span className="font-semibold">
-                                {traites[0].date_achat ? format(new Date(traites[0].date_achat), 'dd/MM/yyyy', { locale: fr }) : '—'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between py-2 border-b">
-                              <span className="text-muted-foreground">Plus d'infos</span>
-                              <span className="font-semibold">{traites[0].notes || '—'}</span>
-                            </div>
-                            <div className="flex justify-between py-2">
-                              <span className="text-muted-foreground">Dernière mise à jour</span>
-                              <span className="font-semibold text-sm">
-                                {format(new Date(traites[0].updated_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                              </span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Colonne droite: L'état des traites bancaires */}
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">L'état des traites bancaires</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <Alert>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription className="text-xs">
-                              Les traites bancaires sont automatiquement ajoutées chaque mois, mais vous pouvez toujours ajouter/supprimer manuellement les traites via la grille interactive ci-dessous.
-                            </AlertDescription>
-                          </Alert>
-
-                          {/* Calendrier annuel */}
-                          <div className="space-y-2">
-                            {(() => {
-                              const firstEcheance = echeances.filter(e => e.traite_id === traites[0].id)[0];
-                              const lastEcheance = echeances.filter(e => e.traite_id === traites[0].id)[echeances.filter(e => e.traite_id === traites[0].id).length - 1];
-                              
-                              if (!firstEcheance || !lastEcheance) return null;
-
-                              const startYear = new Date(firstEcheance.date_echeance).getFullYear();
-                              const endYear = new Date(lastEcheance.date_echeance).getFullYear();
-                              const years = [];
-                              for (let y = startYear; y <= endYear; y++) {
-                                years.push(y);
-                              }
-
-                              const months = ['Janv.', 'Fev.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Aout', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
-                              const today = new Date();
-
-                              return (
-                                <div className="overflow-x-auto">
-                                  <div className="min-w-max">
-                                    {/* En-tête des mois */}
-                                    <div className="grid grid-cols-[60px_repeat(12,50px)] gap-1 mb-1">
-                                      <div></div>
-                                      {months.map((month, idx) => (
-                                        <div key={idx} className="text-center text-xs text-muted-foreground font-medium">
-                                          {month}
-                                        </div>
-                                      ))}
-                                    </div>
-
-                                    {/* Lignes par année */}
-                                    {years.map(year => (
-                                      <div key={year} className="grid grid-cols-[60px_repeat(12,50px)] gap-1 mb-1">
-                                        <div className="text-sm font-medium flex items-center">{year}</div>
-                                        {Array.from({ length: 12 }, (_, monthIdx) => {
-                                          const echeance = echeances.find(e => {
-                                            const d = new Date(e.date_echeance);
-                                            return e.traite_id === traites[0].id && 
-                                                   d.getFullYear() === year && 
-                                                   d.getMonth() === monthIdx;
-                                          });
-
-                                          const echeanceDate = echeance ? new Date(echeance.date_echeance) : null;
-                                          const isPast = echeanceDate && echeanceDate < today;
-                                          
-                                          let bgColor = 'bg-gray-200'; // Mois prépayé (pas encore commencé)
-                                          
-                                          if (echeance) {
-                                            if (echeance.statut === 'Payée') {
-                                              bgColor = 'bg-green-500'; // Mois payé
-                                            } else if (echeance.statut === 'En retard' || (isPast && echeance.statut !== 'Payée')) {
-                                              bgColor = 'bg-red-500'; // Mois non payé
-                                            } else {
-                                              bgColor = 'bg-yellow-400'; // Mois restant
-                                            }
-                                          }
-
-                                          return (
-                                            <div
-                                              key={monthIdx}
-                                              className={`h-10 rounded cursor-pointer transition-opacity hover:opacity-80 ${bgColor}`}
-                                              onClick={() => {
-                                                if (echeance && echeance.statut !== 'Payée') {
-                                                  setSelectedEcheance(echeance);
-                                                  setShowPayEcheanceDialog(true);
-                                                }
-                                              }}
-                                            />
-                                          );
-                                        })}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            })()}
-
-                            {/* Légende */}
-                            <div className="flex items-center justify-center gap-4 text-xs pt-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded bg-green-500" />
-                                <span>Mois payé</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded bg-gray-200" />
-                                <span>Mois prépayé</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded bg-yellow-400" />
-                                <span>Mois restant</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded bg-red-500" />
-                                <span>Mois non payé</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Tableau de résumé */}
-                          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Date du premier traite</span>
-                                <span className="font-medium">
-                                  {format(new Date(traites[0].date_debut), 'dd MMM yyyy', { locale: fr })}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Prix d'achat</span>
-                                <span className="font-medium">{parseFloat(traites[0].montant_total).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Durée/Mois</span>
-                                <span className="font-medium">{traites[0].nombre_traites}</span>
-                              </div>
-                              <div className="flex justify-between text-sm p-2 bg-green-50 rounded">
-                                <span className="font-semibold">Avance payé</span>
-                                <span className="font-bold">{parseFloat(traites[0].avance_paye || 0).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between text-sm p-2 bg-green-50 rounded">
-                                <span className="font-semibold">Montant payé</span>
-                                <span className="font-bold">{getTraiteStats().totalPaye.toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between text-sm p-2 bg-red-50 rounded">
-                                <span className="font-semibold">Montant restant</span>
-                                <span className="font-bold">{getTraiteStats().totalRestant.toFixed(2)}</span>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Date de la dernière traite</span>
-                                <span className="font-medium">
-                                  {(() => {
-                                    const lastEcheance = echeances
-                                      .filter(e => e.traite_id === traites[0].id)
-                                      .sort((a, b) => new Date(b.date_echeance).getTime() - new Date(a.date_echeance).getTime())[0];
-                                    return lastEcheance ? format(new Date(lastEcheance.date_echeance), 'dd MMM yyyy', { locale: fr }) : '—';
-                                  })()}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Avance payé</span>
-                                <span className="font-medium">{parseFloat(traites[0].avance_paye || 0).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Prix/Mois</span>
-                                <span className="font-medium">{parseFloat(traites[0].montant_mensuel).toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Mois payés</span>
-                                <span className="font-medium">
-                                  {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length}
-                                </span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Mois retants</span>
-                                <span className="font-medium">
-                                  {echeances.filter(e => e.traite_id === traites[0].id && e.statut !== 'Payée').length}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="p-4 bg-muted rounded-full">
-                        <Landmark className="w-12 h-12 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium">Aucune traite bancaire</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Ajoutez un plan de financement pour ce véhicule
-                        </p>
-                      </div>
-                      <Button onClick={() => setShowTraiteDialog(true)} className="gap-2">
-                        <Plus className="w-4 h-4" />
-                        Ajouter une traite bancaire
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {traites.length > 0 && (
-                  <div className="flex justify-end">
-                    <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowTraiteDialog(true)}>
-                      <Plus className="w-4 h-4" />
-                      Nouvelle traite
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
           </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Section Traite Bancaire séparée */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Landmark className="w-5 h-5 text-primary" />
+            Les traites & Infos d'achat
+          </CardTitle>
+          {traites.length > 0 && (
+            <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowTraiteDialog(true)}>
+              <Plus className="w-4 h-4" />
+              Nouvelle traite
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {traites.length > 0 ? (
+              <>
+                {/* Layout en deux colonnes */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Colonne gauche: Les infos d'achat */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Les infos d'achat</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Prix d'achat</span>
+                          <span className="font-semibold">{parseFloat(traites[0].montant_total).toFixed(2)} Dh</span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Avance</span>
+                          <span className="font-semibold">{parseFloat(traites[0].avance_paye || 0).toFixed(2)} Dh</span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Durée</span>
+                          <span className="font-semibold">{traites[0].nombre_traites} mois</span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Durée déjà payé</span>
+                          <span className="font-semibold">
+                            {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length} mois
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Concessionaire</span>
+                          <span className="font-semibold">{traites[0].concessionaire || '—'}</span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Organisme de crédit</span>
+                          <span className="font-semibold">{traites[0].organisme}</span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Date du 1ère traite</span>
+                          <span className="font-semibold">
+                            {format(new Date(traites[0].date_debut), 'dd/MM/yyyy', { locale: fr })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Date d'achat</span>
+                          <span className="font-semibold">
+                            {traites[0].date_achat ? format(new Date(traites[0].date_achat), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Plus d'infos</span>
+                          <span className="font-semibold">{traites[0].notes || '—'}</span>
+                        </div>
+                        <div className="flex justify-between py-2">
+                          <span className="text-muted-foreground">Dernière mise à jour</span>
+                          <span className="font-semibold text-sm">
+                            {format(new Date(traites[0].updated_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Colonne droite: L'état des traites bancaires */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">L'état des traites bancaires</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">
+                          Les traites bancaires sont automatiquement ajoutées chaque mois, mais vous pouvez toujours ajouter/supprimer manuellement les traites via la grille interactive ci-dessous.
+                        </AlertDescription>
+                      </Alert>
+
+                      {/* Calendrier annuel */}
+                      <div className="space-y-2">
+                        {(() => {
+                          const firstEcheance = echeances.filter(e => e.traite_id === traites[0].id)[0];
+                          const lastEcheance = echeances.filter(e => e.traite_id === traites[0].id)[echeances.filter(e => e.traite_id === traites[0].id).length - 1];
+                          
+                          if (!firstEcheance || !lastEcheance) return null;
+
+                          const startYear = new Date(firstEcheance.date_echeance).getFullYear();
+                          const endYear = new Date(lastEcheance.date_echeance).getFullYear();
+                          const years = [];
+                          for (let y = startYear; y <= endYear; y++) {
+                            years.push(y);
+                          }
+
+                          const months = ['Janv.', 'Fev.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Aout', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+                          const today = new Date();
+
+                          return (
+                            <div className="overflow-x-auto">
+                              <div className="min-w-max">
+                                {/* En-tête des mois */}
+                                <div className="grid grid-cols-[60px_repeat(12,50px)] gap-1 mb-1">
+                                  <div></div>
+                                  {months.map((month, idx) => (
+                                    <div key={idx} className="text-center text-xs text-muted-foreground font-medium">
+                                      {month}
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Lignes par année */}
+                                {years.map(year => (
+                                  <div key={year} className="grid grid-cols-[60px_repeat(12,50px)] gap-1 mb-1">
+                                    <div className="text-sm font-medium flex items-center">{year}</div>
+                                    {Array.from({ length: 12 }, (_, monthIdx) => {
+                                      const echeance = echeances.find(e => {
+                                        const d = new Date(e.date_echeance);
+                                        return e.traite_id === traites[0].id && 
+                                               d.getFullYear() === year && 
+                                               d.getMonth() === monthIdx;
+                                      });
+
+                                      const echeanceDate = echeance ? new Date(echeance.date_echeance) : null;
+                                      const isPast = echeanceDate && echeanceDate < today;
+                                      
+                                      let bgColor = 'bg-gray-200'; // Mois prépayé (pas encore commencé)
+                                      
+                                      if (echeance) {
+                                        if (echeance.statut === 'Payée') {
+                                          bgColor = 'bg-green-500'; // Mois payé
+                                        } else if (echeance.statut === 'En retard' || (isPast && echeance.statut !== 'Payée')) {
+                                          bgColor = 'bg-red-500'; // Mois non payé
+                                        } else {
+                                          bgColor = 'bg-yellow-400'; // Mois restant
+                                        }
+                                      }
+
+                                      return (
+                                        <div
+                                          key={monthIdx}
+                                          className={`h-10 rounded cursor-pointer transition-opacity hover:opacity-80 ${bgColor}`}
+                                          onClick={() => {
+                                            if (echeance && echeance.statut !== 'Payée') {
+                                              setSelectedEcheance(echeance);
+                                              setShowPayEcheanceDialog(true);
+                                            }
+                                          }}
+                                        />
+                                      );
+                                    })}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Légende */}
+                        <div className="flex items-center justify-center gap-4 text-xs pt-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-green-500" />
+                            <span>Mois payé</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-gray-200" />
+                            <span>Mois prépayé</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-yellow-400" />
+                            <span>Mois restant</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-red-500" />
+                            <span>Mois non payé</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tableau de résumé */}
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Date du premier traite</span>
+                            <span className="font-medium">
+                              {format(new Date(traites[0].date_debut), 'dd MMM yyyy', { locale: fr })}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Prix d'achat</span>
+                            <span className="font-medium">{parseFloat(traites[0].montant_total).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Durée/Mois</span>
+                            <span className="font-medium">{traites[0].nombre_traites}</span>
+                          </div>
+                          <div className="flex justify-between text-sm p-2 bg-green-50 rounded">
+                            <span className="font-semibold">Avance payé</span>
+                            <span className="font-bold">{parseFloat(traites[0].avance_paye || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm p-2 bg-green-50 rounded">
+                            <span className="font-semibold">Montant payé</span>
+                            <span className="font-bold">{getTraiteStats().totalPaye.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm p-2 bg-red-50 rounded">
+                            <span className="font-semibold">Montant restant</span>
+                            <span className="font-bold">{getTraiteStats().totalRestant.toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Date de la dernière traite</span>
+                            <span className="font-medium">
+                              {(() => {
+                                const lastEcheance = echeances
+                                  .filter(e => e.traite_id === traites[0].id)
+                                  .sort((a, b) => new Date(b.date_echeance).getTime() - new Date(a.date_echeance).getTime())[0];
+                                return lastEcheance ? format(new Date(lastEcheance.date_echeance), 'dd MMM yyyy', { locale: fr }) : '—';
+                              })()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Avance payé</span>
+                            <span className="font-medium">{parseFloat(traites[0].avance_paye || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Prix/Mois</span>
+                            <span className="font-medium">{parseFloat(traites[0].montant_mensuel).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Mois payés</span>
+                            <span className="font-medium">
+                              {echeances.filter(e => e.traite_id === traites[0].id && e.statut === 'Payée').length}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Mois retants</span>
+                            <span className="font-medium">
+                              {echeances.filter(e => e.traite_id === traites[0].id && e.statut !== 'Payée').length}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="p-4 bg-muted rounded-full">
+                    <Landmark className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-medium">Aucune traite bancaire</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Ajoutez un plan de financement pour ce véhicule
+                    </p>
+                  </div>
+                  <Button onClick={() => setShowTraiteDialog(true)} className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Ajouter une traite bancaire
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
