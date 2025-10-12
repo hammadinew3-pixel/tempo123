@@ -123,53 +123,14 @@ export default function InfractionDetails() {
 
   const handleDownloadFile = async (file: any) => {
     try {
-      // Si c'est un contrat, générer le PDF via l'edge function
-      if (file.file_type === 'contrat' && infraction.contract_id) {
-        const { data: pdfData, error: pdfError } = await supabase.functions.invoke(
-          'generate-contract-pdf',
-          {
-            body: { contractId: infraction.contract_id },
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (pdfError) {
-          console.error('PDF generation error:', pdfError);
-          throw pdfError;
-        }
-
-        // La réponse doit être un ArrayBuffer ou Blob
-        let pdfBlob;
-        if (pdfData instanceof Blob) {
-          pdfBlob = pdfData;
-        } else if (pdfData instanceof ArrayBuffer) {
-          pdfBlob = new Blob([pdfData], { type: 'application/pdf' });
-        } else if (typeof pdfData === 'string') {
-          // Si c'est une string base64
-          const binaryString = atob(pdfData);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
-          pdfBlob = new Blob([bytes], { type: 'application/pdf' });
-        } else {
-          throw new Error('Format de PDF invalide');
-        }
-
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `contrat_${infraction.contracts?.numero_contrat || 'document'}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
+      // Si c'est un contrat, utiliser directement l'URL du PDF
+      if (file.file_type === 'contrat' && file.file_url) {
+        // Ouvrir dans un nouvel onglet pour permettre l'impression/téléchargement
+        window.open(file.file_url, '_blank');
+        
         toast({
           title: "Succès",
-          description: "Contrat téléchargé avec succès",
+          description: "Contrat ouvert dans un nouvel onglet",
         });
         return;
       }
