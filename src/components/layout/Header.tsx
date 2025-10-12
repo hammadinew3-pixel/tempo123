@@ -47,7 +47,7 @@ export const Header = () => {
             <DropdownMenuContent align="end" className="z-50 bg-card">
               <DropdownMenuLabel>Création rapide</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/clients")}>
+              <DropdownMenuItem onClick={() => navigate("/clients/nouveau")}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Nouveau client
               </DropdownMenuItem>
