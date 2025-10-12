@@ -123,19 +123,6 @@ export default function InfractionDetails() {
 
   const handleDownloadFile = async (file: any) => {
     try {
-      // Si c'est un contrat, utiliser directement l'URL du PDF
-      if (file.file_type === 'contrat' && file.file_url) {
-        // Ouvrir dans un nouvel onglet pour permettre l'impression/téléchargement
-        window.open(file.file_url, '_blank');
-        
-        toast({
-          title: "Succès",
-          description: "Contrat ouvert dans un nouvel onglet",
-        });
-        return;
-      }
-
-      // Pour les autres fichiers (CIN, permis, etc.)
       const urlParts = file.file_url.split('/storage/v1/object/public/');
       const urlPath = file.file_url.split('/').pop() || '';
       const extension = urlPath.includes('.') ? '.' + urlPath.split('.').pop() : '';
