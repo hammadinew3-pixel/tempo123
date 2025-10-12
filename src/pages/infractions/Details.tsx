@@ -138,9 +138,35 @@ export default function InfractionDetails() {
 
       // Download all files and add to zip
       for (const file of files) {
-        const response = await fetch(file.file_url);
-        const blob = await response.blob();
-        zip.file(file.file_name, blob);
+        try {
+          // Extract bucket and path from the file URL
+          const urlParts = file.file_url.split('/storage/v1/object/public/');
+          if (urlParts.length === 2) {
+            const [bucket, ...pathParts] = urlParts[1].split('/');
+            const filePath = pathParts.join('/');
+            
+            // Download from Supabase Storage
+            const { data, error } = await supabase.storage
+              .from(bucket)
+              .download(filePath);
+            
+            if (error) {
+              console.error(`Error downloading ${file.file_name}:`, error);
+              continue;
+            }
+            
+            if (data) {
+              zip.file(file.file_name, data);
+            }
+          } else {
+            // Fallback to direct fetch if URL format is different
+            const response = await fetch(file.file_url);
+            const blob = await response.blob();
+            zip.file(file.file_name, blob);
+          }
+        } catch (err) {
+          console.error(`Error processing ${file.file_name}:`, err);
+        }
       }
 
       // Generate zip file
