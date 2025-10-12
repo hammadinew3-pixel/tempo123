@@ -1261,12 +1261,6 @@ export default function VehiculeDetails() {
             <Landmark className="w-5 h-5 text-primary" />
             Les traites & Infos d'achat
           </CardTitle>
-          {traites.length > 0 && (
-            <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowTraiteDialog(true)}>
-              <Plus className="w-4 h-4" />
-              Nouvelle traite
-            </Button>
-          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
