@@ -12,12 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useRealtime } from "@/hooks/use-realtime";
-import { usePermissions } from "@/hooks/use-permissions";
 
 export default function Infractions() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { hasPermission } = usePermissions();
   const [infractions, setInfractions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -142,12 +140,10 @@ export default function Infractions() {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Infractions</h1>
           <p className="text-muted-foreground">Gestion des contraventions</p>
         </div>
-        {hasPermission('infractions.create') && (
-          <Button onClick={() => navigate("/infractions/nouveau")} className="gap-2">
-            <Plus className="w-4 h-4" />
-            NOUVELLE INFRACTION
-          </Button>
-        )}
+        <Button onClick={() => navigate("/infractions/nouveau")} className="gap-2">
+          <Plus className="w-4 h-4" />
+          NOUVELLE INFRACTION
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -306,24 +302,20 @@ export default function Infractions() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {hasPermission('infractions.update') && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/infractions/${infraction.id}/modifier`)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {hasPermission('infractions.delete') && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(infraction.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/infractions/${infraction.id}/modifier`)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(infraction.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

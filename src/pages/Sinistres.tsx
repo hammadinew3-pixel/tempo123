@@ -16,7 +16,6 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 import { useRealtime } from "@/hooks/use-realtime";
-import { usePermissions } from "@/hooks/use-permissions";
 
 interface Sinistre {
   id: string;
@@ -39,7 +38,6 @@ interface Sinistre {
 
 export default function Sinistres() {
   const navigate = useNavigate();
-  const { hasPermission } = usePermissions();
   const [sinistres, setSinistres] = useState<Sinistre[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -396,12 +394,10 @@ export default function Sinistres() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {hasPermission('sinistres.create') && (
-            <Button size="sm" onClick={() => navigate('/sinistres/nouveau')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau sinistre
-            </Button>
-          )}
+          <Button size="sm" onClick={() => navigate('/sinistres/nouveau')}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nouveau sinistre
+          </Button>
         </div>
       </div>
 
@@ -411,7 +407,7 @@ export default function Sinistres() {
             <p className="text-sm text-muted-foreground">
               {filteredSinistres.length} sinistre(s) trouvé(s)
             </p>
-            {selectedIds.size > 0 && hasPermission('sinistres.delete') && (
+            {selectedIds.size > 0 && (
               <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
                 <Trash2 className="w-4 h-4 mr-2" />
                 Supprimer ({selectedIds.size})
@@ -462,24 +458,20 @@ export default function Sinistres() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          {hasPermission('sinistres.update') && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/sinistres/${sinistre.id}/modifier`)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          )}
-                          {hasPermission('sinistres.delete') && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(sinistre.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/sinistres/${sinistre.id}/modifier`)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(sinistre.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
                         </div>
                       </td>
                       {visibleColumns.reference && (

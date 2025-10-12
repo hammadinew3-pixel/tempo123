@@ -25,11 +25,8 @@ serve(async (req) => {
 
     const { email, password, nom, role } = await req.json();
 
-    console.log('Creating user with email:', email, 'role:', role);
-
     // Validate input
     if (!email || !password || !nom || !role) {
-      console.error('Missing required fields');
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
@@ -47,31 +44,14 @@ serve(async (req) => {
     });
 
     if (authError) {
-      console.error('Auth error:', authError);
       throw authError;
     }
 
     if (!authData.user) {
-      console.error('User creation failed - no user returned');
       throw new Error('User creation failed');
     }
 
-    console.log('User created successfully:', authData.user.id);
-
-    // Wait a bit for the trigger to create the profile
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Delete the auto-assigned role from the trigger (first user gets admin, others get agent)
-    const { error: deleteRoleError } = await supabaseAdmin
-      .from('user_roles')
-      .delete()
-      .eq('user_id', authData.user.id);
-
-    if (deleteRoleError) {
-      console.error('Error deleting auto-assigned role:', deleteRoleError);
-    }
-
-    // Assign the requested role
+    // Assign role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({ 
@@ -80,13 +60,10 @@ serve(async (req) => {
       });
 
     if (roleError) {
-      console.error('Role assignment error:', roleError);
       // Cleanup: delete the created user
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       throw roleError;
     }
-
-    console.log('Role assigned successfully');
 
     return new Response(
       JSON.stringify({ 
@@ -100,7 +77,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in create-user function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),

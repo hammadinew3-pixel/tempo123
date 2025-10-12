@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { usePermissions } from '@/hooks/use-permissions';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -16,7 +15,6 @@ export default function ClientDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { hasPermission } = usePermissions();
   const [client, setClient] = useState<any>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,15 +114,6 @@ export default function ClientDetails() {
   };
 
   const handleDeleteClient = async () => {
-    if (!hasPermission('clients.delete')) {
-      toast({
-        title: 'Accès refusé',
-        description: 'Vous n\'avez pas la permission de supprimer des clients',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     if (contracts.length > 0) {
       toast({
         title: 'Impossible de supprimer',
@@ -563,24 +552,22 @@ export default function ClientDetails() {
       </Collapsible>
 
       {/* Delete Button */}
-      {hasPermission('clients.delete') && (
-        <div className="flex justify-start">
-          <Button
-            variant="destructive"
-            onClick={handleDeleteClient}
-            disabled={contracts.length > 0}
-            className="bg-gray-300 text-gray-500 hover:bg-gray-400 disabled:opacity-50"
-          >
-            SUPPRIMER CE CLIENT
-          </Button>
-          {contracts.length > 0 && (
-            <p className="ml-4 text-sm text-muted-foreground flex items-center gap-2 mt-2">
-              <AlertCircle className="w-4 h-4" />
-              Vous ne pouvez pas supprimer un client s&apos;il a eu des réservations.
-            </p>
-          )}
-        </div>
-      )}
+      <div className="flex justify-start">
+        <Button
+          variant="destructive"
+          onClick={handleDeleteClient}
+          disabled={contracts.length > 0}
+          className="bg-gray-300 text-gray-500 hover:bg-gray-400 disabled:opacity-50"
+        >
+          SUPPRIMER CE CLIENT
+        </Button>
+        {contracts.length > 0 && (
+          <p className="ml-4 text-sm text-muted-foreground flex items-center gap-2 mt-2">
+            <AlertCircle className="w-4 h-4" />
+            Vous ne pouvez pas supprimer un client s&apos;il a eu des réservations.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

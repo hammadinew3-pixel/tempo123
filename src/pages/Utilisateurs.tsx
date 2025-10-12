@@ -13,9 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PermissionsDialog } from "@/components/users/PermissionsDialog";
-import { PermissionsManager } from "@/components/users/PermissionsManager";
 import { UserRole } from "@/hooks/use-user-role";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface UserWithRole {
   id: string;
@@ -237,24 +235,16 @@ export default function Utilisateurs() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Users className="w-8 h-8" />
-          Gestion des utilisateurs
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Gérez les utilisateurs et leurs permissions
-        </p>
-      </div>
-
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList>
-          <TabsTrigger value="users">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions Agent</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="users" className="space-y-6">
-          <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Users className="w-8 h-8" />
+            Gestion des utilisateurs
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gérez les utilisateurs et leurs permissions
+          </p>
+        </div>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -328,7 +318,7 @@ export default function Utilisateurs() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-          </div>
+      </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -459,17 +449,11 @@ export default function Utilisateurs() {
         </CardContent>
       </Card>
 
-        <PermissionsDialog
-          open={permissionsDialogOpen}
-          onOpenChange={setPermissionsDialogOpen}
-          role={selectedUserRole}
-        />
-        </TabsContent>
-
-        <TabsContent value="permissions">
-          <PermissionsManager />
-        </TabsContent>
-      </Tabs>
+      <PermissionsDialog
+        open={permissionsDialogOpen}
+        onOpenChange={setPermissionsDialogOpen}
+        role={selectedUserRole}
+      />
     </div>
   );
 }

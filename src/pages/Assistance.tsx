@@ -354,7 +354,7 @@ export default function Assistance() {
                 CLÔTURÉS ({assistances.filter(a => a.etat === 'cloture').length})
               </button>
             </div>
-            {selectedIds.size > 0 && hasPermission('assistance.delete') && (
+            {selectedIds.size > 0 && (
               <Button 
                 variant="destructive" 
                 size="sm"

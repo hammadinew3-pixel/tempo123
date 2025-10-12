@@ -5,8 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Layout } from "./components/layout/Layout";
-import { usePermissions } from "./hooks/use-permissions";
-import { useUserRole } from "./hooks/use-user-role";
 import Dashboard from "./pages/Dashboard";
 import Locations from "./pages/Locations";
 import NouveauLocation from "./pages/locations/Nouveau";
@@ -15,7 +13,6 @@ import Vehicules from "./pages/Vehicules";
 import VehiculeDetails from "./pages/vehicles/Details";
 import NouveauVehicule from "./pages/vehicles/Nouveau";
 import ModifierVehicule from "./pages/vehicles/Modifier";
-import ModifierVehiculeSimple from "./pages/vehicles/ModifierSimple";
 import WorkflowWrapper from "./pages/vehicles/WorkflowWrapper";
 import Clients from "./pages/Clients";
 import ClientDetails from "./pages/clients/Details";
@@ -51,11 +48,10 @@ import AssistanceFactureTemplate from "./pages/AssistanceFactureTemplate";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, requiredPermission }: { children: React.ReactNode; requiredPermission?: string }) {
-  const { user, loading: authLoading } = useAuth();
-  const { hasPermission, loading: permLoading } = usePermissions();
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
 
-  if (authLoading || permLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-muted-foreground">Chargement...</p>
@@ -65,33 +61,6 @@ function ProtectedRoute({ children, requiredPermission }: { children: React.Reac
 
   if (!user) {
     return <Navigate to="/auth" replace />;
-  }
-
-  if (requiredPermission && !hasPermission(requiredPermission as any)) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
-}
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
-
-  if (authLoading || roleLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Chargement...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -109,7 +78,7 @@ const App = () => (
             <Route
               path="/"
               element={
-                <ProtectedRoute requiredPermission="dashboard.view">
+                <ProtectedRoute>
                   <Layout><Dashboard /></Layout>
                 </ProtectedRoute>
               }
@@ -125,7 +94,7 @@ const App = () => (
             <Route
               path="/locations"
               element={
-                <ProtectedRoute requiredPermission="contracts.view">
+                <ProtectedRoute>
                   <Layout><Locations /></Layout>
                 </ProtectedRoute>
               }
@@ -133,7 +102,7 @@ const App = () => (
             <Route
               path="/locations/nouveau"
               element={
-                <ProtectedRoute requiredPermission="contracts.create">
+                <ProtectedRoute>
                   <Layout><NouveauLocation /></Layout>
                 </ProtectedRoute>
               }
@@ -141,7 +110,7 @@ const App = () => (
             <Route
               path="/locations/:id"
               element={
-                <ProtectedRoute requiredPermission="contracts.view">
+                <ProtectedRoute>
                   <Layout><LocationDetails /></Layout>
                 </ProtectedRoute>
               }
@@ -149,7 +118,7 @@ const App = () => (
             <Route
               path="/vehicules"
               element={
-                <ProtectedRoute requiredPermission="vehicles.view">
+                <ProtectedRoute>
                   <Layout><Vehicules /></Layout>
                 </ProtectedRoute>
               }
@@ -157,7 +126,7 @@ const App = () => (
             <Route
               path="/vehicules/nouveau"
               element={
-                <ProtectedRoute requiredPermission="vehicles.create">
+                <ProtectedRoute>
                   <Layout><NouveauVehicule /></Layout>
                 </ProtectedRoute>
               }
@@ -165,7 +134,7 @@ const App = () => (
             <Route
               path="/vehicules/:id/workflow"
               element={
-                <ProtectedRoute requiredPermission="vehicles.create">
+                <ProtectedRoute>
                   <Layout><WorkflowWrapper /></Layout>
                 </ProtectedRoute>
               }
@@ -173,23 +142,15 @@ const App = () => (
             <Route
               path="/vehicules/:id/modifier"
               element={
-                <AdminRoute>
+                <ProtectedRoute>
                   <Layout><ModifierVehicule /></Layout>
-                </AdminRoute>
-              }
-            />
-            <Route
-              path="/vehicules/:id/modifier-simple"
-              element={
-                <ProtectedRoute requiredPermission="vehicles.update_km">
-                  <Layout><ModifierVehiculeSimple /></Layout>
                 </ProtectedRoute>
               }
             />
             <Route
               path="/vehicules/:id"
               element={
-                <ProtectedRoute requiredPermission="vehicles.view">
+                <ProtectedRoute>
                   <Layout><VehiculeDetails /></Layout>
                 </ProtectedRoute>
               }
@@ -197,7 +158,7 @@ const App = () => (
             <Route
               path="/clients"
               element={
-                <ProtectedRoute requiredPermission="clients.view">
+                <ProtectedRoute>
                   <Layout><Clients /></Layout>
                 </ProtectedRoute>
               }
@@ -205,7 +166,7 @@ const App = () => (
             <Route
               path="/clients/:id"
               element={
-                <ProtectedRoute requiredPermission="clients.view">
+                <ProtectedRoute>
                   <Layout><ClientDetails /></Layout>
                 </ProtectedRoute>
               }
@@ -213,7 +174,7 @@ const App = () => (
             <Route
               path="/assistance"
               element={
-                <ProtectedRoute requiredPermission="assistance.view">
+                <ProtectedRoute>
                   <Layout><Assistance /></Layout>
                 </ProtectedRoute>
               }
@@ -221,7 +182,7 @@ const App = () => (
             <Route
               path="/assistance/nouveau"
               element={
-                <ProtectedRoute requiredPermission="assistance.create">
+                <ProtectedRoute>
                   <Layout><NouveauAssistance /></Layout>
                 </ProtectedRoute>
               }
@@ -229,7 +190,7 @@ const App = () => (
             <Route
               path="/assistance/:id"
               element={
-                <ProtectedRoute requiredPermission="assistance.view">
+                <ProtectedRoute>
                   <Layout><AssistanceDetails /></Layout>
                 </ProtectedRoute>
               }
@@ -237,7 +198,7 @@ const App = () => (
             <Route
               path="/assurances"
               element={
-                <ProtectedRoute requiredPermission="assistance.view">
+                <ProtectedRoute>
                   <Layout><Assurances /></Layout>
                 </ProtectedRoute>
               }
@@ -245,7 +206,7 @@ const App = () => (
             <Route
               path="/factures"
               element={
-                <ProtectedRoute requiredPermission="assistance.view">
+                <ProtectedRoute>
                   <Layout><Factures /></Layout>
                 </ProtectedRoute>
               }
@@ -269,7 +230,7 @@ const App = () => (
             <Route
               path="/charges"
               element={
-                <ProtectedRoute requiredPermission="expenses.view">
+                <ProtectedRoute>
                   <Layout><Charges /></Layout>
                 </ProtectedRoute>
               }
@@ -277,7 +238,7 @@ const App = () => (
             <Route
               path="/cheques"
               element={
-                <ProtectedRoute requiredPermission="expenses.view">
+                <ProtectedRoute>
                   <Layout><Cheques /></Layout>
                 </ProtectedRoute>
               }
@@ -309,7 +270,7 @@ const App = () => (
             <Route
               path="/sinistres"
               element={
-                <ProtectedRoute requiredPermission="sinistres.view">
+                <ProtectedRoute>
                   <Layout><Sinistres /></Layout>
                 </ProtectedRoute>
               }
@@ -317,7 +278,7 @@ const App = () => (
             <Route
               path="/sinistres/nouveau"
               element={
-                <ProtectedRoute requiredPermission="sinistres.create">
+                <ProtectedRoute>
                   <Layout><NouveauSinistre /></Layout>
                 </ProtectedRoute>
               }
@@ -325,7 +286,7 @@ const App = () => (
             <Route
               path="/sinistres/:id"
               element={
-                <ProtectedRoute requiredPermission="sinistres.view">
+                <ProtectedRoute>
                   <Layout><SinistreDetails /></Layout>
                 </ProtectedRoute>
               }
@@ -333,7 +294,7 @@ const App = () => (
             <Route
               path="/sinistres/:id/modifier"
               element={
-                <ProtectedRoute requiredPermission="sinistres.update">
+                <ProtectedRoute>
                   <Layout><ModifierSinistre /></Layout>
                 </ProtectedRoute>
               }
@@ -341,7 +302,7 @@ const App = () => (
             <Route
               path="/infractions"
               element={
-                <ProtectedRoute requiredPermission="infractions.view">
+                <ProtectedRoute>
                   <Layout><Infractions /></Layout>
                 </ProtectedRoute>
               }
@@ -349,7 +310,7 @@ const App = () => (
             <Route
               path="/infractions/nouveau"
               element={
-                <ProtectedRoute requiredPermission="infractions.create">
+                <ProtectedRoute>
                   <Layout><NouvelleInfraction /></Layout>
                 </ProtectedRoute>
               }
@@ -357,7 +318,7 @@ const App = () => (
             <Route
               path="/infractions/:id"
               element={
-                <ProtectedRoute requiredPermission="infractions.view">
+                <ProtectedRoute>
                   <Layout><InfractionDetails /></Layout>
                 </ProtectedRoute>
               }
@@ -365,7 +326,7 @@ const App = () => (
             <Route
               path="/infractions/:id/modifier"
               element={
-                <ProtectedRoute requiredPermission="infractions.update">
+                <ProtectedRoute>
                   <Layout><ModifierInfraction /></Layout>
                 </ProtectedRoute>
               }
@@ -373,17 +334,17 @@ const App = () => (
             <Route
               path="/utilisateurs"
               element={
-                <AdminRoute>
+                <ProtectedRoute>
                   <Layout><Utilisateurs /></Layout>
-                </AdminRoute>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/parametres"
               element={
-                <AdminRoute>
+                <ProtectedRoute>
                   <Layout><Parametres /></Layout>
-                </AdminRoute>
+                </ProtectedRoute>
               }
             />
             <Route

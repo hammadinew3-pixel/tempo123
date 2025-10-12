@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
@@ -29,7 +28,6 @@ export default function VehiculeDetails() {
   const {
     toast
   } = useToast();
-  const { hasPermission, isAdmin } = usePermissions();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [assistances, setAssistances] = useState<any[]>([]);
@@ -166,17 +164,6 @@ export default function VehiculeDetails() {
   };
   const handleDeleteVehicle = async () => {
     if (!vehicle) return;
-
-    if (!hasPermission('vehicles.delete')) {
-      toast({
-        title: 'Accès refusé',
-        description: 'Vous n\'avez pas la permission de supprimer des véhicules',
-        variant: 'destructive',
-      });
-      setShowDeleteDialog(false);
-      return;
-    }
-
     setDeleting(true);
     try {
       // Check if vehicle has active contracts or assistances
@@ -424,27 +411,14 @@ export default function VehiculeDetails() {
           Fiche véhicule Mat. N° {vehicle.immatriculation}
         </h1>
         <div className="flex flex-col sm:flex-row gap-2">
-          {(isAdmin || hasPermission('vehicles.update_km') || hasPermission('vehicles.update_status')) && (
-            <Button 
-              onClick={() => {
-                if (isAdmin) {
-                  navigate(`/vehicules/${id}/modifier`);
-                } else {
-                  navigate(`/vehicules/${id}/modifier-simple`);
-                }
-              }} 
-              className="bg-info hover:bg-info/90 text-white gap-2"
-            >
-              <Edit className="w-4 h-4" />
-              {isAdmin ? 'MODIFIER LE VÉHICULE' : 'MODIFIER KM/STATUT'}
-            </Button>
-          )}
-          {hasPermission('vehicles.delete') && (
-            <Button onClick={() => setShowDeleteDialog(true)} variant="destructive" className="gap-2">
-              <AlertCircle className="w-4 h-4" />
-              SUPPRIMER LE VÉHICULE
-            </Button>
-          )}
+          <Button onClick={() => navigate(`/vehicules/${id}/modifier`)} className="bg-info hover:bg-info/90 text-white gap-2">
+            <Edit className="w-4 h-4" />
+            MODIFIER LE VÉHICULE
+          </Button>
+          <Button onClick={() => setShowDeleteDialog(true)} variant="destructive" className="gap-2">
+            <AlertCircle className="w-4 h-4" />
+            SUPPRIMER LE VÉHICULE
+          </Button>
         </div>
       </div>
 

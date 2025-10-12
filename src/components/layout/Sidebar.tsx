@@ -40,7 +40,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useUserRole } from "@/hooks/use-user-role";
-import { usePermissions } from "@/hooks/use-permissions";
 
 interface NavItem {
   title: string;
@@ -119,7 +118,6 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const location = useLocation();
   const { state } = useSidebar();
   const { isAdmin } = useUserRole();
-  const { hasPermission } = usePermissions();
   const collapsed = state === "collapsed";
   
   // Track which groups are open
@@ -156,63 +154,6 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const getNavCls = (isActive: boolean) =>
     isActive ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium" : "hover:bg-sidebar-accent";
 
-  const shouldShowNavItem = (item: NavItem): boolean => {
-    // Dashboard
-    if (item.href === "/") return hasPermission('dashboard.view');
-    
-    // Locations
-    if (item.title === "Locations") return hasPermission('contracts.view');
-    
-    // Assistance
-    if (item.title === "Assistance") return hasPermission('assistance.view');
-    
-    // Véhicules
-    if (item.title === "Véhicules") return hasPermission('vehicles.view');
-    
-    // Clients
-    if (item.title === "Clients") return hasPermission('clients.view');
-    
-    // Sinistres
-    if (item.href === "/sinistres") return hasPermission('sinistres.view');
-    
-    // Infractions
-    if (item.title === "Infractions") return hasPermission('infractions.view');
-    
-    // Finances/Comptabilité
-    if (item.href === "/cheques" || item.href === "/revenus" || item.href === "/charges") {
-      return hasPermission('expenses.view');
-    }
-    
-    // Autres (calendrier, statistiques, rapports, historique)
-    return true;
-  };
-
-  const shouldShowSubItem = (subItem: { title: string; href?: string; action?: string }): boolean => {
-    // Locations
-    if (subItem.href === "/locations") return hasPermission('contracts.view');
-    if (subItem.href === "/locations/nouveau") return hasPermission('contracts.create');
-    
-    // Assistance
-    if (subItem.href === "/assistance") return hasPermission('assistance.view');
-    if (subItem.href === "/assistance/nouveau") return hasPermission('assistance.create');
-    if (subItem.href === "/assurances") return hasPermission('assistance.view');
-    if (subItem.href === "/factures") return hasPermission('assistance.view');
-    
-    // Véhicules
-    if (subItem.href === "/vehicules") return hasPermission('vehicles.view');
-    if (subItem.href === "/vehicules/nouveau") return hasPermission('vehicles.create');
-    
-    // Clients
-    if (subItem.href === "/clients") return hasPermission('clients.view');
-    if (subItem.action === "open-client-dialog") return hasPermission('clients.create');
-    
-    // Infractions
-    if (subItem.href === "/infractions") return hasPermission('infractions.view');
-    if (subItem.href === "/infractions/nouveau") return hasPermission('infractions.create');
-    
-    return true;
-  };
-
   return (
     <SidebarUI collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent>
@@ -221,7 +162,7 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.filter(shouldShowNavItem).map((item) => {
+              {mainNavItems.map((item) => {
                 const groupKey = item.title.toLowerCase();
                 const hasSubmenu = !!item.submenu;
                 const groupActive = isGroupActive(item.submenu);
@@ -251,7 +192,7 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
-                            {item.submenu?.filter(shouldShowSubItem).map((subItem) => (
+                            {item.submenu?.map((subItem) => (
                               <SidebarMenuSubItem key={subItem.href || subItem.action}>
                                 <SidebarMenuSubButton
                                   asChild={!!subItem.href}
