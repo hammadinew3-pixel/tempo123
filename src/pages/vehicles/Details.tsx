@@ -342,6 +342,7 @@ export default function VehiculeDetails() {
         return;
       }
 
+      // Insert traite
       const { error } = await supabase.from('vehicules_traite').insert({
         vehicle_id: vehicle.id,
         organisme: traiteForm.organisme,
@@ -358,9 +359,17 @@ export default function VehiculeDetails() {
 
       if (error) throw error;
 
+      // Update vehicle valeur_achat with montant_total
+      const { error: updateError } = await supabase
+        .from('vehicles')
+        .update({ valeur_achat: montantTotal })
+        .eq('id', vehicle.id);
+
+      if (updateError) throw updateError;
+
       toast({
         title: "Succès",
-        description: "Traite bancaire ajoutée avec succès"
+        description: "Traite bancaire ajoutée avec succès. Le prix d'achat du véhicule a été mis à jour."
       });
 
       setShowTraiteDialog(false);
