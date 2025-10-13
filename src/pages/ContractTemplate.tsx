@@ -94,6 +94,8 @@ export default function ContractTemplate() {
   const vehicle = contract.vehicles;
   const secondaryDriver = secondaryDrivers[0];
 
+  console.log('🚀 RENDER - Showing CGV?', agenceSettings?.inclure_cgv, 'Has text?', !!agenceSettings?.cgv_texte);
+
   return (
     <>
       <style>{`
