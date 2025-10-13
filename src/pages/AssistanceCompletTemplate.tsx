@@ -142,14 +142,13 @@ export default function AssistanceCompletTemplate() {
       {data.ordre_mission_url && (
         <div className="page-break">
           <h2 className="text-center text-2xl font-bold mb-6">ORDRE DE MISSION</h2>
-          <div className="border-2 border-gray-300 p-4 rounded">
-            <p className="text-center mb-4">Document disponible à l'adresse suivante:</p>
-            <a href={data.ordre_mission_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all block text-center">
-              {data.ordre_mission_url}
-            </a>
-            <p className="text-xs text-gray-500 mt-4 text-center">
-              Note: Veuillez ouvrir le lien ci-dessus pour consulter l'ordre de mission complet
-            </p>
+          <div className="flex justify-center">
+            <img 
+              src={data.ordre_mission_url} 
+              alt="Ordre de mission" 
+              className="max-w-full h-auto"
+              style={{ maxHeight: '90vh' }}
+            />
           </div>
         </div>
       )}
@@ -158,16 +157,17 @@ export default function AssistanceCompletTemplate() {
       {data.clients?.cin_url && (
         <div className="page-break">
           <h2 className="text-center text-2xl font-bold mb-6">COPIE CIN DU CLIENT</h2>
-          <div className="border-2 border-gray-300 p-4 rounded">
+          <div className="mb-4">
             <p className="mb-2"><strong>Client:</strong> {clientName}</p>
             <p className="mb-4"><strong>N° CIN:</strong> {data.clients?.cin || ''}</p>
-            <p className="text-center mb-4">Document disponible à l'adresse suivante:</p>
-            <a href={data.clients.cin_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all block text-center">
-              {data.clients.cin_url}
-            </a>
-            <p className="text-xs text-gray-500 mt-4 text-center">
-              Note: Veuillez ouvrir le lien ci-dessus pour consulter la CIN
-            </p>
+          </div>
+          <div className="flex justify-center">
+            <img 
+              src={data.clients.cin_url} 
+              alt="CIN du client" 
+              className="max-w-full h-auto"
+              style={{ maxHeight: '85vh' }}
+            />
           </div>
         </div>
       )}
