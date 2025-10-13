@@ -271,8 +271,8 @@ export default function NouveauLocation() {
     try {
       let ordreMissionUrl = null;
 
-      // Upload ordre de mission file if exists
-      if (ordreMissionFile) {
+      // Upload ordre de mission file if exists (only for assistance)
+      if (contractType === "assistance" && ordreMissionFile) {
         const fileExt = ordreMissionFile.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `ordre-mission/${fileName}`;
@@ -310,7 +310,6 @@ export default function NouveauLocation() {
             start_location: formData.start_location || null,
             end_location: formData.end_location || null,
             notes: formData.notes || null,
-            ordre_mission_url: ordreMissionUrl,
           },
         ]);
 
@@ -897,46 +896,48 @@ export default function NouveauLocation() {
           </div>
         </div>
 
-        {/* Ordre de mission */}
-        <div className="space-y-2">
-          <Label htmlFor="ordre_mission">Ordre de mission (Fichier)</Label>
+        {/* Ordre de mission - Only for assistance contracts */}
+        {contractType === "assistance" && (
           <div className="space-y-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-              className="hidden"
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-            />
-            {ordreMissionPreview ? (
-              <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
-                <span className="text-sm flex-1 truncate">{ordreMissionPreview}</span>
+            <Label htmlFor="ordre_mission">Ordre de mission (Fichier)</Label>
+            <div className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileChange}
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              />
+              {ordreMissionPreview ? (
+                <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                  <span className="text-sm flex-1 truncate">{ordreMissionPreview}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={removeFile}
+                    className="h-6 w-6"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={removeFile}
-                  className="h-6 w-6"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full"
                 >
-                  <X className="h-4 w-4" />
+                  <Upload className="h-4 w-4 mr-2" />
+                  Télécharger le fichier
                 </Button>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Télécharger le fichier
-              </Button>
-            )}
-            <p className="text-xs text-muted-foreground">
-              PDF, JPG, PNG, DOC, DOCX (facultatif)
-            </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                PDF, JPG, PNG, DOC, DOCX (facultatif)
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Summary Section */}
         <div className="border-2 border-dashed border-border rounded-lg p-6 bg-muted/30">
