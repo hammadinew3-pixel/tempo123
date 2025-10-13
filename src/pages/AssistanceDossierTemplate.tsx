@@ -136,10 +136,22 @@ export default function AssistanceDossierTemplate() {
               <td className="py-2 font-semibold">Statut :</td>
               <td className="py-2">{getStatusLabel(assistance.etat)}</td>
             </tr>
-            {assistance.ordre_mission && (
+            {(assistance.ordre_mission || assistance.ordre_mission_url) && (
               <tr className="border-b">
                 <td className="py-2 font-semibold">Ordre de mission :</td>
-                <td className="py-2">{assistance.ordre_mission}</td>
+                <td className="py-2">
+                  {assistance.ordre_mission}
+                  {assistance.ordre_mission_url && (
+                    <a 
+                      href={assistance.ordre_mission_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="ml-2 text-blue-600 hover:underline"
+                    >
+                      Voir le document
+                    </a>
+                  )}
+                </td>
               </tr>
             )}
             <tr className="border-b">

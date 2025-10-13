@@ -131,6 +131,7 @@ export type Database = {
           niveau_carburant_retour: string | null
           num_dossier: string
           ordre_mission: string | null
+          ordre_mission_url: string | null
           prolongations: Json | null
           remarques: string | null
           tarif_journalier: number | null
@@ -164,6 +165,7 @@ export type Database = {
           niveau_carburant_retour?: string | null
           num_dossier: string
           ordre_mission?: string | null
+          ordre_mission_url?: string | null
           prolongations?: Json | null
           remarques?: string | null
           tarif_journalier?: number | null
@@ -197,6 +199,7 @@ export type Database = {
           niveau_carburant_retour?: string | null
           num_dossier?: string
           ordre_mission?: string | null
+          ordre_mission_url?: string | null
           prolongations?: Json | null
           remarques?: string | null
           tarif_journalier?: number | null
