@@ -54,6 +54,12 @@ export default function ContractTemplate() {
       setVehicleChanges(changesRes.data || []);
       setSecondaryDrivers(driversRes.data || []);
       setAgenceSettings(settingsRes.data);
+      
+      console.log('CGV Settings:', {
+        inclure_cgv: settingsRes.data?.inclure_cgv,
+        cgv_texte: settingsRes.data?.cgv_texte,
+        has_cgv_texte: !!settingsRes.data?.cgv_texte
+      });
     } catch (error) {
       console.error('Error loading contract:', error);
     } finally {
