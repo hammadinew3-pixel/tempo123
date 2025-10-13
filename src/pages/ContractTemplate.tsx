@@ -55,11 +55,10 @@ export default function ContractTemplate() {
       setSecondaryDrivers(driversRes.data || []);
       setAgenceSettings(settingsRes.data);
       
-      console.log('CGV Settings:', {
-        inclure_cgv: settingsRes.data?.inclure_cgv,
-        cgv_texte: settingsRes.data?.cgv_texte,
-        has_cgv_texte: !!settingsRes.data?.cgv_texte
-      });
+      console.log('🔍 CONTRACT TEMPLATE - Agence Settings:', settingsRes.data);
+      console.log('🔍 CGV inclure_cgv:', settingsRes.data?.inclure_cgv);
+      console.log('🔍 CGV texte présent:', !!settingsRes.data?.cgv_texte);
+      console.log('🔍 CGV texte length:', settingsRes.data?.cgv_texte?.length);
     } catch (error) {
       console.error('Error loading contract:', error);
     } finally {
@@ -310,15 +309,18 @@ export default function ContractTemplate() {
     </div>
 
       {/* CGV Page - Outside main contract div for proper page break */}
-      {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
-        <div className="page-break p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto">
-          <div className="text-center mb-6">
-            <h2 className="text-[16pt] font-bold">CONDITIONS GÉNÉRALES DE VENTE</h2>
+      {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte ? (
+        <div className="page-break p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto min-h-screen">
+          <div className="text-center mb-6 pt-8">
+            <h2 className="text-[16pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE VENTE</h2>
           </div>
-          <div className="text-[10pt] leading-relaxed whitespace-pre-wrap">
+          <div className="text-[10pt] leading-relaxed whitespace-pre-wrap text-justify">
             {agenceSettings.cgv_texte}
           </div>
         </div>
+      ) : (
+        console.log('❌ CGV NOT DISPLAYED - inclure_cgv:', agenceSettings?.inclure_cgv, 'has_cgv_texte:', !!agenceSettings?.cgv_texte),
+        null
       )}
     </>
   );
