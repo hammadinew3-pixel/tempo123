@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ChevronRight, ChevronDown, ChevronUp, Upload, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ export default function ModifierVehicule() {
     immatriculation: '',
     annee: new Date().getFullYear(),
     categorie: 'A' as VehicleCategory,
+    categories: [] as VehicleCategory[],
     kilometrage: 0,
     tarif_journalier: 0,
     valeur_achat: 0,
@@ -87,6 +89,7 @@ export default function ModifierVehicule() {
         immatriculation: data.immatriculation || '',
         annee: data.annee || new Date().getFullYear(),
         categorie: data.categorie || 'A',
+        categories: (data.categories || []) as VehicleCategory[],
         kilometrage: data.kilometrage || 0,
         tarif_journalier: data.tarif_journalier || 0,
         valeur_achat: data.valeur_achat || 0,
@@ -165,6 +168,7 @@ export default function ModifierVehicule() {
         immatriculation: formData.immatriculation,
         annee: formData.annee,
         categorie: formData.categorie,
+        categories: formData.categories,
         kilometrage: formData.kilometrage,
         tarif_journalier: formData.tarif_journalier,
         valeur_achat: formData.valeur_achat,
@@ -284,24 +288,43 @@ export default function ModifierVehicule() {
               </Select>
             </div>
 
-            {/* Catégorie */}
-            <div>
-              <Label htmlFor="categorie">Catégorie *</Label>
-              <Select value={formData.categorie} onValueChange={value => setFormData({
-              ...formData,
-              categorie: value as VehicleCategory
-            })} disabled={isAgent}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">A - Citadine</SelectItem>
-                  <SelectItem value="B">B - Economique</SelectItem>
-                  <SelectItem value="C">C - Compacte</SelectItem>
-                  <SelectItem value="D">D - Berline</SelectItem>
-                  <SelectItem value="E">E - SUV/Luxe</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Catégories (Assistance) */}
+            <div className="md:col-span-2">
+              <Label className="mb-3 block">Catégories (Assistance)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {(['A', 'B', 'C', 'D', 'E'] as VehicleCategory[]).map((cat) => (
+                  <div key={cat} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`cat-${cat}`}
+                      checked={formData.categories.includes(cat)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData({
+                            ...formData,
+                            categories: [...formData.categories, cat]
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            categories: formData.categories.filter((c) => c !== cat)
+                          });
+                        }
+                      }}
+                      disabled={isAgent}
+                    />
+                    <Label htmlFor={`cat-${cat}`} className="cursor-pointer font-normal">
+                      {cat === 'A' && 'A - Citadine'}
+                      {cat === 'B' && 'B - Economique'}
+                      {cat === 'C' && 'C - Compacte'}
+                      {cat === 'D' && 'D - Berline'}
+                      {cat === 'E' && 'E - SUV/Luxe'}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Sélectionnez toutes les catégories applicables pour les contrats d'assistance
+              </p>
             </div>
 
             {/* Matricule */}
