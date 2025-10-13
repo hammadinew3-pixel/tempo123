@@ -307,10 +307,11 @@ export default function ContractTemplate() {
           {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
         </div>
       )}
+    </div>
 
-      {/* CGV Page */}
+      {/* CGV Page - Outside main contract div for proper page break */}
       {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
-        <div className="page-break">
+        <div className="page-break p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto">
           <div className="text-center mb-6">
             <h2 className="text-[16pt] font-bold">CONDITIONS GÉNÉRALES DE VENTE</h2>
           </div>
@@ -319,7 +320,6 @@ export default function ContractTemplate() {
           </div>
         </div>
       )}
-    </div>
     </>
   );
 }
