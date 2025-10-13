@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, FileText, Download, Edit, DollarSign, Car, User, Calendar, MapPin, Key, AlertCircle, Check, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Download, Edit, DollarSign, Car, User, Calendar, MapPin, Key, AlertCircle, Check, CheckCircle2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,10 @@ export default function AssistanceDetails() {
   const [showEditDeliveryDialog, setShowEditDeliveryDialog] = useState(false);
   const [showEditReturnDialog, setShowEditReturnDialog] = useState(false);
   const [showProlongationDialog, setShowProlongationDialog] = useState(false);
+  const [ordreMissionFile, setOrdreMissionFile] = useState<File | null>(null);
+  const [ordreMissionPreview, setOrdreMissionPreview] = useState<string | null>(null);
+  const [uploadingOrdreMission, setUploadingOrdreMission] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [franchiseData, setFranchiseData] = useState({
     franchise_montant: '',
@@ -784,6 +788,83 @@ export default function AssistanceDetails() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setOrdreMissionFile(file);
+      setOrdreMissionPreview(file.name);
+    }
+  };
+
+  const removeFile = () => {
+    setOrdreMissionFile(null);
+    setOrdreMissionPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadOrdreMission = async () => {
+    if (!ordreMissionFile) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez sélectionner un fichier",
+      });
+      return;
+    }
+
+    setUploadingOrdreMission(true);
+    try {
+      const fileExt = ordreMissionFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `ordre-mission/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('client-documents')
+        .upload(filePath, ordreMissionFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('client-documents')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('assistance')
+        .update({ ordre_mission_url: urlData.publicUrl })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Succès",
+        description: "Ordre de mission uploadé avec succès",
+      });
+
+      setOrdreMissionFile(null);
+      setOrdreMissionPreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      loadAssistance();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message,
+      });
+    } finally {
+      setUploadingOrdreMission(false);
+    }
+  };
+
+  const handleDownloadOrdreMission = () => {
+    if (assistance?.ordre_mission_url) {
+      window.open(assistance.ordre_mission_url, '_blank');
+    }
+  };
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
@@ -1254,6 +1335,72 @@ export default function AssistanceDetails() {
                     <p className="text-sm text-foreground">{assistance.remarques}</p>
                   </div>
                 )}
+                
+                {/* Ordre de mission section */}
+                <div className="pt-3 border-t">
+                  <span className="text-muted-foreground block mb-2">Ordre de mission</span>
+                  {assistance.ordre_mission_url ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadOrdreMission}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Télécharger
+                      </Button>
+                      <span className="text-xs text-muted-foreground">Document disponible</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      />
+                      {ordreMissionPreview ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 p-2 border rounded-md bg-muted flex-1">
+                            <span className="text-sm flex-1 truncate">{ordreMissionPreview}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={removeFile}
+                              className="h-6 w-6"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleUploadOrdreMission}
+                            disabled={uploadingOrdreMission}
+                          >
+                            {uploadingOrdreMission ? 'Upload...' : 'Enregistrer'}
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Uploader le fichier
+                        </Button>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        PDF, JPG, PNG, DOC, DOCX
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </CollapsibleContent>
           </Collapsible>
