@@ -26,6 +26,7 @@ type Expense = {
     modele: string;
     immatriculation: string;
   };
+  source?: 'expense' | 'traite'; // Pour différencier les sources
 };
 
 export default function Charges() {
@@ -37,7 +38,7 @@ export default function Charges() {
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    categorie: 'entretien' as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'autres',
+    categorie: 'entretien' as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'traite' | 'autres',
     montant: 0,
     date_depense: format(new Date(), 'yyyy-MM-dd'),
     description: '',
@@ -51,7 +52,8 @@ export default function Charges() {
 
   const loadExpenses = async () => {
     try {
-      const { data, error } = await supabase
+      // Charger les dépenses normales
+      const { data: expensesData, error: expensesError } = await supabase
         .from('expenses')
         .select(`
           *,
@@ -59,12 +61,52 @@ export default function Charges() {
         `)
         .order('date_depense', { ascending: false });
 
-      if (error) throw error;
+      if (expensesError) throw expensesError;
 
-      const expensesData = data as Expense[];
-      setExpenses(expensesData);
+      // Charger les traites payées
+      const { data: traitesData, error: traitesError } = await supabase
+        .from('vehicules_traites_echeances')
+        .select(`
+          *,
+          vehicles:vehicle_id (marque, modele, immatriculation)
+        `)
+        .eq('statut', 'Payée')
+        .order('date_paiement', { ascending: false });
+
+      if (traitesError) throw traitesError;
+
+      // Formater les dépenses normales
+      const formattedExpenses: Expense[] = (expensesData || []).map(e => ({
+        id: e.id,
+        categorie: e.categorie,
+        montant: e.montant || 0,
+        date_depense: e.date_depense,
+        description: e.description,
+        vehicle_id: e.vehicle_id,
+        vehicle: e.vehicles,
+        source: 'expense' as const
+      }));
+
+      // Formater les traites comme des charges
+      const formattedTraites: Expense[] = (traitesData || []).map(t => ({
+        id: t.id,
+        categorie: 'traite',
+        montant: t.montant ? parseFloat(t.montant.toString()) : 0,
+        date_depense: t.date_paiement || t.date_echeance,
+        description: t.notes || `Traite bancaire - Échéance du ${format(new Date(t.date_echeance), 'dd/MM/yyyy')}`,
+        vehicle_id: t.vehicle_id,
+        vehicle: t.vehicles,
+        source: 'traite' as const
+      }));
+
+      // Combiner et trier toutes les charges par date
+      const allExpenses = [...formattedExpenses, ...formattedTraites].sort((a, b) => 
+        new Date(b.date_depense).getTime() - new Date(a.date_depense).getTime()
+      );
+
+      setExpenses(allExpenses);
       
-      const total = expensesData.reduce((sum, e) => sum + (e.montant || 0), 0);
+      const total = allExpenses.reduce((sum, e) => sum + (e.montant || 0), 0);
       setTotalExpenses(total);
     } catch (error: any) {
       toast({
@@ -96,8 +138,19 @@ export default function Charges() {
     setLoading(true);
 
     try {
+      // Empêcher l'ajout manuel de traites (elles sont auto-générées)
+      if (formData.categorie === 'traite') {
+        toast({
+          title: 'Information',
+          description: 'Les traites bancaires sont gérées automatiquement depuis la page du véhicule',
+          variant: 'default',
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.from('expenses').insert([{
-        categorie: formData.categorie,
+        categorie: formData.categorie as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'autres',
         montant: formData.montant,
         date_depense: formData.date_depense,
         description: formData.description || null,
@@ -125,10 +178,20 @@ export default function Charges() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, source: 'expense' | 'traite' = 'expense') => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette charge ?')) return;
 
     try {
+      if (source === 'traite') {
+        // Ne pas permettre la suppression des traites depuis cette page
+        toast({
+          title: 'Information',
+          description: 'Les traites bancaires doivent être gérées depuis la page du véhicule',
+          variant: 'default',
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('expenses')
         .delete()
@@ -153,7 +216,7 @@ export default function Charges() {
 
   const resetForm = () => {
     setFormData({
-      categorie: 'entretien' as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'autres',
+      categorie: 'entretien' as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'traite' | 'autres',
       montant: 0,
       date_depense: format(new Date(), 'yyyy-MM-dd'),
       description: '',
@@ -168,6 +231,7 @@ export default function Charges() {
       loyer: 'bg-amber-100 text-amber-800',
       marketing: 'bg-green-100 text-green-800',
       salaires: 'bg-indigo-100 text-indigo-800',
+      traite: 'bg-rose-100 text-rose-800',
       autres: 'bg-gray-100 text-gray-800',
     };
 
@@ -226,6 +290,7 @@ export default function Charges() {
                     <SelectItem value="loyer">Loyer</SelectItem>
                     <SelectItem value="marketing">Marketing</SelectItem>
                     <SelectItem value="salaires">Salaires</SelectItem>
+                    <SelectItem value="traite">Traite</SelectItem>
                     <SelectItem value="autres">Autres</SelectItem>
                   </SelectContent>
                 </Select>
@@ -367,14 +432,17 @@ export default function Charges() {
                 </div>
                 <div className="flex items-center gap-3">
                   <p className="text-lg font-bold text-red-600">{expense.montant.toFixed(2)} DH</p>
-                  {isAdmin && (
+                  {isAdmin && expense.source !== 'traite' && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(expense.id)}
+                      onClick={() => handleDelete(expense.id, expense.source)}
                     >
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
+                  )}
+                  {expense.source === 'traite' && (
+                    <Badge variant="outline" className="text-xs">Auto</Badge>
                   )}
                 </div>
               </div>
