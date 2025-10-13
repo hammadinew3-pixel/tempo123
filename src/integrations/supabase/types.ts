@@ -22,6 +22,7 @@ export type Database = {
           alerte_cheque_jours: number | null
           alerte_vidange_kms: number | null
           alerte_visite_jours: number | null
+          cgv_texte: string | null
           cgv_url: string | null
           cnss: string | null
           created_at: string | null
@@ -51,6 +52,7 @@ export type Database = {
           alerte_cheque_jours?: number | null
           alerte_vidange_kms?: number | null
           alerte_visite_jours?: number | null
+          cgv_texte?: string | null
           cgv_url?: string | null
           cnss?: string | null
           created_at?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           alerte_cheque_jours?: number | null
           alerte_vidange_kms?: number | null
           alerte_visite_jours?: number | null
+          cgv_texte?: string | null
           cgv_url?: string | null
           cnss?: string | null
           created_at?: string | null

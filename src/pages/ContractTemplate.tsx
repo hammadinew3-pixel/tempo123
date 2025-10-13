@@ -90,7 +90,18 @@ export default function ContractTemplate() {
   const secondaryDriver = secondaryDrivers[0];
 
   return (
-    <div className="p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto">
+    <>
+      <style>{`
+        @media print {
+          @page { 
+            size: A4 portrait;
+            margin: 15mm;
+          }
+          body { margin: 0; }
+          .page-break { page-break-before: always; }
+        }
+      `}</style>
+      <div className="p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto">
       {/* Header */}
       {!agenceSettings?.masquer_entete && (
         <div className="mb-6 pb-3 border-b-2 border-black">
@@ -290,6 +301,19 @@ export default function ContractTemplate() {
           {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
         </div>
       )}
+
+      {/* CGV Page */}
+      {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
+        <div className="page-break">
+          <div className="text-center mb-6">
+            <h2 className="text-[16pt] font-bold">CONDITIONS GÉNÉRALES DE VENTE</h2>
+          </div>
+          <div className="text-[10pt] leading-relaxed whitespace-pre-wrap">
+            {agenceSettings.cgv_texte}
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 }

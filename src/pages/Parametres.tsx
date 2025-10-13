@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon } from "lucide-react";
 
@@ -32,6 +33,7 @@ interface AgenceSettings {
   masquer_pied_page?: boolean;
   inclure_cgv?: boolean;
   cgv_url?: string;
+  cgv_texte?: string;
 }
 
 export default function Parametres() {
@@ -480,11 +482,27 @@ export default function Parametres() {
                 onCheckedChange={(checked) => setSettings(prev => prev ? {...prev, inclure_cgv: checked} : null)}
               />
             </div>
+            {settings?.inclure_cgv && (
+              <div className="space-y-2">
+                <Label>Conditions Générales de Vente (CGV)</Label>
+                <Textarea
+                  placeholder="Saisissez les conditions générales de vente qui apparaîtront au dos des contrats..."
+                  value={settings?.cgv_texte || ''}
+                  onChange={(e) => setSettings(prev => prev ? {...prev, cgv_texte: e.target.value} : null)}
+                  rows={10}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Les CGV apparaîtront sur une nouvelle page au dos du contrat de location
+                </p>
+              </div>
+            )}
             <Button onClick={() => updateSettings({
               masquer_logo: settings?.masquer_logo,
               masquer_entete: settings?.masquer_entete,
               masquer_pied_page: settings?.masquer_pied_page,
               inclure_cgv: settings?.inclure_cgv,
+              cgv_texte: settings?.cgv_texte,
             })} disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Enregistrer
