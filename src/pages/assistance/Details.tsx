@@ -999,6 +999,14 @@ export default function AssistanceDetails() {
                   CIN Client
                 </DropdownMenuItem>
               )}
+              {assistance.clients?.permis_url && (
+                <DropdownMenuItem onClick={() => {
+                  window.open(assistance.clients.permis_url, '_blank');
+                }}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Permis Client
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={() => {
                 const url = `/assistance-complet-template?id=${id}`;
                 window.open(url, '_blank');

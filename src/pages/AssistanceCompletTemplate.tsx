@@ -172,7 +172,26 @@ export default function AssistanceCompletTemplate() {
         </div>
       )}
 
-      {/* PAGE 4: FACTURE */}
+      {/* PAGE 5: PERMIS DU CLIENT */}
+      {data.clients?.permis_url && (
+        <div className="page-break">
+          <h2 className="text-center text-2xl font-bold mb-6">COPIE PERMIS DU CLIENT</h2>
+          <div className="mb-4">
+            <p className="mb-2"><strong>Client:</strong> {clientName}</p>
+            <p className="mb-4"><strong>N° Permis:</strong> {data.clients?.permis_conduire || ''}</p>
+          </div>
+          <div className="flex justify-center">
+            <img 
+              src={data.clients.permis_url} 
+              alt="Permis de conduire du client" 
+              className="max-w-full h-auto"
+              style={{ maxHeight: '85vh' }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* PAGE 6: FACTURE */}
       <div className="page-break">
         <div className="text-center mb-6">
           {settings?.logo_url && !settings?.masquer_logo && (
