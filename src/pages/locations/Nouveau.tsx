@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarIcon, Clock, Car, User as UserIcon, Plus } from "lucide-react";
+import { CalendarIcon, Clock, Car, User as UserIcon, Plus, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,9 @@ export default function NouveauLocation() {
   const [baremes, setBaremes] = useState<Bareme[]>([]);
   const [contractType, setContractType] = useState<"standard" | "assistance">("standard");
   const [selectedCategorie, setSelectedCategorie] = useState<string>("");
+  const [ordreMissionFile, setOrdreMissionFile] = useState<File | null>(null);
+  const [ordreMissionPreview, setOrdreMissionPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [dateDebutOpen, setDateDebutOpen] = useState(false);
   const [dateFinOpen, setDateFinOpen] = useState(false);
@@ -216,6 +219,22 @@ export default function NouveauLocation() {
     });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setOrdreMissionFile(file);
+      setOrdreMissionPreview(file.name);
+    }
+  };
+
+  const removeFile = () => {
+    setOrdreMissionFile(null);
+    setOrdreMissionPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -250,6 +269,27 @@ export default function NouveauLocation() {
     setLoading(true);
 
     try {
+      let ordreMissionUrl = null;
+
+      // Upload ordre de mission file if exists
+      if (ordreMissionFile) {
+        const fileExt = ordreMissionFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `ordre-mission/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('client-documents')
+          .upload(filePath, ordreMissionFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('client-documents')
+          .getPublicUrl(filePath);
+
+        ordreMissionUrl = urlData.publicUrl;
+      }
+
       if (contractType === "standard") {
         // Créer un contrat standard
         const { error } = await supabase.from("contracts").insert([
@@ -270,6 +310,7 @@ export default function NouveauLocation() {
             start_location: formData.start_location || null,
             end_location: formData.end_location || null,
             notes: formData.notes || null,
+            ordre_mission_url: ordreMissionUrl,
           },
         ]);
 
@@ -299,6 +340,7 @@ export default function NouveauLocation() {
             montant_total: calculatedValues.total,
             franchise_montant: formData.franchise_montant,
             remarques: formData.notes || null,
+            ordre_mission_url: ordreMissionUrl,
           },
         ]).select();
 
@@ -852,6 +894,47 @@ export default function NouveauLocation() {
               className="min-h-12"
               rows={1}
             />
+          </div>
+        </div>
+
+        {/* Ordre de mission */}
+        <div className="space-y-2">
+          <Label htmlFor="ordre_mission">Ordre de mission (Fichier)</Label>
+          <div className="space-y-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            />
+            {ordreMissionPreview ? (
+              <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                <span className="text-sm flex-1 truncate">{ordreMissionPreview}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={removeFile}
+                  className="h-6 w-6"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Télécharger le fichier
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">
+              PDF, JPG, PNG, DOC, DOCX (facultatif)
+            </p>
           </div>
         </div>
 

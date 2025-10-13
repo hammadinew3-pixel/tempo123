@@ -471,6 +471,7 @@ export type Database = {
           id: string
           notes: string | null
           numero_contrat: string
+          ordre_mission_url: string | null
           payment_method: string | null
           pdf_url: string | null
           pickup_branch_id: number | null
@@ -515,6 +516,7 @@ export type Database = {
           id?: string
           notes?: string | null
           numero_contrat: string
+          ordre_mission_url?: string | null
           payment_method?: string | null
           pdf_url?: string | null
           pickup_branch_id?: number | null
@@ -559,6 +561,7 @@ export type Database = {
           id?: string
           notes?: string | null
           numero_contrat?: string
+          ordre_mission_url?: string | null
           payment_method?: string | null
           pdf_url?: string | null
           pickup_branch_id?: number | null
