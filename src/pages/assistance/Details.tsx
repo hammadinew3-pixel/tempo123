@@ -197,7 +197,7 @@ export default function AssistanceDetails() {
         .from('assistance')
         .select(`
           *,
-          clients (id, nom, prenom, telephone, email, cin, permis_conduire),
+          clients (id, nom, prenom, telephone, email, cin, permis_conduire, cin_url, permis_url),
           vehicles (id, marque, modele, immatriculation, categorie, kilometrage),
           assurances (id, nom, contact_nom, contact_telephone, contact_email)
         `)
