@@ -960,17 +960,12 @@ export default function AssistanceDetails() {
         </div>
         <div className="flex gap-2 items-center">
           {getStatusBadge(assistance.etat, assistance.etat_paiement)}
-          <Button variant="outline" size="sm" onClick={() => handleGenerateContractPDF()}>
+          <Button variant="default" size="sm" onClick={() => {
+            const completUrl = `/assistance-complet-template?id=${id}`;
+            window.open(completUrl, '_blank');
+          }}>
             <FileText className="w-4 h-4 mr-2" />
-            Contrat de location
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleGenerateDossierPDF()}>
-            <FileText className="w-4 h-4 mr-2" />
-            Info dossier
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => handleGenerateFacturePDF()}>
-            <FileText className="w-4 h-4 mr-2" />
-            Facture
+            Dossier complet PDF
           </Button>
         </div>
       </div>

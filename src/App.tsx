@@ -46,6 +46,7 @@ import ContractTemplate from "./pages/ContractTemplate";
 import AssistanceContractTemplate from "./pages/AssistanceContractTemplate";
 import AssistanceDossierTemplate from "./pages/AssistanceDossierTemplate";
 import AssistanceFactureTemplate from "./pages/AssistanceFactureTemplate";
+import AssistanceCompletTemplate from "./pages/AssistanceCompletTemplate";
 
 const queryClient = new QueryClient();
 
@@ -377,6 +378,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AssistanceFactureTemplate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assistance-complet-template"
+              element={
+                <ProtectedRoute>
+                  <AssistanceCompletTemplate />
                 </ProtectedRoute>
               }
             />
