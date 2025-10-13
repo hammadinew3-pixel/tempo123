@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { Shield } from "lucide-react";
 import logoCrsapp from "@/assets/logo-crsapp.png";
 import { useLayoutContext } from "@/components/layout/Layout";
-import { OfflineSyncButton } from "./OfflineSyncButton";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
@@ -37,7 +36,6 @@ export const Header = () => {
           </div>
         </div>
         <div className="flex items-center space-x-1 md:space-x-2">
-          <OfflineSyncButton />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 

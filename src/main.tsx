@@ -1,10 +1,5 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { OfflineProvider } from "./contexts/OfflineContext";
 
-createRoot(document.getElementById("root")!).render(
-  <OfflineProvider>
-    <App />
-  </OfflineProvider>
-);
+createRoot(document.getElementById("root")!).render(<App />);
