@@ -77,14 +77,19 @@ export default function AssistanceContractTemplate() {
   const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white print:p-0">
+    <>
       <style>{`
         @media print {
-          body { margin: 0; padding: 20px; }
-          @page { size: A4; margin: 15mm; }
+          @page { 
+            size: A4 portrait;
+            margin: 15mm;
+          }
+          body { margin: 0; }
+          .page-break { page-break-before: always; }
         }
       `}</style>
-
+      
+      <div className="max-w-[210mm] mx-auto p-8 bg-white print:p-0">
       {/* Header */}
       {!agenceSettings?.masquer_entete && (
         <div className="border-b-2 border-black pb-4 mb-6">
@@ -308,5 +313,18 @@ export default function AssistanceContractTemplate() {
         </div>
       )}
     </div>
+
+      {/* CGV Page - Outside main contract div for proper page break */}
+      {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
+        <div className="page-break p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto min-h-screen">
+          <div className="text-center mb-6 pt-8">
+            <h2 className="text-[16pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE VENTE</h2>
+          </div>
+          <div className="text-[10pt] leading-relaxed whitespace-pre-wrap text-justify">
+            {agenceSettings.cgv_texte}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
