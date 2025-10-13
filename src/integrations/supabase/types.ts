@@ -130,6 +130,7 @@ export type Database = {
           niveau_carburant_depart: string | null
           niveau_carburant_retour: string | null
           num_dossier: string
+          ordre_mission: string | null
           prolongations: Json | null
           remarques: string | null
           tarif_journalier: number | null
@@ -162,6 +163,7 @@ export type Database = {
           niveau_carburant_depart?: string | null
           niveau_carburant_retour?: string | null
           num_dossier: string
+          ordre_mission?: string | null
           prolongations?: Json | null
           remarques?: string | null
           tarif_journalier?: number | null
@@ -194,6 +196,7 @@ export type Database = {
           niveau_carburant_depart?: string | null
           niveau_carburant_retour?: string | null
           num_dossier?: string
+          ordre_mission?: string | null
           prolongations?: Json | null
           remarques?: string | null
           tarif_journalier?: number | null
@@ -1347,6 +1350,7 @@ export type Database = {
           annee: number
           assurance_expire_le: string | null
           categorie: Database["public"]["Enums"]["vehicle_category"] | null
+          categories: string[] | null
           created_at: string
           date_derniere_vidange: string | null
           dernier_kilometrage_vidange: number | null
@@ -1370,6 +1374,7 @@ export type Database = {
           annee: number
           assurance_expire_le?: string | null
           categorie?: Database["public"]["Enums"]["vehicle_category"] | null
+          categories?: string[] | null
           created_at?: string
           date_derniere_vidange?: string | null
           dernier_kilometrage_vidange?: number | null
@@ -1393,6 +1398,7 @@ export type Database = {
           annee?: number
           assurance_expire_le?: string | null
           categorie?: Database["public"]["Enums"]["vehicle_category"] | null
+          categories?: string[] | null
           created_at?: string
           date_derniere_vidange?: string | null
           dernier_kilometrage_vidange?: number | null

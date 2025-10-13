@@ -39,6 +39,7 @@ export default function NouveauAssistance() {
     tarif_journalier: undefined,
     montant_total: undefined,
     etat: 'ouvert',
+    ordre_mission: undefined,
   });
 
   useEffect(() => {
@@ -310,6 +311,16 @@ export default function NouveauAssistance() {
                   value={formData.montant_total || ''}
                   disabled
                   className="bg-muted"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ordre_mission">Ordre de mission</Label>
+                <Input
+                  id="ordre_mission"
+                  value={formData.ordre_mission || ''}
+                  onChange={(e) => setFormData({ ...formData, ordre_mission: e.target.value })}
+                  placeholder="Numéro d'ordre de mission (facultatif)"
                 />
               </div>
 

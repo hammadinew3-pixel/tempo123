@@ -136,6 +136,12 @@ export default function AssistanceDossierTemplate() {
               <td className="py-2 font-semibold">Statut :</td>
               <td className="py-2">{getStatusLabel(assistance.etat)}</td>
             </tr>
+            {assistance.ordre_mission && (
+              <tr className="border-b">
+                <td className="py-2 font-semibold">Ordre de mission :</td>
+                <td className="py-2">{assistance.ordre_mission}</td>
+              </tr>
+            )}
             <tr className="border-b">
               <td className="py-2 font-semibold">Date début :</td>
               <td className="py-2">{format(startDate, 'dd MMMM yyyy', { locale: fr })}</td>

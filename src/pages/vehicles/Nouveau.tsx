@@ -32,10 +32,12 @@ export default function NouveauVehicule() {
     statut: 'disponible',
     tarif_journalier: 0,
     valeur_achat: 0,
-    categorie: undefined,
+    categories: [],
     en_service: true,
     sous_location: false,
   });
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   // Mapping marque -> modèles
   const modelesParMarque: Record<string, string[]> = {
@@ -107,6 +109,7 @@ export default function NouveauVehicule() {
       // Dans une implémentation complète, vous devriez uploader vers Supabase Storage
       const dataToInsert = {
         ...formData,
+        categories: selectedCategories,
         photo_url: photoPreview || null,
       };
 
@@ -301,24 +304,31 @@ export default function NouveauVehicule() {
           {/* Right Column */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="categorie">Catégorie (Assistance) *</Label>
-              <Select 
-                value={formData.categorie}
-                onValueChange={(value) => setFormData({ ...formData, categorie: value as any })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">Catégorie A</SelectItem>
-                  <SelectItem value="B">Catégorie B</SelectItem>
-                  <SelectItem value="C">Catégorie C</SelectItem>
-                  <SelectItem value="D">Catégorie D</SelectItem>
-                  <SelectItem value="E">Catégorie E</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="categorie">Catégories (Assistance) *</Label>
+              <div className="space-y-2">
+                {['A', 'B', 'C', 'D', 'E'].map((cat) => (
+                  <div key={cat} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`cat-${cat}`}
+                      checked={selectedCategories.includes(cat)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCategories([...selectedCategories, cat]);
+                        } else {
+                          setSelectedCategories(selectedCategories.filter(c => c !== cat));
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                    <Label htmlFor={`cat-${cat}`} className="cursor-pointer font-normal">
+                      Catégorie {cat}
+                    </Label>
+                  </div>
+                ))}
+              </div>
               <p className="text-xs text-muted-foreground">
-                Catégorie utilisée pour le calcul des tarifs d'assistance
+                Catégories utilisées pour le calcul des tarifs d'assistance
               </p>
             </div>
 
