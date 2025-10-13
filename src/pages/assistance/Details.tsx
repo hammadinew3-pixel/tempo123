@@ -1501,15 +1501,39 @@ export default function AssistanceDetails() {
                   </div>
                 )}
                 {assistance.clients?.cin && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">CIN</span>
-                    <span className="font-medium">{assistance.clients.cin}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{assistance.clients.cin}</span>
+                      {assistance.clients.cin_url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(assistance.clients.cin_url, '_blank')}
+                          className="h-7 px-2"
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
                 {assistance.clients?.permis_conduire && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-muted-foreground">Permis</span>
-                    <span className="font-medium">{assistance.clients.permis_conduire}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{assistance.clients.permis_conduire}</span>
+                      {assistance.clients.permis_url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(assistance.clients.permis_url, '_blank')}
+                          className="h-7 px-2"
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
               </CardContent>
