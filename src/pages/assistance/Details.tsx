@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ChevronDown, ChevronUp, FileText, Download, Edit, DollarSign, Car, User, Calendar, MapPin, Key, AlertCircle, Check, CheckCircle2, Upload, X } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Download, Edit, DollarSign, Car, User, Calendar, MapPin, Key, AlertCircle, Check, CheckCircle2, Upload, X, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -960,13 +961,53 @@ export default function AssistanceDetails() {
         </div>
         <div className="flex gap-2 items-center">
           {getStatusBadge(assistance.etat, assistance.etat_paiement)}
-          <Button variant="default" size="sm" onClick={() => {
-            const completUrl = `/assistance-complet-template?id=${id}`;
-            window.open(completUrl, '_blank');
-          }}>
-            <FileText className="w-4 h-4 mr-2" />
-            Dossier complet PDF
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="default" size="sm">
+                <FileDown className="w-4 h-4 mr-2" />
+                Télécharger
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => {
+                const url = `/assistance-dossier-template?id=${id}`;
+                window.open(url, '_blank');
+              }}>
+                <FileText className="w-4 h-4 mr-2" />
+                Info dossier
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const url = `/assistance-contract-template?id=${id}`;
+                window.open(url, '_blank');
+              }}>
+                <FileText className="w-4 h-4 mr-2" />
+                Contrat de location assistance
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                const url = `/assistance-facture-template?id=${id}`;
+                window.open(url, '_blank');
+              }}>
+                <FileText className="w-4 h-4 mr-2" />
+                Facture
+              </DropdownMenuItem>
+              {assistance.clients?.cin_url && (
+                <DropdownMenuItem onClick={() => {
+                  window.open(assistance.clients.cin_url, '_blank');
+                }}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  CIN Client
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => {
+                const url = `/assistance-complet-template?id=${id}`;
+                window.open(url, '_blank');
+              }}>
+                <FileText className="w-4 h-4 mr-2" />
+                Dossier complet
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
