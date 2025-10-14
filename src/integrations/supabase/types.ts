@@ -1107,6 +1107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_assistance_categories: {
+        Row: {
+          actif: boolean
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          ordre: number
+          updated_at: string
+        }
+        Insert: {
+          actif?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          ordre?: number
+          updated_at?: string
+        }
+        Update: {
+          actif?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          ordre?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       vehicle_changes: {
         Row: {
           change_date: string

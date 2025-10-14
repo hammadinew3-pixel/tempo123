@@ -44,8 +44,13 @@ export default function Parametres() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [newCategory, setNewCategory] = useState("");
+  const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [newCategoryForm, setNewCategoryForm] = useState({
+    code: '',
+    label: '',
+    description: ''
+  });
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -61,7 +66,7 @@ export default function Parametres() {
   useEffect(() => {
     if (isAdmin) {
       loadSettings();
-      loadCategories();
+      loadAssistanceCategories();
     }
   }, [isAdmin]);
 
@@ -82,66 +87,103 @@ export default function Parametres() {
     }
   };
 
-  const loadCategories = async () => {
+  const loadAssistanceCategories = async () => {
     try {
-      const { data: vehiclesData } = await supabase
-        .from('vehicles')
-        .select('categorie')
-        .not('categorie', 'is', null);
+      const { data, error } = await supabase
+        .from('vehicle_assistance_categories')
+        .select('*')
+        .eq('actif', true)
+        .order('ordre');
       
-      if (vehiclesData) {
-        const uniqueCategories = Array.from(
-          new Set(vehiclesData.map(v => v.categorie).filter(Boolean))
-        ).sort();
-        setCategories(uniqueCategories as string[]);
-      }
+      if (error) throw error;
+      setAssistanceCategories(data || []);
     } catch (error: any) {
-      console.error('Error loading categories:', error);
+      console.error('Error loading assistance categories:', error);
     }
   };
 
-  const addCategory = () => {
-    if (!newCategory.trim()) return;
-    
-    if (categories.includes(newCategory.trim())) {
+  const addAssistanceCategory = async () => {
+    if (!newCategoryForm.code.trim() || !newCategoryForm.label.trim()) {
       toast({
         title: "Erreur",
-        description: "Cette catégorie existe déjà.",
+        description: "Le code et le libellé sont obligatoires.",
         variant: "destructive",
       });
       return;
     }
 
-    setCategories(prev => [...prev, newCategory.trim()].sort());
-    setNewCategory("");
-    toast({
-      title: "Catégorie ajoutée",
-      description: "La nouvelle catégorie a été ajoutée. Elle sera disponible lors de l'ajout/modification de véhicules.",
-    });
+    try {
+      const maxOrdre = assistanceCategories.reduce((max, cat) => Math.max(max, cat.ordre), 0);
+      
+      const { error } = await supabase
+        .from('vehicle_assistance_categories')
+        .insert({
+          code: newCategoryForm.code.toUpperCase(),
+          label: newCategoryForm.label,
+          description: newCategoryForm.description,
+          ordre: maxOrdre + 1
+        });
+
+      if (error) throw error;
+
+      setNewCategoryForm({ code: '', label: '', description: '' });
+      await loadAssistanceCategories();
+      
+      toast({
+        title: "Catégorie ajoutée",
+        description: "La nouvelle catégorie d'assistance a été créée.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteCategory = async (category: string) => {
+  const updateAssistanceCategory = async (category: any) => {
     try {
-      // Check if category is in use
-      const { data: vehiclesWithCat } = await supabase
-        .from('vehicles')
-        .select('id')
-        .eq('categorie', category as any)
-        .limit(1);
+      const { error } = await supabase
+        .from('vehicle_assistance_categories')
+        .update({
+          label: category.label,
+          description: category.description
+        })
+        .eq('id', category.id);
 
-      if (vehiclesWithCat && vehiclesWithCat.length > 0) {
-        toast({
-          title: "Impossible de supprimer",
-          description: "Cette catégorie est utilisée par au moins un véhicule.",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
-      setCategories(prev => prev.filter(c => c !== category));
+      setEditingCategory(null);
+      await loadAssistanceCategories();
+      
       toast({
-        title: "Catégorie supprimée",
-        description: "La catégorie a été retirée.",
+        title: "Catégorie modifiée",
+        description: "Les modifications ont été enregistrées.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteAssistanceCategory = async (categoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('vehicle_assistance_categories')
+        .update({ actif: false })
+        .eq('id', categoryId);
+
+      if (error) throw error;
+
+      await loadAssistanceCategories();
+      
+      toast({
+        title: "Catégorie désactivée",
+        description: "La catégorie a été désactivée.",
       });
     } catch (error: any) {
       toast({
@@ -583,45 +625,123 @@ export default function Parametres() {
           </CardContent>
         </Card>
 
-        {/* Gestion des catégories */}
-        <Card>
+        {/* Gestion des catégories d'assistance */}
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Tag className="w-5 h-5" />
-              Catégories de véhicules
+              Catégories d'assistance
             </CardTitle>
             <CardDescription>
-              Gérez les catégories disponibles pour les véhicules
+              Gérez les catégories disponibles pour les contrats d'assistance (A, B, C, D, E...)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
+            {/* Add new category form */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
               <Input
-                placeholder="Nouvelle catégorie (ex: A, B, C...)"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addCategory()}
+                placeholder="Code (ex: A, F, G...)"
+                value={newCategoryForm.code}
+                onChange={(e) => setNewCategoryForm({...newCategoryForm, code: e.target.value})}
+                maxLength={3}
               />
-              <Button onClick={addCategory} size="icon">
-                <Plus className="w-4 h-4" />
+              <Input
+                placeholder="Libellé (ex: Citadine)"
+                value={newCategoryForm.label}
+                onChange={(e) => setNewCategoryForm({...newCategoryForm, label: e.target.value})}
+              />
+              <Input
+                placeholder="Description (optionnel)"
+                value={newCategoryForm.description}
+                onChange={(e) => setNewCategoryForm({...newCategoryForm, description: e.target.value})}
+              />
+              <Button onClick={addAssistanceCategory} className="md:col-span-3">
+                <Plus className="w-4 h-4 mr-2" />
+                Ajouter une catégorie
               </Button>
             </div>
+
+            {/* Categories list */}
             <div className="space-y-2">
-              {categories.length === 0 ? (
+              {assistanceCategories.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   Aucune catégorie définie
                 </p>
               ) : (
-                categories.map((cat) => (
-                  <div key={cat} className="flex items-center justify-between p-3 border rounded-lg">
-                    <span className="font-medium">{cat}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteCategory(cat)}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                assistanceCategories.map((cat) => (
+                  <div key={cat.id} className="p-4 border rounded-lg">
+                    {editingCategory?.id === cat.id ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Code</Label>
+                            <Input
+                              value={cat.code}
+                              disabled
+                              className="bg-muted"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Libellé</Label>
+                            <Input
+                              value={editingCategory.label}
+                              onChange={(e) => setEditingCategory({...editingCategory, label: e.target.value})}
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <Label className="text-xs">Description</Label>
+                            <Input
+                              value={editingCategory.description || ''}
+                              onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => updateAssistanceCategory(editingCategory)}
+                          >
+                            Enregistrer
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingCategory(null)}
+                          >
+                            Annuler
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-lg">{cat.code}</span>
+                            <span className="text-muted-foreground">-</span>
+                            <span className="font-medium">{cat.label}</span>
+                          </div>
+                          {cat.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{cat.description}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setEditingCategory(cat)}
+                          >
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteAssistanceCategory(cat.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
