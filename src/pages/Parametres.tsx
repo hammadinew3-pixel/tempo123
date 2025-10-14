@@ -522,7 +522,10 @@ export default function Parametres() {
             </Button>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Second row - Categories + Print settings */}
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Gestion des catégories d'assistance */}
         <Card>
           <CardHeader>
@@ -569,10 +572,7 @@ export default function Parametres() {
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Second row - full width */}
-      <div className="grid gap-6">
         {/* Paramètres d'impression */}
         <Card>
           <CardHeader>
