@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, Upload, ChevronUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export default function NouveauVehicule() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [assistanceCategories, setAssistanceCategories] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<Partial<VehicleInsert>>({
     marque: '',
@@ -86,6 +87,25 @@ export default function NouveauVehicule() {
     setPhotoPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  useEffect(() => {
+    loadAssistanceCategories();
+  }, []);
+
+  const loadAssistanceCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_assistance_categories')
+        .select('code')
+        .eq('actif', true)
+        .order('ordre');
+      
+      if (error) throw error;
+      setAssistanceCategories(data?.map(c => c.code) || []);
+    } catch (error: any) {
+      console.error('Error loading assistance categories:', error);
     }
   };
 
@@ -306,7 +326,7 @@ export default function NouveauVehicule() {
             <div className="space-y-2">
               <Label htmlFor="categorie">Catégories (Assistance) *</Label>
               <div className="space-y-2">
-                {['A', 'B', 'C', 'D', 'E'].map((cat) => (
+                {assistanceCategories.map((cat) => (
                   <div key={cat} className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -322,7 +342,7 @@ export default function NouveauVehicule() {
                       className="h-4 w-4 rounded border-input"
                     />
                     <Label htmlFor={`cat-${cat}`} className="cursor-pointer font-normal">
-                      Catégorie {cat}
+                      {cat}
                     </Label>
                   </div>
                 ))}

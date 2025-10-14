@@ -71,11 +71,28 @@ export default function ModifierVehicule() {
   const [isInService, setIsInService] = useState(true);
   const [isSousLocation, setIsSousLocation] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [assistanceCategories, setAssistanceCategories] = useState<string[]>([]);
   useEffect(() => {
     if (id) {
       loadVehicle();
+      loadAssistanceCategories();
     }
   }, [id]);
+
+  const loadAssistanceCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_assistance_categories')
+        .select('code')
+        .eq('actif', true)
+        .order('ordre');
+      
+      if (error) throw error;
+      setAssistanceCategories(data?.map(c => c.code) || []);
+    } catch (error: any) {
+      console.error('Error loading assistance categories:', error);
+    }
+  };
   const loadVehicle = async () => {
     try {
       const {
@@ -292,16 +309,16 @@ export default function ModifierVehicule() {
             <div className="md:col-span-2">
               <Label className="mb-3 block">Catégories (Assistance)</Label>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {(['A', 'B', 'C', 'D', 'E'] as VehicleCategory[]).map((cat) => (
+                {assistanceCategories.map((cat) => (
                   <div key={cat} className="flex items-center space-x-2">
                     <Checkbox
                       id={`cat-${cat}`}
-                      checked={formData.categories.includes(cat)}
+                      checked={formData.categories.includes(cat as VehicleCategory)}
                       onCheckedChange={(checked) => {
                         if (checked) {
                           setFormData({
                             ...formData,
-                            categories: [...formData.categories, cat]
+                            categories: [...formData.categories, cat as VehicleCategory]
                           });
                         } else {
                           setFormData({
@@ -313,11 +330,7 @@ export default function ModifierVehicule() {
                       disabled={isAgent}
                     />
                     <Label htmlFor={`cat-${cat}`} className="cursor-pointer font-normal">
-                      {cat === 'A' && 'A - Citadine'}
-                      {cat === 'B' && 'B - Economique'}
-                      {cat === 'C' && 'C - Compacte'}
-                      {cat === 'D' && 'D - Berline'}
-                      {cat === 'E' && 'E - SUV/Luxe'}
+                      {cat}
                     </Label>
                   </div>
                 ))}

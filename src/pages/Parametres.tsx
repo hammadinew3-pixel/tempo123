@@ -45,12 +45,7 @@ export default function Parametres() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
-  const [newCategoryForm, setNewCategoryForm] = useState({
-    code: '',
-    label: '',
-    description: ''
-  });
+  const [newCategoryCode, setNewCategoryCode] = useState("");
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -103,10 +98,10 @@ export default function Parametres() {
   };
 
   const addAssistanceCategory = async () => {
-    if (!newCategoryForm.code.trim() || !newCategoryForm.label.trim()) {
+    if (!newCategoryCode.trim()) {
       toast({
         title: "Erreur",
-        description: "Le code et le libellé sont obligatoires.",
+        description: "Le code est obligatoire.",
         variant: "destructive",
       });
       return;
@@ -118,48 +113,19 @@ export default function Parametres() {
       const { error } = await supabase
         .from('vehicle_assistance_categories')
         .insert({
-          code: newCategoryForm.code.toUpperCase(),
-          label: newCategoryForm.label,
-          description: newCategoryForm.description,
+          code: newCategoryCode.toUpperCase(),
+          label: newCategoryCode.toUpperCase(),
           ordre: maxOrdre + 1
         });
 
       if (error) throw error;
 
-      setNewCategoryForm({ code: '', label: '', description: '' });
+      setNewCategoryCode('');
       await loadAssistanceCategories();
       
       toast({
         title: "Catégorie ajoutée",
         description: "La nouvelle catégorie d'assistance a été créée.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateAssistanceCategory = async (category: any) => {
-    try {
-      const { error } = await supabase
-        .from('vehicle_assistance_categories')
-        .update({
-          label: category.label,
-          description: category.description
-        })
-        .eq('id', category.id);
-
-      if (error) throw error;
-
-      setEditingCategory(null);
-      await loadAssistanceCategories();
-      
-      toast({
-        title: "Catégorie modifiée",
-        description: "Les modifications ont été enregistrées.",
       });
     } catch (error: any) {
       toast({
@@ -557,6 +523,56 @@ export default function Parametres() {
           </CardContent>
         </Card>
 
+        {/* Gestion des catégories d'assistance */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Tag className="w-5 h-5" />
+              Catégories d'assistance
+            </CardTitle>
+            <CardDescription>
+              Gérez les catégories disponibles pour les contrats d'assistance
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Code catégorie (ex: A, F, G...)"
+                value={newCategoryCode}
+                onChange={(e) => setNewCategoryCode(e.target.value.toUpperCase())}
+                onKeyPress={(e) => e.key === 'Enter' && addAssistanceCategory()}
+                maxLength={3}
+              />
+              <Button onClick={addAssistanceCategory} size="icon">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {assistanceCategories.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Aucune catégorie définie
+                </p>
+              ) : (
+                assistanceCategories.map((cat) => (
+                  <div key={cat.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <span className="font-bold text-lg">{cat.code}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteAssistanceCategory(cat.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Second row - full width */}
+      <div className="grid gap-6">
         {/* Paramètres d'impression */}
         <Card>
           <CardHeader>
@@ -622,130 +638,6 @@ export default function Parametres() {
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Enregistrer
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Gestion des catégories d'assistance */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Tag className="w-5 h-5" />
-              Catégories d'assistance
-            </CardTitle>
-            <CardDescription>
-              Gérez les catégories disponibles pour les contrats d'assistance (A, B, C, D, E...)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Add new category form */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
-              <Input
-                placeholder="Code (ex: A, F, G...)"
-                value={newCategoryForm.code}
-                onChange={(e) => setNewCategoryForm({...newCategoryForm, code: e.target.value})}
-                maxLength={3}
-              />
-              <Input
-                placeholder="Libellé (ex: Citadine)"
-                value={newCategoryForm.label}
-                onChange={(e) => setNewCategoryForm({...newCategoryForm, label: e.target.value})}
-              />
-              <Input
-                placeholder="Description (optionnel)"
-                value={newCategoryForm.description}
-                onChange={(e) => setNewCategoryForm({...newCategoryForm, description: e.target.value})}
-              />
-              <Button onClick={addAssistanceCategory} className="md:col-span-3">
-                <Plus className="w-4 h-4 mr-2" />
-                Ajouter une catégorie
-              </Button>
-            </div>
-
-            {/* Categories list */}
-            <div className="space-y-2">
-              {assistanceCategories.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Aucune catégorie définie
-                </p>
-              ) : (
-                assistanceCategories.map((cat) => (
-                  <div key={cat.id} className="p-4 border rounded-lg">
-                    {editingCategory?.id === cat.id ? (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-xs">Code</Label>
-                            <Input
-                              value={cat.code}
-                              disabled
-                              className="bg-muted"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Libellé</Label>
-                            <Input
-                              value={editingCategory.label}
-                              onChange={(e) => setEditingCategory({...editingCategory, label: e.target.value})}
-                            />
-                          </div>
-                          <div className="md:col-span-2">
-                            <Label className="text-xs">Description</Label>
-                            <Input
-                              value={editingCategory.description || ''}
-                              onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => updateAssistanceCategory(editingCategory)}
-                          >
-                            Enregistrer
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingCategory(null)}
-                          >
-                            Annuler
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-lg">{cat.code}</span>
-                            <span className="text-muted-foreground">-</span>
-                            <span className="font-medium">{cat.label}</span>
-                          </div>
-                          {cat.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{cat.description}</p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingCategory(cat)}
-                          >
-                            <Settings className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteAssistanceCategory(cat.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
           </CardContent>
         </Card>
       </div>
