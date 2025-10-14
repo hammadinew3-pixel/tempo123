@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon } from "lucide-react";
+import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2 } from "lucide-react";
 
 interface AgenceSettings {
   id: string;
@@ -44,6 +44,8 @@ export default function Parametres() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState("");
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -59,6 +61,7 @@ export default function Parametres() {
   useEffect(() => {
     if (isAdmin) {
       loadSettings();
+      loadCategories();
     }
   }, [isAdmin]);
 
@@ -76,6 +79,76 @@ export default function Parametres() {
       console.error('Error loading settings:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const { data: vehiclesData } = await supabase
+        .from('vehicles')
+        .select('categorie')
+        .not('categorie', 'is', null);
+      
+      if (vehiclesData) {
+        const uniqueCategories = Array.from(
+          new Set(vehiclesData.map(v => v.categorie).filter(Boolean))
+        ).sort();
+        setCategories(uniqueCategories as string[]);
+      }
+    } catch (error: any) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  const addCategory = () => {
+    if (!newCategory.trim()) return;
+    
+    if (categories.includes(newCategory.trim())) {
+      toast({
+        title: "Erreur",
+        description: "Cette catégorie existe déjà.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCategories(prev => [...prev, newCategory.trim()].sort());
+    setNewCategory("");
+    toast({
+      title: "Catégorie ajoutée",
+      description: "La nouvelle catégorie a été ajoutée. Elle sera disponible lors de l'ajout/modification de véhicules.",
+    });
+  };
+
+  const deleteCategory = async (category: string) => {
+    try {
+      // Check if category is in use
+      const { data: vehiclesWithCat } = await supabase
+        .from('vehicles')
+        .select('id')
+        .eq('categorie', category as any)
+        .limit(1);
+
+      if (vehiclesWithCat && vehiclesWithCat.length > 0) {
+        toast({
+          title: "Impossible de supprimer",
+          description: "Cette catégorie est utilisée par au moins un véhicule.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setCategories(prev => prev.filter(c => c !== category));
+      toast({
+        title: "Catégorie supprimée",
+        description: "La catégorie a été retirée.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -507,6 +580,52 @@ export default function Parametres() {
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Enregistrer
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Gestion des catégories */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Tag className="w-5 h-5" />
+              Catégories de véhicules
+            </CardTitle>
+            <CardDescription>
+              Gérez les catégories disponibles pour les véhicules
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Nouvelle catégorie (ex: A, B, C...)"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addCategory()}
+              />
+              <Button onClick={addCategory} size="icon">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {categories.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Aucune catégorie définie
+                </p>
+              ) : (
+                categories.map((cat) => (
+                  <div key={cat} className="flex items-center justify-between p-3 border rounded-lg">
+                    <span className="font-medium">{cat}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteCategory(cat)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
