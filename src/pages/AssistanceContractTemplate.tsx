@@ -26,7 +26,7 @@ export default function AssistanceContractTemplate() {
         .select(`
           *,
           clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
-          vehicles (immatriculation, marque, modele, kilometrage)
+          vehicles (immatriculation, marque, modele, kilometrage, categorie, categories)
         `)
         .eq("id", assistanceId)
         .single();
@@ -40,7 +40,7 @@ export default function AssistanceContractTemplate() {
         if (assistanceData?.assureur_id) {
           const { data: assuranceData } = await supabase
             .from('assurances')
-            .select('nom, contact_nom, contact_telephone, contact_email, adresse')
+            .select('nom')
             .eq('id', assistanceData.assureur_id)
             .maybeSingle();
           
@@ -213,8 +213,7 @@ export default function AssistanceContractTemplate() {
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
                 <div><strong>Compagnie:</strong> {assistance.assurance?.nom || assistance.assureur_nom || ''}</div>
-                <div><strong>Contact:</strong> {assistance.assurance?.contact_nom || ''}</div>
-                <div><strong>Téléphone:</strong> {assistance.assurance?.contact_telephone || ''}</div>
+                <div><strong>Ordre de mission:</strong> {assistance.ordre_mission || 'N/A'}</div>
               </div>
             </div>
           </div>
@@ -229,6 +228,7 @@ export default function AssistanceContractTemplate() {
               <div className="p-3 space-y-1 text-[9pt]">
                 <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
                 <div><strong>Immatriculation:</strong> {vehicle?.immatriculation}</div>
+                <div><strong>Catégorie:</strong> {vehicle?.categorie || vehicle?.categories?.[0] || ''}</div>
                 <div><strong>Km départ:</strong> {assistance.kilometrage_depart || vehicle?.kilometrage}</div>
               </div>
             </div>
@@ -303,7 +303,7 @@ export default function AssistanceContractTemplate() {
 
           {/* Signatures */}
           <div className="mt-auto mb-3">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="text-center">
                 <div className="h-12 mb-1 flex items-center justify-center">
                   {agenceSettings?.signature_agence_url && (
@@ -324,13 +324,6 @@ export default function AssistanceContractTemplate() {
                 <div className="h-12 mb-1"></div>
                 <div className="border-t-2 border-black pt-1">
                   <strong className="text-[9pt]">Signature Locataire</strong>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <div className="h-12 mb-1"></div>
-                <div className="border-t-2 border-black pt-1">
-                  <strong className="text-[9pt]">Signature Assurance</strong>
                 </div>
               </div>
             </div>

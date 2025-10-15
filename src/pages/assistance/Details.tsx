@@ -75,6 +75,7 @@ export default function AssistanceDetails() {
     type: '',
     assureur_nom: '',
     assureur_id: '',
+    ordre_mission: '',
   });
   
   const [clientEditData, setClientEditData] = useState({
@@ -124,6 +125,7 @@ export default function AssistanceDetails() {
         type: assistance.type || '',
         assureur_nom: assistance.assureur_nom || '',
         assureur_id: assistance.assureur_id || '',
+        ordre_mission: assistance.ordre_mission || '',
       });
       
       setClientEditData({
@@ -316,6 +318,7 @@ export default function AssistanceDetails() {
           montant_facture: total,
           franchise_montant: parseFloat(editData.franchise_montant) || null,
           remarques: editData.remarques,
+          ordre_mission: editData.ordre_mission || null,
         })
         .eq("id", id);
 
@@ -1471,69 +1474,95 @@ export default function AssistanceDetails() {
                 )}
                 
                 {/* Ordre de mission section */}
-                <div className="pt-3 border-t">
-                  <span className="text-muted-foreground block mb-2">Ordre de mission</span>
-                  {assistance.ordre_mission_url ? (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadOrdreMission}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Télécharger
-                      </Button>
-                      <span className="text-xs text-muted-foreground">Document disponible</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        onChange={handleFileChange}
-                        className="hidden"
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      />
-                      {ordreMissionPreview ? (
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-2 p-2 border rounded-md bg-muted flex-1">
-                            <span className="text-sm flex-1 truncate">{ordreMissionPreview}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={removeFile}
-                              className="h-6 w-6"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
+                <div className="pt-3 border-t space-y-3">
+                  <div>
+                    <span className="text-muted-foreground block mb-2">N° Ordre de mission</span>
+                    {assistance.ordre_mission ? (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-foreground font-medium">{assistance.ordre_mission}</p>
+                        {isAdmin && (
                           <Button
                             type="button"
+                            variant="ghost"
                             size="sm"
-                            onClick={handleUploadOrdreMission}
-                            disabled={uploadingOrdreMission}
+                            onClick={() => {
+                              setEditData(prev => ({ ...prev, ordre_mission: assistance.ordre_mission || '' }));
+                              setShowEditDialog(true);
+                            }}
                           >
-                            {uploadingOrdreMission ? 'Upload...' : 'Enregistrer'}
+                            <Edit className="h-3 w-3" />
                           </Button>
-                        </div>
-                      ) : (
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Non renseigné</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <span className="text-muted-foreground block mb-2">Document ordre de mission</span>
+                    {assistance.ordre_mission_url ? (
+                      <div className="flex items-center gap-2">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => fileInputRef.current?.click()}
+                          onClick={handleDownloadOrdreMission}
                         >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Uploader le fichier
+                          <Download className="h-4 w-4 mr-2" />
+                          Télécharger
                         </Button>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        PDF, JPG, PNG, DOC, DOCX
-                      </p>
-                    </div>
-                  )}
+                        <span className="text-xs text-muted-foreground">Document disponible</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          onChange={handleFileChange}
+                          className="hidden"
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        />
+                        {ordreMissionPreview ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 p-2 border rounded-md bg-muted flex-1">
+                              <span className="text-sm flex-1 truncate">{ordreMissionPreview}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={removeFile}
+                                className="h-6 w-6"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleUploadOrdreMission}
+                              disabled={uploadingOrdreMission}
+                            >
+                              {uploadingOrdreMission ? 'Upload...' : 'Enregistrer'}
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Uploader le fichier
+                          </Button>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          PDF, JPG, PNG, DOC, DOCX
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </CollapsibleContent>
@@ -2062,6 +2091,14 @@ export default function AssistanceDetails() {
                   onChange={(e) => setEditData({ ...editData, franchise_montant: e.target.value })}
                 />
               </div>
+            </div>
+            <div>
+              <Label>N° Ordre de mission</Label>
+              <Input
+                value={editData.ordre_mission}
+                onChange={(e) => setEditData({ ...editData, ordre_mission: e.target.value })}
+                placeholder="Numéro d'ordre de mission"
+              />
             </div>
             <div>
               <Label>Remarques</Label>
