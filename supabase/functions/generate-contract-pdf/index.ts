@@ -39,7 +39,7 @@ serve(async (req) => {
     // Get vehicle changes history for this contract
     const { data: vehicleChanges, error: changesError } = await supabase
       .from('vehicle_changes')
-      .select('*')
+      .select('*, old_vehicle:old_vehicle_id(*), new_vehicle:new_vehicle_id(*)')
       .eq('contract_id', contractId)
       .order('change_date', { ascending: true });
 
@@ -57,11 +57,21 @@ serve(async (req) => {
       console.error('Error fetching secondary drivers:', driversError);
     }
 
+    // Get agence settings
+    const { data: agenceSettings, error: settingsError } = await supabase
+      .from('agence_settings')
+      .select('*')
+      .single();
+
+    if (settingsError) {
+      console.error('Error fetching agence settings:', settingsError);
+    }
+
     console.log('📋 Vehicle changes found:', vehicleChanges?.length || 0);
     console.log('👥 Secondary drivers found:', secondaryDrivers?.length || 0);
 
     // Generate HTML for the PDF
-    const html = generateContractHTML(contract, vehicleChanges || [], secondaryDrivers || []);
+    const html = generateContractHTML(contract, vehicleChanges || [], secondaryDrivers || [], agenceSettings);
 
     // Get the origin from the request headers
     const origin = req.headers.get('origin') || 'https://66e40113-c245-4ca2-bcfb-093ee69d0d09.lovableproject.com';
@@ -110,44 +120,154 @@ serve(async (req) => {
   }
 });
 
-function generateContractHTML(contract: any, vehicleChanges: any[], secondaryDrivers: any[]): string {
+function generateContractHTML(contract: any, vehicleChanges: any[], secondaryDrivers: any[], agenceSettings: any): string {
   const client = contract.clients;
   const vehicle = contract.vehicles;
-  const secondaryDriver = secondaryDrivers[0] || {};
+  const prolongations = contract.prolongations || [];
 
-  // Generate vehicle changes section if any exist
-  let vehicleChangesHTML = '';
-  if (vehicleChanges && vehicleChanges.length > 0) {
-    vehicleChangesHTML = `
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+  // Format date helper
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('fr-FR');
+  };
+
+  // Prolongations HTML
+  let prolongationsHTML = '';
+  if (prolongations.length > 0) {
+    prolongationsHTML = `
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
         <thead>
           <tr>
-            <th colspan="2" style="background-color: #fff8e6; border: 2px solid #ffcc00; padding: 10px; text-align: center; font-weight: bold; font-size: 12pt;">
-              ⚠️ CHANGEMENT(S) DE VÉHICULE
+            <th colspan="4" style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt;">
+              PROLONGATION
             </th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td colspan="2" style="border: 1px solid #000; padding: 12px;">
-              ${vehicleChanges.map((change: any, index: number) => `
-                <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #ddd;">
-                  <div style="font-weight: bold; color: #ff6600; margin-bottom: 6px; font-size: 10pt;">
-                    Changement #${index + 1} - ${change.change_date ? new Date(change.change_date).toLocaleDateString('fr-FR') : ''}
-                  </div>
-                  <div style="font-size: 9pt; line-height: 1.5;">
-                    <div><strong>Raison:</strong> ${formatReason(change.reason)}</div>
-                    ${change.notes ? `<div style="font-size: 8.5pt; color: #555; margin-top: 4px;"><strong>Détails:</strong> ${change.notes}</div>` : ''}
-                  </div>
+          ${prolongations.map((p: any, idx: number) => `
+            <tr>
+              <td colspan="4" style="border: 2px solid #000; padding: 6px;">
+                <div style="margin-bottom: 4px; font-size: 9pt;">
+                  <strong>Prolongation ${idx + 1}:</strong> Du ${formatDate(p.date_debut)} au ${formatDate(p.date_fin)} - ${p.duree || 0} jour(s) - ${p.montant?.toFixed(0) || 0} DH
                 </div>
-              `).join('')}
-              <div style="margin-top: 12px; padding: 8px; background-color: #e6f7ff; border-radius: 4px; font-size: 9pt;">
-                <strong>Note:</strong> Le montant total ci-dessous inclut le calcul au prorata des changements de véhicule effectués.
-              </div>
-            </td>
-          </tr>
+              </td>
+            </tr>
+          `).join('')}
         </tbody>
       </table>
+    `;
+  }
+
+  // Vehicle changes HTML
+  let vehicleChangesHTML = '';
+  if (vehicleChanges.length > 0) {
+    vehicleChangesHTML = `
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <thead>
+          <tr>
+            <th colspan="4" style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt;">
+              CHANGEMENT DE VÉHICULE
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          ${vehicleChanges.map((change: any, idx: number) => `
+            <tr>
+              <td colspan="4" style="border: 2px solid #000; padding: 6px;">
+                <div style="margin-bottom: 4px; font-size: 9pt;">
+                  <strong>Changement ${idx + 1}:</strong> ${change.old_vehicle?.immatriculation} → ${change.new_vehicle?.immatriculation} (${formatReason(change.reason)}) - ${formatDate(change.change_date)}
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // Secondary drivers HTML
+  let secondaryDriversHTML = '';
+  if (secondaryDrivers.length > 0) {
+    secondaryDriversHTML = secondaryDrivers.map((driver: any) => `
+      <tr>
+        <td style="border: 2px solid #000; padding: 6px; width: 33%;">
+          <div style="margin-bottom: 4px; font-size: 9pt;"><strong>Nom & Prénom:</strong> ${driver.nom} ${driver.prenom || ''}</div>
+        </td>
+        <td style="border: 2px solid #000; padding: 6px; width: 33%;">
+          <div style="margin-bottom: 4px; font-size: 9pt;"><strong>CIN/Passeport:</strong> ${driver.cin || ''}</div>
+        </td>
+        <td style="border: 2px solid #000; padding: 6px; width: 34%;">
+          <div style="margin-bottom: 4px; font-size: 9pt;"><strong>N° Permis:</strong> ${driver.permis_conduire || ''}</div>
+        </td>
+      </tr>
+    `).join('');
+  } else {
+    secondaryDriversHTML = `
+      <tr>
+        <td colspan="4" style="border: 2px solid #000; padding: 6px;">
+          <div style="margin-bottom: 4px; font-size: 9pt; text-align: center; color: #666;">CIN/Passeport renseigné: _________________</div>
+        </td>
+      </tr>
+    `;
+  }
+
+  // Logo HTML
+  let logoHTML = '';
+  if (!agenceSettings?.masquer_logo && agenceSettings?.logo_url) {
+    logoHTML = `<img src="${agenceSettings.logo_url}" alt="Logo" style="height: 56px; width: auto; object-fit: contain;" />`;
+  }
+
+  // Header HTML
+  let headerHTML = '';
+  if (!agenceSettings?.masquer_entete) {
+    headerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #000;">
+        ${logoHTML}
+        <div style="flex: 1; text-align: center;">
+          <h1 style="font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0;">Contrat de Location</h1>
+          <div style="font-size: 10pt; font-weight: 600; margin-top: 4px;">N° ${contract.numero_contrat}</div>
+        </div>
+        <div style="font-size: 8pt; text-align: right; line-height: 1.3; max-width: 140px;">
+          ${agenceSettings?.raison_sociale ? `<div style="font-weight: 600;">${agenceSettings.raison_sociale}</div>` : ''}
+          ${agenceSettings?.adresse ? `<div>${agenceSettings.adresse}</div>` : ''}
+          ${agenceSettings?.telephone ? `<div>Tél: ${agenceSettings.telephone}</div>` : ''}
+          ${agenceSettings?.ice ? `<div>ICE: ${agenceSettings.ice}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // Footer HTML
+  let footerHTML = '';
+  if (!agenceSettings?.masquer_pied_page) {
+    footerHTML = `
+      <div style="text-align: center; font-size: 7pt; color: #666; margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;">
+        ${agenceSettings?.raison_sociale || ''}
+        ${agenceSettings?.ice ? ` | ICE: ${agenceSettings.ice}` : ''}
+        ${agenceSettings?.rc ? ` | RC: ${agenceSettings.rc}` : ''}
+        ${agenceSettings?.cnss ? ` | CNSS: ${agenceSettings.cnss}` : ''}
+        ${agenceSettings?.patente ? ` | Patente: ${agenceSettings.patente}` : ''}
+        ${agenceSettings?.if_number ? ` | IF: ${agenceSettings.if_number}` : ''}
+        <br/>
+        ${agenceSettings?.adresse ? `Adresse: ${agenceSettings.adresse}` : ''}
+        ${agenceSettings?.telephone ? ` | Tél: ${agenceSettings.telephone}` : ''}
+        ${agenceSettings?.email ? ` | Email: ${agenceSettings.email}` : ''}
+      </div>
+    `;
+  }
+
+  // CGV Page HTML
+  let cgvHTML = '';
+  if (agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte) {
+    cgvHTML = `
+      <div style="page-break-before: always; padding: 32px; font-family: Arial, sans-serif; font-size: 10pt; line-height: 1.6;">
+        <div style="text-align: center; margin-bottom: 24px; padding-top: 32px;">
+          <h2 style="font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0;">Conditions Générales de Vente</h2>
+        </div>
+        <div style="font-size: 9pt; line-height: 1.6; white-space: pre-wrap; text-align: justify;">
+          ${agenceSettings.cgv_texte}
+        </div>
+      </div>
     `;
   }
 
@@ -161,173 +281,230 @@ function generateContractHTML(contract: any, vehicleChanges: any[], secondaryDri
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       font-family: Arial, sans-serif; 
-      padding: 30px; 
-      line-height: 1.4;
-      font-size: 11pt;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #000;
-    }
-    .header h1 {
-      font-size: 18pt;
-      font-weight: bold;
-    }
-    .header .date {
-      font-size: 10pt;
-      color: #666;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-    th {
-      background-color: #d9d9d9;
-      border: 1px solid #000;
-      padding: 8px;
-      text-align: center;
-      font-weight: bold;
-      font-size: 12pt;
-    }
-    td {
-      border: 1px solid #000;
-      padding: 12px;
-      vertical-align: top;
-    }
-    .field {
-      margin-bottom: 6px;
-      font-size: 10pt;
-    }
-    .field strong {
-      font-weight: bold;
-    }
-    .footer {
-      margin-top: 30px;
       font-size: 9pt;
-      text-align: center;
-      font-style: italic;
-      margin-bottom: 30px;
+      line-height: 1.3;
     }
-    .signatures {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 40px;
-      margin-bottom: 30px;
+    @page { 
+      size: A4 portrait;
+      margin: 10mm;
     }
-    .signature-box {
-      width: 45%;
-      text-align: center;
-      padding-top: 60px;
-      border-bottom: 1px solid #000;
-    }
-    .company-info {
-      text-align: center;
-      font-size: 9pt;
-      margin-top: 20px;
-      color: #666;
-    }
+    .field { margin-bottom: 4px; font-size: 9pt; }
+    .field strong { font-weight: 600; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>CONTRAT DE LOCATION N° ${contract.numero_contrat}</h1>
-    <div class="date">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+  <div style="padding: 24px;">
+    ${headerHTML}
+
+    <!-- Section CLIENT -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <thead>
+        <tr>
+          <th colspan="4" style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt;">CLIENT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Compagnie:</strong> ${client?.type === 'entreprise' ? client?.nom : ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Nom:</strong> ${client?.nom || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Prénom:</strong> ${client?.prenom || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Adresse:</strong> ${client?.adresse || ''}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>CIN N°:</strong> ${client?.cin || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>N° Permis:</strong> ${client?.permis_conduire || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>N° Passeport:</strong></div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>Réf dossier:</strong> ${contract.numero_contrat}</div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>GSM:</strong> ${client?.telephone || ''}</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section VOITURE -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <thead>
+        <tr>
+          <th colspan="4" style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt;">VOITURE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Marque:</strong> ${vehicle?.marque || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Immatriculation:</strong> ${vehicle?.immatriculation || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Km Départ:</strong> ${contract.delivery_km || vehicle?.kilometrage || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 25%;">
+            <div class="field"><strong>Carburant:</strong> ${contract.delivery_fuel_level || ''}</div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>Lieu Départ:</strong> ${contract.start_location || ''}</div>
+          </td>
+          <td colspan="2" style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>Lieu Retour:</strong> ${contract.end_location || contract.start_location || ''}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>Date:</strong> ${formatDate(contract.date_debut)}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>Heure:</strong> ${contract.start_time || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>Lieu:</strong> ${contract.start_location || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field"><strong>Durée:</strong> ${contract.daily_rate?.toFixed(0) || 0} DH x ${contract.duration || 0}j = ${contract.total_amount?.toFixed(0) || 0} DH</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    ${prolongationsHTML}
+    ${vehicleChangesHTML}
+
+    <!-- Section AUTRES CONDUCTEURS -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <thead>
+        <tr>
+          <th colspan="4" style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt;">AUTRES CONDUCTEURS</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${secondaryDriversHTML}
+      </tbody>
+    </table>
+
+    <!-- Section AGENCES -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <thead>
+        <tr>
+          <th style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt; width: 50%;">Agence Départ</th>
+          <th style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt; width: 50%;">Agence Retour</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field">${contract.start_location || agenceSettings?.raison_sociale || ''}</div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px;">
+            <div class="field">${contract.end_location || contract.start_location || agenceSettings?.raison_sociale || ''}</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section MODE DE RÈGLEMENT -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <thead>
+        <tr>
+          <th colspan="3" style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt;">MODE DE RÈGLEMENT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px; width: 33%; text-align: center;">
+            <div class="field">
+              <input type="checkbox" ${contract.payment_method === 'especes' ? 'checked' : ''} /> Espèces
+            </div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 33%; text-align: center;">
+            <div class="field">
+              <input type="checkbox" ${contract.payment_method === 'cheque' ? 'checked' : ''} /> Chèque
+            </div>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; width: 34%; text-align: center;">
+            <div class="field">
+              <input type="checkbox" ${contract.payment_method && !['especes', 'cheque'].includes(contract.payment_method) ? 'checked' : ''} /> Autres
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Diagramme véhicule + Observations -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <thead>
+        <tr>
+          <th style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt; width: 50%;">DIAGRAMME DU VÉHICULE</th>
+          <th style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt; width: 50%;">OBSERVATIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px; height: 180px; vertical-align: top;">
+            <svg viewBox="0 0 200 120" style="width: 100%; height: 100%;">
+              <rect x="40" y="20" width="120" height="80" fill="none" stroke="#000" stroke-width="2" rx="8"/>
+              <rect x="50" y="10" width="100" height="15" fill="none" stroke="#000" stroke-width="1.5"/>
+              <rect x="50" y="95" width="100" height="15" fill="none" stroke="#000" stroke-width="1.5"/>
+              <circle cx="60" cy="30" r="8" fill="none" stroke="#000" stroke-width="1.5"/>
+              <circle cx="140" cy="30" r="8" fill="none" stroke="#000" stroke-width="1.5"/>
+              <circle cx="60" cy="90" r="8" fill="none" stroke="#000" stroke-width="1.5"/>
+              <circle cx="140" cy="90" r="8" fill="none" stroke="#000" stroke-width="1.5"/>
+              <text x="100" y="65" text-anchor="middle" font-size="10" fill="#666">Vue dessus</text>
+            </svg>
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; height: 180px; vertical-align: top;">
+            <div style="font-size: 8pt; white-space: pre-wrap; height: 100%; overflow: hidden;">
+              ${contract.delivery_notes || contract.notes || 'Aucune observation'}
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Signatures -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+      <thead>
+        <tr>
+          <th style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt; width: 33%;">Signature Agence</th>
+          <th style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt; width: 33%;">Signature Client</th>
+          <th style="background-color: #e0e0e0; border: 2px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 11pt; width: 34%;">Signature 2ème Conducteur</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border: 2px solid #000; padding: 6px; height: 60px; vertical-align: bottom; text-align: center;">
+            ${contract.signed_at ? `<div style="font-size: 7pt; color: #666;">Signé le ${formatDate(contract.signed_at)}</div>` : ''}
+          </td>
+          <td style="border: 2px solid #000; padding: 6px; height: 60px; vertical-align: bottom; text-align: center;"></td>
+          <td style="border: 2px solid #000; padding: 6px; height: 60px; vertical-align: bottom; text-align: center;"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ${footerHTML}
   </div>
 
-  <table>
-    <tr>
-      <th>LOCATAIRE</th>
-      <th>DEUXIÈME CONDUCTEUR</th>
-    </tr>
-    <tr>
-      <td>
-        <div class="field"><strong>Nom & Prénom:</strong> ${client?.nom || ''} ${client?.prenom || ''}</div>
-        <div class="field"><strong>CIN N°:</strong> ${client?.cin || ''}</div>
-        <div class="field"><strong>Permis de conduire N°:</strong> ${client?.permis_conduire || ''}</div>
-        <div class="field"><strong>Délivré le:</strong> ${contract.date_debut ? new Date(contract.date_debut).toLocaleDateString('fr-FR') : ''}</div>
-        <div class="field"><strong>Passeport N°:</strong></div>
-        <div class="field"><strong>Adresse:</strong> ${client?.adresse || ''}</div>
-        <div class="field"><strong>Tél:</strong> ${client?.telephone || ''}</div>
-      </td>
-      <td>
-        <div class="field"><strong>Nom & Prénom:</strong> ${secondaryDriver?.nom || ''} ${secondaryDriver?.prenom || ''}</div>
-        <div class="field"><strong>CIN N°:</strong> ${secondaryDriver?.cin || ''}</div>
-        <div class="field"><strong>Permis de conduire N°:</strong> ${secondaryDriver?.permis_conduire || ''}</div>
-        <div class="field"><strong>Délivré le:</strong></div>
-        <div class="field"><strong>Passeport N°:</strong></div>
-        <div class="field"><strong>Adresse:</strong></div>
-        <div class="field"><strong>Tél:</strong> ${secondaryDriver?.telephone || ''}</div>
-      </td>
-    </tr>
-  </table>
-
-  <table>
-    <tr>
-      <th>VÉHICULE</th>
-      <th>LOCATION</th>
-    </tr>
-    <tr>
-      <td>
-        <div class="field"><strong>Marque/Modèle:</strong> ${vehicle?.marque || ''} - ${vehicle?.modele || ''}</div>
-        <div class="field"><strong>Immatriculation:</strong> ${vehicle?.immatriculation || ''}</div>
-        <div class="field"><strong>Carburant:</strong> Diesel</div>
-        <div class="field"><strong>Km départ:</strong> ${contract.delivery_km || vehicle?.kilometrage || ''} KMs</div>
-      </td>
-      <td>
-        <div class="field"><strong>Date de départ:</strong> ${contract.date_debut ? new Date(contract.date_debut).toLocaleDateString('fr-FR') : ''} ${contract.start_time || ''}</div>
-        <div class="field"><strong>Date de retour:</strong> ${contract.date_fin ? new Date(contract.date_fin).toLocaleDateString('fr-FR') : ''} ${contract.end_time || ''}</div>
-        <div class="field"><strong>Durée de location:</strong> ${contract.duration || 0} jour(s)</div>
-        <div class="field"><strong>Prix total (TTC):</strong> ${contract.total_amount?.toFixed(2) || '0.00'} Dh</div>
-        <div class="field"><strong>Lieu de départ:</strong> ${contract.start_location || ''}</div>
-        <div class="field"><strong>Lieu de retour:</strong> ${contract.end_location || contract.start_location || ''}</div>
-      </td>
-    </tr>
-  </table>
-
-  ${vehicleChangesHTML}
-
-  <table>
-    <tr>
-      <th>ÉTAT DE VÉHICULE</th>
-      <th>OBSERVATIONS</th>
-    </tr>
-    <tr>
-      <td style="height: 200px; text-align: center; vertical-align: middle;">
-        <div style="font-size: 9pt; color: #666;">
-          Schéma d'inspection du véhicule<br/>
-          (À compléter lors de la remise des clés)
-        </div>
-      </td>
-      <td style="height: 200px;">
-        <div class="field" style="height: 100%;">
-          ${contract.delivery_notes || contract.notes || ''}
-        </div>
-      </td>
-    </tr>
-  </table>
-
-  <div class="footer">
-    * En signant le contrat de location, le client accepte les conditions générales de location fournies par le loueur professionnel.
-  </div>
-
-  <div class="signatures">
-    <div class="signature-box">
-      <strong>Signature agence :</strong>
-    </div>
-    <div class="signature-box">
-      <strong>Signature locataire :</strong>
-    </div>
-  </div>
-
-  <div class="company-info">
-    Luxeauto | ICE: 344569385000157<br/>
-    Adresse: Casablanca, Maroc
-  </div>
+  ${cgvHTML}
 </body>
 </html>
   `;
