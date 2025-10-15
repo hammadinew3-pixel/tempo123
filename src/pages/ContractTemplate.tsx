@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
 
 export default function ContractTemplate() {
   const [searchParams] = useSearchParams();
@@ -227,12 +228,16 @@ export default function ContractTemplate() {
         <table className="w-full border-collapse mb-1.5">
           <thead>
             <tr>
-              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[9pt]">OBSERVATIONS</th>
+              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[9pt] w-1/2">ÉTAT DE VÉHICULE</th>
+              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[9pt] w-1/2">OBSERVATIONS</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-black p-1.5 h-12 align-top">
+              <td className="border border-black p-2 align-middle text-center">
+                <img src={vehicleInspectionDiagram} alt="Schéma inspection véhicule" className="w-full h-auto max-h-32 object-contain mx-auto" />
+              </td>
+              <td className="border border-black p-1.5 h-32 align-top">
                 <div className="text-[7.5pt]">{contract.delivery_notes || contract.notes || ''}</div>
               </td>
             </tr>
