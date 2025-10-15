@@ -8,7 +8,6 @@ export interface AuditLog {
   changed_fields: string[] | null;
   user_id: string | null;
   user_email: string | null;
-  timestamp: string;
   created_at: string;
 }
 

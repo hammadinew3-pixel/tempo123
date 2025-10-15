@@ -27,7 +27,7 @@ export function AuditTimeline({ tableName, recordId, limit = 20 }: AuditTimeline
       let query = supabase
         .from('audit_logs')
         .select('*')
-        .order('timestamp', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (tableName) {
@@ -102,7 +102,7 @@ export function AuditTimeline({ tableName, recordId, limit = 20 }: AuditTimeline
                       {ACTION_LABELS[log.action]}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(log.timestamp), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                      {format(new Date(log.created_at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
                     </span>
                   </div>
 
