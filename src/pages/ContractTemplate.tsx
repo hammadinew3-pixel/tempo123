@@ -144,7 +144,6 @@ export default function ContractTemplate() {
                   <div><strong>Nom & Prénom:</strong> {secondaryDriver?.nom} {secondaryDriver?.prenom}</div>
                   <div><strong>CIN:</strong> {secondaryDriver?.cin}</div>
                   <div><strong>Permis:</strong> {secondaryDriver?.permis_conduire}</div>
-                  <div><strong>Tél:</strong> {secondaryDriver?.telephone}</div>
                 </div>
               </td>
             </tr>
