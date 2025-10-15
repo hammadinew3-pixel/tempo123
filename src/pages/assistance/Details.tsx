@@ -929,16 +929,23 @@ export default function AssistanceDetails() {
         .createSignedUrl(info.path, 300);
       if (error) throw error;
       if (data?.signedUrl) {
-        // Télécharger directement au lieu d'ouvrir dans un nouvel onglet
-        const link = document.createElement('a');
-        link.href = data.signedUrl;
-        link.download = info.path.split('/').pop() || docType;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        toast({ title: 'Téléchargement', description: `${docType} en cours de téléchargement` });
+        try {
+          const filename = info.path.split('/').pop() || `${docType}.pdf`;
+          const response = await fetch(data.signedUrl);
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          toast({ title: 'Téléchargement', description: `${docType} téléchargé` });
+        } catch (e) {
+          console.error('Erreur téléchargement blob:', e);
+          window.open(data.signedUrl, '_blank');
+        }
       } else {
         window.open(docUrl, '_blank');
       }
