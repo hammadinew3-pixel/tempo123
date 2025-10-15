@@ -865,6 +865,19 @@ export default function LocationDetails() {
 
         if (error) throw error;
 
+        // Update vehicle status to disponible when contract is closed
+        if (contract?.vehicle_id) {
+          const { error: vehicleError } = await supabase
+            .from("vehicles")
+            .update({ 
+              statut: 'disponible',
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", contract.vehicle_id);
+
+          if (vehicleError) throw vehicleError;
+        }
+
         toast({
           title: "Contrat clôturé",
           description: "Le contrat a été clôturé avec succès",
