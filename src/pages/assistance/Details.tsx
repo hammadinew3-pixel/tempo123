@@ -76,6 +76,7 @@ export default function AssistanceDetails() {
     assureur_nom: '',
     assureur_id: '',
     ordre_mission: '',
+    num_dossier: '',
   });
   
   const [clientEditData, setClientEditData] = useState({
@@ -126,6 +127,7 @@ export default function AssistanceDetails() {
         assureur_nom: assistance.assureur_nom || '',
         assureur_id: assistance.assureur_id || '',
         ordre_mission: assistance.ordre_mission || '',
+        num_dossier: assistance.num_dossier || '',
       });
       
       setClientEditData({
@@ -319,6 +321,7 @@ export default function AssistanceDetails() {
           franchise_montant: parseFloat(editData.franchise_montant) || null,
           remarques: editData.remarques,
           ordre_mission: editData.ordre_mission || null,
+          num_dossier: editData.num_dossier,
         })
         .eq("id", id);
 
@@ -1402,17 +1405,31 @@ export default function AssistanceDetails() {
               <CardContent className="px-4 pb-4 space-y-3 text-sm">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">N° Dossier</span>
-                  <Button
-                    variant="link"
-                    className="h-auto p-0 font-medium"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.clipboard.writeText(assistance.num_dossier);
-                      toast({ title: "Copié", description: "N° Dossier copié dans le presse-papier" });
-                    }}
-                  >
-                    {assistance.num_dossier}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(assistance.num_dossier);
+                        toast({ title: "Copié", description: "N° Dossier copié dans le presse-papier" });
+                      }}
+                    >
+                      {assistance.num_dossier}
+                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEditDialog(true);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Type</span>
@@ -2032,6 +2049,14 @@ export default function AssistanceDetails() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label>N° Dossier *</Label>
+              <Input
+                value={editData.num_dossier}
+                onChange={(e) => setEditData({ ...editData, num_dossier: e.target.value })}
+                placeholder="N° de dossier"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Type d'assistance *</Label>
