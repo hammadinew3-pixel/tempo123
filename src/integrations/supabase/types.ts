@@ -958,6 +958,7 @@ export type Database = {
           annee: number | null
           assurance_expire_le: string | null
           categorie: string | null
+          categories: string[] | null
           created_at: string | null
           date_derniere_vidange: string | null
           dernier_kilometrage_vidange: number | null
@@ -981,6 +982,7 @@ export type Database = {
           annee?: number | null
           assurance_expire_le?: string | null
           categorie?: string | null
+          categories?: string[] | null
           created_at?: string | null
           date_derniere_vidange?: string | null
           dernier_kilometrage_vidange?: number | null
@@ -1004,6 +1006,7 @@ export type Database = {
           annee?: number | null
           assurance_expire_le?: string | null
           categorie?: string | null
+          categories?: string[] | null
           created_at?: string | null
           date_derniere_vidange?: string | null
           dernier_kilometrage_vidange?: number | null
