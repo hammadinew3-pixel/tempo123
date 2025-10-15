@@ -123,6 +123,11 @@ export default function ContractTemplate() {
   const client = contract.clients;
   const vehicle = contract.vehicles;
   const secondaryDriver = secondaryDrivers[0];
+  const hasCgvPage = Boolean(
+    agenceSettings?.inclure_cgv &&
+    agenceSettings?.cgv_texte &&
+    agenceSettings.cgv_texte.trim().length > 0
+  );
 
   return (
     <>
@@ -149,6 +154,8 @@ export default function ContractTemplate() {
           width: 190mm;
           height: 277mm;
           overflow: hidden;
+        }
+        .with-break {
           page-break-after: always;
         }
         .cgv-page {
@@ -163,7 +170,7 @@ export default function ContractTemplate() {
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {/* Page 1 - Contrat */}
-        <div className="contract-page flex flex-col p-6"
+        <div className={`contract-page flex flex-col p-6${hasCgvPage ? ' with-break' : ''}`}
              style={{ height: '277mm', overflow: 'hidden' }}>
           {!agenceSettings?.masquer_entete && (
             <div className="mb-4 pb-2 border-b-2 border-black">
