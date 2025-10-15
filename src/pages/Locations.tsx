@@ -509,40 +509,29 @@ export default function Locations() {
       console.log('📄 Génération du PDF pour le contrat:', contractId);
       
       toast({
-        title: "Génération en cours",
-        description: "Veuillez patienter...",
+        title: "Ouverture du contrat",
+        description: "Le contrat s'ouvre pour impression...",
       });
 
-      const { data, error } = await supabase.functions.invoke('generate-contract-pdf', {
-        body: { contractId }
-      });
-
-      if (error) {
-        console.error('❌ Erreur Edge Function:', error);
-        throw error;
-      }
-
-      console.log('✅ Réponse Edge Function:', data);
-
-      if (data?.pdfUrl) {
-        // Ouvrir le PDF dans un nouvel onglet
-        window.open(data.pdfUrl, '_blank');
-        
+      // Ouvrir le contrat dans une nouvelle fenêtre pour impression
+      const printWindow = window.open(`/contract-template?id=${contractId}`, '_blank');
+      
+      if (printWindow) {
         toast({
-          title: 'PDF généré',
-          description: 'Le contrat a été ouvert dans un nouvel onglet',
+          title: 'Contrat prêt',
+          description: 'Utilisez Ctrl+P (ou Cmd+P sur Mac) pour sauvegarder en PDF',
         });
-        
-        // Recharger les données pour mettre à jour le pdf_url
-        loadData();
       } else {
-        throw new Error('Aucune URL de PDF reçue');
+        throw new Error('Impossible d\'ouvrir la fenêtre d\'impression');
       }
+      
+      // Recharger les données
+      loadData();
     } catch (error: any) {
       console.error('❌ Erreur lors de la génération du PDF:', error);
       toast({
-        title: 'Erreur de génération',
-        description: error.message || 'Impossible de générer le PDF',
+        title: 'Erreur',
+        description: error.message || 'Impossible d\'ouvrir le contrat',
         variant: 'destructive',
       });
     }
