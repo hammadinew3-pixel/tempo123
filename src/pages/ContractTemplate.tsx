@@ -377,11 +377,11 @@ export default function ContractTemplate() {
         {hasCgvPage && (
           <div className="page-break-before cgv-page p-6"
                style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            <div className="text-center mb-3">
-              <h2 className="text-[12pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
+            <div className="text-center mb-4">
+              <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
             </div>
-            <div className="text-[8pt] leading-tight whitespace-pre-wrap text-justify"
-                 style={{ maxHeight: '255mm', overflowY: 'hidden', lineHeight: '1.3' }}>
+            <div className="text-[9pt] leading-normal whitespace-pre-wrap text-justify"
+                 style={{ maxHeight: '250mm', overflowY: 'hidden' }}>
               {agenceSettings.cgv_texte}
             </div>
           </div>
