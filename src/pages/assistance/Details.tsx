@@ -929,8 +929,16 @@ export default function AssistanceDetails() {
         .createSignedUrl(info.path, 300);
       if (error) throw error;
       if (data?.signedUrl) {
-        window.open(data.signedUrl, '_blank');
-        toast({ title: 'Téléchargement', description: `${docType} ouvert dans un nouvel onglet` });
+        // Télécharger directement au lieu d'ouvrir dans un nouvel onglet
+        const link = document.createElement('a');
+        link.href = data.signedUrl;
+        link.download = info.path.split('/').pop() || docType;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({ title: 'Téléchargement', description: `${docType} en cours de téléchargement` });
       } else {
         window.open(docUrl, '_blank');
       }
