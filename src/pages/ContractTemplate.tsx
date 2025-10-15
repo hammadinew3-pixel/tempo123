@@ -134,12 +134,27 @@ export default function ContractTemplate() {
         @media print {
           body { margin: 0; padding: 0; }
           .no-print { display: none !important; }
-          .page-break { page-break-before: always; }
+          .page-break { 
+            page-break-before: always;
+            page-break-after: always;
+          }
         }
         #contract-content {
           width: 100%;
           max-width: 190mm;
           margin: auto;
+          overflow: hidden;
+        }
+        .contract-page {
+          width: 190mm;
+          height: 277mm;
+          overflow: hidden;
+          page-break-after: always;
+        }
+        .cgv-page {
+          width: 190mm;
+          min-height: 277mm;
+          max-height: 277mm;
           overflow: hidden;
         }
       `}</style>
@@ -148,26 +163,27 @@ export default function ContractTemplate() {
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {/* Page 1 - Contrat */}
-        <div className="min-h-[297mm] flex flex-col p-8">
+        <div className="contract-page flex flex-col p-6"
+             style={{ height: '277mm', overflow: 'hidden' }}>
           {!agenceSettings?.masquer_entete && (
-            <div className="mb-6 pb-3 border-b-2 border-black">
+            <div className="mb-4 pb-2 border-b-2 border-black">
               <div className="flex justify-between items-start">
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
                   <div className="w-1/4">
                     <img 
                       src={agenceSettings.logo_url} 
                       alt="Logo" 
-                      className="h-20 w-auto object-contain" 
+                      className="h-16 w-auto object-contain" 
                       crossOrigin="anonymous"
                     />
                   </div>
                 )}
                 <div className={`flex-1 text-center ${!agenceSettings?.masquer_logo && agenceSettings?.logo_url ? '' : 'w-full'}`}>
-                  <h1 className="text-[16pt] font-bold mb-1">CONTRAT DE LOCATION</h1>
-                  <p className="text-[12pt] font-semibold">N° {contract.numero_contrat}</p>
+                  <h1 className="text-[14pt] font-bold mb-1">CONTRAT DE LOCATION</h1>
+                  <p className="text-[11pt] font-semibold">N° {contract.numero_contrat}</p>
                 </div>
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
-                  <div className="w-1/4 text-right text-[9pt] text-gray-600">
+                  <div className="w-1/4 text-right text-[8pt] text-gray-600">
                     {format(new Date(), 'dd/MM/yyyy')}
                   </div>
                 )}
@@ -176,7 +192,7 @@ export default function ContractTemplate() {
           )}
 
           {/* Informations principales */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-3">
             {/* Locataire */}
             <div className="border-2 border-black">
               <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
@@ -205,7 +221,7 @@ export default function ContractTemplate() {
           </div>
 
           {/* Véhicule et Location */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-3">
             {/* Véhicule */}
             <div className="border-2 border-black">
               <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
@@ -235,7 +251,7 @@ export default function ContractTemplate() {
 
           {/* Prolongations */}
           {contract.prolongations && contract.prolongations.length > 0 && (
-            <div className="border-2 border-yellow-500 bg-yellow-50 mb-4">
+            <div className="border-2 border-yellow-500 bg-yellow-50 mb-3">
               <div className="bg-yellow-200 border-b-2 border-yellow-500 p-2 text-center">
                 <strong className="text-[10pt]">⚠️ PROLONGATION(S)</strong>
               </div>
@@ -265,7 +281,7 @@ export default function ContractTemplate() {
 
           {/* Changements de véhicule */}
           {vehicleChanges && vehicleChanges.length > 0 && (
-            <div className="border-2 border-orange-500 bg-orange-50 mb-4">
+            <div className="border-2 border-orange-500 bg-orange-50 mb-3">
               <div className="bg-orange-200 border-b-2 border-orange-500 p-2 text-center">
                 <strong className="text-[10pt]">CHANGEMENT(S) DE VÉHICULE</strong>
               </div>
@@ -280,13 +296,13 @@ export default function ContractTemplate() {
           )}
 
           {/* État du véhicule */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-3">
             <div className="border-2 border-black">
               <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
                 <strong className="text-[10pt]">ÉTAT DU VÉHICULE</strong>
               </div>
-              <div className="p-3 flex items-center justify-center">
-                <img src={vehicleInspectionDiagram} alt="Schéma inspection" className="w-full h-auto max-h-32 object-contain" />
+              <div className="p-2 flex items-center justify-center">
+                <img src={vehicleInspectionDiagram} alt="Schéma inspection" className="w-full h-auto max-h-24 object-contain" />
               </div>
             </div>
 
@@ -294,27 +310,27 @@ export default function ContractTemplate() {
               <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
                 <strong className="text-[10pt]">OBSERVATIONS</strong>
               </div>
-              <div className="p-3 text-[9pt] min-h-32">
+              <div className="p-2 text-[9pt] min-h-24">
                 {contract.delivery_notes || contract.notes || ''}
               </div>
             </div>
           </div>
 
           {/* Note CGV */}
-          <div className="text-center text-[9pt] italic my-3">
+          <div className="text-center text-[8pt] italic my-2">
             * En signant le contrat, le client accepte les conditions générales de location.
           </div>
 
           {/* Signatures */}
-          <div className="mt-auto">
-            <div className="grid grid-cols-3 gap-6">
+          <div className="mt-auto mb-3">
+            <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="h-16 mb-2 flex items-center justify-center">
+                <div className="h-12 mb-1 flex items-center justify-center">
                   {agenceSettings?.signature_agence_url && (
                     <img 
                       src={agenceSettings.signature_agence_url} 
                       alt="Signature agence" 
-                      className="max-h-16 w-auto object-contain"
+                      className="max-h-12 w-auto object-contain"
                       crossOrigin="anonymous"
                     />
                   )}
@@ -325,14 +341,14 @@ export default function ContractTemplate() {
               </div>
               
               <div className="text-center">
-                <div className="h-16 mb-2"></div>
+                <div className="h-12 mb-1"></div>
                 <div className="border-t-2 border-black pt-1">
                   <strong className="text-[9pt]">Signature Locataire</strong>
                 </div>
               </div>
               
               <div className="text-center">
-                <div className="h-16 mb-2"></div>
+                <div className="h-12 mb-1"></div>
                 <div className="border-t-2 border-black pt-1">
                   <strong className="text-[9pt]">Signature 2ème Conducteur</strong>
                 </div>
@@ -342,7 +358,7 @@ export default function ContractTemplate() {
 
           {/* Footer */}
           {!agenceSettings?.masquer_pied_page && (
-            <div className="text-center text-[8pt] text-gray-600 mt-4 pt-3 border-t border-gray-400">
+            <div className="text-center text-[7pt] text-gray-600 mt-2 pt-2 border-t border-gray-400">
               {agenceSettings?.raison_sociale && <><strong>{agenceSettings.raison_sociale}</strong></>}
               {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
               {agenceSettings?.rc && <> | RC: {agenceSettings.rc}</>}
@@ -356,12 +372,12 @@ export default function ContractTemplate() {
 
         {/* Page 2 - CGV */}
         {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
-          <div className="page-break min-h-[297mm] p-8"
-               style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            <div className="text-center mb-6">
-              <h2 className="text-[14pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
+          <div className="cgv-page p-6"
+               style={{ fontFamily: 'Arial, Helvetica, sans-serif', height: '277mm', overflow: 'hidden' }}>
+            <div className="text-center mb-4">
+              <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
             </div>
-            <div className="text-[10pt] leading-relaxed whitespace-pre-wrap text-justify">
+            <div className="text-[9pt] leading-relaxed whitespace-pre-wrap text-justify overflow-hidden">
               {agenceSettings.cgv_texte}
             </div>
           </div>
