@@ -288,7 +288,10 @@ export default function VehiculeDetails() {
   };
   const handleMarkOilChangeDone = async () => {
     if (!vehicle) return;
+    
     try {
+      setLoading(true); // Disable button during processing
+      
       const prochainKm = prochainKmVidange ? parseInt(prochainKmVidange) : null;
       const montant = montantVidange ? parseFloat(montantVidange) : null;
       if (prochainKm && prochainKm <= vehicle.kilometrage) {
@@ -297,6 +300,7 @@ export default function VehiculeDetails() {
           description: "Le prochain kilométrage de vidange doit être supérieur au kilométrage actuel",
           variant: "destructive"
         });
+        setLoading(false);
         return;
       }
       if (montant !== null && montant < 0) {
@@ -305,6 +309,7 @@ export default function VehiculeDetails() {
           description: "Le montant doit être positif",
           variant: "destructive"
         });
+        setLoading(false);
         return;
       }
       const {
@@ -345,8 +350,10 @@ export default function VehiculeDetails() {
       setShowVidangeDialog(false);
       setProchainKmVidange('');
       setMontantVidange('');
+      setLoading(false);
       loadVehicle();
     } catch (error: any) {
+      setLoading(false);
       toast({
         title: "Erreur",
         description: error.message,
@@ -1645,7 +1652,7 @@ export default function VehiculeDetails() {
           }}>
               Annuler
             </Button>
-            <Button onClick={handleMarkOilChangeDone}>
+            <Button type="button" onClick={handleMarkOilChangeDone} disabled={loading}>
               Enregistrer
             </Button>
           </DialogFooter>
