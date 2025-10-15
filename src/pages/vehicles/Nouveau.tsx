@@ -22,7 +22,7 @@ export default function NouveauVehicule() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [assistanceCategories, setAssistanceCategories] = useState<Array<{code: string, nom: string}>>([]);
+  const [assistanceCategories, setAssistanceCategories] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<Partial<VehicleInsert>>({
     marque: '',
@@ -97,12 +97,12 @@ export default function NouveauVehicule() {
     try {
       const { data, error } = await supabase
         .from('vehicle_assistance_categories')
-        .select('code, nom')
+        .select('code')
         .eq('actif', true)
         .order('ordre');
       
       if (error) throw error;
-      setAssistanceCategories(data || []);
+      setAssistanceCategories(data?.map(c => c.code) || []);
     } catch (error: any) {
       console.error('Error loading assistance categories:', error);
     }
@@ -325,30 +325,26 @@ export default function NouveauVehicule() {
             <div className="space-y-2">
               <Label htmlFor="categorie">Catégories (Assistance) *</Label>
               <div className="space-y-2">
-                {assistanceCategories.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Aucune catégorie disponible</p>
-                ) : (
-                  assistanceCategories.map((cat) => (
-                    <div key={cat.code} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`cat-${cat.code}`}
-                        checked={selectedCategories.includes(cat.code)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCategories([...selectedCategories, cat.code]);
-                          } else {
-                            setSelectedCategories(selectedCategories.filter(c => c !== cat.code));
-                          }
-                        }}
-                        className="h-4 w-4 rounded border-input"
-                      />
-                      <Label htmlFor={`cat-${cat.code}`} className="cursor-pointer font-normal">
-                        {cat.nom}
-                      </Label>
-                    </div>
-                  ))
-                )}
+                {assistanceCategories.map((cat) => (
+                  <div key={cat} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`cat-${cat}`}
+                      checked={selectedCategories.includes(cat)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCategories([...selectedCategories, cat]);
+                        } else {
+                          setSelectedCategories(selectedCategories.filter(c => c !== cat));
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-input"
+                    />
+                    <Label htmlFor={`cat-${cat}`} className="cursor-pointer font-normal">
+                      {cat}
+                    </Label>
+                  </div>
+                ))}
               </div>
               <p className="text-xs text-muted-foreground">
                 Catégories utilisées pour le calcul des tarifs d'assistance
