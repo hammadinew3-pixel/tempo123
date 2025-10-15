@@ -26,6 +26,7 @@ export default function Assurances() {
   const [editingAssurance, setEditingAssurance] = useState<Assurance | null>(null);
   const [selectedAssurance, setSelectedAssurance] = useState<Assurance | null>(null);
   const [baremes, setBaremes] = useState<Bareme[]>([]);
+  const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [visibleColumns, setVisibleColumns] = useState({
     nom: true,
     contact: true,
@@ -47,17 +48,38 @@ export default function Assurances() {
     actif: true,
   });
 
-  const [baremeForm, setBaremeForm] = useState<Record<string, number>>({
-    A: 0,
-    B: 0,
-    C: 0,
-    D: 0,
-    E: 0,
-  });
+  const [baremeForm, setBaremeForm] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadAssurances();
+    loadAssistanceCategories();
   }, []);
+
+  const loadAssistanceCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicle_assistance_categories')
+        .select('*')
+        .eq('actif', true)
+        .order('ordre', { ascending: true });
+
+      if (error) throw error;
+      setAssistanceCategories(data || []);
+      
+      // Initialize baremeForm with categories
+      const initialBareme: Record<string, number> = {};
+      (data || []).forEach(cat => {
+        initialBareme[cat.code] = 0;
+      });
+      setBaremeForm(initialBareme);
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   const loadAssurances = async () => {
     try {
@@ -88,10 +110,14 @@ export default function Assurances() {
 
       if (error) throw error;
       
-      const baremeData: Record<string, number> = {
-        A: 0, B: 0, C: 0, D: 0, E: 0,
-      };
+      const baremeData: Record<string, number> = {};
       
+      // Initialize with all categories
+      assistanceCategories.forEach(cat => {
+        baremeData[cat.code] = 0;
+      });
+      
+      // Fill with existing data
       (data || []).forEach((b) => {
         baremeData[b.categorie] = Number(b.tarif_journalier);
       });
@@ -423,19 +449,19 @@ export default function Assurances() {
                 <p className="text-sm text-muted-foreground">
                   Définissez les tarifs journaliers pour chaque catégorie de véhicule
                 </p>
-                {['A', 'B', 'C', 'D', 'E'].map((categorie) => (
-                  <div key={categorie} className="grid grid-cols-2 gap-4 items-center">
-                    <Label htmlFor={`cat-${categorie}`}>Catégorie {categorie}</Label>
+                {assistanceCategories.map((category) => (
+                  <div key={category.code} className="grid grid-cols-2 gap-4 items-center">
+                    <Label htmlFor={`cat-${category.code}`}>{category.label || category.nom}</Label>
                     <div className="flex items-center gap-2">
                       <Input
-                        id={`cat-${categorie}`}
+                        id={`cat-${category.code}`}
                         type="number"
                         step="0.01"
                         placeholder="0.00"
-                        value={baremeForm[categorie] || ''}
+                        value={baremeForm[category.code] || ''}
                         onChange={(e) => setBaremeForm({
                           ...baremeForm,
-                          [categorie]: parseFloat(e.target.value) || 0
+                          [category.code]: parseFloat(e.target.value) || 0
                         })}
                       />
                       <span className="text-sm text-muted-foreground">MAD/jour</span>
