@@ -79,11 +79,12 @@ export default function AssistanceContractTemplate() {
           if (!element) return;
 
           const opt = {
-            margin: 10,
+            margin: [10, 10, 10, 10] as [number, number, number, number],
             filename: `Contrat_${assistance.num_dossier}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+            html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
 
           html2pdf().set(opt).from(element).save().then(() => {
@@ -137,7 +138,7 @@ export default function AssistanceContractTemplate() {
         }
       `}</style>
       
-      <div id="contract-content" className="max-w-[210mm] mx-auto p-8 bg-white print:p-0">
+      <div id="contract-content" className="min-h-[297mm] flex flex-col p-8 bg-white w-[210mm] mx-auto print:p-0">
       {/* Header */}
       {!agenceSettings?.masquer_entete && (
         <div className="border-b-2 border-black pb-4 mb-6">
@@ -147,6 +148,7 @@ export default function AssistanceContractTemplate() {
                 src={agenceSettings.logo_url} 
                 alt="Logo" 
                 className="h-16 w-auto object-contain"
+                crossOrigin="anonymous"
               />
             </div>
           )}
@@ -364,7 +366,7 @@ export default function AssistanceContractTemplate() {
 
       {/* CGV Page - Outside main contract div for proper page break */}
       {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
-        <div className="page-break p-8 font-sans text-[11pt] leading-normal bg-white max-w-[210mm] mx-auto min-h-screen">
+        <div className="page-break min-h-[297mm] p-8 font-sans text-[11pt] leading-normal bg-white w-[210mm] mx-auto">
           <div className="text-center mb-6 pt-8">
             <h2 className="text-[16pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE VENTE</h2>
           </div>
