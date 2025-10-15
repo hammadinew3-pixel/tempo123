@@ -1,1 +1,24 @@
 project_id = "vqlusbhqoalhbfiotdhi"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public"]
+max_rows = 1000
+
+[auth]
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[functions.create-user]
+verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.generate-contract-pdf]
+verify_jwt = true
+
+[functions.generate-assistance-pdf]
+verify_jwt = true
