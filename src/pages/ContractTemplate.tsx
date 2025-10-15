@@ -139,9 +139,8 @@ export default function ContractTemplate() {
         @media print {
           body { margin: 0; padding: 0; }
           .no-print { display: none !important; }
-          .page-break { 
+          .page-break-before { 
             page-break-before: always;
-            page-break-after: always;
           }
         }
         #contract-content {
@@ -155,9 +154,6 @@ export default function ContractTemplate() {
           height: 277mm;
           overflow: hidden;
         }
-        .with-break {
-          page-break-after: always;
-        }
         .cgv-page {
           width: 190mm;
           min-height: 277mm;
@@ -170,7 +166,7 @@ export default function ContractTemplate() {
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {/* Page 1 - Contrat */}
-        <div className={`contract-page flex flex-col p-6${hasCgvPage ? ' with-break' : ''}`}
+        <div className="contract-page flex flex-col p-6"
              style={{ height: '277mm', overflow: 'hidden' }}>
           {!agenceSettings?.masquer_entete && (
             <div className="mb-4 pb-2 border-b-2 border-black">
@@ -379,7 +375,7 @@ export default function ContractTemplate() {
 
         {/* Page 2 - CGV */}
         {hasCgvPage && (
-          <div className="page-break cgv-page p-6"
+          <div className="page-break-before cgv-page p-6"
                style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
             <div className="text-center mb-4">
               <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
