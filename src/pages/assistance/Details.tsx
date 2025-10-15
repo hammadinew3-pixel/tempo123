@@ -1066,17 +1066,13 @@ export default function AssistanceDetails() {
                 Facture
               </DropdownMenuItem>
               {assistance.clients?.cin_url && (
-                <DropdownMenuItem onClick={() => {
-                  window.open(assistance.clients.cin_url, '_blank');
-                }}>
+                <DropdownMenuItem onClick={() => handleDownloadClientDoc(assistance.clients.cin_url, 'CIN')}>
                   <FileText className="w-4 h-4 mr-2" />
                   CIN Client
                 </DropdownMenuItem>
               )}
               {assistance.clients?.permis_url && (
-                <DropdownMenuItem onClick={() => {
-                  window.open(assistance.clients.permis_url, '_blank');
-                }}>
+                <DropdownMenuItem onClick={() => handleDownloadClientDoc(assistance.clients.permis_url, 'Permis')}>
                   <FileText className="w-4 h-4 mr-2" />
                   Permis Client
                 </DropdownMenuItem>
