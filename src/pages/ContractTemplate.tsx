@@ -28,11 +28,17 @@ export default function ContractTemplate() {
           const element = document.getElementById('contract-content');
           if (!element) return;
           const opt = {
-            margin: 10,
+            margin: [10, 10, 10, 10] as [number, number, number, number],
             filename: `Contrat_${contract.numero_contrat || contractId}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+            html2canvas: { 
+              scale: 2, 
+              useCORS: true,
+              allowTaint: true,
+              logging: false
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
           html2pdf().set(opt).from(element).save().then(() => {
             setTimeout(() => {
@@ -132,7 +138,12 @@ export default function ContractTemplate() {
           <div className="mb-4 pb-2 border-b-2 border-black">
             <div className="flex justify-between items-center">
               {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
-                <img src={agenceSettings.logo_url} alt="Logo" className="h-10 w-auto object-contain" />
+                <img 
+                  src={agenceSettings.logo_url} 
+                  alt="Logo" 
+                  className="h-16 w-auto object-contain" 
+                  crossOrigin="anonymous"
+                />
               )}
               <div className="flex-1 text-center">
                 <h1 className="text-[14pt] font-bold">CONTRAT DE LOCATION N° {contract.numero_contrat}</h1>
@@ -328,12 +339,12 @@ export default function ContractTemplate() {
       </div>
 
       {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
-        <div className="page-break p-4 font-sans bg-white w-[210mm] mx-auto print:p-0"
+        <div className="page-break min-h-[297mm] p-8 font-sans bg-white w-[210mm] mx-auto print:p-0"
              style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-          <div className="text-center mb-3">
-            <h2 className="text-[12pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE VENTE</h2>
+          <div className="text-center mb-6">
+            <h2 className="text-[14pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE VENTE</h2>
           </div>
-          <div className="text-[10.5pt] leading-normal whitespace-pre-wrap text-justify">
+          <div className="text-[10pt] leading-relaxed whitespace-pre-wrap text-justify">
             {agenceSettings.cgv_texte}
           </div>
         </div>
