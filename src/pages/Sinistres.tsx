@@ -93,13 +93,26 @@ export default function Sinistres() {
         .from('sinistres')
         .select(`
           *,
-          vehicles (immatriculation, marque, modele),
-          clients (nom, prenom)
+          vehicles (immatriculation, marque, modele)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSinistres(data || []);
+      
+      // Load clients separately if needed
+      const sinistresWithClients = await Promise.all((data || []).map(async (sinistre) => {
+        if (sinistre.client_id) {
+          const { data: clientData } = await supabase
+            .from('clients')
+            .select('nom, prenom')
+            .eq('id', sinistre.client_id)
+            .single();
+          return { ...sinistre, clients: clientData };
+        }
+        return { ...sinistre, clients: null };
+      }));
+      
+      setSinistres(sinistresWithClients as any);
     } catch (error: any) {
       toast({
         title: 'Erreur',

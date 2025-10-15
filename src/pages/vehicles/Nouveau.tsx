@@ -33,7 +33,6 @@ export default function NouveauVehicule() {
     statut: 'disponible',
     tarif_journalier: 0,
     valeur_achat: 0,
-    categories: [],
     en_service: true,
     sous_location: false,
   });

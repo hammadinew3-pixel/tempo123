@@ -306,7 +306,7 @@ export default function NouveauLocation() {
             franchise_montant: formData.franchise_montant,
             caution_statut: "bloquee",
             advance_payment: formData.advance_payment,
-            payment_method: formData.payment_method,
+            payment_method: (formData.payment_method === 'carte' ? 'carte_bancaire' : formData.payment_method) as any,
             start_location: formData.start_location || null,
             end_location: formData.end_location || null,
             notes: formData.notes || null,

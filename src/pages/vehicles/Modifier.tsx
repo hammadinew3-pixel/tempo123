@@ -14,7 +14,6 @@ import { Database } from "@/integrations/supabase/types";
 import { useUserRole } from "@/hooks/use-user-role";
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleStatus = Database['public']['Enums']['vehicle_status'];
-type VehicleCategory = Database['public']['Enums']['vehicle_category'];
 
 // Mapping des marques et leurs modèles
 const MARQUES_MODELES: Record<string, string[]> = {
@@ -52,8 +51,8 @@ export default function ModifierVehicule() {
     modele: '',
     immatriculation: '',
     annee: new Date().getFullYear(),
-    categorie: 'A' as VehicleCategory,
-    categories: [] as VehicleCategory[],
+    categorie: 'A' as any,
+    categories: [] as any[],
     kilometrage: 0,
     tarif_journalier: 0,
     valeur_achat: 0,
@@ -106,7 +105,7 @@ export default function ModifierVehicule() {
         immatriculation: data.immatriculation || '',
         annee: data.annee || new Date().getFullYear(),
         categorie: data.categorie || 'A',
-        categories: (data.categories || []) as VehicleCategory[],
+        categories: [],
         kilometrage: data.kilometrage || 0,
         tarif_journalier: data.tarif_journalier || 0,
         valeur_achat: data.valeur_achat || 0,
@@ -313,12 +312,12 @@ export default function ModifierVehicule() {
                   <div key={cat} className="flex items-center space-x-2">
                     <Checkbox
                       id={`cat-${cat}`}
-                      checked={formData.categories.includes(cat as VehicleCategory)}
+                      checked={formData.categories.includes(cat as any)}
                       onCheckedChange={(checked) => {
                         if (checked) {
                           setFormData({
                             ...formData,
-                            categories: [...formData.categories, cat as VehicleCategory]
+                            categories: [...formData.categories, cat as any]
                           });
                         } else {
                           setFormData({

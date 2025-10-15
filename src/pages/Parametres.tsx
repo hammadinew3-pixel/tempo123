@@ -116,6 +116,7 @@ export default function Parametres() {
         .from('vehicle_assistance_categories')
         .insert({
           code: newCategoryCode.toUpperCase(),
+          nom: newCategoryCode.toUpperCase(),
           label: newCategoryCode.toUpperCase(),
           ordre: maxOrdre + 1
         });

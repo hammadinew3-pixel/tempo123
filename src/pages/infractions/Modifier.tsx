@@ -53,7 +53,7 @@ export default function ModifierInfraction() {
       setFormData({
         date_infraction: infraction.date_infraction,
         lieu: infraction.lieu,
-        type_infraction: infraction.type_infraction,
+        type_infraction: (infraction.type_infraction || 'autre') as any,
         vehicle_id: infraction.vehicle_id,
         description: infraction.description || "",
         montant: infraction.montant.toString(),

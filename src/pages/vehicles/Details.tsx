@@ -382,16 +382,11 @@ export default function VehiculeDetails() {
       // Insert traite
       const { data: traiteData, error } = await supabase.from('vehicules_traite').insert({
         vehicle_id: vehicle.id,
+        type_traitement: 'traite',
+        date_traitement: traiteForm.date_debut,
+        description: `Traite - ${traiteForm.organisme}`,
         organisme: traiteForm.organisme,
-        concessionaire: traiteForm.concessionaire || null,
-        date_achat: traiteForm.date_achat || null,
-        montant_total: prixAchat,
-        montant_mensuel: montantMensuel,
-        date_debut: traiteForm.date_debut,
-        nombre_traites: nombreMois,
-        avance_paye: avance,
-        duree_deja_paye: dureeDejaPaye,
-        notes: traiteForm.plus_infos || null
+        montant: prixAchat,
       }).select().single();
 
       if (error) throw error;
@@ -2485,10 +2480,9 @@ export default function VehiculeDetails() {
                 error
               } = await supabase.from('vehicle_vignette').insert({
                 vehicle_id: vehicle!.id,
-                ...vignetteForm,
-                annee: parseInt(vignetteForm.annee),
+                date_debut: vignetteForm.date_expiration,
+                date_expiration: vignetteForm.date_expiration,
                 montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null,
-                photo_url: photoUrl
               });
               if (error) throw error;
 

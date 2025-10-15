@@ -157,7 +157,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
         .from('vehicle_vignette')
         .insert([{
           vehicle_id: vehicleId,
-          ...vignetteData,
+          date_debut: vignetteData.date_expiration?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
           date_expiration: vignetteData.date_expiration?.toISOString().split('T')[0],
           date_paiement: vignetteData.date_paiement?.toISOString().split('T')[0],
           montant: vignetteData.montant ? parseFloat(vignetteData.montant) : null,

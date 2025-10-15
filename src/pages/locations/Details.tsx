@@ -351,7 +351,7 @@ export default function LocationDetails() {
           contract_id: id,
           montant: parseFloat(paymentData.montant),
           date_paiement: paymentData.date_paiement,
-          methode: paymentData.methode,
+          methode: paymentData.methode === 'carte' ? 'carte_bancaire' : paymentData.methode,
           numero_cheque: paymentData.numero_cheque || null,
           banque: paymentData.banque || null,
           remarques: paymentData.remarques || null,
@@ -488,6 +488,7 @@ export default function LocationDetails() {
           new_vehicle_id: changeVehicleData.new_vehicle_id,
           reason: changeVehicleData.reason,
           notes: calculationNote,
+          change_date: new Date().toISOString().split('T')[0],
         }]);
 
       if (changeError) throw changeError;

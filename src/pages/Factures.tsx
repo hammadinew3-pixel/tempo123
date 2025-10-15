@@ -162,7 +162,7 @@ export default function FacturesAssurance() {
     try {
       await supabase
         .from('assistance')
-        .update({ etat_paiement: newStatus })
+        .update({ etat_paiement: newStatus as 'en_attente' | 'partiellement_paye' | 'paye' })
         .in('id', selectedForStatus);
       
       await loadData();
