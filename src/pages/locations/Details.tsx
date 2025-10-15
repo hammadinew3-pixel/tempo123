@@ -266,6 +266,19 @@ export default function LocationDetails() {
 
       if (error) throw error;
 
+      // Update vehicle kilometrage if return_km is provided
+      if (returnData.return_km && contract?.vehicle_id) {
+        const { error: vehicleError } = await supabase
+          .from("vehicles")
+          .update({ 
+            kilometrage: parseInt(returnData.return_km),
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", contract.vehicle_id);
+
+        if (vehicleError) throw vehicleError;
+      }
+
       toast({
         title: "Succès",
         description: "Véhicule retourné avec succès",
