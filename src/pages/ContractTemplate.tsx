@@ -123,11 +123,7 @@ export default function ContractTemplate() {
   const client = contract.clients;
   const vehicle = contract.vehicles;
   const secondaryDriver = secondaryDrivers[0];
-  const hasCgvPage = Boolean(
-    agenceSettings?.inclure_cgv &&
-    agenceSettings?.cgv_texte &&
-    agenceSettings.cgv_texte.trim().length > 0
-  );
+  const hasCgvPage = false;
 
   return (
     <>
@@ -377,19 +373,6 @@ export default function ContractTemplate() {
           )}
         </div>
 
-        {/* Page 2 - CGV */}
-        {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
-          <div className="page-break cgv-page p-6"
-               style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            <div className="text-center mb-4">
-              <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
-            </div>
-            <div className="text-[9pt] leading-normal whitespace-pre-wrap text-justify"
-                 style={{ maxHeight: '250mm', overflowY: 'hidden' }}>
-              {agenceSettings.cgv_texte}
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
