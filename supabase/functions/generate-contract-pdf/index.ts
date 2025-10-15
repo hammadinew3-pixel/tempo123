@@ -52,8 +52,11 @@ serve(async (req) => {
       .select('*')
       .eq('contract_id', contractId);
 
-    const origin = req.headers.get('origin') || Deno.env.get('SUPABASE_URL')!.replace('.supabase.co', '.lovableproject.com');
+    // Get the origin from the request headers or fallback to the environment
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://66e40113-c245-4ca2-bcfb-093ee69d0d09.lovableproject.com';
     const pdfUrl = `${origin}/contract-template?id=${contractId}`;
+
+    console.log('📄 Generated PDF URL:', pdfUrl);
 
     await supabase.from('contracts').update({ pdf_url: pdfUrl, signed_at: new Date().toISOString() }).eq('id', contractId);
 
