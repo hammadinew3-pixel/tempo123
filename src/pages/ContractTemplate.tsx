@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
-import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function ContractTemplate() {
   const [searchParams] = useSearchParams();
@@ -24,29 +25,54 @@ export default function ContractTemplate() {
   useEffect(() => {
     if (!loading && contract) {
       if (downloadMode) {
-        setTimeout(() => {
+        setTimeout(async () => {
           const element = document.getElementById('contract-content');
           if (!element) return;
-          const opt = {
-            margin: [10, 10, 10, 10] as [number, number, number, number],
-            filename: `Contrat_${contract.numero_contrat || contractId}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-              scale: 2, 
+
+          try {
+            const canvas = await html2canvas(element, {
+              scale: 2,
               useCORS: true,
               allowTaint: true,
-              logging: false
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          };
-          html2pdf().set(opt).from(element).save().then(() => {
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+              orientation: 'portrait',
+              unit: 'mm',
+              format: 'a4'
+            });
+
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = pageWidth - 20; // marges de 10mm de chaque côté
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+            let position = 10;
+            let heightLeft = imgHeight;
+
+            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight - 20; // soustraire la hauteur de page moins les marges
+
+            while (heightLeft > 0) {
+              position = -(imgHeight - heightLeft) + 10;
+              pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight - 20;
+            }
+
+            pdf.save(`Contrat_${contract.numero_contrat || contractId}.pdf`);
+
             setTimeout(() => {
               if (window.parent !== window) {
                 window.parent.document.querySelector('iframe')?.remove();
               }
             }, 1000);
-          });
+          } catch (error) {
+            console.error('Erreur génération PDF:', error);
+          }
         }, 500);
       } else {
         setTimeout(() => window.print(), 500);
@@ -129,9 +155,15 @@ export default function ContractTemplate() {
           .no-print { display: none !important; }
           .page-break { page-break-before: always; }
         }
+        #contract-content {
+          width: 100%;
+          max-width: 190mm;
+          margin: auto;
+          overflow: hidden;
+        }
       `}</style>
       
-      <div id="contract-content" className="bg-white w-[210mm] mx-auto print:p-0"
+      <div id="contract-content" className="bg-white w-[190mm] mx-auto print:p-0"
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {/* Page 1 - Contrat */}
