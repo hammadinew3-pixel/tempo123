@@ -343,11 +343,19 @@ export type Database = {
         Row: {
           advance_payment: number | null
           caution_montant: number | null
+          caution_notes: string | null
           caution_statut: string | null
           client_id: string
           created_at: string | null
+          daily_rate: number | null
           date_debut: string
           date_fin: string
+          delivery_date: string | null
+          delivery_fuel_level: string | null
+          delivery_km: number | null
+          delivery_notes: string | null
+          delivery_type: string | null
+          duration: number | null
           end_location: string | null
           end_time: string | null
           id: string
@@ -355,7 +363,13 @@ export type Database = {
           numero_contrat: string
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           pdf_url: string | null
+          prolongations: Json | null
           remaining_amount: number | null
+          return_date: string | null
+          return_fuel_level: string | null
+          return_km: number | null
+          return_notes: string | null
+          return_type: string | null
           signed_at: string | null
           start_location: string | null
           start_time: string | null
@@ -367,11 +381,19 @@ export type Database = {
         Insert: {
           advance_payment?: number | null
           caution_montant?: number | null
+          caution_notes?: string | null
           caution_statut?: string | null
           client_id: string
           created_at?: string | null
+          daily_rate?: number | null
           date_debut: string
           date_fin: string
+          delivery_date?: string | null
+          delivery_fuel_level?: string | null
+          delivery_km?: number | null
+          delivery_notes?: string | null
+          delivery_type?: string | null
+          duration?: number | null
           end_location?: string | null
           end_time?: string | null
           id?: string
@@ -379,7 +401,13 @@ export type Database = {
           numero_contrat: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           pdf_url?: string | null
+          prolongations?: Json | null
           remaining_amount?: number | null
+          return_date?: string | null
+          return_fuel_level?: string | null
+          return_km?: number | null
+          return_notes?: string | null
+          return_type?: string | null
           signed_at?: string | null
           start_location?: string | null
           start_time?: string | null
@@ -391,11 +419,19 @@ export type Database = {
         Update: {
           advance_payment?: number | null
           caution_montant?: number | null
+          caution_notes?: string | null
           caution_statut?: string | null
           client_id?: string
           created_at?: string | null
+          daily_rate?: number | null
           date_debut?: string
           date_fin?: string
+          delivery_date?: string | null
+          delivery_fuel_level?: string | null
+          delivery_km?: number | null
+          delivery_notes?: string | null
+          delivery_type?: string | null
+          duration?: number | null
           end_location?: string | null
           end_time?: string | null
           id?: string
@@ -403,7 +439,13 @@ export type Database = {
           numero_contrat?: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           pdf_url?: string | null
+          prolongations?: Json | null
           remaining_amount?: number | null
+          return_date?: string | null
+          return_fuel_level?: string | null
+          return_km?: number | null
+          return_notes?: string | null
+          return_type?: string | null
           signed_at?: string | null
           start_location?: string | null
           start_time?: string | null
