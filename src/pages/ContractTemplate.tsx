@@ -191,11 +191,25 @@ export default function ContractTemplate() {
             <tbody>
               <tr>
                 <td className="border border-black p-2">
-                  {contract.prolongations.map((p: any, i: number) => (
-                    <div key={i} className="text-[8pt] mb-1">
-                      Du {p.date_debut ? format(new Date(p.date_debut), 'dd/MM/yyyy') : ''} au {p.date_fin ? format(new Date(p.date_fin), 'dd/MM/yyyy') : ''} - {p.duree}j - {p.montant} Dh
-                    </div>
-                  ))}
+                  {contract.prolongations.map((p: any, i: number) => {
+                    const ancienneDate = p.ancienne_date_fin ? new Date(p.ancienne_date_fin) : null;
+                    const nouvelleDate = p.nouvelle_date_fin ? new Date(p.nouvelle_date_fin) : null;
+                    const duree = ancienneDate && nouvelleDate 
+                      ? Math.ceil((nouvelleDate.getTime() - ancienneDate.getTime()) / (1000 * 60 * 60 * 24))
+                      : 0;
+                    const montant = duree * (contract.daily_rate || 0);
+                    
+                    return (
+                      <div key={i} className="text-[8pt] mb-1">
+                        {ancienneDate && nouvelleDate && (
+                          <>
+                            Du {format(ancienneDate, 'dd/MM/yyyy')} au {format(nouvelleDate, 'dd/MM/yyyy')} - {duree}j - {montant.toFixed(2)} Dh
+                            {p.raison && <span className="ml-2 text-gray-600">({p.raison})</span>}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </td>
               </tr>
             </tbody>
