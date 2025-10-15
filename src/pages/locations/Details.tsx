@@ -739,35 +739,24 @@ export default function LocationDetails() {
   const handleGeneratePDF = async () => {
     try {
       toast({
-        title: "Génération en cours",
-        description: "Le PDF du contrat est en cours de génération...",
+        title: "Génération du contrat",
+        description: "Veuillez patienter...",
       });
 
-      const { data, error } = await supabase.functions.invoke('generate-contract-pdf', {
-        body: { contractId: id }
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.top = '-10000px';
+      iframe.style.left = '-10000px';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
+      document.body.appendChild(iframe);
+
+      iframe.src = `/contract-template?id=${id}&download=true`;
+
+      toast({
+        title: 'Contrat en cours de téléchargement',
+        description: 'Le PDF sera téléchargé automatiquement',
       });
-
-      if (error) throw error;
-
-      if (data?.pdfUrl) {
-        // Télécharger directement le PDF généré
-        const filename = `Contrat_${contract?.numero_contrat || id}.pdf`;
-        const response = await fetch(data.pdfUrl);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-        toast({
-          title: "Succès",
-          description: "Le contrat PDF a été téléchargé",
-        });
-        loadContractData();
-      }
     } catch (error: any) {
       console.error('Erreur génération PDF:', error);
       toast({
@@ -999,7 +988,7 @@ export default function LocationDetails() {
             </Button>
           )}
           {contract.pdf_url && (
-            <Button variant="outline" size="sm" onClick={handleDownloadExistingPDF}>
+            <Button variant="outline" size="sm" onClick={handleGeneratePDF}>
               <Download className="w-4 h-4 mr-2" />
               Télécharger contrat
             </Button>

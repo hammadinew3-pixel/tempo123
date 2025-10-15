@@ -3,10 +3,12 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
+import html2pdf from 'html2pdf.js';
 
 export default function ContractTemplate() {
   const [searchParams] = useSearchParams();
   const contractId = searchParams.get('id');
+  const downloadMode = searchParams.get('download') === 'true';
   const [contract, setContract] = useState<any>(null);
   const [vehicleChanges, setVehicleChanges] = useState<any[]>([]);
   const [secondaryDrivers, setSecondaryDrivers] = useState<any[]>([]);
@@ -21,9 +23,30 @@ export default function ContractTemplate() {
 
   useEffect(() => {
     if (!loading && contract) {
-      setTimeout(() => window.print(), 500);
+      if (downloadMode) {
+        setTimeout(() => {
+          const element = document.getElementById('contract-content');
+          if (!element) return;
+          const opt = {
+            margin: 10,
+            filename: `Contrat_${contract.numero_contrat || contractId}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+          };
+          html2pdf().set(opt).from(element).save().then(() => {
+            setTimeout(() => {
+              if (window.parent !== window) {
+                window.parent.document.querySelector('iframe')?.remove();
+              }
+            }, 1000);
+          });
+        }, 500);
+      } else {
+        setTimeout(() => window.print(), 500);
+      }
     }
-  }, [loading, contract]);
+  }, [loading, contract, downloadMode, contractId]);
 
   const loadContractData = async () => {
     try {
@@ -102,7 +125,7 @@ export default function ContractTemplate() {
         }
       `}</style>
       
-      <div className="min-h-[297mm] flex flex-col p-6 font-sans text-[10pt] leading-normal bg-white w-[210mm] mx-auto print:p-0"
+      <div id="contract-content" className="min-h-[297mm] flex flex-col p-6 font-sans text-[10pt] leading-normal bg-white w-[210mm] mx-auto print:p-0"
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {!agenceSettings?.masquer_entete && (
