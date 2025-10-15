@@ -18,31 +18,51 @@ export default function AssistanceContractTemplate() {
   const loadData = async () => {
     if (!assistanceId) return;
 
-    const [assistanceRes, settingsRes] = await Promise.all([
-      supabase
+    try {
+      const assistanceRes = await supabase
         .from("assistance")
         .select(`
           *,
           clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
-          vehicles (immatriculation, marque, modele, annee, categorie),
-          assurances (nom, contact_nom, contact_telephone, contact_email, adresse)
+          vehicles (immatriculation, marque, modele, annee, categorie)
         `)
         .eq("id", assistanceId)
-        .single(),
-      supabase
+        .single();
+
+      if (assistanceRes.error) {
+        console.error("Error loading assistance:", assistanceRes.error);
+      } else {
+        let assistanceData: any = assistanceRes.data;
+        
+        // Charger les données de l'assurance si assureur_id existe
+        if (assistanceData?.assureur_id) {
+          const { data: assuranceData } = await supabase
+            .from('assurances')
+            .select('nom, contact_nom, contact_telephone, contact_email, adresse')
+            .eq('id', assistanceData.assureur_id)
+            .maybeSingle();
+          
+          if (assuranceData) {
+            assistanceData = {
+              ...assistanceData,
+              assurance: assuranceData
+            };
+          }
+        }
+        
+        setAssistance(assistanceData);
+      }
+      
+      const settingsRes = await supabase
         .from('agence_settings')
         .select('*')
-        .single()
-    ]);
-
-    if (assistanceRes.error) {
-      console.error("Error loading assistance:", assistanceRes.error);
-    } else {
-      setAssistance(assistanceRes.data);
-    }
-    
-    if (!settingsRes.error) {
-      setAgenceSettings(settingsRes.data);
+        .maybeSingle();
+      
+      if (!settingsRes.error && settingsRes.data) {
+        setAgenceSettings(settingsRes.data);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
     }
     
     setLoading(false);

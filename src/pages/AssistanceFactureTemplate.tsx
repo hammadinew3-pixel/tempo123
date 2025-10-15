@@ -35,15 +35,33 @@ export default function AssistanceFactureTemplate() {
           .select(`
             *,
             clients (nom, prenom, telephone, email, cin, adresse),
-            vehicles (immatriculation, marque, modele),
-            assurances (nom, adresse, contact_telephone)
+            vehicles (immatriculation, marque, modele)
           `)
           .in("id", ids);
 
         if (error) {
           console.error("Error loading assistances:", error);
         } else {
-          setAssistances(data || []);
+          // Charger les assurances pour chaque assistance
+          const assistancesWithAssurance = await Promise.all(
+            (data || []).map(async (assistance: any) => {
+              if (assistance.assureur_id) {
+                const { data: assuranceData } = await supabase
+                  .from('assurances')
+                  .select('nom, adresse, contact_telephone')
+                  .eq('id', assistance.assureur_id)
+                  .maybeSingle();
+                
+                return {
+                  ...assistance,
+                  assurance: assuranceData
+                };
+              }
+              return assistance;
+            })
+          );
+          
+          setAssistances(assistancesWithAssurance);
           setIsGrouped(true);
         }
       } else if (assistanceId) {
@@ -53,8 +71,7 @@ export default function AssistanceFactureTemplate() {
           .select(`
             *,
             clients (nom, prenom, telephone, email, cin, adresse),
-            vehicles (immatriculation, marque, modele),
-            assurances (nom, adresse, contact_telephone)
+            vehicles (immatriculation, marque, modele)
           `)
           .eq("id", assistanceId)
           .single();
@@ -62,7 +79,25 @@ export default function AssistanceFactureTemplate() {
         if (error) {
           console.error("Error loading assistance:", error);
         } else {
-          setAssistances(data ? [data] : []);
+          let assistanceData: any = data;
+          
+          // Charger l'assurance si assureur_id existe
+          if (data?.assureur_id) {
+            const { data: assuranceData } = await supabase
+              .from('assurances')
+              .select('nom, adresse, contact_telephone')
+              .eq('id', data.assureur_id)
+              .maybeSingle();
+            
+            if (assuranceData) {
+              assistanceData = {
+                ...data,
+                assurance: assuranceData
+              };
+            }
+          }
+          
+          setAssistances([assistanceData]);
           setIsGrouped(false);
         }
       }

@@ -877,9 +877,61 @@ export default function AssistanceDetails() {
     }
   };
 
-  const handleDownloadOrdreMission = () => {
+  const handleDownloadOrdreMission = async () => {
     if (assistance?.ordre_mission_url) {
-      window.open(assistance.ordre_mission_url, '_blank');
+      try {
+        // Si l'URL est dans un bucket privé, créer une URL signée
+        const url = new URL(assistance.ordre_mission_url);
+        const path = url.pathname.split('/object/public/')[1];
+        
+        if (path) {
+          const { data, error } = await supabase.storage
+            .from('assistance-pdfs')
+            .createSignedUrl(path.replace('assistance-pdfs/', ''), 60);
+          
+          if (data?.signedUrl) {
+            window.open(data.signedUrl, '_blank');
+          } else {
+            window.open(assistance.ordre_mission_url, '_blank');
+          }
+        } else {
+          window.open(assistance.ordre_mission_url, '_blank');
+        }
+      } catch (error) {
+        window.open(assistance.ordre_mission_url, '_blank');
+      }
+    }
+  };
+
+  const handleDownloadClientDoc = async (docUrl: string, docType: string) => {
+    try {
+      // Extraire le chemin du document
+      const url = new URL(docUrl);
+      const path = url.pathname.split('/object/public/')[1] || url.pathname.split('/object/')[1];
+      
+      if (path) {
+        const bucketPath = path.replace('client-documents/', '');
+        const { data, error } = await supabase.storage
+          .from('client-documents')
+          .createSignedUrl(bucketPath, 60);
+        
+        if (error) throw error;
+        
+        if (data?.signedUrl) {
+          window.open(data.signedUrl, '_blank');
+          toast({
+            title: "Téléchargement",
+            description: `${docType} ouvert dans un nouvel onglet`,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('Erreur téléchargement:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: `Impossible de télécharger le ${docType}`,
+      });
     }
   };
 
@@ -1570,7 +1622,7 @@ export default function AssistanceDetails() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(assistance.clients.cin_url, '_blank')}
+                          onClick={() => handleDownloadClientDoc(assistance.clients.cin_url, 'CIN')}
                           className="h-7 px-2"
                         >
                           <Download className="w-4 h-4" />
@@ -1588,7 +1640,7 @@ export default function AssistanceDetails() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => window.open(assistance.clients.permis_url, '_blank')}
+                          onClick={() => handleDownloadClientDoc(assistance.clients.permis_url, 'Permis')}
                           className="h-7 px-2"
                         >
                           <Download className="w-4 h-4" />

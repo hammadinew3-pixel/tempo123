@@ -18,28 +18,49 @@ export default function AssistanceDossierTemplate() {
   const loadData = async () => {
     if (!assistanceId) return;
 
-    // Load settings
-    const { data: settingsData } = await supabase
-      .from("agence_settings")
-      .select("*")
-      .single();
-    setSettings(settingsData);
+    try {
+      // Load settings
+      const { data: settingsData } = await supabase
+        .from("agence_settings")
+        .select("*")
+        .maybeSingle();
+      setSettings(settingsData);
 
-    const { data, error } = await supabase
-      .from("assistance")
-      .select(`
-        *,
-        clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
-        vehicles (immatriculation, marque, modele, annee, categorie, kilometrage),
-        assurances (nom, contact_nom, contact_telephone, contact_email, adresse)
-      `)
-      .eq("id", assistanceId)
-      .single();
+      const { data, error } = await supabase
+        .from("assistance")
+        .select(`
+          *,
+          clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
+          vehicles (immatriculation, marque, modele, annee, categorie, kilometrage)
+        `)
+        .eq("id", assistanceId)
+        .single();
 
-    if (error) {
-      console.error("Error loading assistance:", error);
-    } else {
-      setAssistance(data);
+      if (error) {
+        console.error("Error loading assistance:", error);
+      } else {
+        let assistanceData: any = data;
+        
+        // Charger l'assurance séparément si assureur_id existe
+        if (data?.assureur_id) {
+          const { data: assuranceData } = await supabase
+            .from('assurances')
+            .select('nom, contact_nom, contact_telephone, contact_email, adresse')
+            .eq('id', data.assureur_id)
+            .maybeSingle();
+          
+          if (assuranceData) {
+            assistanceData = {
+              ...data,
+              assurance: assuranceData
+            };
+          }
+        }
+        
+        setAssistance(assistanceData);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
     }
     setLoading(false);
   };

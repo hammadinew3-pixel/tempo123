@@ -16,24 +16,40 @@ export default function AssistanceCompletTemplate() {
       if (!id) return;
 
       try {
-        const [assistanceRes, settingsRes] = await Promise.all([
-          supabase
-            .from('assistance')
-            .select(`
-              *,
-              clients (nom, prenom, telephone, email, cin, permis_conduire, adresse, cin_url, permis_url),
-              vehicles (marque, modele, immatriculation, categorie),
-              assurances (nom, contact_nom, contact_telephone, contact_email, adresse)
-            `)
-            .eq('id', id)
-            .single(),
-          supabase.from('agence_settings').select('*').single()
-        ]);
+        const assistanceRes = await supabase
+          .from('assistance')
+          .select(`
+            *,
+            clients (nom, prenom, telephone, email, cin, permis_conduire, adresse, cin_url, permis_url),
+            vehicles (marque, modele, immatriculation, categorie)
+          `)
+          .eq('id', id)
+          .single();
 
         if (assistanceRes.error) throw assistanceRes.error;
+
+        let assistanceData: any = assistanceRes.data;
+        
+        // Charger l'assurance si assureur_id existe
+        if (assistanceData?.assureur_id) {
+          const { data: assuranceData } = await supabase
+            .from('assurances')
+            .select('nom, contact_nom, contact_telephone, contact_email, adresse')
+            .eq('id', assistanceData.assureur_id)
+            .maybeSingle();
+          
+          if (assuranceData) {
+            assistanceData = {
+              ...assistanceData,
+              assurance: assuranceData
+            };
+          }
+        }
+
+        const settingsRes = await supabase.from('agence_settings').select('*').maybeSingle();
         if (settingsRes.error) throw settingsRes.error;
 
-        setData(assistanceRes.data);
+        setData(assistanceData);
         setSettings(settingsRes.data);
       } catch (error) {
         console.error('Erreur:', error);
