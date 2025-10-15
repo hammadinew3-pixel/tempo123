@@ -49,44 +49,56 @@ export type Database = {
       }
       assistance: {
         Row: {
+          assureur_nom: string | null
           client_id: string
           created_at: string | null
           date_debut: string
           date_fin: string
           etat: string | null
           etat_paiement: Database["public"]["Enums"]["payment_status"] | null
+          franchise_montant: number | null
           id: string
           montant_facture: number | null
+          montant_paye: number | null
           montant_total: number | null
           num_dossier: string
+          type: string | null
           updated_at: string | null
           vehicle_id: string
         }
         Insert: {
+          assureur_nom?: string | null
           client_id: string
           created_at?: string | null
           date_debut: string
           date_fin: string
           etat?: string | null
           etat_paiement?: Database["public"]["Enums"]["payment_status"] | null
+          franchise_montant?: number | null
           id?: string
           montant_facture?: number | null
+          montant_paye?: number | null
           montant_total?: number | null
           num_dossier: string
+          type?: string | null
           updated_at?: string | null
           vehicle_id: string
         }
         Update: {
+          assureur_nom?: string | null
           client_id?: string
           created_at?: string | null
           date_debut?: string
           date_fin?: string
           etat?: string | null
           etat_paiement?: Database["public"]["Enums"]["payment_status"] | null
+          franchise_montant?: number | null
           id?: string
           montant_facture?: number | null
+          montant_paye?: number | null
           montant_total?: number | null
           num_dossier?: string
+          type?: string | null
           updated_at?: string | null
           vehicle_id?: string
         }
