@@ -69,9 +69,7 @@ export default function Charges() {
         .select(`
           *,
           vehicles:vehicle_id (marque, modele, immatriculation)
-        `)
-        .eq('statut', 'Payée')
-        .order('date_paiement', { ascending: false });
+        `) as any;
 
       if (traitesError) throw traitesError;
 

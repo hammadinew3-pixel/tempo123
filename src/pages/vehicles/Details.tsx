@@ -3196,12 +3196,10 @@ export default function VehiculeDetails() {
                 if (traiteError) throw traiteError;
 
                 // Delete existing echeances
-                const { error: deleteError } = await supabase
+                await supabase
                   .from('vehicules_traites_echeances')
                   .delete()
                   .eq('traite_id', selectedTraite.id);
-
-                if (deleteError) throw deleteError;
 
                 // Generate new echeances
                 const echeancesToInsert = [];

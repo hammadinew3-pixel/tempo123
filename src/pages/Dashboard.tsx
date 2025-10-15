@@ -402,10 +402,7 @@ export default function Dashboard() {
       // Check traite bancaire alerts
       const { data: echeances } = await supabase
         .from('vehicules_traites_echeances')
-        .select('*')
-        .eq('vehicle_id', vehicle.id)
-        .eq('statut', 'À payer')
-        .order('date_echeance', { ascending: true });
+        .select('*') as any;
 
       if (echeances && echeances.length > 0) {
         for (const echeance of echeances) {

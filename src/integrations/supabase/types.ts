@@ -1027,31 +1027,52 @@ export type Database = {
       }
       vehicules_traite: {
         Row: {
+          avance_paye: number | null
           created_at: string | null
+          date_debut: string | null
           date_traitement: string
           description: string | null
+          duree_deja_paye: number | null
           id: string
           montant: number | null
+          montant_mensuel: number | null
+          montant_total: number | null
+          nombre_traites: number | null
+          notes: string | null
           organisme: string | null
           type_traitement: string
           vehicle_id: string
         }
         Insert: {
+          avance_paye?: number | null
           created_at?: string | null
+          date_debut?: string | null
           date_traitement: string
           description?: string | null
+          duree_deja_paye?: number | null
           id?: string
           montant?: number | null
+          montant_mensuel?: number | null
+          montant_total?: number | null
+          nombre_traites?: number | null
+          notes?: string | null
           organisme?: string | null
           type_traitement: string
           vehicle_id: string
         }
         Update: {
+          avance_paye?: number | null
           created_at?: string | null
+          date_debut?: string | null
           date_traitement?: string
           description?: string | null
+          duree_deja_paye?: number | null
           id?: string
           montant?: number | null
+          montant_mensuel?: number | null
+          montant_total?: number | null
+          nombre_traites?: number | null
+          notes?: string | null
           organisme?: string | null
           type_traitement?: string
           vehicle_id?: string
@@ -1067,6 +1088,8 @@ export type Database = {
           id: string
           montant: number | null
           notes: string | null
+          statut: string | null
+          traite_id: string | null
           type_echeance: string
           vehicle_id: string | null
         }
@@ -1078,6 +1101,8 @@ export type Database = {
           id?: string
           montant?: number | null
           notes?: string | null
+          statut?: string | null
+          traite_id?: string | null
           type_echeance: string
           vehicle_id?: string | null
         }
@@ -1089,10 +1114,19 @@ export type Database = {
           id?: string
           montant?: number | null
           notes?: string | null
+          statut?: string | null
+          traite_id?: string | null
           type_echeance?: string
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "vehicules_traites_echeances_traite_id_fkey"
+            columns: ["traite_id"]
+            isOneToOne: false
+            referencedRelation: "vehicules_traite"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vehicules_traites_echeances_vehicle_id_fkey"
             columns: ["vehicle_id"]

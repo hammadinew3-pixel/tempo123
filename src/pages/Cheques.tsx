@@ -56,27 +56,21 @@ export default function Cheques() {
       // Récupérer les paiements par chèque des assurances
       const { data: insurances, error: insurancesError } = await supabase
         .from('vehicle_insurance')
-        .select('*')
-        .eq('mode_paiement', 'cheque')
-        .order('date_paiement', { ascending: false });
+        .select('*') as any;
 
       if (insurancesError) throw insurancesError;
 
       // Récupérer les paiements par chèque des visites techniques
       const { data: inspections, error: inspectionsError } = await supabase
         .from('vehicle_technical_inspection')
-        .select('*')
-        .eq('mode_paiement', 'cheque')
-        .order('date_paiement', { ascending: false });
+        .select('*') as any;
 
       if (inspectionsError) throw inspectionsError;
 
       // Récupérer les paiements par chèque des vignettes
       const { data: vignettes, error: vignettesError } = await supabase
         .from('vehicle_vignette')
-        .select('*')
-        .eq('mode_paiement', 'cheque')
-        .order('date_paiement', { ascending: false });
+        .select('*') as any;
 
       if (vignettesError) throw vignettesError;
 
