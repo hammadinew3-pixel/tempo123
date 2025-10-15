@@ -1074,10 +1074,7 @@ export default function AssistanceDetails() {
                 <FileText className="w-4 h-4 mr-2" />
                 Info dossier
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                const url = `/assistance-contract-template?id=${id}`;
-                window.open(url, '_blank');
-              }}>
+              <DropdownMenuItem onClick={handleGenerateContractPDF}>
                 <FileText className="w-4 h-4 mr-2" />
                 Contrat de location assistance
               </DropdownMenuItem>

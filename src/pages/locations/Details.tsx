@@ -716,6 +716,26 @@ export default function LocationDetails() {
     return diff;
   };
 
+  const handleDownloadExistingPDF = async () => {
+    try {
+      if (!contract?.pdf_url) return;
+      const response = await fetch(contract.pdf_url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Contrat_${contract.numero_contrat || id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast({ title: 'Téléchargement', description: 'Contrat téléchargé' });
+    } catch (e) {
+      console.error('Erreur téléchargement contrat:', e);
+      window.open(contract!.pdf_url, '_blank');
+    }
+  };
+
   const handleGeneratePDF = async () => {
     try {
       toast({
@@ -730,10 +750,21 @@ export default function LocationDetails() {
       if (error) throw error;
 
       if (data?.pdfUrl) {
-        window.open(data.pdfUrl, '_blank');
+        // Télécharger directement le PDF généré
+        const filename = `Contrat_${contract?.numero_contrat || id}.pdf`;
+        const response = await fetch(data.pdfUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
         toast({
           title: "Succès",
-          description: "Le contrat PDF a été généré avec succès",
+          description: "Le contrat PDF a été téléchargé",
         });
         loadContractData();
       }
@@ -968,7 +999,7 @@ export default function LocationDetails() {
             </Button>
           )}
           {contract.pdf_url && (
-            <Button variant="outline" size="sm" onClick={() => window.open(contract.pdf_url, '_blank')}>
+            <Button variant="outline" size="sm" onClick={handleDownloadExistingPDF}>
               <Download className="w-4 h-4 mr-2" />
               Télécharger contrat
             </Button>
