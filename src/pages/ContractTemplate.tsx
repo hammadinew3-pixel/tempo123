@@ -295,7 +295,7 @@ export default function ContractTemplate() {
         </div>
 
         {!agenceSettings?.masquer_pied_page && (
-          <div className="text-center text-[8pt] text-gray-600 mt-auto pt-3 border-t border-gray-300">
+          <div className="text-center text-[7pt] text-gray-600 mt-auto pt-3 border-t border-gray-300">
             {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
             {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
             <br/>
