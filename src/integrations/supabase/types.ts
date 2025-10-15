@@ -842,32 +842,56 @@ export type Database = {
       vehicle_insurance: {
         Row: {
           assureur: string
+          banque: string | null
+          coordonnees_assureur: string | null
           created_at: string | null
           date_debut: string
           date_expiration: string
+          date_paiement: string | null
           id: string
+          mode_paiement: string | null
           montant: number | null
+          numero_cheque: string | null
+          numero_ordre: string | null
           numero_police: string | null
+          photo_url: string | null
+          remarques: string | null
           vehicle_id: string
         }
         Insert: {
           assureur: string
+          banque?: string | null
+          coordonnees_assureur?: string | null
           created_at?: string | null
           date_debut: string
           date_expiration: string
+          date_paiement?: string | null
           id?: string
+          mode_paiement?: string | null
           montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
           numero_police?: string | null
+          photo_url?: string | null
+          remarques?: string | null
           vehicle_id: string
         }
         Update: {
           assureur?: string
+          banque?: string | null
+          coordonnees_assureur?: string | null
           created_at?: string | null
           date_debut?: string
           date_expiration?: string
+          date_paiement?: string | null
           id?: string
+          mode_paiement?: string | null
           montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
           numero_police?: string | null
+          photo_url?: string | null
+          remarques?: string | null
           vehicle_id?: string
         }
         Relationships: [
@@ -882,26 +906,53 @@ export type Database = {
       }
       vehicle_technical_inspection: {
         Row: {
+          banque: string | null
+          centre_controle: string | null
           created_at: string | null
           date_expiration: string
+          date_paiement: string | null
           date_visite: string
           id: string
+          mode_paiement: string | null
+          montant: number | null
+          numero_cheque: string | null
+          numero_ordre: string | null
+          photo_url: string | null
+          remarques: string | null
           resultat: string | null
           vehicle_id: string
         }
         Insert: {
+          banque?: string | null
+          centre_controle?: string | null
           created_at?: string | null
           date_expiration: string
+          date_paiement?: string | null
           date_visite: string
           id?: string
+          mode_paiement?: string | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
+          photo_url?: string | null
+          remarques?: string | null
           resultat?: string | null
           vehicle_id: string
         }
         Update: {
+          banque?: string | null
+          centre_controle?: string | null
           created_at?: string | null
           date_expiration?: string
+          date_paiement?: string | null
           date_visite?: string
           id?: string
+          mode_paiement?: string | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
+          photo_url?: string | null
+          remarques?: string | null
           resultat?: string | null
           vehicle_id?: string
         }
@@ -917,30 +968,48 @@ export type Database = {
       }
       vehicle_vignette: {
         Row: {
+          annee: number | null
+          banque: string | null
           created_at: string | null
           date_debut: string
           date_expiration: string
           date_paiement: string | null
           id: string
+          mode_paiement: string | null
           montant: number | null
+          numero_cheque: string | null
+          numero_ordre: string | null
+          remarques: string | null
           vehicle_id: string
         }
         Insert: {
+          annee?: number | null
+          banque?: string | null
           created_at?: string | null
           date_debut: string
           date_expiration: string
           date_paiement?: string | null
           id?: string
+          mode_paiement?: string | null
           montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
+          remarques?: string | null
           vehicle_id: string
         }
         Update: {
+          annee?: number | null
+          banque?: string | null
           created_at?: string | null
           date_debut?: string
           date_expiration?: string
           date_paiement?: string | null
           id?: string
+          mode_paiement?: string | null
           montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
+          remarques?: string | null
           vehicle_id?: string
         }
         Relationships: [
