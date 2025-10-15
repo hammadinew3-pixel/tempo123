@@ -199,14 +199,31 @@ export default function AssistanceDetails() {
         .select(`
           *,
           clients (id, nom, prenom, telephone, email, cin, permis_conduire, cin_url, permis_url),
-          vehicles (id, marque, modele, immatriculation, categorie, kilometrage),
-          assurances (id, nom, contact_nom, contact_telephone, contact_email)
+          vehicles (id, marque, modele, immatriculation, categorie, kilometrage)
         `)
         .eq('id', id!)
         .single();
 
       if (error) throw error;
-      setAssistance(data);
+      
+      // Si assureur_id existe, charger les données de l'assurance séparément
+      let assistanceWithAssurance: any = data;
+      if (data && data.assureur_id) {
+        const { data: assuranceData } = await supabase
+          .from('assurances')
+          .select('id, nom, contact_nom, contact_telephone, contact_email')
+          .eq('id', data.assureur_id)
+          .maybeSingle();
+        
+        if (assuranceData) {
+          assistanceWithAssurance = {
+            ...data,
+            assurance: assuranceData
+          };
+        }
+      }
+      
+      setAssistance(assistanceWithAssurance);
     } catch (error: any) {
       console.error("Erreur chargement:", error);
       toast({
