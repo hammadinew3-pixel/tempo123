@@ -275,7 +275,7 @@ export default function ContractTemplate() {
           <div className="text-center mb-3">
             <h2 className="text-[11pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE VENTE</h2>
           </div>
-          <div className="text-[10.5pt] leading-normal whitespace-pre-wrap text-justify">
+          <div className="text-[10pt] leading-normal whitespace-pre-wrap text-justify">
             {agenceSettings.cgv_texte}
           </div>
         </div>
