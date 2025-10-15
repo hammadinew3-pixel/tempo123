@@ -55,19 +55,28 @@ export type Database = {
           created_at: string | null
           date_debut: string
           date_fin: string
+          date_paiement_assurance: string | null
           date_retour_effective: string | null
           etat: string | null
           etat_paiement: Database["public"]["Enums"]["payment_status"] | null
+          etat_vehicule_depart: string | null
+          etat_vehicule_retour: string | null
           franchise_montant: number | null
+          franchise_notes: string | null
           franchise_statut: string | null
           id: string
           kilometrage_depart: number | null
+          kilometrage_retour: number | null
           montant_facture: number | null
           montant_paye: number | null
           montant_total: number | null
+          niveau_carburant_depart: string | null
+          niveau_carburant_retour: string | null
           num_dossier: string
           ordre_mission: string | null
           ordre_mission_url: string | null
+          prolongations: Json | null
+          remarques: string | null
           tarif_journalier: number | null
           type: string | null
           updated_at: string | null
@@ -80,19 +89,28 @@ export type Database = {
           created_at?: string | null
           date_debut: string
           date_fin: string
+          date_paiement_assurance?: string | null
           date_retour_effective?: string | null
           etat?: string | null
           etat_paiement?: Database["public"]["Enums"]["payment_status"] | null
+          etat_vehicule_depart?: string | null
+          etat_vehicule_retour?: string | null
           franchise_montant?: number | null
+          franchise_notes?: string | null
           franchise_statut?: string | null
           id?: string
           kilometrage_depart?: number | null
+          kilometrage_retour?: number | null
           montant_facture?: number | null
           montant_paye?: number | null
           montant_total?: number | null
+          niveau_carburant_depart?: string | null
+          niveau_carburant_retour?: string | null
           num_dossier: string
           ordre_mission?: string | null
           ordre_mission_url?: string | null
+          prolongations?: Json | null
+          remarques?: string | null
           tarif_journalier?: number | null
           type?: string | null
           updated_at?: string | null
@@ -105,19 +123,28 @@ export type Database = {
           created_at?: string | null
           date_debut?: string
           date_fin?: string
+          date_paiement_assurance?: string | null
           date_retour_effective?: string | null
           etat?: string | null
           etat_paiement?: Database["public"]["Enums"]["payment_status"] | null
+          etat_vehicule_depart?: string | null
+          etat_vehicule_retour?: string | null
           franchise_montant?: number | null
+          franchise_notes?: string | null
           franchise_statut?: string | null
           id?: string
           kilometrage_depart?: number | null
+          kilometrage_retour?: number | null
           montant_facture?: number | null
           montant_paye?: number | null
           montant_total?: number | null
+          niveau_carburant_depart?: string | null
+          niveau_carburant_retour?: string | null
           num_dossier?: string
           ordre_mission?: string | null
           ordre_mission_url?: string | null
+          prolongations?: Json | null
+          remarques?: string | null
           tarif_journalier?: number | null
           type?: string | null
           updated_at?: string | null
