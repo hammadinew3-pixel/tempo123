@@ -3,10 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import html2pdf from 'html2pdf.js';
 
 export default function AssistanceContractTemplate() {
   const [searchParams] = useSearchParams();
   const assistanceId = searchParams.get("id");
+  const downloadMode = searchParams.get("download") === "true";
   const [assistance, setAssistance] = useState<any>(null);
   const [agenceSettings, setAgenceSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -70,9 +72,35 @@ export default function AssistanceContractTemplate() {
 
   useEffect(() => {
     if (assistance && !loading) {
-      setTimeout(() => window.print(), 500);
+      if (downloadMode) {
+        // Mode téléchargement PDF
+        setTimeout(() => {
+          const element = document.getElementById('contract-content');
+          if (!element) return;
+
+          const opt = {
+            margin: 10,
+            filename: `Contrat_${assistance.num_dossier}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+          };
+
+          html2pdf().set(opt).from(element).save().then(() => {
+            // Fermer l'iframe après le téléchargement
+            setTimeout(() => {
+              if (window.parent !== window) {
+                window.parent.document.querySelector('iframe')?.remove();
+              }
+            }, 1000);
+          });
+        }, 500);
+      } else {
+        // Mode impression classique
+        setTimeout(() => window.print(), 500);
+      }
     }
-  }, [assistance, loading]);
+  }, [assistance, loading, downloadMode]);
 
   if (loading) {
     return (
@@ -109,7 +137,7 @@ export default function AssistanceContractTemplate() {
         }
       `}</style>
       
-      <div className="max-w-[210mm] mx-auto p-8 bg-white print:p-0">
+      <div id="contract-content" className="max-w-[210mm] mx-auto p-8 bg-white print:p-0">
       {/* Header */}
       {!agenceSettings?.masquer_entete && (
         <div className="border-b-2 border-black pb-4 mb-6">

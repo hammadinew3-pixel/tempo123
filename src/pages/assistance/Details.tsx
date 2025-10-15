@@ -619,13 +619,21 @@ export default function AssistanceDetails() {
         description: "Veuillez patienter...",
       });
 
-      // Open contract template in new tab
-      const contractUrl = `/assistance-contract-template?id=${id}`;
-      window.open(contractUrl, '_blank');
+      // Ouvrir le template dans un iframe caché pour générer le PDF
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.top = '-10000px';
+      iframe.style.left = '-10000px';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
+      document.body.appendChild(iframe);
 
+      iframe.src = `/assistance-contract-template?id=${id}&download=true`;
+
+      // Attendre que le PDF soit généré (l'iframe se supprimera automatiquement)
       toast({
-        title: 'Contrat généré',
-        description: 'Le contrat a été ouvert dans un nouvel onglet',
+        title: 'Contrat en cours de téléchargement',
+        description: 'Le PDF sera téléchargé automatiquement',
       });
     } catch (error: any) {
       console.error('Erreur génération contrat:', error);
