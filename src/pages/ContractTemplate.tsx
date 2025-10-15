@@ -131,224 +131,229 @@ export default function ContractTemplate() {
         }
       `}</style>
       
-      <div id="contract-content" className="min-h-[297mm] flex flex-col p-6 font-sans text-[10pt] leading-normal bg-white w-[210mm] mx-auto print:p-0"
+      <div id="contract-content" className="bg-white w-[210mm] mx-auto print:p-0"
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
-        {!agenceSettings?.masquer_entete && (
-          <div className="mb-4 pb-2 border-b-2 border-black">
-            <div className="flex justify-between items-center">
-              {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
-                <img 
-                  src={agenceSettings.logo_url} 
-                  alt="Logo" 
-                  className="h-16 w-auto object-contain" 
-                  crossOrigin="anonymous"
-                />
-              )}
-              <div className="flex-1 text-center">
-                <h1 className="text-[14pt] font-bold">CONTRAT DE LOCATION N° {contract.numero_contrat}</h1>
+        {/* Page 1 - Contrat */}
+        <div className="min-h-[297mm] flex flex-col p-8">
+          {!agenceSettings?.masquer_entete && (
+            <div className="mb-6 pb-3 border-b-2 border-black">
+              <div className="flex justify-between items-start">
+                {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
+                  <div className="w-1/4">
+                    <img 
+                      src={agenceSettings.logo_url} 
+                      alt="Logo" 
+                      className="h-20 w-auto object-contain" 
+                      crossOrigin="anonymous"
+                    />
+                  </div>
+                )}
+                <div className={`flex-1 text-center ${!agenceSettings?.masquer_logo && agenceSettings?.logo_url ? '' : 'w-full'}`}>
+                  <h1 className="text-[16pt] font-bold mb-1">CONTRAT DE LOCATION</h1>
+                  <p className="text-[12pt] font-semibold">N° {contract.numero_contrat}</p>
+                </div>
+                {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
+                  <div className="w-1/4 text-right text-[9pt] text-gray-600">
+                    {format(new Date(), 'dd/MM/yyyy')}
+                  </div>
+                )}
               </div>
-              <div className="text-[9pt] text-gray-600">
-                {format(new Date(), 'dd/MM/yyyy')}
+            </div>
+          )}
+
+          {/* Informations principales */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Locataire */}
+            <div className="border-2 border-black">
+              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+                <strong className="text-[11pt]">LOCATAIRE</strong>
+              </div>
+              <div className="p-3 space-y-1 text-[9pt]">
+                <div><strong>Nom & Prénom:</strong> {client?.nom} {client?.prenom}</div>
+                <div><strong>CIN:</strong> {client?.cin}</div>
+                <div><strong>Permis:</strong> {client?.permis_conduire}</div>
+                <div><strong>Adresse:</strong> {client?.adresse}</div>
+                <div><strong>Téléphone:</strong> {client?.telephone}</div>
+              </div>
+            </div>
+
+            {/* 2ème conducteur */}
+            <div className="border-2 border-black">
+              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+                <strong className="text-[11pt]">2ÈME CONDUCTEUR</strong>
+              </div>
+              <div className="p-3 space-y-1 text-[9pt]">
+                <div><strong>Nom & Prénom:</strong> {secondaryDriver?.nom || ''} {secondaryDriver?.prenom || ''}</div>
+                <div><strong>CIN:</strong> {secondaryDriver?.cin || ''}</div>
+                <div><strong>Permis:</strong> {secondaryDriver?.permis_conduire || ''}</div>
               </div>
             </div>
           </div>
-        )}
 
-        <table className="w-full border-collapse mb-3">
-          <thead>
-            <tr>
-              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[10pt] w-1/2">LOCATAIRE</th>
-              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[10pt] w-1/2">2ÈME CONDUCTEUR</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-black p-2 align-top">
-                <div className="space-y-1 text-[9pt]">
-                  <div><strong>Nom & Prénom:</strong> {client?.nom} {client?.prenom}</div>
-                  <div><strong>CIN:</strong> {client?.cin}</div>
-                  <div><strong>Permis:</strong> {client?.permis_conduire}</div>
-                  <div><strong>Adresse:</strong> {client?.adresse}</div>
-                  <div><strong>Tél:</strong> {client?.telephone}</div>
-                </div>
-              </td>
-              <td className="border border-black p-2 align-top">
-                <div className="space-y-1 text-[9pt]">
-                  <div><strong>Nom & Prénom:</strong> {secondaryDriver?.nom} {secondaryDriver?.prenom}</div>
-                  <div><strong>CIN:</strong> {secondaryDriver?.cin}</div>
-                  <div><strong>Permis:</strong> {secondaryDriver?.permis_conduire}</div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          {/* Véhicule et Location */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Véhicule */}
+            <div className="border-2 border-black">
+              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+                <strong className="text-[11pt]">VÉHICULE</strong>
+              </div>
+              <div className="p-3 space-y-1 text-[9pt]">
+                <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
+                <div><strong>Immatriculation:</strong> {vehicle?.immatriculation}</div>
+                <div><strong>Km départ:</strong> {contract.delivery_km || vehicle?.kilometrage}</div>
+              </div>
+            </div>
 
-        <table className="w-full border-collapse mb-3">
-          <thead>
-            <tr>
-              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[10pt] w-1/2">VÉHICULE</th>
-              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[10pt] w-1/2">LOCATION</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-black p-2 align-top">
-                <div className="space-y-1 text-[9pt]">
-                  <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
-                  <div><strong>Immatriculation:</strong> {vehicle?.immatriculation}</div>
-                  <div><strong>Km départ:</strong> {contract.delivery_km || vehicle?.kilometrage}</div>
-                </div>
-              </td>
-              <td className="border border-black p-2 align-top">
-                <div className="space-y-1 text-[9pt]">
-                  <div><strong>Départ:</strong> {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : ''}</div>
-                  <div><strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
-                  <div><strong>Durée:</strong> {contract.duration}j</div>
-                  <div><strong>Prix TTC:</strong> {contract.total_amount?.toFixed(2)} Dh</div>
-                  <div><strong>Caution:</strong> {contract.caution_montant?.toFixed(2)} Dh</div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            {/* Location */}
+            <div className="border-2 border-black">
+              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+                <strong className="text-[11pt]">LOCATION</strong>
+              </div>
+              <div className="p-3 space-y-1 text-[9pt]">
+                <div><strong>Départ:</strong> {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : ''}</div>
+                <div><strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
+                <div><strong>Durée:</strong> {contract.duration} jour(s)</div>
+                <div><strong>Prix TTC:</strong> {contract.total_amount?.toFixed(2)} DH</div>
+                <div><strong>Caution:</strong> {contract.caution_montant?.toFixed(2)} DH</div>
+              </div>
+            </div>
+          </div>
 
-        {contract.prolongations && contract.prolongations.length > 0 && (
-          <table className="w-full border-collapse mb-3">
-            <thead>
-              <tr>
-                <th className="bg-yellow-100 border border-yellow-600 p-1 text-center font-bold text-[9pt]">
-                  PROLONGATION(S)
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-black p-2">
-                  {contract.prolongations.map((p: any, i: number) => {
-                    const ancienneDate = p.ancienne_date_fin ? new Date(p.ancienne_date_fin) : null;
-                    const nouvelleDate = p.nouvelle_date_fin ? new Date(p.nouvelle_date_fin) : null;
-                    const duree = ancienneDate && nouvelleDate 
-                      ? Math.ceil((nouvelleDate.getTime() - ancienneDate.getTime()) / (1000 * 60 * 60 * 24))
-                      : 0;
-                    const montant = duree * (contract.daily_rate || 0);
-                    
-                    return (
-                      <div key={i} className="text-[9pt] mb-1">
-                        {ancienneDate && nouvelleDate && (
-                          <>
-                            Du {format(ancienneDate, 'dd/MM/yyyy')} au {format(nouvelleDate, 'dd/MM/yyyy')} - {duree}j - {montant.toFixed(2)} Dh
-                            {p.raison && <span className="ml-2 text-gray-600">({p.raison})</span>}
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        )}
-
-        {vehicleChanges && vehicleChanges.length > 0 && (
-          <table className="w-full border-collapse mb-3">
-            <thead>
-              <tr>
-                <th className="bg-orange-100 border border-orange-600 p-1 text-center font-bold text-[9pt]">
-                  CHANGEMENT(S) DE VÉHICULE
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-black p-2">
-                  {vehicleChanges.map((change: any, idx: number) => (
-                    <div key={change.id} className="text-[9pt] mb-1">
-                      <strong>#{idx + 1}:</strong> {change.old_vehicle?.immatriculation} → {change.new_vehicle?.immatriculation} - {formatReason(change.reason)}
+          {/* Prolongations */}
+          {contract.prolongations && contract.prolongations.length > 0 && (
+            <div className="border-2 border-yellow-500 bg-yellow-50 mb-4">
+              <div className="bg-yellow-200 border-b-2 border-yellow-500 p-2 text-center">
+                <strong className="text-[10pt]">⚠️ PROLONGATION(S)</strong>
+              </div>
+              <div className="p-3">
+                {contract.prolongations.map((p: any, i: number) => {
+                  const ancienneDate = p.ancienne_date_fin ? new Date(p.ancienne_date_fin) : null;
+                  const nouvelleDate = p.nouvelle_date_fin ? new Date(p.nouvelle_date_fin) : null;
+                  const duree = ancienneDate && nouvelleDate 
+                    ? Math.ceil((nouvelleDate.getTime() - ancienneDate.getTime()) / (1000 * 60 * 60 * 24))
+                    : 0;
+                  const montant = duree * (contract.daily_rate || 0);
+                  
+                  return (
+                    <div key={i} className="text-[9pt] mb-1">
+                      {ancienneDate && nouvelleDate && (
+                        <>
+                          <strong>Prolongation #{i + 1}:</strong> Du {format(ancienneDate, 'dd/MM/yyyy')} au {format(nouvelleDate, 'dd/MM/yyyy')} - {duree} jour(s) - {montant.toFixed(2)} DH
+                          {p.raison && <span className="text-gray-700"> ({p.raison})</span>}
+                        </>
+                      )}
                     </div>
-                  ))}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        )}
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-        <table className="w-full border-collapse mb-3">
-          <thead>
-            <tr>
-              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[10pt] w-1/2">ÉTAT DE VÉHICULE</th>
-              <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[10pt] w-1/2">OBSERVATIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-black p-3 align-middle text-center">
-                <img src={vehicleInspectionDiagram} alt="Schéma inspection véhicule" className="w-full h-auto max-h-40 object-contain mx-auto" />
-              </td>
-              <td className="border border-black p-2 h-40 align-top">
-                <div className="text-[9pt]">{contract.delivery_notes || contract.notes || ''}</div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          {/* Changements de véhicule */}
+          {vehicleChanges && vehicleChanges.length > 0 && (
+            <div className="border-2 border-orange-500 bg-orange-50 mb-4">
+              <div className="bg-orange-200 border-b-2 border-orange-500 p-2 text-center">
+                <strong className="text-[10pt]">CHANGEMENT(S) DE VÉHICULE</strong>
+              </div>
+              <div className="p-3">
+                {vehicleChanges.map((change: any, idx: number) => (
+                  <div key={change.id} className="text-[9pt] mb-1">
+                    <strong>#{idx + 1}:</strong> {change.old_vehicle?.immatriculation} → {change.new_vehicle?.immatriculation} - {formatReason(change.reason)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-        <div className="flex-grow"></div>
+          {/* État du véhicule */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="border-2 border-black">
+              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+                <strong className="text-[10pt]">ÉTAT DU VÉHICULE</strong>
+              </div>
+              <div className="p-3 flex items-center justify-center">
+                <img src={vehicleInspectionDiagram} alt="Schéma inspection" className="w-full h-auto max-h-32 object-contain" />
+              </div>
+            </div>
 
-        <div className="text-center text-[9pt] italic mb-3">
-          * En signant le contrat, le client accepte les CGV.
+            <div className="border-2 border-black">
+              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+                <strong className="text-[10pt]">OBSERVATIONS</strong>
+              </div>
+              <div className="p-3 text-[9pt] min-h-32">
+                {contract.delivery_notes || contract.notes || ''}
+              </div>
+            </div>
+          </div>
+
+          {/* Note CGV */}
+          <div className="text-center text-[9pt] italic my-3">
+            * En signant le contrat, le client accepte les conditions générales de location.
+          </div>
+
+          {/* Signatures */}
+          <div className="mt-auto">
+            <div className="grid grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="h-16 mb-2 flex items-center justify-center">
+                  {agenceSettings?.signature_agence_url && (
+                    <img 
+                      src={agenceSettings.signature_agence_url} 
+                      alt="Signature agence" 
+                      className="max-h-16 w-auto object-contain"
+                      crossOrigin="anonymous"
+                    />
+                  )}
+                </div>
+                <div className="border-t-2 border-black pt-1">
+                  <strong className="text-[9pt]">Signature Agence</strong>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <div className="h-16 mb-2"></div>
+                <div className="border-t-2 border-black pt-1">
+                  <strong className="text-[9pt]">Signature Locataire</strong>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <div className="h-16 mb-2"></div>
+                <div className="border-t-2 border-black pt-1">
+                  <strong className="text-[9pt]">Signature 2ème Conducteur</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          {!agenceSettings?.masquer_pied_page && (
+            <div className="text-center text-[8pt] text-gray-600 mt-4 pt-3 border-t border-gray-400">
+              {agenceSettings?.raison_sociale && <><strong>{agenceSettings.raison_sociale}</strong></>}
+              {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
+              {agenceSettings?.rc && <> | RC: {agenceSettings.rc}</>}
+              <br/>
+              {agenceSettings?.adresse && <>Adresse: {agenceSettings.adresse}</>}
+              {agenceSettings?.telephone && <> | Tél: {agenceSettings.telephone}</>}
+              {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
+            </div>
+          )}
         </div>
 
-        <div className="flex justify-between mt-4 mb-3 gap-4">
-          <div className="w-[32%] text-center">
-            <div className="h-12 mb-2 flex items-center justify-center">
-              {agenceSettings?.signature_agence_url && (
-                <img 
-                  src={agenceSettings.signature_agence_url} 
-                  alt="Signature agence" 
-                  className="max-h-12 w-auto object-contain"
-                />
-              )}
+        {/* Page 2 - CGV */}
+        {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
+          <div className="page-break min-h-[297mm] p-8"
+               style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+            <div className="text-center mb-6">
+              <h2 className="text-[14pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
             </div>
-            <div className="border-t border-black pt-1 text-[9pt]">
-              <strong>Signature agence</strong>
+            <div className="text-[10pt] leading-relaxed whitespace-pre-wrap text-justify">
+              {agenceSettings.cgv_texte}
             </div>
-          </div>
-          <div className="w-[32%] text-center">
-            <div className="h-12 mb-2"></div>
-            <div className="border-t border-black pt-1 text-[9pt]">
-              <strong>Signature locataire</strong>
-            </div>
-          </div>
-          <div className="w-[32%] text-center">
-            <div className="h-12 mb-2"></div>
-            <div className="border-t border-black pt-1 text-[9pt]">
-              <strong>Signature 2ème conducteur</strong>
-            </div>
-          </div>
-        </div>
-
-        {!agenceSettings?.masquer_pied_page && (
-          <div className="text-center text-[8pt] text-gray-600 mt-auto pt-3 border-t border-gray-300">
-            {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
-            {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
-            <br/>
-            {agenceSettings?.adresse && <>Adresse: {agenceSettings.adresse}</>}
-            {agenceSettings?.telephone && <> | Tél: {agenceSettings.telephone}</>}
           </div>
         )}
       </div>
-
-      {agenceSettings?.inclure_cgv && agenceSettings?.cgv_texte && (
-        <div className="page-break min-h-[297mm] p-8 font-sans bg-white w-[210mm] mx-auto print:p-0"
-             style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-          <div className="text-center mb-6">
-            <h2 className="text-[14pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE VENTE</h2>
-          </div>
-          <div className="text-[10pt] leading-relaxed whitespace-pre-wrap text-justify">
-            {agenceSettings.cgv_texte}
-          </div>
-        </div>
-      )}
     </>
   );
 }
