@@ -1291,6 +1291,7 @@ export type Database = {
           kilometrage: number
           montant: number | null
           notes: string | null
+          remarques: string | null
           type_vidange: string | null
           vehicle_id: string
         }
@@ -1301,6 +1302,7 @@ export type Database = {
           kilometrage: number
           montant?: number | null
           notes?: string | null
+          remarques?: string | null
           type_vidange?: string | null
           vehicle_id: string
         }
@@ -1311,6 +1313,7 @@ export type Database = {
           kilometrage?: number
           montant?: number | null
           notes?: string | null
+          remarques?: string | null
           type_vidange?: string | null
           vehicle_id?: string
         }
