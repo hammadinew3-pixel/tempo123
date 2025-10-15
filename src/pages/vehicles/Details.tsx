@@ -313,7 +313,7 @@ export default function VehiculeDetails() {
         vehicle_id: vehicle.id,
         kilometrage: vehicle.kilometrage,
         date_vidange: new Date().toISOString().split('T')[0],
-        type: 'Vidange complète',
+        type_vidange: 'Vidange complète',
         montant: montant,
         remarques: prochainKm ? `Prochain kilométrage prévu: ${prochainKm} km` : null
       });
