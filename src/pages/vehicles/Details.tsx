@@ -21,7 +21,10 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditInspectionDialog, EditVignetteDialog } from "@/components/vehicles/EditDialogs";
 import { useUserRole } from "@/hooks/use-user-role";
+import { safeFormatDate } from "@/lib/dateUtils";
+
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
+
 export default function VehiculeDetails() {
   const {
     id
@@ -762,9 +765,7 @@ export default function VehiculeDetails() {
                   {vehicle.kilometrage.toLocaleString()} km
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Dernière mise à jour : {format(new Date(vehicle.updated_at), 'dd/MM/yyyy à HH:mm', {
-                  locale: fr
-                })}
+                  Dernière mise à jour : {safeFormatDate(vehicle.updated_at, 'dd/MM/yyyy à HH:mm', { locale: fr })}
                 </p>
                 
                 {vehicle.dernier_kilometrage_vidange > 0 && <div className="mt-3">
@@ -983,9 +984,7 @@ export default function VehiculeDetails() {
                 <div>
                   <Label className="text-muted-foreground">Dernière vidange</Label>
                   <p className="font-medium mt-1">
-                    {vehicle.date_derniere_vidange ? format(new Date(vehicle.date_derniere_vidange), 'dd/MM/yyyy', {
-                    locale: fr
-                  }) : 'Non renseignée'}
+                    {vehicle.date_derniere_vidange ? safeFormatDate(vehicle.date_derniere_vidange, 'dd/MM/yyyy', { locale: fr }) : 'Non renseignée'}
                   </p>
                 </div>
               </div>
@@ -1053,9 +1052,7 @@ export default function VehiculeDetails() {
                         })}</TableCell>
                             <TableCell>
                               <span className={daysUntilExpiration <= 30 && daysUntilExpiration > 0 ? 'text-warning font-medium' : ''}>
-                                {format(new Date(insurance.date_expiration), 'dd/MM/yyyy', {
-                            locale: fr
-                          })}
+                                {safeFormatDate(insurance.date_expiration, 'dd/MM/yyyy', { locale: fr })}
                               </span>
                               {daysUntilExpiration > 0 && daysUntilExpiration <= 30 && <Badge variant="outline" className="ml-2 bg-warning/10 text-warning border-warning">
                                   {daysUntilExpiration}J
@@ -1063,9 +1060,7 @@ export default function VehiculeDetails() {
                             </TableCell>
                             <TableCell className="text-right">{insurance.montant.toFixed(2)}</TableCell>
                             <TableCell className="text-right text-muted-foreground text-sm">
-                              {format(new Date(insurance.created_at), 'dd/MM/yyyy HH:mm', {
-                          locale: fr
-                        })}
+                              {safeFormatDate(insurance.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
                               {insurance.photo_url ? <Button variant="ghost" size="sm" onClick={() => window.open(insurance.photo_url, '_blank')}>
@@ -1114,9 +1109,7 @@ export default function VehiculeDetails() {
                         })}</TableCell>
                             <TableCell>
                               <span className={daysUntilExpiration <= 30 && daysUntilExpiration > 0 ? 'text-warning font-medium' : ''}>
-                                {format(new Date(inspection.date_expiration), 'dd/MM/yyyy', {
-                            locale: fr
-                          })}
+                                {safeFormatDate(inspection.date_expiration, 'dd/MM/yyyy', { locale: fr })}
                               </span>
                               {daysUntilExpiration > 0 && daysUntilExpiration <= 30 && <Badge variant="outline" className="ml-2 bg-warning/10 text-warning border-warning">
                                   {daysUntilExpiration}J
@@ -1124,9 +1117,7 @@ export default function VehiculeDetails() {
                             </TableCell>
                             <TableCell className="text-right">{inspection.montant?.toFixed(2) || '-'}</TableCell>
                             <TableCell className="text-right text-muted-foreground text-sm">
-                              {format(new Date(inspection.created_at), 'dd/MM/yyyy HH:mm', {
-                          locale: fr
-                        })}
+                              {safeFormatDate(inspection.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
                               {inspection.photo_url ? <Button variant="ghost" size="sm" onClick={() => window.open(inspection.photo_url, '_blank')}>
@@ -1211,20 +1202,26 @@ export default function VehiculeDetails() {
                     <TableBody>
                       {vignettes.map(vignette => {
                     const today = new Date();
-                    const expirationDate = new Date(vignette.date_expiration);
-                    const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                    const expirationDate = vignette.date_expiration ? new Date(vignette.date_expiration) : null;
+                    const daysUntilExpiration = expirationDate ? Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
                     return <TableRow key={vignette.id} className="cursor-pointer hover:bg-accent/50" onClick={() => setSelectedVignette(vignette)}>
-                            <TableCell>{vignette.numero_ordre}</TableCell>
-                            <TableCell>{vignette.annee}</TableCell>
+                            <TableCell>{vignette.numero_ordre || '-'}</TableCell>
+                            <TableCell>{vignette.annee || '-'}</TableCell>
                             <TableCell>
-                              <span className={daysUntilExpiration <= 30 && daysUntilExpiration > 0 ? 'text-warning font-medium' : ''}>
-                                {format(new Date(vignette.date_expiration), 'dd/MM/yyyy', {
-                            locale: fr
-                          })}
-                              </span>
-                              {daysUntilExpiration > 0 && daysUntilExpiration <= 30 && <Badge variant="outline" className="ml-2 bg-warning/10 text-warning border-warning">
-                                  {daysUntilExpiration}J
-                                </Badge>}
+                              {vignette.date_expiration ? (
+                                <>
+                                  <span className={daysUntilExpiration !== null && daysUntilExpiration <= 30 && daysUntilExpiration > 0 ? 'text-warning font-medium' : ''}>
+                                    {safeFormatDate(vignette.date_expiration, 'dd/MM/yyyy', { locale: fr })}
+                                  </span>
+                                  {daysUntilExpiration !== null && daysUntilExpiration > 0 && daysUntilExpiration <= 30 && (
+                                    <Badge variant="outline" className="ml-2 bg-warning/10 text-warning border-warning">
+                                      {daysUntilExpiration}J
+                                    </Badge>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
                             </TableCell>
                             <TableCell className="text-right">{vignette.montant?.toFixed(2) || '-'}</TableCell>
                             <TableCell className="text-right text-muted-foreground text-sm">
@@ -1322,13 +1319,13 @@ export default function VehiculeDetails() {
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Date du 1ère traite</span>
                           <span className="font-semibold">
-                            {format(new Date(traites[0].date_debut), 'dd/MM/yyyy', { locale: fr })}
+                            {safeFormatDate(traites[0].date_debut, 'dd/MM/yyyy', { locale: fr })}
                           </span>
                         </div>
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Date d'achat</span>
                           <span className="font-semibold">
-                            {traites[0].date_achat ? format(new Date(traites[0].date_achat), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                            {safeFormatDate(traites[0].date_achat, 'dd/MM/yyyy', { locale: fr })}
                           </span>
                         </div>
                         <div className="flex justify-between py-2 border-b">
@@ -1338,7 +1335,7 @@ export default function VehiculeDetails() {
                         <div className="flex justify-between py-2">
                           <span className="text-muted-foreground">Dernière mise à jour</span>
                           <span className="font-semibold text-sm">
-                            {format(new Date(traites[0].updated_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                            {safeFormatDate(traites[0].updated_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
                           </span>
                         </div>
                       </div>
@@ -1463,7 +1460,7 @@ export default function VehiculeDetails() {
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Date du premier traite</span>
                             <span className="font-medium">
-                              {format(new Date(traites[0].date_debut), 'dd MMM yyyy', { locale: fr })}
+                              {safeFormatDate(traites[0].date_debut, 'dd MMM yyyy', { locale: fr })}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm">
@@ -1496,7 +1493,7 @@ export default function VehiculeDetails() {
                                 const lastEcheance = echeances
                                   .filter(e => e.traite_id === traites[0].id)
                                   .sort((a, b) => new Date(b.date_echeance).getTime() - new Date(a.date_echeance).getTime())[0];
-                                return lastEcheance ? format(new Date(lastEcheance.date_echeance), 'dd MMM yyyy', { locale: fr }) : '—';
+                                return lastEcheance ? safeFormatDate(lastEcheance.date_echeance, 'dd MMM yyyy', { locale: fr }) : '—';
                               })()}
                             </span>
                           </div>
@@ -1782,7 +1779,7 @@ export default function VehiculeDetails() {
               <div className="p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Date fin mensualité calculée:</p>
                 <p className="font-semibold text-lg">
-                  {format(new Date(dateFinCalculee), 'dd MMMM yyyy', { locale: fr })}
+                  {safeFormatDate(dateFinCalculee, 'dd MMMM yyyy', { locale: fr })}
                 </p>
               </div>
             )}
@@ -1867,7 +1864,7 @@ export default function VehiculeDetails() {
               <div className="p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Échéance du</p>
                 <p className="font-semibold">
-                  {format(new Date(selectedEcheance.date_echeance), 'dd MMMM yyyy', { locale: fr })}
+                  {safeFormatDate(selectedEcheance.date_echeance, 'dd MMMM yyyy', { locale: fr })}
                 </p>
                 <p className="text-lg font-bold mt-2">{parseFloat(selectedEcheance.montant).toFixed(2)} DH</p>
               </div>
@@ -2550,15 +2547,11 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date début</Label>
-                  <p className="font-medium">{format(new Date(selectedInsurance.date_debut), 'dd/MM/yyyy', {
-                  locale: fr
-                })}</p>
+                  <p className="font-medium">{safeFormatDate(selectedInsurance.date_debut, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date d'expiration</Label>
-                  <p className="font-medium">{format(new Date(selectedInsurance.date_expiration), 'dd/MM/yyyy', {
-                  locale: fr
-                })}</p>
+                  <p className="font-medium">{safeFormatDate(selectedInsurance.date_expiration, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Montant</Label>
@@ -2566,9 +2559,7 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date de paiement</Label>
-                  <p className="font-medium">{selectedInsurance.date_paiement ? format(new Date(selectedInsurance.date_paiement), 'dd/MM/yyyy', {
-                  locale: fr
-                }) : '-'}</p>
+                  <p className="font-medium">{safeFormatDate(selectedInsurance.date_paiement, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Mode de paiement</Label>
@@ -2833,15 +2824,11 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date de visite</Label>
-                  <p className="font-medium">{format(new Date(selectedInspection.date_visite), 'dd/MM/yyyy', {
-                  locale: fr
-                })}</p>
+                  <p className="font-medium">{safeFormatDate(selectedInspection.date_visite, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date d'expiration</Label>
-                  <p className="font-medium">{format(new Date(selectedInspection.date_expiration), 'dd/MM/yyyy', {
-                  locale: fr
-                })}</p>
+                  <p className="font-medium">{safeFormatDate(selectedInspection.date_expiration, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Montant</Label>
@@ -2849,9 +2836,7 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date de paiement</Label>
-                  <p className="font-medium">{selectedInspection.date_paiement ? format(new Date(selectedInspection.date_paiement), 'dd/MM/yyyy', {
-                  locale: fr
-                }) : '-'}</p>
+                  <p className="font-medium">{safeFormatDate(selectedInspection.date_paiement, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 {selectedInspection.mode_paiement && <div>
                     <Label className="text-muted-foreground">Mode de paiement</Label>
@@ -2916,9 +2901,7 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date d'expiration</Label>
-                  <p className="font-medium">{format(new Date(selectedVignette.date_expiration), 'dd/MM/yyyy', {
-                  locale: fr
-                })}</p>
+                  <p className="font-medium">{safeFormatDate(selectedVignette.date_expiration, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Montant</Label>
@@ -2926,9 +2909,7 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Date de paiement</Label>
-                  <p className="font-medium">{selectedVignette.date_paiement ? format(new Date(selectedVignette.date_paiement), 'dd/MM/yyyy', {
-                  locale: fr
-                }) : '-'}</p>
+                  <p className="font-medium">{safeFormatDate(selectedVignette.date_paiement, 'dd/MM/yyyy', { locale: fr })}</p>
                 </div>
                 {selectedVignette.mode_paiement && <div>
                     <Label className="text-muted-foreground">Mode de paiement</Label>

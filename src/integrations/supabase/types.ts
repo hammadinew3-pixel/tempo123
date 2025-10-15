@@ -1175,7 +1175,9 @@ export type Database = {
       vehicules_traite: {
         Row: {
           avance_paye: number | null
+          concessionaire: string | null
           created_at: string | null
+          date_achat: string | null
           date_debut: string | null
           date_traitement: string
           description: string | null
@@ -1192,7 +1194,9 @@ export type Database = {
         }
         Insert: {
           avance_paye?: number | null
+          concessionaire?: string | null
           created_at?: string | null
+          date_achat?: string | null
           date_debut?: string | null
           date_traitement: string
           description?: string | null
@@ -1209,7 +1213,9 @@ export type Database = {
         }
         Update: {
           avance_paye?: number | null
+          concessionaire?: string | null
           created_at?: string | null
+          date_achat?: string | null
           date_debut?: string | null
           date_traitement?: string
           description?: string | null
