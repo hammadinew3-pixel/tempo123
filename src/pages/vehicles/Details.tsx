@@ -396,7 +396,16 @@ export default function VehiculeDetails() {
         date_traitement: traiteForm.date_debut,
         description: `Traite - ${traiteForm.organisme}`,
         organisme: traiteForm.organisme,
+        concessionaire: traiteForm.concessionaire || null,
+        date_achat: traiteForm.date_achat || null,
         montant: prixAchat,
+        montant_total: prixAchat,
+        avance_paye: avance,
+        date_debut: traiteForm.date_debut,
+        nombre_traites: nombreMois,
+        montant_mensuel: montantMensuel,
+        duree_deja_paye: dureeDejaPaye,
+        notes: traiteForm.plus_infos || null
       }).select().single();
 
       if (error) throw error;
