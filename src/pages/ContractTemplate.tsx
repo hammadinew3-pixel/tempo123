@@ -378,7 +378,7 @@ export default function ContractTemplate() {
             <div className="text-center mb-3">
               <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
             </div>
-            <div className="text-[9pt] whitespace-pre-wrap text-justify"
+            <div className="text-[10pt] whitespace-pre-wrap text-justify"
                  style={{ lineHeight: '1.4' }}>
               {agenceSettings.cgv_texte}
             </div>
