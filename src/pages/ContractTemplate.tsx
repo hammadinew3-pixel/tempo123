@@ -102,11 +102,11 @@ export default function ContractTemplate() {
         }
       `}</style>
       
-      <div className="p-4 font-sans text-[9pt] leading-tight bg-white w-[210mm] mx-auto print:p-0"
+      <div className="min-h-[297mm] flex flex-col p-6 font-sans text-[9pt] leading-normal bg-white w-[210mm] mx-auto print:p-0"
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {!agenceSettings?.masquer_entete && (
-          <div className="mb-2 pb-1 border-b-2 border-black">
+          <div className="mb-4 pb-2 border-b-2 border-black">
             <div className="flex justify-between items-center">
               {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
                 <img src={agenceSettings.logo_url} alt="Logo" className="h-10 w-auto object-contain" />
@@ -121,7 +121,7 @@ export default function ContractTemplate() {
           </div>
         )}
 
-        <table className="w-full border-collapse mb-1.5">
+        <table className="w-full border-collapse mb-3">
           <thead>
             <tr>
               <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[9pt] w-1/2">LOCATAIRE</th>
@@ -130,8 +130,8 @@ export default function ContractTemplate() {
           </thead>
           <tbody>
             <tr>
-              <td className="border border-black p-1.5 align-top">
-                <div className="space-y-0.5 text-[7.5pt]">
+              <td className="border border-black p-2 align-top">
+                <div className="space-y-1 text-[8pt]">
                   <div><strong>Nom & Prénom:</strong> {client?.nom} {client?.prenom}</div>
                   <div><strong>CIN:</strong> {client?.cin}</div>
                   <div><strong>Permis:</strong> {client?.permis_conduire}</div>
@@ -139,8 +139,8 @@ export default function ContractTemplate() {
                   <div><strong>Tél:</strong> {client?.telephone}</div>
                 </div>
               </td>
-              <td className="border border-black p-1.5 align-top">
-                <div className="space-y-0.5 text-[7.5pt]">
+              <td className="border border-black p-2 align-top">
+                <div className="space-y-1 text-[8pt]">
                   <div><strong>Nom & Prénom:</strong> {secondaryDriver?.nom} {secondaryDriver?.prenom}</div>
                   <div><strong>CIN:</strong> {secondaryDriver?.cin}</div>
                   <div><strong>Permis:</strong> {secondaryDriver?.permis_conduire}</div>
@@ -151,7 +151,7 @@ export default function ContractTemplate() {
           </tbody>
         </table>
 
-        <table className="w-full border-collapse mb-1.5">
+        <table className="w-full border-collapse mb-3">
           <thead>
             <tr>
               <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[9pt] w-1/2">VÉHICULE</th>
@@ -160,15 +160,15 @@ export default function ContractTemplate() {
           </thead>
           <tbody>
             <tr>
-              <td className="border border-black p-1.5 align-top">
-                <div className="space-y-0.5 text-[7.5pt]">
+              <td className="border border-black p-2 align-top">
+                <div className="space-y-1 text-[8pt]">
                   <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
                   <div><strong>Immatriculation:</strong> {vehicle?.immatriculation}</div>
                   <div><strong>Km départ:</strong> {contract.delivery_km || vehicle?.kilometrage}</div>
                 </div>
               </td>
-              <td className="border border-black p-1.5 align-top">
-                <div className="space-y-0.5 text-[7.5pt]">
+              <td className="border border-black p-2 align-top">
+                <div className="space-y-1 text-[8pt]">
                   <div><strong>Départ:</strong> {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : ''}</div>
                   <div><strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
                   <div><strong>Durée:</strong> {contract.duration}j</div>
@@ -180,7 +180,7 @@ export default function ContractTemplate() {
         </table>
 
         {contract.prolongations && contract.prolongations.length > 0 && (
-          <table className="w-full border-collapse mb-1.5">
+          <table className="w-full border-collapse mb-3">
             <thead>
               <tr>
                 <th className="bg-yellow-100 border border-yellow-600 p-1 text-center font-bold text-[8pt]">
@@ -190,9 +190,9 @@ export default function ContractTemplate() {
             </thead>
             <tbody>
               <tr>
-                <td className="border border-black p-1.5">
+                <td className="border border-black p-2">
                   {contract.prolongations.map((p: any, i: number) => (
-                    <div key={i} className="text-[7pt] mb-0.5">
+                    <div key={i} className="text-[8pt] mb-1">
                       Du {p.date_debut ? format(new Date(p.date_debut), 'dd/MM/yyyy') : ''} au {p.date_fin ? format(new Date(p.date_fin), 'dd/MM/yyyy') : ''} - {p.duree}j - {p.montant} Dh
                     </div>
                   ))}
@@ -203,7 +203,7 @@ export default function ContractTemplate() {
         )}
 
         {vehicleChanges && vehicleChanges.length > 0 && (
-          <table className="w-full border-collapse mb-1.5">
+          <table className="w-full border-collapse mb-3">
             <thead>
               <tr>
                 <th className="bg-orange-100 border border-orange-600 p-1 text-center font-bold text-[8pt]">
@@ -213,9 +213,9 @@ export default function ContractTemplate() {
             </thead>
             <tbody>
               <tr>
-                <td className="border border-black p-1.5">
+                <td className="border border-black p-2">
                   {vehicleChanges.map((change: any, idx: number) => (
-                    <div key={change.id} className="text-[7pt] mb-0.5">
+                    <div key={change.id} className="text-[8pt] mb-1">
                       <strong>#{idx + 1}:</strong> {change.old_vehicle?.immatriculation} → {change.new_vehicle?.immatriculation} - {formatReason(change.reason)}
                     </div>
                   ))}
@@ -225,7 +225,7 @@ export default function ContractTemplate() {
           </table>
         )}
 
-        <table className="w-full border-collapse mb-1.5">
+        <table className="w-full border-collapse mb-3">
           <thead>
             <tr>
               <th className="bg-gray-300 border border-black p-1 text-center font-bold text-[9pt] w-1/2">ÉTAT DE VÉHICULE</th>
@@ -234,51 +234,53 @@ export default function ContractTemplate() {
           </thead>
           <tbody>
             <tr>
-              <td className="border border-black p-2 align-middle text-center">
-                <img src={vehicleInspectionDiagram} alt="Schéma inspection véhicule" className="w-full h-auto max-h-32 object-contain mx-auto" />
+              <td className="border border-black p-3 align-middle text-center">
+                <img src={vehicleInspectionDiagram} alt="Schéma inspection véhicule" className="w-full h-auto max-h-40 object-contain mx-auto" />
               </td>
-              <td className="border border-black p-1.5 h-32 align-top">
-                <div className="text-[7.5pt]">{contract.delivery_notes || contract.notes || ''}</div>
+              <td className="border border-black p-2 h-40 align-top">
+                <div className="text-[8pt]">{contract.delivery_notes || contract.notes || ''}</div>
               </td>
             </tr>
           </tbody>
         </table>
 
-        <div className="text-center text-[7pt] italic mb-2">
+        <div className="flex-grow"></div>
+
+        <div className="text-center text-[8pt] italic mb-3">
           * En signant le contrat, le client accepte les CGV.
         </div>
 
-        <div className="flex justify-between mt-3 mb-2 gap-2">
+        <div className="flex justify-between mt-4 mb-3 gap-4">
           <div className="w-[32%] text-center">
-            <div className="h-10 mb-1 flex items-center justify-center">
+            <div className="h-12 mb-2 flex items-center justify-center">
               {agenceSettings?.signature_agence_url && (
                 <img 
                   src={agenceSettings.signature_agence_url} 
                   alt="Signature agence" 
-                  className="max-h-10 w-auto object-contain"
+                  className="max-h-12 w-auto object-contain"
                 />
               )}
             </div>
-            <div className="border-t border-black pt-0.5 text-[7.5pt]">
+            <div className="border-t border-black pt-1 text-[8pt]">
               <strong>Signature agence</strong>
             </div>
           </div>
           <div className="w-[32%] text-center">
-            <div className="h-10 mb-1"></div>
-            <div className="border-t border-black pt-0.5 text-[7.5pt]">
+            <div className="h-12 mb-2"></div>
+            <div className="border-t border-black pt-1 text-[8pt]">
               <strong>Signature locataire</strong>
             </div>
           </div>
           <div className="w-[32%] text-center">
-            <div className="h-10 mb-1"></div>
-            <div className="border-t border-black pt-0.5 text-[7.5pt]">
+            <div className="h-12 mb-2"></div>
+            <div className="border-t border-black pt-1 text-[8pt]">
               <strong>Signature 2ème conducteur</strong>
             </div>
           </div>
         </div>
 
         {!agenceSettings?.masquer_pied_page && (
-          <div className="text-center text-[6.5pt] text-gray-600">
+          <div className="text-center text-[7.5pt] text-gray-600 mt-auto pt-3 border-t border-gray-300">
             {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
             {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
             <br/>
