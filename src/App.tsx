@@ -351,11 +351,7 @@ const App = () => (
             />
             <Route
               path="/contract-template"
-              element={
-                <ProtectedRoute>
-                  <ContractTemplate />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute><ContractTemplate /></ProtectedRoute>}
             />
             <Route
               path="/assistance-contract-template"
