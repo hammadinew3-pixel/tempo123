@@ -87,9 +87,7 @@ export default function LocationDetails() {
     nom: '',
     prenom: '',
     cin: '',
-    permis_conduire: '',
-    telephone: '',
-    email: '',
+    permis_conduire: ''
   });
 
   const [paymentData, setPaymentData] = useState({
@@ -288,7 +286,10 @@ export default function LocationDetails() {
         .from("secondary_drivers")
         .insert([{
           contract_id: id,
-          ...driverData
+          nom: driverData.nom,
+          prenom: driverData.prenom,
+          cin: driverData.cin,
+          permis_conduire: driverData.permis_conduire
         }]);
 
       if (error) throw error;
@@ -303,9 +304,7 @@ export default function LocationDetails() {
         nom: '',
         prenom: '',
         cin: '',
-        permis_conduire: '',
-        telephone: '',
-        email: '',
+        permis_conduire: ''
       });
       loadContractData();
     } catch (error: any) {
@@ -1732,21 +1731,6 @@ export default function LocationDetails() {
               <Input
                 value={driverData.permis_conduire}
                 onChange={(e) => setDriverData({...driverData, permis_conduire: e.target.value})}
-              />
-            </div>
-            <div>
-              <Label>Téléphone</Label>
-              <Input
-                value={driverData.telephone}
-                onChange={(e) => setDriverData({...driverData, telephone: e.target.value})}
-              />
-            </div>
-            <div>
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={driverData.email}
-                onChange={(e) => setDriverData({...driverData, email: e.target.value})}
               />
             </div>
             <div className="flex justify-end gap-2">
