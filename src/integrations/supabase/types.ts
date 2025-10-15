@@ -664,28 +664,34 @@ export type Database = {
           cin: string | null
           contract_id: string
           created_at: string | null
+          email: string | null
           id: string
           nom: string
           permis_conduire: string | null
           prenom: string
+          telephone: string | null
         }
         Insert: {
           cin?: string | null
           contract_id: string
           created_at?: string | null
+          email?: string | null
           id?: string
           nom: string
           permis_conduire?: string | null
           prenom: string
+          telephone?: string | null
         }
         Update: {
           cin?: string | null
           contract_id?: string
           created_at?: string | null
+          email?: string | null
           id?: string
           nom?: string
           permis_conduire?: string | null
           prenom?: string
+          telephone?: string | null
         }
         Relationships: [
           {
