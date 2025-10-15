@@ -259,7 +259,7 @@ export default function ContractTemplate() {
           </tbody>
         </table>
 
-        <div className="flex-grow"></div>
+        <div className="h-4"></div>
 
         <div className="text-center text-[9pt] italic mb-1">
           * En signant le contrat, le client accepte les CGV.
