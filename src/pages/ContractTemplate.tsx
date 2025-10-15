@@ -261,11 +261,11 @@ export default function ContractTemplate() {
 
         <div className="flex-grow"></div>
 
-        <div className="text-center text-[9pt] italic mb-3">
+        <div className="text-center text-[9pt] italic mb-1">
           * En signant le contrat, le client accepte les CGV.
         </div>
 
-        <div className="flex justify-between mt-4 mb-3 gap-4">
+        <div className="flex justify-between mt-2 mb-2 gap-4">
           <div className="w-[32%] text-center">
             <div className="h-12 mb-2 flex items-center justify-center">
               {agenceSettings?.signature_agence_url && (
@@ -295,7 +295,7 @@ export default function ContractTemplate() {
         </div>
 
         {!agenceSettings?.masquer_pied_page && (
-          <div className="text-center text-[7pt] text-gray-600 mt-auto pt-3 border-t border-gray-300">
+          <div className="text-center text-[7pt] text-gray-600 mt-auto pt-1 border-t border-gray-300">
             {agenceSettings?.raison_sociale && <>{agenceSettings.raison_sociale}</>}
             {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
             <br/>
