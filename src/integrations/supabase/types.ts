@@ -565,6 +565,7 @@ export type Database = {
       }
       infractions: {
         Row: {
+          client_id: string | null
           contract_id: string | null
           created_at: string | null
           date_infraction: string
@@ -572,12 +573,14 @@ export type Database = {
           id: string
           lieu: string | null
           montant: number | null
+          reference: string | null
           statut: string | null
           statut_traitement: string | null
           type_infraction: string | null
           vehicle_id: string | null
         }
         Insert: {
+          client_id?: string | null
           contract_id?: string | null
           created_at?: string | null
           date_infraction: string
@@ -585,12 +588,14 @@ export type Database = {
           id?: string
           lieu?: string | null
           montant?: number | null
+          reference?: string | null
           statut?: string | null
           statut_traitement?: string | null
           type_infraction?: string | null
           vehicle_id?: string | null
         }
         Update: {
+          client_id?: string | null
           contract_id?: string | null
           created_at?: string | null
           date_infraction?: string
@@ -598,6 +603,7 @@ export type Database = {
           id?: string
           lieu?: string | null
           montant?: number | null
+          reference?: string | null
           statut?: string | null
           statut_traitement?: string | null
           type_infraction?: string | null
