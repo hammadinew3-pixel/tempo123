@@ -423,6 +423,8 @@ export default function VehiculeDetails() {
         echeancesToInsert.push({
           traite_id: traiteData.id,
           vehicle_id: vehicle.id,
+          type_echeance: 'traite',
+          date_traitee: traiteForm.date_debut,
           date_echeance: echeanceDate.toISOString().split('T')[0],
           montant: montantMensuel,
           statut: isPaid ? 'Payée' : 'À payer',
