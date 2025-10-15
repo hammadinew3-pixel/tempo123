@@ -23,6 +23,7 @@ interface AgenceSettings {
   email?: string;
   telephone?: string;
   logo_url?: string;
+  signature_agence_url?: string;
   taux_tva?: number;
   alerte_cheque_jours?: number;
   alerte_visite_jours?: number;
@@ -44,6 +45,7 @@ export default function Parametres() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [newCategoryCode, setNewCategoryCode] = useState("");
 
@@ -266,7 +268,6 @@ export default function Parametres() {
     try {
       setUploadingLogo(true);
 
-      // Delete from storage
       const oldPath = settings.logo_url.split('/').pop();
       if (oldPath) {
         await supabase.storage
@@ -274,7 +275,6 @@ export default function Parametres() {
           .remove([oldPath]);
       }
 
-      // Update settings
       await updateSettings({ logo_url: null });
 
       toast({
@@ -290,6 +290,103 @@ export default function Parametres() {
       });
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const handleSignatureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une image (PNG, JPG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Erreur",
+        description: "L'image ne doit pas dépasser 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploadingSignature(true);
+
+      if (settings?.signature_agence_url) {
+        const oldPath = settings.signature_agence_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage
+            .from('agency-logos')
+            .remove([oldPath]);
+        }
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `signature-${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('agency-logos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('agency-logos')
+        .getPublicUrl(fileName);
+
+      await updateSettings({ signature_agence_url: publicUrl });
+
+      toast({
+        title: "Signature mise à jour",
+        description: "Votre signature/cachet a été enregistré avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingSignature(false);
+    }
+  };
+
+  const handleRemoveSignature = async () => {
+    if (!settings?.signature_agence_url) return;
+
+    try {
+      setUploadingSignature(true);
+
+      const oldPath = settings.signature_agence_url.split('/').pop();
+      if (oldPath) {
+        await supabase.storage
+          .from('agency-logos')
+          .remove([oldPath]);
+      }
+
+      await updateSettings({ signature_agence_url: null });
+
+      toast({
+        title: "Signature supprimée",
+        description: "La signature/cachet a été retiré.",
+      });
+    } catch (error: any) {
+      console.error('Error removing signature:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la signature.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingSignature(false);
     }
   };
 
@@ -366,6 +463,51 @@ export default function Parametres() {
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     PNG, JPG ou WEBP (max 2MB)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Signature/Cachet Upload */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Signature / Cachet de l&apos;agence
+              </Label>
+              <div className="flex items-center gap-4">
+                {settings?.signature_agence_url ? (
+                  <div className="relative">
+                    <img 
+                      src={settings.signature_agence_url} 
+                      alt="Signature agence" 
+                      className="h-20 w-auto object-contain border rounded p-2"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={handleRemoveSignature}
+                      disabled={uploadingSignature}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="h-20 w-20 border-2 border-dashed rounded flex items-center justify-center text-muted-foreground">
+                    <ImageIcon className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSignatureUpload}
+                    disabled={uploadingSignature}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG, JPG ou WEBP (max 2MB) - Sera affichée automatiquement sur les contrats
                   </p>
                 </div>
               </div>

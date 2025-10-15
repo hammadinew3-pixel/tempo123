@@ -41,6 +41,7 @@ export type Database = {
           patente: string | null
           raison_sociale: string | null
           rc: string | null
+          signature_agence_url: string | null
           taux_tva: number | null
           telephone: string | null
           updated_at: string | null
@@ -71,6 +72,7 @@ export type Database = {
           patente?: string | null
           raison_sociale?: string | null
           rc?: string | null
+          signature_agence_url?: string | null
           taux_tva?: number | null
           telephone?: string | null
           updated_at?: string | null
@@ -101,6 +103,7 @@ export type Database = {
           patente?: string | null
           raison_sociale?: string | null
           rc?: string | null
+          signature_agence_url?: string | null
           taux_tva?: number | null
           telephone?: string | null
           updated_at?: string | null

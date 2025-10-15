@@ -248,17 +248,31 @@ export default function ContractTemplate() {
           * En signant le contrat, le client accepte les CGV.
         </div>
 
-        <div className="flex justify-between mt-3 mb-2">
-          <div className="w-[48%] text-center">
-            <div className="h-10 mb-1"></div>
+        <div className="flex justify-between mt-3 mb-2 gap-2">
+          <div className="w-[32%] text-center">
+            <div className="h-10 mb-1 flex items-center justify-center">
+              {agenceSettings?.signature_agence_url && (
+                <img 
+                  src={agenceSettings.signature_agence_url} 
+                  alt="Signature agence" 
+                  className="max-h-10 w-auto object-contain"
+                />
+              )}
+            </div>
             <div className="border-t border-black pt-0.5 text-[7.5pt]">
               <strong>Signature agence</strong>
             </div>
           </div>
-          <div className="w-[48%] text-center">
+          <div className="w-[32%] text-center">
             <div className="h-10 mb-1"></div>
             <div className="border-t border-black pt-0.5 text-[7.5pt]">
               <strong>Signature locataire</strong>
+            </div>
+          </div>
+          <div className="w-[32%] text-center">
+            <div className="h-10 mb-1"></div>
+            <div className="border-t border-black pt-0.5 text-[7.5pt]">
+              <strong>Signature 2ème conducteur</strong>
             </div>
           </div>
         </div>
