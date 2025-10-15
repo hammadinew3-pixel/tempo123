@@ -3,8 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 
 export default function ContractTemplate() {
   const [searchParams] = useSearchParams();
@@ -25,54 +24,36 @@ export default function ContractTemplate() {
   useEffect(() => {
     if (!loading && contract) {
       if (downloadMode) {
-        setTimeout(async () => {
+        setTimeout(() => {
           const element = document.getElementById('contract-content');
           if (!element) return;
-
-          try {
-            const canvas = await html2canvas(element, {
-              scale: 2,
+          
+          const opt = {
+            margin: 10,
+            filename: `Contrat_${contract.numero_contrat || contractId}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { 
+              scale: 2, 
               useCORS: true,
               allowTaint: true,
               logging: false,
               backgroundColor: '#ffffff'
-            });
-
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-              orientation: 'portrait',
-              unit: 'mm',
-              format: 'a4'
-            });
-
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = pageWidth - 20; // marges de 10mm de chaque côté
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-            let position = 10;
-            let heightLeft = imgHeight;
-
-            pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight - 20; // soustraire la hauteur de page moins les marges
-
-            while (heightLeft > 0) {
-              position = -(imgHeight - heightLeft) + 10;
-              pdf.addPage();
-              pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-              heightLeft -= pageHeight - 20;
-            }
-
-            pdf.save(`Contrat_${contract.numero_contrat || contractId}.pdf`);
-
+            },
+            jsPDF: { 
+              unit: 'mm' as const, 
+              format: 'a4' as const, 
+              orientation: 'portrait' as const
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+          
+          html2pdf().set(opt).from(element).save().then(() => {
             setTimeout(() => {
               if (window.parent !== window) {
                 window.parent.document.querySelector('iframe')?.remove();
               }
             }, 1000);
-          } catch (error) {
-            console.error('Erreur génération PDF:', error);
-          }
+          });
         }, 500);
       } else {
         setTimeout(() => window.print(), 500);
