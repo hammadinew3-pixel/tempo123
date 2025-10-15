@@ -85,8 +85,6 @@ export default function VehiculeDetails() {
   const isValidAmount = nombreMois > 0 && Math.abs(montantTotalMensualites - resteAPayer) < 0.01;
   const [echeancePaymentForm, setEcheancePaymentForm] = useState({
     date_paiement: new Date().toISOString().split('T')[0],
-    mode_paiement: '',
-    ref_paiement: '',
     notes: ''
   });
 
@@ -483,8 +481,6 @@ export default function VehiculeDetails() {
         .update({
           statut: 'Payée',
           date_paiement: echeancePaymentForm.date_paiement,
-          mode_paiement: echeancePaymentForm.mode_paiement || null,
-          ref_paiement: echeancePaymentForm.ref_paiement || null,
           notes: echeancePaymentForm.notes || null
         })
         .eq('id', selectedEcheance.id);
@@ -500,8 +496,6 @@ export default function VehiculeDetails() {
       setSelectedEcheance(null);
       setEcheancePaymentForm({
         date_paiement: new Date().toISOString().split('T')[0],
-        mode_paiement: '',
-        ref_paiement: '',
         notes: ''
       });
       loadVehicle();
@@ -1896,32 +1890,6 @@ export default function VehiculeDetails() {
                 />
               </div>
               <div>
-                <Label htmlFor="mode_paiement_echeance">Mode de paiement</Label>
-                <Select 
-                  value={echeancePaymentForm.mode_paiement} 
-                  onValueChange={(value) => setEcheancePaymentForm({...echeancePaymentForm, mode_paiement: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="prelevement">Prélèvement automatique</SelectItem>
-                    <SelectItem value="cheque">Chèque</SelectItem>
-                    <SelectItem value="virement">Virement</SelectItem>
-                    <SelectItem value="especes">Espèces</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="ref_paiement">Référence de paiement</Label>
-                <Input 
-                  id="ref_paiement"
-                  value={echeancePaymentForm.ref_paiement}
-                  onChange={(e) => setEcheancePaymentForm({...echeancePaymentForm, ref_paiement: e.target.value})}
-                  placeholder="N° de chèque, référence..."
-                />
-              </div>
-              <div>
                 <Label htmlFor="notes_paiement">Notes</Label>
                 <Textarea 
                   id="notes_paiement"
@@ -1939,8 +1907,6 @@ export default function VehiculeDetails() {
               setSelectedEcheance(null);
               setEcheancePaymentForm({
                 date_paiement: new Date().toISOString().split('T')[0],
-                mode_paiement: '',
-                ref_paiement: '',
                 notes: ''
               });
             }}>
@@ -3213,6 +3179,8 @@ export default function VehiculeDetails() {
                   echeancesToInsert.push({
                     traite_id: selectedTraite.id,
                     vehicle_id: vehicle!.id,
+                    type_echeance: 'traite',
+                    date_traitee: traiteForm.date_debut,
                     date_echeance: echeanceDate.toISOString().split('T')[0],
                     montant: montantMensuel,
                     statut: isPaid ? 'Payée' : 'À payer',
