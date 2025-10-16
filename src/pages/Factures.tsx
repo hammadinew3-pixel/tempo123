@@ -134,30 +134,15 @@ export default function FacturesAssurance() {
     window.open(`/assistance-facture-template?id=${assistanceId}&print=true`, '_blank');
   };
 
-  const handleGroupInvoice = async () => {
+  const handleGroupInvoice = () => {
     if (selectedForInvoice.length === 0) return;
-    
-    try {
-      const ids = selectedForInvoice.join(',');
-      const { data, error } = await supabase.functions.invoke('generate-assistance-facture-pdf', {
-        body: { assistanceIds: ids }
-      });
-
-      if (error) throw error;
-
-      // Open the PDF URL
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-
-      setShowGroupDialog(false);
-      setSelectedForInvoice([]);
-      setGroupDialogAssurance('all');
-      setGroupDialogDateRange({});
-      setGroupDialogSearch('');
-    } catch (error) {
-      console.error('Error generating group invoice:', error);
-    }
+    const ids = selectedForInvoice.join(',');
+    window.open(`/assistance-facture-template?ids=${ids}&print=true`, '_blank');
+    setShowGroupDialog(false);
+    setSelectedForInvoice([]);
+    setGroupDialogAssurance('all');
+    setGroupDialogDateRange({});
+    setGroupDialogSearch('');
   };
 
   const toggleInvoiceSelection = (id: string) => {
@@ -214,21 +199,9 @@ export default function FacturesAssurance() {
     return (assistance.montant_facture || assistance.montant_total || 0).toFixed(2);
   };
 
-  const handleDownloadInvoice = async (assistanceId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-assistance-facture-pdf', {
-        body: { assistanceId }
-      });
-
-      if (error) throw error;
-
-      // Open the PDF URL
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error downloading invoice:', error);
-    }
+  const handleDownloadInvoice = (assistanceId: string) => {
+    // Ouvrir la facture dans un nouvel onglet avec mode print
+    window.open(`/assistance-facture-template?id=${assistanceId}&print=true`, '_blank');
   };
 
   const handleEditInvoice = (assistanceId: string) => {

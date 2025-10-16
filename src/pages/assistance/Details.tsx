@@ -676,39 +676,14 @@ export default function AssistanceDetails() {
     }
   };
 
-  const handleGenerateFacturePDF = async () => {
-    try {
-      toast({
-        title: "Génération de la facture PDF",
-        description: "Veuillez patienter...",
-      });
-
-      // Call the edge function to generate PDF
-      const { data, error } = await supabase.functions.invoke('generate-assistance-facture-pdf', {
-        body: { assistanceId: id }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Open the PDF URL
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-
-      toast({
-        title: 'Facture générée',
-        description: 'La facture PDF a été générée avec succès',
-      });
-    } catch (error: any) {
-      console.error('Erreur génération facture:', error);
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Une erreur est survenue lors de la génération de la facture',
-        variant: 'destructive',
-      });
-    }
+  const handleGenerateFacturePDF = () => {
+    // Ouvrir la facture dans un nouvel onglet avec mode print
+    window.open(`/assistance-facture-template?id=${id}&print=true`, '_blank');
+    
+    toast({
+      title: 'Facture générée',
+      description: 'La facture a été ouverte dans un nouvel onglet. Utilisez Ctrl+P pour la sauvegarder en PDF.',
+    });
   };
 
   const handleUpdateClient = async () => {
