@@ -121,24 +121,24 @@ export default function AssistanceFactureTemplate() {
             ? `Facture_Groupee_${assistanceIds?.replace(/,/g, '_')}` 
             : `Facture_${assistances[0]?.num_dossier || assistanceId}`;
           
-          const opt = {
-            margin: 0,
-            filename: `${invoiceNumber}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-              scale: 2, 
-              useCORS: true,
-              allowTaint: true,
-              logging: false,
-              backgroundColor: '#ffffff'
-            },
-            jsPDF: { 
-              unit: 'mm' as const, 
-              format: 'a4' as const, 
-              orientation: 'portrait' as const
-            },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          };
+  const opt = {
+    margin: 10,
+    filename: `${invoiceNumber}.pdf`,
+    image: { type: 'jpeg' as const, quality: 0.98 },
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    },
+    jsPDF: { 
+      unit: 'mm' as const, 
+      format: 'a4' as const, 
+      orientation: 'portrait' as const
+    },
+    pagebreak: { mode: ['css', 'legacy'] }
+  };
           
           html2pdf().set(opt).from(element).save().then(() => {
             setTimeout(() => {
@@ -191,51 +191,47 @@ export default function AssistanceFactureTemplate() {
     : `FAC-${firstAssistance.num_dossier}`;
   
   // Get assurance info from first assistance (should be same for grouped)
-  const assuranceInfo = firstAssistance.assurances || { nom: firstAssistance.assureur_nom };
+  const assuranceInfo = firstAssistance.assurance || { nom: firstAssistance.assureur_nom };
 
   return (
-    <div id="facture-content" className="flex flex-col w-[210mm] mx-auto p-0 bg-white print:p-0">
+    <div id="facture-content" className="w-full max-w-[190mm] mx-auto bg-white">
       <style>{`
         * {
           box-sizing: border-box;
         }
+        @page { 
+          size: A4 portrait; 
+          margin: 10mm; 
+        }
         #facture-content {
-          width: 210mm;
-          height: 297mm;
+          width: 100%;
+          max-width: 190mm;
           margin: auto;
           overflow: hidden;
-          box-sizing: border-box;
-          padding: 15mm 15mm 8mm 15mm;
-          page-break-after: avoid;
-          page-break-inside: avoid;
+        }
+        .invoice-page {
+          width: 190mm;
+          height: 277mm;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          padding: 0 0 8mm 0;
+          background: white;
         }
         @media print {
           body { margin: 0; padding: 0; }
-          @page { size: A4 portrait; margin: 0; }
-          #facture-content {
-            padding: 15mm 15mm 8mm 15mm;
-            page-break-after: avoid;
-            page-break-inside: avoid;
-          }
         }
         table {
-          page-break-inside: avoid;
           width: 100%;
-        }
-        .footer {
-          page-break-inside: avoid;
-          page-break-before: avoid;
-        }
-        .flex-1 {
-          page-break-inside: avoid;
         }
       `}</style>
 
-      <div className="flex-1">
+      <div className="invoice-page">
+        <div className="flex-1 px-4 pt-4">
 
-      {/* Header */}
-      {!settings?.masquer_entete && (
-        <div className="mb-8">
+        {/* Header */}
+        {!settings?.masquer_entete && (
+          <div className="mb-6">
           {!settings?.masquer_logo && settings?.logo_url && (
             <div className="flex justify-center mb-4">
               <img 
@@ -335,39 +331,38 @@ export default function AssistanceFactureTemplate() {
         </tbody>
       </table>
 
-      {/* Totals */}
-      <div className="flex justify-end mb-8">
-        <div className="w-80">
-          <div className="flex justify-between py-2 border-b">
-            <span className="font-semibold">Sous-total HT :</span>
-            <span>{totalHT.toFixed(2)} DH</span>
-          </div>
-          <div className="flex justify-between py-2 border-b">
-            <span className="font-semibold">TVA (20%) :</span>
-            <span>{totalTVA.toFixed(2)} DH</span>
-          </div>
-          <div className="flex justify-between py-3 border-t-2 border-gray-400">
-            <span className="font-bold text-lg">TOTAL TTC :</span>
-            <span className="font-bold text-lg">{totalTTC.toFixed(2)} DH</span>
+        {/* Totals */}
+        <div className="flex justify-end mb-4">
+          <div className="w-80">
+            <div className="flex justify-between py-2 border-b">
+              <span className="font-semibold">Sous-total HT :</span>
+              <span>{totalHT.toFixed(2)} DH</span>
+            </div>
+            <div className="flex justify-between py-2 border-b">
+              <span className="font-semibold">TVA (20%) :</span>
+              <span>{totalTVA.toFixed(2)} DH</span>
+            </div>
+            <div className="flex justify-between py-3 border-t-2 border-gray-400">
+              <span className="font-bold text-lg">TOTAL TTC :</span>
+              <span className="font-bold text-lg">{totalTTC.toFixed(2)} DH</span>
+            </div>
           </div>
         </div>
       </div>
 
-
+        {/* Footer */}
+        {!settings?.masquer_pied_page && (
+          <div className="mt-auto text-center text-[7pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+            {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
+            {settings?.ice && <> | ICE: {settings.ice}</>}
+            {settings?.rc && <> | RC: {settings.rc}</>}
+            <br/>
+            {settings?.adresse && <>Adresse: {settings.adresse}</>}
+            {settings?.telephone && <> | Tél: {settings.telephone}</>}
+            {settings?.email && <> | Email: {settings.email}</>}
+          </div>
+        )}
       </div>
-
-      {/* Footer */}
-      {!settings?.masquer_pied_page && (
-        <div className="mt-auto text-center text-[7pt] text-gray-600 pt-2 border-t border-gray-400">
-          {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
-          {settings?.ice && <> | ICE: {settings.ice}</>}
-          {settings?.rc && <> | RC: {settings.rc}</>}
-          <br/>
-          {settings?.adresse && <>Adresse: {settings.adresse}</>}
-          {settings?.telephone && <> | Tél: {settings.telephone}</>}
-          {settings?.email && <> | Email: {settings.email}</>}
-        </div>
-      )}
     </div>
   );
 }
