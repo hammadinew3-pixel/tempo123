@@ -161,7 +161,7 @@ export default function NouveauSinistre() {
 
       if (sinistreError) throw sinistreError;
 
-      // Mettre le véhicule en statut "immobilisé" si un véhicule est associé
+      // FORCER le véhicule en statut "immobilisé" même s'il est actuellement loué
       if (formData.vehicle_id) {
         const { error: vehicleError } = await supabase
           .from('vehicles')

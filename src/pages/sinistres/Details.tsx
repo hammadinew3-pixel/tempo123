@@ -79,7 +79,7 @@ export default function SinistreDetails() {
 
       if (error) throw error;
 
-      // Mettre à jour le statut du véhicule selon le statut du sinistre
+      // FORCER le statut du véhicule selon le statut du sinistre (même s'il est loué)
       if (sinistre?.vehicle_id) {
         let vehicleStatus: 'disponible' | 'loue' | 'reserve' | 'en_panne' | 'immobilise';
         

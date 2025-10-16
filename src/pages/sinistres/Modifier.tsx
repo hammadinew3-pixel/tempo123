@@ -184,7 +184,7 @@ export default function ModifierSinistre() {
             .eq('id', oldSinistre.vehicle_id);
         }
 
-        // Mettre le nouveau véhicule en immobilisé si le sinistre n'est pas clos
+        // FORCER le nouveau véhicule en immobilisé si le sinistre n'est pas clos (même s'il est loué)
         if (formData.vehicle_id && formData.statut !== 'clos' && formData.statut !== 'ferme') {
           await supabase
             .from('vehicles')
