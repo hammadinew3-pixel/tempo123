@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Plus, Search, Car, ArrowRight, Calendar as CalendarIcon, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, Car, ArrowRight, Calendar as CalendarIcon, User, CheckCircle, Clock, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useState, useEffect } from "react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +22,29 @@ const months = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
 ];
+
+// Palette de couleurs pour les véhicules
+const vehicleColors = [
+  { bg: "bg-blue-500/50", text: "text-blue-900", border: "border-blue-300", hover: "hover:bg-blue-500/60", label: "Bleu" },
+  { bg: "bg-green-500/50", text: "text-green-900", border: "border-green-300", hover: "hover:bg-green-500/60", label: "Vert" },
+  { bg: "bg-purple-500/50", text: "text-purple-900", border: "border-purple-300", hover: "hover:bg-purple-500/60", label: "Violet" },
+  { bg: "bg-orange-500/50", text: "text-orange-900", border: "border-orange-300", hover: "hover:bg-orange-500/60", label: "Orange" },
+  { bg: "bg-pink-500/50", text: "text-pink-900", border: "border-pink-300", hover: "hover:bg-pink-500/60", label: "Rose" },
+  { bg: "bg-cyan-500/50", text: "text-cyan-900", border: "border-cyan-300", hover: "hover:bg-cyan-500/60", label: "Cyan" },
+  { bg: "bg-amber-500/50", text: "text-amber-900", border: "border-amber-300", hover: "hover:bg-amber-500/60", label: "Ambre" },
+  { bg: "bg-teal-500/50", text: "text-teal-900", border: "border-teal-300", hover: "hover:bg-teal-500/60", label: "Sarcelle" },
+  { bg: "bg-indigo-500/50", text: "text-indigo-900", border: "border-indigo-300", hover: "hover:bg-indigo-500/60", label: "Indigo" },
+  { bg: "bg-rose-500/50", text: "text-rose-900", border: "border-rose-300", hover: "hover:bg-rose-500/60", label: "Rose foncé" },
+];
+
+// Fonction pour obtenir une couleur basée sur l'ID du véhicule
+const getVehicleColor = (vehicleId: string) => {
+  let hash = 0;
+  for (let i = 0; i < vehicleId.length; i++) {
+    hash = vehicleId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return vehicleColors[Math.abs(hash) % vehicleColors.length];
+};
 
 type Contract = {
   id: string;
@@ -67,6 +91,8 @@ export default function Calendrier() {
   const [rangeEndDate, setRangeEndDate] = useState<Date | null>(null);
   const [availStartOpen, setAvailStartOpen] = useState(false);
   const [availEndOpen, setAvailEndOpen] = useState(false);
+  const [selectedVehicleFilter, setSelectedVehicleFilter] = useState<string | null>(null);
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -309,6 +335,44 @@ export default function Calendrier() {
   // Calculate contract bars after firstDayOfMonth is defined
   const contractBars = getContractBars();
 
+  // Filtrer les contrats affichés
+  const filteredContracts = useMemo(() => {
+    return contracts.filter(contract => {
+      if (selectedVehicleFilter && contract.vehicle_id !== selectedVehicleFilter) return false;
+      if (selectedStatusFilter && contract.statut !== selectedStatusFilter) return false;
+      return true;
+    });
+  }, [contracts, selectedVehicleFilter, selectedStatusFilter]);
+
+  // Recalculer les barres avec les contrats filtrés
+  const displayedBars = contractBars.filter(bar => {
+    if (selectedVehicleFilter && bar.contract.vehicle_id !== selectedVehicleFilter) return false;
+    if (selectedStatusFilter && bar.contract.statut !== selectedStatusFilter) return false;
+    return true;
+  });
+
+  // Obtenir la liste unique des véhicules
+  const uniqueVehicles = useMemo(() => {
+    const vehicleMap = new Map();
+    contracts.forEach(contract => {
+      if (contract.vehicles && !vehicleMap.has(contract.vehicle_id)) {
+        vehicleMap.set(contract.vehicle_id, {
+          id: contract.vehicle_id,
+          immatriculation: contract.vehicles.immatriculation,
+          marque: contract.vehicles.marque,
+          modele: contract.vehicles.modele,
+          color: getVehicleColor(contract.vehicle_id),
+          count: 0
+        });
+      }
+      if (vehicleMap.has(contract.vehicle_id)) {
+        const vehicle = vehicleMap.get(contract.vehicle_id);
+        vehicle.count++;
+      }
+    });
+    return Array.from(vehicleMap.values());
+  }, [contracts]);
+
   const selectedDayContracts = selectedDay ? getContractsForDay(selectedDay.getDate()) : [];
 
   return (
@@ -360,6 +424,125 @@ export default function Calendrier() {
               <Button variant="outline" size="sm" onClick={handleNextMonth}>
                 <ChevronRight className="w-4 h-4" />
               </Button>
+            </div>
+          </div>
+
+          {/* Légende et filtres */}
+          <div className="mt-4 space-y-3">
+            {/* Filtres */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Filtres:</span>
+              </div>
+              
+              {/* Filtre véhicule */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Car className="w-3 h-3 mr-1" />
+                    {selectedVehicleFilter 
+                      ? uniqueVehicles.find(v => v.id === selectedVehicleFilter)?.immatriculation 
+                      : "Tous les véhicules"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-2">
+                  <div className="space-y-1">
+                    <Button
+                      variant={!selectedVehicleFilter ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => setSelectedVehicleFilter(null)}
+                    >
+                      Tous les véhicules
+                    </Button>
+                    {uniqueVehicles.map(vehicle => (
+                      <Button
+                        key={vehicle.id}
+                        variant={selectedVehicleFilter === vehicle.id ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => setSelectedVehicleFilter(vehicle.id)}
+                      >
+                        <div className={`w-3 h-3 rounded mr-2 ${vehicle.color.bg}`} />
+                        {vehicle.immatriculation}
+                        <Badge variant="outline" className="ml-auto">
+                          {vehicle.count}
+                        </Badge>
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Filtre statut */}
+              <div className="flex gap-1">
+                <Button
+                  variant={!selectedStatusFilter ? "secondary" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setSelectedStatusFilter(null)}
+                >
+                  Tous
+                </Button>
+                <Button
+                  variant={selectedStatusFilter === "livre" ? "secondary" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setSelectedStatusFilter(selectedStatusFilter === "livre" ? null : "livre")}
+                >
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Livrés
+                </Button>
+                <Button
+                  variant={selectedStatusFilter === "contrat_valide" ? "secondary" : "outline"}
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setSelectedStatusFilter(selectedStatusFilter === "contrat_valide" ? null : "contrat_valide")}
+                >
+                  <Clock className="w-3 h-3 mr-1" />
+                  Validés
+                </Button>
+              </div>
+
+              {/* Réinitialiser les filtres */}
+              {(selectedVehicleFilter || selectedStatusFilter) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => {
+                    setSelectedVehicleFilter(null);
+                    setSelectedStatusFilter(null);
+                  }}
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Réinitialiser
+                </Button>
+              )}
+            </div>
+
+            {/* Légende des véhicules */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm text-muted-foreground">Légende:</span>
+              {uniqueVehicles.slice(0, 6).map(vehicle => (
+                <div
+                  key={vehicle.id}
+                  className="flex items-center gap-1.5 text-xs cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setSelectedVehicleFilter(selectedVehicleFilter === vehicle.id ? null : vehicle.id)}
+                >
+                  <div className={`w-3 h-3 rounded ${vehicle.color.bg} ${vehicle.color.border} border`} />
+                  <span className="text-foreground">{vehicle.immatriculation}</span>
+                  <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                    {vehicle.count}
+                  </Badge>
+                </div>
+              ))}
+              {uniqueVehicles.length > 6 && (
+                <span className="text-xs text-muted-foreground">
+                  +{uniqueVehicles.length - 6} autres
+                </span>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -421,34 +604,117 @@ export default function Calendrier() {
                 {/* Contract bars overlay */}
                 <div className="absolute top-[70px] md:top-[80px] left-0 right-0 pointer-events-none">
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
-                    {contractBars.map((bar, idx) => {
-                      const rowOffset = bar.row * 32; // 32px per row for spacing
-                      const colIndex = bar.startCol % 7;
-                      const weekRow = Math.floor(bar.startCol / 7);
-                      
-                      return (
-                        <div
-                          key={`${bar.contract.id}-${idx}`}
-                          className="pointer-events-auto cursor-pointer mb-1"
-                          style={{
-                            gridColumn: `${colIndex + 1} / span ${Math.min(bar.width, 7 - colIndex)}`,
-                            gridRow: weekRow + 1,
-                            marginTop: `${rowOffset + 5}px`,
-                            zIndex: 10 + bar.row
-                          }}
-                          onClick={() => {
-                            setSelectedContract(bar.contract);
-                            setShowContractDetails(true);
-                          }}
-                        >
-                          <div className="bg-red-500/50 text-red-900 rounded px-2 py-1 text-[10px] md:text-xs font-medium border border-red-300 hover:bg-red-500/60 transition-colors">
-                            <div className="truncate">
-                              {bar.contract.vehicles?.immatriculation} - Rés. {bar.contract.numero_contrat} - {bar.contract.clients?.nom} {bar.contract.clients?.prenom} - {bar.contract.vehicles?.marque} {bar.contract.vehicles?.modele}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    <TooltipProvider>
+                      {displayedBars.map((bar, idx) => {
+                        const rowOffset = bar.row * 32;
+                        const colIndex = bar.startCol % 7;
+                        const weekRow = Math.floor(bar.startCol / 7);
+                        const vehicleColor = getVehicleColor(bar.contract.vehicle_id);
+                        const duration = differenceInDays(
+                          new Date(bar.contract.date_fin),
+                          new Date(bar.contract.date_debut)
+                        ) + 1;
+                        const isFiltered = (selectedVehicleFilter && bar.contract.vehicle_id !== selectedVehicleFilter) ||
+                                          (selectedStatusFilter && bar.contract.statut !== selectedStatusFilter);
+                        
+                        return (
+                          <Tooltip key={`${bar.contract.id}-${idx}`}>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={cn(
+                                  "pointer-events-auto cursor-pointer mb-1 transition-all",
+                                  isFiltered && "opacity-30"
+                                )}
+                                style={{
+                                  gridColumn: `${colIndex + 1} / span ${Math.min(bar.width, 7 - colIndex)}`,
+                                  gridRow: weekRow + 1,
+                                  marginTop: `${rowOffset + 5}px`,
+                                  zIndex: 10 + bar.row
+                                }}
+                                onClick={() => {
+                                  setSelectedContract(bar.contract);
+                                  setShowContractDetails(true);
+                                }}
+                              >
+                                <div className={cn(
+                                  "rounded px-2 py-1 text-[10px] md:text-xs font-medium border transition-all",
+                                  vehicleColor.bg,
+                                  vehicleColor.text,
+                                  vehicleColor.border,
+                                  vehicleColor.hover
+                                )}>
+                                  <div className="flex items-center gap-1 truncate">
+                                    {bar.contract.statut === "livre" ? (
+                                      <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                                    ) : (
+                                      <Clock className="w-3 h-3 flex-shrink-0" />
+                                    )}
+                                    <span className="font-bold hidden sm:inline">
+                                      {bar.contract.vehicles?.immatriculation}
+                                    </span>
+                                    <span className="font-bold sm:hidden">
+                                      {bar.contract.vehicles?.immatriculation}
+                                    </span>
+                                    <span className="hidden md:inline">
+                                      - {bar.contract.clients?.nom}
+                                    </span>
+                                    <span className="hidden lg:inline">
+                                      ({duration}j)
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-xs">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Car className="w-4 h-4" />
+                                  <span className="font-bold">
+                                    {bar.contract.vehicles?.immatriculation}
+                                  </span>
+                                  <span className="text-muted-foreground text-xs">
+                                    {bar.contract.vehicles?.marque} {bar.contract.vehicles?.modele}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <User className="w-4 h-4" />
+                                  <span>
+                                    {bar.contract.clients?.nom} {bar.contract.clients?.prenom}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <CalendarIcon className="w-4 h-4" />
+                                  <span className="text-sm">
+                                    {format(new Date(bar.contract.date_debut), 'd MMM', { locale: fr })} - {format(new Date(bar.contract.date_fin), 'd MMM', { locale: fr })}
+                                  </span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {duration} jours
+                                  </Badge>
+                                </div>
+                                <div className="pt-1 border-t">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground">Contrat:</span>
+                                    <span className="font-medium">{bar.contract.numero_contrat}</span>
+                                  </div>
+                                  {bar.contract.total_amount && (
+                                    <div className="flex items-center justify-between text-sm">
+                                      <span className="text-muted-foreground">Montant:</span>
+                                      <span className="font-medium">{bar.contract.total_amount} MAD</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground">Statut:</span>
+                                    <Badge variant={bar.contract.statut === "livre" ? "default" : "secondary"}>
+                                      {bar.contract.statut === "livre" ? "Livré" : "Validé"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </TooltipProvider>
                   </div>
                 </div>
               </div>
