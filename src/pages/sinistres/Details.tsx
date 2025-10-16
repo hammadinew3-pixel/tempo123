@@ -79,6 +79,26 @@ export default function SinistreDetails() {
 
       if (error) throw error;
 
+      // Mettre à jour le statut du véhicule selon le statut du sinistre
+      if (sinistre?.vehicle_id) {
+        let vehicleStatus: 'disponible' | 'loue' | 'reserve' | 'en_panne' | 'immobilise';
+        
+        if (newStatus === 'clos' || newStatus === 'ferme') {
+          vehicleStatus = 'disponible';
+        } else {
+          vehicleStatus = 'immobilise';
+        }
+
+        const { error: vehicleError } = await supabase
+          .from('vehicles')
+          .update({ statut: vehicleStatus })
+          .eq('id', sinistre.vehicle_id);
+
+        if (vehicleError) {
+          console.error('Erreur lors de la mise à jour du statut du véhicule:', vehicleError);
+        }
+      }
+
       toast({
         title: 'Succès',
         description: 'Statut mis à jour',

@@ -32,6 +32,7 @@ export default function ModifierSinistre() {
     gravite: 'legere',
     description: '',
     cout_estime: '',
+    statut: 'ouvert',
   });
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export default function ModifierSinistre() {
           gravite: data.gravite,
           description: data.description || '',
           cout_estime: data.cout_estime?.toString() || '',
+          statut: data.statut || 'ouvert',
         });
       }
     } catch (error: any) {
@@ -146,6 +148,13 @@ export default function ModifierSinistre() {
     setLoading(true);
 
     try {
+      // Get old vehicle_id and statut before update
+      const { data: oldSinistre } = await supabase
+        .from('sinistres')
+        .select('vehicle_id, statut')
+        .eq('id', id)
+        .single();
+
       // Update sinistre
       const { error: updateError } = await supabase
         .from('sinistres')
@@ -164,6 +173,25 @@ export default function ModifierSinistre() {
         .eq('id', id);
 
       if (updateError) throw updateError;
+
+      // Gérer le statut du véhicule si celui-ci a changé
+      if (oldSinistre) {
+        // Si l'ancien véhicule existe et est différent du nouveau, le remettre disponible
+        if (oldSinistre.vehicle_id && oldSinistre.vehicle_id !== formData.vehicle_id) {
+          await supabase
+            .from('vehicles')
+            .update({ statut: 'disponible' })
+            .eq('id', oldSinistre.vehicle_id);
+        }
+
+        // Mettre le nouveau véhicule en immobilisé si le sinistre n'est pas clos
+        if (formData.vehicle_id && formData.statut !== 'clos' && formData.statut !== 'ferme') {
+          await supabase
+            .from('vehicles')
+            .update({ statut: 'immobilise' })
+            .eq('id', formData.vehicle_id);
+        }
+      }
 
       // Upload new files if any
       if (uploadedFiles.length > 0) {
