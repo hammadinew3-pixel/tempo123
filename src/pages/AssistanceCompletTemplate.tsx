@@ -91,8 +91,23 @@ export default function AssistanceCompletTemplate() {
         }
       `}</style>
 
-      {/* PAGE 1: CONTRAT DE LOCATION */}
-      <div className="mb-8">
+      {/* PAGE 1: ORDRE DE MISSION */}
+      {data.ordre_mission_url && (
+        <div className="mb-8">
+          <h2 className="text-center text-2xl font-bold mb-6">ORDRE DE MISSION</h2>
+          <div className="flex justify-center">
+            <img 
+              src={data.ordre_mission_url} 
+              alt="Ordre de mission" 
+              className="max-w-full h-auto"
+              style={{ maxHeight: '90vh' }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* PAGE 2: CONTRAT DE LOCATION */}
+      <div className={data.ordre_mission_url ? "page-break" : "mb-8"}>
         <div className="text-center mb-6">
           {settings?.logo_url && !settings?.masquer_logo && (
             <img src={settings.logo_url} alt="Logo" className="h-20 mx-auto mb-4" />
@@ -154,21 +169,6 @@ export default function AssistanceCompletTemplate() {
         </div>
       </div>
 
-      {/* PAGE 2: ORDRE DE MISSION */}
-      {data.ordre_mission_url && (
-        <div className="page-break">
-          <h2 className="text-center text-2xl font-bold mb-6">ORDRE DE MISSION</h2>
-          <div className="flex justify-center">
-            <img 
-              src={data.ordre_mission_url} 
-              alt="Ordre de mission" 
-              className="max-w-full h-auto"
-              style={{ maxHeight: '90vh' }}
-            />
-          </div>
-        </div>
-      )}
-
       {/* PAGE 3: CIN DU CLIENT */}
       {data.clients?.cin_url && (
         <div className="page-break">
@@ -188,7 +188,7 @@ export default function AssistanceCompletTemplate() {
         </div>
       )}
 
-      {/* PAGE 5: PERMIS DU CLIENT */}
+      {/* PAGE 4: PERMIS DU CLIENT */}
       {data.clients?.permis_url && (
         <div className="page-break">
           <h2 className="text-center text-2xl font-bold mb-6">COPIE PERMIS DU CLIENT</h2>
@@ -207,7 +207,7 @@ export default function AssistanceCompletTemplate() {
         </div>
       )}
 
-      {/* PAGE 6: FACTURE */}
+      {/* PAGE 5: FACTURE */}
       <div className="page-break">
         <div className="text-center mb-6">
           {settings?.logo_url && !settings?.masquer_logo && (
