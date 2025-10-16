@@ -1061,13 +1061,6 @@ export default function AssistanceDetails() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => {
-                const url = `/assistance-dossier-template?id=${id}`;
-                window.open(url, '_blank');
-              }}>
-                <FileText className="w-4 h-4 mr-2" />
-                Info dossier
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleGenerateContractPDF}>
                 <FileText className="w-4 h-4 mr-2" />
                 Contrat de location assistance
@@ -1079,6 +1072,12 @@ export default function AssistanceDetails() {
                 <FileText className="w-4 h-4 mr-2" />
                 Facture
               </DropdownMenuItem>
+              {assistance.ordre_mission_url && (
+                <DropdownMenuItem onClick={handleDownloadOrdreMission}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Ordre de mission
+                </DropdownMenuItem>
+              )}
               {assistance.clients?.cin_url && (
                 <DropdownMenuItem onClick={() => handleDownloadClientDoc(assistance.clients.cin_url, 'CIN')}>
                   <FileText className="w-4 h-4 mr-2" />
@@ -1091,37 +1090,6 @@ export default function AssistanceDetails() {
                   Permis Client
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={async () => {
-                try {
-                  toast({
-                    title: "Génération en cours",
-                    description: "Le dossier complet est en cours de génération...",
-                  });
-
-                  const url = `${window.location.origin}/assistance-complet-template?id=${id}&download=true`;
-                  const iframe = document.createElement('iframe');
-                  iframe.style.display = 'none';
-                  iframe.src = url;
-                  document.body.appendChild(iframe);
-                  
-                  // Sécurité: cleanup forcé après 60s si le template ne se ferme pas lui-même
-                  setTimeout(() => {
-                    if (iframe.parentNode) {
-                      document.body.removeChild(iframe);
-                    }
-                  }, 60000);
-                } catch (error: any) {
-                  console.error('Error generating dossier complet:', error);
-                  toast({
-                    variant: "destructive",
-                    title: "Erreur",
-                    description: "Impossible de générer le dossier complet",
-                  });
-                }
-              }}>
-                <FileDown className="w-4 h-4 mr-2" />
-                Dossier complet
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
