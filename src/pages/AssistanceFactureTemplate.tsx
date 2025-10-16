@@ -228,12 +228,6 @@ export default function AssistanceFactureTemplate() {
                 Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
               </p>
             </div>
-            <div className="text-right">
-              <p className="font-bold text-lg">{settings?.raison_sociale || "Nom de l'entreprise"}</p>
-              {settings?.adresse && <p className="text-sm">{settings.adresse}</p>}
-              {settings?.telephone && <p className="text-sm">Téléphone : {settings.telephone}</p>}
-              {settings?.email && <p className="text-sm">Email : {settings.email}</p>}
-            </div>
           </div>
 
           <div className="border-t-2 border-gray-300 pt-4">
@@ -271,15 +265,6 @@ export default function AssistanceFactureTemplate() {
         </div>
       )}
 
-      {/* Dossier information */}
-      {!isGrouped && (
-        <div className="mb-6 bg-gray-50 p-4 rounded">
-          <p className="text-sm"><span className="font-semibold">Dossier N° :</span> {firstAssistance.num_dossier}</p>
-          <p className="text-sm">
-            <span className="font-semibold">Période :</span> Du {format(new Date(firstAssistance.date_debut), 'dd/MM/yyyy', { locale: fr })} au {format(new Date(firstAssistance.date_fin || new Date()), 'dd/MM/yyyy', { locale: fr })}
-          </p>
-        </div>
-      )}
 
       {/* Items table */}
       <table className="w-full mb-6">
