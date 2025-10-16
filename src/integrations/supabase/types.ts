@@ -615,7 +615,15 @@ export type Database = {
           infraction_id?: string
           uploaded_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_infraction_files_infraction_id"
+            columns: ["infraction_id"]
+            isOneToOne: false
+            referencedRelation: "infractions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       infractions: {
         Row: {
@@ -664,6 +672,27 @@ export type Database = {
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_infractions_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_infractions_contract_id"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_infractions_vehicle_id"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "infractions_contract_id_fkey"
             columns: ["contract_id"]
@@ -782,7 +811,15 @@ export type Database = {
           sinistre_id?: string
           uploaded_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_sinistre_files_sinistre_id"
+            columns: ["sinistre_id"]
+            isOneToOne: false
+            referencedRelation: "sinistres"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sinistres: {
         Row: {
@@ -849,6 +886,27 @@ export type Database = {
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_sinistres_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_sinistres_contract_id"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_sinistres_vehicle_id"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sinistres_contract_id_fkey"
             columns: ["contract_id"]
