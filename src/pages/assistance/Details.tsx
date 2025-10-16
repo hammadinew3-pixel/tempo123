@@ -1099,7 +1099,7 @@ export default function AssistanceDetails() {
                   });
 
                   const { data, error } = await supabase.functions.invoke('generate-assistance-dossier-complet', {
-                    body: { assistanceId: id }
+                    body: { assistanceId: id, baseUrl: window.location.origin }
                   });
 
                   if (error) throw error;

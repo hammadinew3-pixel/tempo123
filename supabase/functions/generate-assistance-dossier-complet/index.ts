@@ -42,7 +42,7 @@ serve(async (req) => {
   }
 
   try {
-    const { assistanceId } = await req.json();
+    const { assistanceId, baseUrl } = await req.json();
     console.log('Generating dossier complet for assistance:', assistanceId);
 
     if (!assistanceId) {
@@ -53,8 +53,9 @@ serve(async (req) => {
     const BROWSERLESS_TOKEN = Deno.env.get('BROWSERLESS_TOKEN');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 
-    // Construct template URL
-    const templateUrl = `${SUPABASE_URL?.replace('.supabase.co', '.lovableproject.com') || ''}/assistance-complet-template?id=${assistanceId}&download=true`;
+    // Construct template URL from caller origin when provided
+    const effectiveBase = (baseUrl?.toString()?.trim().replace(/\/$/, '')) || (SUPABASE_URL?.replace('.supabase.co', '.lovableproject.com') || '');
+    const templateUrl = `${effectiveBase}/assistance-complet-template?id=${assistanceId}&download=true`;
     console.log('Template URL:', templateUrl);
 
     let pdfBuffer: ArrayBuffer;
@@ -64,7 +65,7 @@ serve(async (req) => {
       console.log('Using html2pdf.app for PDF generation');
       
       try {
-        const html2pdfUrl = `https://api.html2pdf.app/v1/generate?apiKey=${encodeURIComponent(HTML2PDF_APP_KEY)}&url=${encodeURIComponent(templateUrl)}&pageSize=A4&orientation=portrait&margin=10&printBackground=true`;
+        const html2pdfUrl = `https://api.html2pdf.app/v1/generate?apiKey=${encodeURIComponent(HTML2PDF_APP_KEY)}&url=${encodeURIComponent(templateUrl)}&pageSize=A4&orientation=portrait&margin=10mm&printBackground=true`;
         console.log('Calling html2pdf.app:', html2pdfUrl.substring(0, 200) + '...');
         
         const pdfResponse = await fetch(html2pdfUrl, {
