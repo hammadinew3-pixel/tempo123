@@ -63,6 +63,8 @@ export default function NouvelleInfraction() {
 
   const findContractForDate = async () => {
     try {
+      if (!formData.vehicle_id || !formData.date_infraction) return;
+
       // Chercher le véhicule actif à la date d'infraction via vehicle_affectations
       const { data: affectations, error: affectationsError } = await supabase
         .from("vehicle_affectations")

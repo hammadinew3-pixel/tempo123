@@ -18,6 +18,7 @@ export default function ModifierInfraction() {
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
 
   const [formData, setFormData] = useState<{
     date_infraction: string;
@@ -38,6 +39,12 @@ export default function ModifierInfraction() {
   useEffect(() => {
     loadData();
   }, [id]);
+
+  useEffect(() => {
+    if (formData.date_infraction) {
+      loadAvailableVehicles();
+    }
+  }, [formData.date_infraction]);
 
   const loadData = async () => {
     try {
@@ -67,6 +74,35 @@ export default function ModifierInfraction() {
         description: error.message,
       });
       navigate("/infractions");
+    }
+  };
+
+  const loadAvailableVehicles = async () => {
+    if (!formData.date_infraction) {
+      setAvailableVehicles(vehicles);
+      return;
+    }
+
+    try {
+      // Récupérer les véhicules actifs à la date d'infraction
+      const { data: affectations, error } = await supabase
+        .from("vehicle_affectations")
+        .select("vehicle_id, vehicles(*)")
+        .lte("date_debut", formData.date_infraction)
+        .or(`date_fin.gte.${formData.date_infraction},date_fin.is.null`);
+
+      if (error) throw error;
+
+      if (affectations && affectations.length > 0) {
+        const activeVehicles = affectations.map(a => a.vehicles).filter(Boolean);
+        setAvailableVehicles(activeVehicles);
+      } else {
+        // Si aucune affectation trouvée, afficher tous les véhicules
+        setAvailableVehicles(vehicles);
+      }
+    } catch (error: any) {
+      console.error("Erreur lors du chargement des véhicules disponibles:", error);
+      setAvailableVehicles(vehicles);
     }
   };
 
@@ -227,13 +263,18 @@ export default function ModifierInfraction() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {vehicles.map((vehicle) => (
+                  {(availableVehicles.length > 0 ? availableVehicles : vehicles).map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
                       {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {formData.date_infraction && availableVehicles.length > 0 && availableVehicles.length < vehicles.length && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Véhicules actifs à cette date uniquement
+                </p>
+              )}
             </div>
 
             <div>
