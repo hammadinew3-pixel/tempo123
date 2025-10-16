@@ -1589,7 +1589,7 @@ export default function VehiculeDetails() {
                         <TableCell>{format(new Date(contract.date_fin), 'dd/MM/yyyy', {
                       locale: fr
                     })}</TableCell>
-                        <TableCell className="text-right">{contract.total_amount.toFixed(2)} DH</TableCell>
+                        <TableCell className="text-right">{(contract.total_amount || 0).toFixed(2)} DH</TableCell>
                       </TableRow>)}
                   </TableBody>
                 </Table>
