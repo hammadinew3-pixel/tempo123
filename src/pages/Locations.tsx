@@ -866,7 +866,14 @@ export default function Locations() {
                           </>
                         )}
                         {visibleColumns.montant && (
-                          <td className="py-4 text-foreground">{contract.total_amount?.toFixed(2) || '0.00'} MAD</td>
+                          <td className="py-4 text-foreground">{(() => {
+                            const ta = Number(contract.total_amount || 0);
+                            if (ta > 0) return `${ta.toFixed(2)} MAD`;
+                            const rate = Number(contract.daily_rate ?? contract.vehicles?.tarif_journalier) || 0;
+                            const days = contract.date_fin ? (contract.duration || calculateDuration(contract.date_debut, contract.date_fin)) : 0;
+                            const computed = rate * days;
+                            return `${computed.toFixed(2)} MAD`;
+                          })()}</td>
                         )}
                         {visibleColumns.statut && (
                           <td className="py-4">{getStatusBadge(contract.statut)}</td>
