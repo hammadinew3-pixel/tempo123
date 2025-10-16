@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ContractWorkflow } from "@/components/workflow/ContractWorkflow";
+import { computeChangeAmounts, safeRemaining, resolveRates } from "@/lib/contractPricing";
 
 export default function LocationDetails() {
   const { id } = useParams();
@@ -468,79 +469,59 @@ export default function LocationDetails() {
     }
 
     try {
-      // Récupérer le tarif du nouveau véhicule
+      // Récupérer le véhicule sélectionné et vérifier qu'il est différent
       const selectedVehicle = availableVehicles.find(v => v.id === changeVehicleData.new_vehicle_id);
-      const oldDailyRate = Number(contract.daily_rate) || 0;
-      let newDailyRate = Number(selectedVehicle?.tarif_journalier);
-      // Si le tarif du nouveau véhicule est indisponible ou égal à 0, on conserve l'ancien tarif
-      if (!newDailyRate || newDailyRate <= 0) {
-        newDailyRate = oldDailyRate;
+      if (!selectedVehicle) {
+        toast({ variant: "destructive", title: "Erreur", description: "Véhicule invalide" });
+        return;
       }
-      
-      // Calculer le jour du changement basé sur les dates (normalisées à 00:00)
-      const startDate = new Date(`${contract.date_debut}T00:00:00`);
-      const changeDate = new Date(`${changeVehicleData.change_date}T00:00:00`);
-      const endDate = new Date(`${contract.date_fin}T00:00:00`);
-      
-      // Validation de la date de changement
+      if (selectedVehicle.id === contract.vehicle_id) {
+        toast({ variant: "destructive", title: "Erreur", description: "Veuillez choisir un véhicule différent" });
+        return;
+      }
+
+      // Valider la date de changement (inclusif entre début et fin)
+      const startStr = contract.date_debut;
+      const endStr = contract.date_fin;
+      const changeStr = changeVehicleData.change_date;
+      const startDate = new Date(`${startStr}T00:00:00`);
+      const changeDate = new Date(`${changeStr}T00:00:00`);
+      const endDate = new Date(`${endStr}T00:00:00`);
       if (changeDate < startDate || changeDate > endDate) {
         toast({
           variant: "destructive",
-          title: "Erreur",
-          description: "La date de changement doit être entre la date de début et la date de fin de la location",
+          title: "Date invalide",
+          description: "La date de changement doit être comprise entre la date de début et la date de fin",
         });
         return;
       }
-      
-      // Calculer le nombre de jours entre les dates
-      // On compte le jour du changement inclus pour l'ancien véhicule
-      const dayMs = 1000 * 60 * 60 * 24;
-      const totalDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / dayMs);
-      const daysWithOldVehicle = Math.floor((changeDate.getTime() - startDate.getTime()) / dayMs) + 1;
-      const daysWithNewVehicle = totalDuration - daysWithOldVehicle;
-      
-      if (daysWithNewVehicle < 0) {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "La date de changement ne peut pas être après la date de fin de location",
-        });
-        return;
-      }
-      
-      // Si le changement est le dernier jour, on accepte mais on informe l'utilisateur
-      if (daysWithNewVehicle === 0) {
-        toast({
-          variant: "default",
-          title: "Information",
-          description: "Le changement sera effectué le dernier jour de location",
-        });
-      }
-      
-      // Montant pour les jours avec l'ancien véhicule
-      const amountOldVehicle = daysWithOldVehicle * oldDailyRate;
-      
-      // Montant pour les jours avec le nouveau véhicule
-      const amountNewVehicle = daysWithNewVehicle * newDailyRate;
-      
-      // Nouveau montant total
-      const newTotalAmount = amountOldVehicle + amountNewVehicle;
-      
-      // Calcul du reste à payer
-      const advancePayment = contract.advance_payment || 0;
-      const newRemainingAmount = newTotalAmount - advancePayment;
 
-      // Note détaillée du calcul
-      const calculationNote = `Changement le ${format(changeDate, 'dd/MM/yyyy', { locale: fr })} (jour ${daysWithOldVehicle + 1}/${totalDuration}). ` +
-        `Ancien véhicule: ${daysWithOldVehicle} jours × ${oldDailyRate} DH = ${amountOldVehicle.toFixed(2)} DH. ` +
-        `Nouveau véhicule: ${daysWithNewVehicle} jours × ${newDailyRate} DH = ${amountNewVehicle.toFixed(2)} DH. ` +
+      // Résoudre les tarifs
+      const { oldRate: oldDailyRate, newRate: newDailyRate } = resolveRates(contract, selectedVehicle);
+
+      // Calculs robustes (jours et montants)
+      const { totalDays, daysOld, daysNew, amountOld, amountNew, total } = computeChangeAmounts({
+        start: startStr,
+        end: endStr,
+        change: changeStr,
+        oldRate: oldDailyRate,
+        newRate: newDailyRate,
+      });
+
+      const newTotalAmount = total;
+      const newRemainingAmount = safeRemaining(newTotalAmount, contract.advance_payment);
+
+      // Message de calcul détaillé
+      const calculationNote = `Changement le ${format(changeDate, 'dd/MM/yyyy', { locale: fr })} (jour ${daysOld + 1}/${totalDays}). ` +
+        `Ancien véhicule: ${daysOld} jours × ${oldDailyRate} DH = ${amountOld.toFixed(2)} DH. ` +
+        `Nouveau véhicule: ${daysNew} jours × ${newDailyRate} DH = ${amountNew.toFixed(2)} DH. ` +
         `Montant total: ${newTotalAmount.toFixed(2)} DH. ` +
         `${changeVehicleData.notes ? changeVehicleData.notes : ''}`;
 
-      // 1. Enregistrer le changement dans l'historique
+      // 1) Historiser le changement
       const { error: changeError } = await supabase
-        .from("vehicle_changes")
-        .insert([{
+        .from('vehicle_changes')
+        .insert([{ 
           contract_id: id,
           old_vehicle_id: contract.vehicle_id,
           new_vehicle_id: changeVehicleData.new_vehicle_id,
@@ -548,50 +529,37 @@ export default function LocationDetails() {
           notes: calculationNote,
           change_date: changeVehicleData.change_date,
         }]);
-
       if (changeError) throw changeError;
 
-      // 2. Mettre à jour le contrat avec le nouveau véhicule et les nouveaux montants
+      // 2) Mettre à jour le contrat
       const { error: contractError } = await supabase
-        .from("contracts")
+        .from('contracts')
         .update({ 
           vehicle_id: changeVehicleData.new_vehicle_id,
           daily_rate: newDailyRate,
           total_amount: newTotalAmount,
           remaining_amount: newRemainingAmount,
-        })
-        .eq("id", id);
-
+        } as any)
+        .eq('id', id);
       if (contractError) throw contractError;
 
-      // 3. Libérer l'ancien véhicule
+      // 3) Mettre à jour les statuts véhicules (éviter maj si même véhicule)
       const { error: oldVehicleError } = await supabase
-        .from("vehicles")
+        .from('vehicles')
         .update({ statut: 'disponible' })
-        .eq("id", contract.vehicle_id);
-
+        .eq('id', contract.vehicle_id);
       if (oldVehicleError) throw oldVehicleError;
 
-      // 4. Marquer le nouveau véhicule comme loué
       const { error: newVehicleError } = await supabase
-        .from("vehicles")
+        .from('vehicles')
         .update({ statut: 'loue' })
-        .eq("id", changeVehicleData.new_vehicle_id);
-
+        .eq('id', changeVehicleData.new_vehicle_id);
       if (newVehicleError) throw newVehicleError;
 
-      toast({
-        title: "Succès",
-        description: `Véhicule changé. Nouveau montant total: ${newTotalAmount.toFixed(2)} DH`,
-      });
+      toast({ title: 'Succès', description: `Véhicule changé. Nouveau montant: ${newTotalAmount.toFixed(2)} DH` });
 
       setShowChangeVehicleDialog(false);
-      setChangeVehicleData({
-        new_vehicle_id: '',
-        reason: '',
-        notes: '',
-        change_date: '',
-      });
+      setChangeVehicleData({ new_vehicle_id: '', reason: '', notes: '', change_date: '' });
       loadContractData();
     } catch (error: any) {
       toast({
