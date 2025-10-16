@@ -965,10 +965,16 @@ export default function LocationDetails() {
     ? `${contract.clients.nom} ${contract.clients.prenom || ""}`.trim()
     : "Client inconnu";
 
-  const totalAmount = contract.total_amount || 0;
-  const paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.montant), 0);
-  const remainingAmount = totalAmount - paidAmount;
   const duration = calculateDuration(contract.date_debut, contract.date_fin);
+  
+  // Calculer le tarif journalier si manquant
+  const dailyRate = contract.daily_rate || contract.vehicles?.tarif_journalier || 0;
+  
+  // Calculer le montant total si manquant
+  const totalAmount = contract.total_amount || (duration * dailyRate);
+  
+  const paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.montant), 0);
+  const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -1194,7 +1200,7 @@ export default function LocationDetails() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Prix/Jr</span>
-                  <span className="font-medium">{contract.daily_rate?.toFixed(2)} DH</span>
+                  <span className="font-medium">{dailyRate?.toFixed(2) || '0.00'} DH</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Caution</span>
