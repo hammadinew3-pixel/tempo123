@@ -82,7 +82,8 @@ export default function Revenus() {
   const loadRevenues = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Charger les revenus manuels
+      const { data: revenusData, error: revenusError } = await supabase
         .from('revenus')
         .select(`
           *,
@@ -91,8 +92,57 @@ export default function Revenus() {
         `)
         .order('date_encaissement', { ascending: false });
 
-      if (error) throw error;
-      setRevenues(data || []);
+      if (revenusError) throw revenusError;
+
+      // Charger les paiements de contrats
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('contract_payments')
+        .select(`
+          *,
+          contracts!inner (
+            numero_contrat,
+            clients (nom, prenom)
+          )
+        `)
+        .order('date_paiement', { ascending: false });
+
+      if (paymentsError) throw paymentsError;
+
+      // Formater les revenus manuels
+      const formattedRevenus: Revenue[] = (revenusData || []).map(r => ({
+        id: r.id,
+        date_encaissement: r.date_encaissement,
+        source_revenu: r.source_revenu,
+        montant: r.montant,
+        mode_paiement: r.mode_paiement,
+        statut: r.statut,
+        client_id: r.client_id,
+        contract_id: r.contract_id,
+        note: r.note,
+        clients: r.clients,
+        contracts: r.contracts,
+      }));
+
+      // Formater les paiements de contrats comme des revenus
+      const formattedPayments: Revenue[] = (paymentsData || []).map((p: any) => ({
+        id: p.id,
+        date_encaissement: p.date_paiement,
+        source_revenu: 'contrat',
+        montant: p.montant,
+        mode_paiement: p.methode || 'espece',
+        statut: 'paye',
+        contract_id: p.contract_id,
+        note: `Paiement contrat ${p.contracts?.numero_contrat || ''}`,
+        clients: p.contracts?.clients,
+        contracts: { numero_contrat: p.contracts?.numero_contrat },
+      }));
+
+      // Combiner et trier tous les revenus
+      const allRevenues = [...formattedRevenus, ...formattedPayments].sort((a, b) =>
+        new Date(b.date_encaissement).getTime() - new Date(a.date_encaissement).getTime()
+      );
+
+      setRevenues(allRevenues);
     } catch (error) {
       console.error('Error loading revenues:', error);
       toast({
