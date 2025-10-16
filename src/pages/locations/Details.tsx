@@ -382,22 +382,31 @@ export default function LocationDetails() {
 
   const handleAddPayment = async () => {
     try {
+      // Validation
+      if (!paymentData.montant || parseFloat(paymentData.montant) <= 0) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Veuillez entrer un montant valide",
+        });
+        return;
+      }
+
+      const montantPaiement = parseFloat(paymentData.montant);
+      
       const { error } = await supabase
         .from("contract_payments")
         .insert([{
           contract_id: id,
-          montant: parseFloat(paymentData.montant),
+          montant: montantPaiement,
           date_paiement: paymentData.date_paiement,
           methode: paymentData.methode === 'carte' ? 'carte_bancaire' : paymentData.methode,
-          numero_cheque: paymentData.numero_cheque || null,
-          banque: paymentData.banque || null,
-          remarques: paymentData.remarques || null,
         }]);
 
       if (error) throw error;
 
       // Update contract advance_payment
-      const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.montant), 0) + parseFloat(paymentData.montant);
+      const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.montant), 0) + montantPaiement;
       const { error: updateError } = await supabase
         .from("contracts")
         .update({ advance_payment: totalPaid })
@@ -407,7 +416,7 @@ export default function LocationDetails() {
 
       toast({
         title: "Succès",
-        description: "Paiement ajouté",
+        description: `Paiement de ${montantPaiement.toFixed(2)} DH enregistré`,
       });
 
       setShowPaymentDialog(false);
@@ -421,10 +430,11 @@ export default function LocationDetails() {
       });
       loadContractData();
     } catch (error: any) {
+      console.error("Erreur ajout paiement:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: error.message,
+        description: error.message || "Impossible d'ajouter le paiement",
       });
     }
   };
