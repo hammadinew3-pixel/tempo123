@@ -603,7 +603,7 @@ export default function Calendrier() {
 
                 {/* Contract bars overlay */}
                 <div className="absolute top-[70px] md:top-[80px] left-0 right-0 pointer-events-none">
-                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  <div className="grid grid-cols-7 gap-1 md:gap-2 auto-rows-[80px] md:auto-rows-[100px]">
                     <TooltipProvider>
                       {displayedBars.map((bar, idx) => {
                         const rowOffset = bar.row * 32;
