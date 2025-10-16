@@ -194,14 +194,14 @@ export default function AssistanceFactureTemplate() {
   const assuranceInfo = firstAssistance.assurances || { nom: firstAssistance.assureur_nom };
 
   return (
-    <div id="facture-content" className="flex flex-col min-h-[297mm] w-[210mm] mx-auto p-6 bg-white print:p-0">
+    <div id="facture-content" className="flex flex-col w-[210mm] mx-auto p-6 bg-white print:p-0">
       <style>{`
         * {
           box-sizing: border-box;
         }
         #facture-content {
           width: 210mm;
-          min-height: 297mm;
+          max-height: 297mm;
           margin: auto;
           overflow: hidden;
           box-sizing: border-box;
@@ -350,7 +350,7 @@ export default function AssistanceFactureTemplate() {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="footer mt-auto mb-[10mm] border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
+        <div className="footer mt-auto mb-[8mm] border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
           <p>
             {settings?.raison_sociale || "Nom de l'entreprise"}
             {settings?.rc && ` - RC: ${settings.rc}`}
