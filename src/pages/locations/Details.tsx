@@ -469,9 +469,15 @@ export default function LocationDetails() {
       const totalDuration = contract.duration || 1;
       
       // Calculer le jour du changement basé sur les dates
+      // Normaliser les dates pour comparer uniquement jour/mois/année (sans heure)
       const startDate = new Date(contract.date_debut);
+      startDate.setHours(0, 0, 0, 0);
+      
       const changeDate = new Date(changeVehicleData.change_date);
+      changeDate.setHours(0, 0, 0, 0);
+      
       const endDate = new Date(contract.date_fin);
+      endDate.setHours(0, 0, 0, 0);
       
       // Validation de la date de changement
       if (changeDate < startDate || changeDate > endDate) {
