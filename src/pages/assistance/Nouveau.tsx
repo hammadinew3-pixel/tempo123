@@ -23,8 +23,11 @@ export default function NouveauAssistance() {
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
   const [assurances, setAssurances] = useState<Assurance[]>([]);
   const [baremes, setBaremes] = useState<Bareme[]>([]);
+  const [categories, setCategories] = useState<Array<{code: string, nom: string}>>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [ordreMissionFile, setOrdreMissionFile] = useState<File | null>(null);
   const [ordreMissionPreview, setOrdreMissionPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,19 +54,23 @@ export default function NouveauAssistance() {
 
   const loadData = async () => {
     try {
-      const [clientsRes, vehiclesRes, assurancesRes] = await Promise.all([
+      const [clientsRes, vehiclesRes, assurancesRes, categoriesRes] = await Promise.all([
         supabase.from('clients').select('*').order('nom'),
         supabase.from('vehicles').select('*').eq('statut', 'disponible').order('marque'),
         supabase.from('assurances').select('*').eq('actif', true).order('nom'),
+        supabase.from('vehicle_assistance_categories').select('code, nom').eq('actif', true).order('ordre'),
       ]);
 
       if (clientsRes.error) throw clientsRes.error;
       if (vehiclesRes.error) throw vehiclesRes.error;
       if (assurancesRes.error) throw assurancesRes.error;
+      if (categoriesRes.error) throw categoriesRes.error;
 
       setClients(clientsRes.data || []);
       setVehicles(vehiclesRes.data || []);
+      setFilteredVehicles(vehiclesRes.data || []);
       setAssurances(assurancesRes.data || []);
+      setCategories(categoriesRes.data || []);
     } catch (error: any) {
       toast({
         title: 'Erreur',
@@ -115,6 +122,28 @@ export default function NouveauAssistance() {
       montant_total: total,
       montant_facture: total,
     }));
+  };
+
+  const handleCategoryChange = (categoryCode: string) => {
+    setSelectedCategory(categoryCode);
+    
+    let filtered = vehicles;
+    
+    if (categoryCode) {
+      filtered = vehicles.filter(v => 
+        v.categories && Array.isArray(v.categories) && v.categories.includes(categoryCode)
+      );
+    }
+    
+    setFilteredVehicles(filtered);
+    
+    // Reset vehicle selection if current vehicle is not in filtered list
+    if (formData.vehicle_id) {
+      const isVehicleInFiltered = filtered.some(v => v.id === formData.vehicle_id);
+      if (!isVehicleInFiltered) {
+        setFormData({ ...formData, vehicle_id: undefined });
+      }
+    }
   };
 
   const handleVehicleChange = (vehicleId: string) => {
@@ -290,6 +319,26 @@ export default function NouveauAssistance() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="category">Catégorie d'assistance</Label>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={handleCategoryChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Toutes les catégories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Toutes les catégories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.code} value={category.code}>
+                        {category.nom}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="vehicle">Véhicule *</Label>
                 <Select
                   value={formData.vehicle_id}
@@ -300,14 +349,21 @@ export default function NouveauAssistance() {
                     <SelectValue placeholder="Sélectionner un véhicule" />
                   </SelectTrigger>
                   <SelectContent>
-                    {vehicles.map((vehicle) => (
+                    {filteredVehicles.map((vehicle) => (
                       <SelectItem key={vehicle.id} value={vehicle.id}>
                         {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
-                        {vehicle.categorie && ` (Cat. ${vehicle.categorie})`}
+                        {vehicle.categories && vehicle.categories.length > 0 && 
+                          ` (Cat. ${vehicle.categories.join(', ')})`
+                        }
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedCategory && (
+                  <p className="text-xs text-muted-foreground">
+                    Filtré par catégorie {selectedCategory} ({filteredVehicles.length} véhicule(s))
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
