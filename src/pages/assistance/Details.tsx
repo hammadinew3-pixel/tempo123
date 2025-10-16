@@ -902,20 +902,37 @@ export default function AssistanceDetails() {
     try {
       const info = extractBucketAndPath(assistance.ordre_mission_url);
       if (!info) {
-        window.open(assistance.ordre_mission_url, '_blank');
+        // Téléchargement direct
+        const link = document.createElement('a');
+        link.href = assistance.ordre_mission_url;
+        link.download = `ordre_mission_${assistance.num_dossier}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         return;
       }
       const { data, error } = await supabase.storage
         .from(info.bucket)
-        .createSignedUrl(info.path, 300);
+        .download(info.path);
       if (error) throw error;
-      if (data?.signedUrl) {
-        window.open(data.signedUrl, '_blank');
-      } else {
-        window.open(assistance.ordre_mission_url, '_blank');
+      if (data) {
+        // Créer un blob et le télécharger
+        const url = URL.createObjectURL(data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ordre_mission_${assistance.num_dossier}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       }
     } catch (e) {
-      window.open(assistance.ordre_mission_url, '_blank');
+      console.error('Erreur lors du téléchargement:', e);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de télécharger l'ordre de mission",
+      });
     }
   };
 
