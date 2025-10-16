@@ -194,18 +194,18 @@ export default function AssistanceFactureTemplate() {
   const assuranceInfo = firstAssistance.assurances || { nom: firstAssistance.assureur_nom };
 
   return (
-    <div id="facture-content" className="flex flex-col min-h-[297mm] w-[210mm] mx-auto p-6 bg-white print:p-0">
+    <div id="facture-content" className="flex flex-col w-[210mm] mx-auto p-0 bg-white print:p-0">
       <style>{`
         * {
           box-sizing: border-box;
         }
         #facture-content {
           width: 210mm;
-          min-height: 297mm;
+          height: 297mm;
           margin: auto;
           overflow: hidden;
           box-sizing: border-box;
-          padding: 15mm;
+          padding: 15mm 15mm 8mm 15mm;
           page-break-after: avoid;
           page-break-inside: avoid;
         }
@@ -213,7 +213,7 @@ export default function AssistanceFactureTemplate() {
           body { margin: 0; padding: 0; }
           @page { size: A4 portrait; margin: 0; }
           #facture-content {
-            padding: 15mm;
+            padding: 15mm 15mm 8mm 15mm;
             page-break-after: avoid;
             page-break-inside: avoid;
           }
@@ -358,7 +358,7 @@ export default function AssistanceFactureTemplate() {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="mt-auto mb-[8mm] text-center text-[7pt] text-gray-600 pt-2 border-t border-gray-400">
+        <div className="mt-auto text-center text-[7pt] text-gray-600 pt-2 border-t border-gray-400">
           {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
           {settings?.ice && <> | ICE: {settings.ice}</>}
           {settings?.rc && <> | RC: {settings.rc}</>}
