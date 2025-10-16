@@ -83,7 +83,8 @@ export default function Charges() {
   const loadExpenses = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Charger les dépenses normales
+      const { data: expensesData, error: expensesError } = await supabase
         .from('expenses')
         .select(`
           *,
@@ -92,8 +93,60 @@ export default function Charges() {
         `)
         .order('date_depense', { ascending: false });
 
-      if (error) throw error;
-      setExpenses(data || []);
+      if (expensesError) throw expensesError;
+
+      // Charger les traites de véhicules payées
+      const { data: traitesData, error: traitesError } = await supabase
+        .from('vehicules_traites_echeances')
+        .select(`
+          *,
+          vehicules_traite!inner (
+            vehicle_id,
+            organisme,
+            vehicles (immatriculation, marque, modele)
+          )
+        `)
+        .eq('statut', 'Payée')
+        .order('date_echeance', { ascending: false });
+
+      if (traitesError) throw traitesError;
+
+      // Formater les dépenses normales
+      const formattedExpenses: Expense[] = (expensesData || []).map(e => ({
+        id: e.id,
+        date_depense: e.date_depense,
+        type_depense: e.type_depense,
+        montant: e.montant,
+        mode_paiement: e.mode_paiement,
+        description: e.description,
+        statut: e.statut,
+        vehicle_id: e.vehicle_id,
+        contract_id: e.contract_id,
+        fournisseur: e.fournisseur,
+        vehicles: e.vehicles,
+        contracts: e.contracts,
+      }));
+
+      // Formater les traites comme des dépenses
+      const formattedTraites: Expense[] = (traitesData || []).map((t: any) => ({
+        id: t.id,
+        date_depense: t.date_paiement || t.date_echeance,
+        type_depense: 'autre',
+        montant: t.montant,
+        mode_paiement: 'virement',
+        description: `Traite véhicule - ${t.vehicules_traite?.organisme || ''}`,
+        statut: 'paye',
+        vehicle_id: t.vehicules_traite?.vehicle_id,
+        fournisseur: t.vehicules_traite?.organisme,
+        vehicles: t.vehicules_traite?.vehicles,
+      }));
+
+      // Combiner et trier toutes les dépenses
+      const allExpenses = [...formattedExpenses, ...formattedTraites].sort((a, b) =>
+        new Date(b.date_depense).getTime() - new Date(a.date_depense).getTime()
+      );
+
+      setExpenses(allExpenses);
     } catch (error) {
       console.error('Error loading expenses:', error);
       toast({
