@@ -139,7 +139,9 @@ export default function NouveauLocation() {
 
       // Si c'est une assistance, filtrer par catégorie
       if (contractType === 'assistance' && selectedCategorie) {
-        availableVehicles = availableVehicles.filter(v => v.categorie === selectedCategorie);
+        availableVehicles = availableVehicles.filter(v =>
+          (Array.isArray(v.categories) && v.categories.includes(selectedCategorie)) || v.categorie === selectedCategorie
+        );
       }
 
       setVehicles(availableVehicles);
@@ -183,7 +185,7 @@ export default function NouveauLocation() {
   const handleCategorieSelect = (categorie: string) => {
     setSelectedCategorie(categorie);
     // Filtrer les véhicules par catégorie
-    const filteredVehicles = allVehicles.filter((v) => v.categorie === categorie);
+    const filteredVehicles = allVehicles.filter((v) => (Array.isArray(v.categories) && v.categories.includes(categorie)) || v.categorie === categorie);
     setVehicles(filteredVehicles);
     setFormData((prev) => ({ ...prev, vehicle_id: "" }));
   };
@@ -427,7 +429,7 @@ export default function NouveauLocation() {
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Sélectionner une assurance" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   {assurances.map((assurance) => (
                     <SelectItem key={assurance.id} value={assurance.id}>
                       {assurance.nom}
@@ -621,16 +623,18 @@ export default function NouveauLocation() {
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder={vehicles.length === 0 ? "Sélectionnez d'abord les dates" : "Sélectionner un véhicule"} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
                       <div className="flex items-center space-x-2">
                         <Car className="w-4 h-4" />
                         <span>
                           {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
-                          {vehicle.categorie && contractType === "assistance" && (
+                          {contractType === "assistance" && (
                             <span className="ml-2 text-xs text-muted-foreground">
-                              (Cat. {vehicle.categorie})
+                              {Array.isArray(vehicle.categories) && vehicle.categories.length > 0
+                                ? `(Cat. ${vehicle.categories.join(', ')})`
+                                : vehicle.categorie ? `(Cat. ${vehicle.categorie})` : ''}
                             </span>
                           )}
                           <span className="ml-2 text-xs text-green-600">
@@ -661,7 +665,7 @@ export default function NouveauLocation() {
                 <SelectTrigger className="h-12">
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background z-50">
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       <div className="flex items-center space-x-2">
