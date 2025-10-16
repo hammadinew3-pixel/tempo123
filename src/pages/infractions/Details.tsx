@@ -139,50 +139,21 @@ export default function InfractionDetails() {
         iframe.style.height = '297mm';
         document.body.appendChild(iframe);
 
-        // Charger la page du contrat
-        iframe.src = file.file_url;
+        // Charger la page du contrat en mode téléchargement (désactive l'impression)
+        const urlObj = new URL(file.file_url, window.location.origin);
+        urlObj.searchParams.set('download', 'true');
+        iframe.src = urlObj.toString();
 
-        // Attendre que la page soit chargée
+        // Attendre que la page soit chargée puis laisser le template générer le PDF
         await new Promise((resolve) => {
           iframe.onload = resolve;
         });
-
-        // Attendre un peu plus pour que tout soit rendu
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Récupérer le contenu de l'iframe
-        const content = iframe.contentDocument?.body;
-
-        if (!content) {
-          throw new Error("Impossible de charger le contenu du contrat");
-        }
-
-        // Options pour html2pdf
-        const options = {
-          margin: 10,
-          filename: `contrat_${infraction.contracts?.numero_contrat || 'document'}.pdf`,
-          image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        // Générer et télécharger le PDF directement sans popup d'impression
-        const worker = html2pdf().set(options).from(content);
-        const pdf = await worker.outputPdf('blob');
-        
-        // Créer un lien de téléchargement direct
-        const url = URL.createObjectURL(pdf);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = options.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        await new Promise(resolve => setTimeout(resolve, 2500));
 
         // Nettoyer l'iframe
-        document.body.removeChild(iframe);
+        if (iframe.parentNode) {
+          document.body.removeChild(iframe);
+        }
 
         toast({
           title: "Succès",
