@@ -259,9 +259,8 @@ export default function Calendrier() {
       const barEndDay = displayEnd.getDate();
       const duration = barEndDay - barStartDay + 1;
 
-      // Calculate column position using actual grid index to avoid offset errors
-      const cellIndex = days.findIndex((d) => d === barStartDay);
-      const startCol = cellIndex >= 0 ? cellIndex : (firstDayOfMonth + barStartDay - 1);
+      // Calculate column position (accounting for empty cells at start)
+      const startCol = firstDayOfMonth + barStartDay - 1;
       
       // Find available row for this contract
       let row = 0;
