@@ -484,16 +484,26 @@ export default function LocationDetails() {
       }
       
       // Calculer le nombre de jours entre le début et le changement
-      const daysWithOldVehicle = Math.ceil((changeDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      // On compte le jour du changement inclus pour l'ancien véhicule
+      const daysWithOldVehicle = Math.floor((changeDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       const daysWithNewVehicle = totalDuration - daysWithOldVehicle;
       
-      if (daysWithNewVehicle <= 0) {
+      if (daysWithNewVehicle < 0) {
         toast({
           variant: "destructive",
           title: "Erreur",
-          description: "La date de changement ne laisse pas de jours restants pour le nouveau véhicule",
+          description: "La date de changement ne peut pas être après la date de fin de location",
         });
         return;
+      }
+      
+      // Si le changement est le dernier jour, on accepte mais on informe l'utilisateur
+      if (daysWithNewVehicle === 0) {
+        toast({
+          variant: "default",
+          title: "Information",
+          description: "Le changement sera effectué le dernier jour de location",
+        });
       }
       
       // Montant pour les jours avec l'ancien véhicule
