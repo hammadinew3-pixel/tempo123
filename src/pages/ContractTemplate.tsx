@@ -12,6 +12,7 @@ export default function ContractTemplate() {
   const [contract, setContract] = useState<any>(null);
   const [vehicleChanges, setVehicleChanges] = useState<any[]>([]);
   const [secondaryDrivers, setSecondaryDrivers] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [agenceSettings, setAgenceSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,7 +64,7 @@ export default function ContractTemplate() {
 
   const loadContractData = async () => {
     try {
-      const [contractRes, changesRes, driversRes, settingsRes] = await Promise.all([
+      const [contractRes, changesRes, driversRes, paymentsRes, settingsRes] = await Promise.all([
         supabase
           .from('contracts')
           .select('*, clients(*), vehicles(*)')
@@ -79,6 +80,11 @@ export default function ContractTemplate() {
           .select('*')
           .eq('contract_id', contractId),
         supabase
+          .from('contract_payments')
+          .select('*')
+          .eq('contract_id', contractId)
+          .order('date_paiement', { ascending: true }),
+        supabase
           .from('agence_settings')
           .select('*')
           .single()
@@ -89,6 +95,7 @@ export default function ContractTemplate() {
       setContract(contractRes.data);
       setVehicleChanges(changesRes.data || []);
       setSecondaryDrivers(driversRes.data || []);
+      setPayments(paymentsRes.data || []);
       setAgenceSettings(settingsRes.data);
     } catch (error) {
       console.error('Error loading contract:', error);
@@ -123,6 +130,20 @@ export default function ContractTemplate() {
   const client = contract.clients;
   const vehicle = contract.vehicles;
   const secondaryDriver = secondaryDrivers[0];
+  
+  // Calculer la durée et les montants
+  const calculateDuration = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  };
+  
+  const duration = contract.duration || calculateDuration(contract.date_debut, contract.date_fin);
+  const dailyRate = contract.daily_rate || vehicle?.tarif_journalier || 0;
+  const totalAmount = contract.total_amount || (duration * dailyRate);
+  const paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.montant || 0), 0);
+  const remainingAmount = Math.max(0, totalAmount - paidAmount);
+  
   const hasCgvPage = Boolean(
     agenceSettings?.inclure_cgv &&
     agenceSettings?.cgv_texte &&
@@ -243,8 +264,9 @@ export default function ContractTemplate() {
               <div className="p-3 space-y-1 text-[9pt]">
                 <div><strong>Départ:</strong> {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : ''}</div>
                 <div><strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
-                <div><strong>Durée:</strong> {contract.duration} jour(s)</div>
-                <div><strong>Prix TTC:</strong> {contract.total_amount?.toFixed(2)} DH</div>
+                <div><strong>Durée:</strong> {duration} jour(s)</div>
+                <div><strong>Prix/Jr:</strong> {dailyRate.toFixed(2)} DH</div>
+                <div><strong>Prix TTC:</strong> {totalAmount.toFixed(2)} DH</div>
                 <div><strong>Caution:</strong> {contract.caution_montant?.toFixed(2)} DH</div>
               </div>
             </div>
@@ -296,7 +318,38 @@ export default function ContractTemplate() {
             </div>
           )}
 
-          {/* État du véhicule */}
+          {/* Paiements */}
+          {payments && payments.length > 0 && (
+            <div className="border-2 border-green-500 bg-green-50 mb-3">
+              <div className="bg-green-200 border-b-2 border-green-500 p-2 text-center">
+                <strong className="text-[10pt]">💰 PAIEMENTS EFFECTUÉS</strong>
+              </div>
+              <div className="p-3">
+                <div className="grid grid-cols-3 gap-2 mb-2 text-[8pt] font-bold border-b border-green-300 pb-1">
+                  <div>Date</div>
+                  <div>Méthode</div>
+                  <div className="text-right">Montant</div>
+                </div>
+                {payments.map((payment: any, i: number) => (
+                  <div key={i} className="grid grid-cols-3 gap-2 text-[9pt] mb-1">
+                    <div>{payment.date_paiement ? format(new Date(payment.date_paiement), 'dd/MM/yyyy') : ''}</div>
+                    <div className="capitalize">{payment.methode === 'carte_bancaire' ? 'Carte' : payment.methode}</div>
+                    <div className="text-right font-semibold">{parseFloat(payment.montant).toFixed(2)} DH</div>
+                  </div>
+                ))}
+                <div className="grid grid-cols-3 gap-2 text-[9pt] font-bold border-t-2 border-green-500 pt-2 mt-2">
+                  <div className="col-span-2">Total payé:</div>
+                  <div className="text-right text-green-700">{paidAmount.toFixed(2)} DH</div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[9pt] font-bold">
+                  <div className="col-span-2">Reste à payer:</div>
+                  <div className="text-right text-red-700">{remainingAmount.toFixed(2)} DH</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div className="border-2 border-black">
               <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
