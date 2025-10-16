@@ -17,7 +17,7 @@ import { format, isSameDay, isWithinInterval, parseISO, differenceInDays, startO
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-const daysOfWeek = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+const daysOfWeek = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const months = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
@@ -322,7 +322,7 @@ export default function Calendrier() {
 
   // Calculate days in month
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+  const firstDayOfMonth = (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
 
   const days = [];
   for (let i = 0; i < firstDayOfMonth; i++) {
