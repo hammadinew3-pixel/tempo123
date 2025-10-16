@@ -102,8 +102,7 @@ export default function Charges() {
           *,
           vehicules_traite!inner (
             vehicle_id,
-            organisme,
-            vehicles (immatriculation, marque, modele)
+            organisme
           )
         `)
         .eq('statut', 'Payée')
@@ -136,9 +135,8 @@ export default function Charges() {
         mode_paiement: 'virement',
         description: `Traite véhicule - ${t.vehicules_traite?.organisme || ''}`,
         statut: 'paye',
-        vehicle_id: t.vehicules_traite?.vehicle_id,
+        vehicle_id: t.vehicle_id,
         fournisseur: t.vehicules_traite?.organisme,
-        vehicles: t.vehicules_traite?.vehicles,
       }));
 
       // Combiner et trier toutes les dépenses
