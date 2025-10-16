@@ -334,6 +334,9 @@ export default function AssistanceFactureTemplate() {
                 {assuranceInfo.contact_telephone && (
                   <p className="text-sm">Tél : {assuranceInfo.contact_telephone}</p>
                 )}
+                {!isGrouped && firstAssistance.ordre_mission && (
+                  <p className="text-sm mt-2"><strong>N° Ordre de mission :</strong> {firstAssistance.ordre_mission}</p>
+                )}
               </div>
               <div>
                 <h3 className="font-bold mb-2">{isGrouped ? 'FACTURE GROUPÉE' : 'CLIENT BÉNÉFICIAIRE'} :</h3>
