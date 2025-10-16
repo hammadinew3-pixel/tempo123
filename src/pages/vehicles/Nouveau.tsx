@@ -26,6 +26,7 @@ export default function NouveauVehicule() {
 
   const [formData, setFormData] = useState<Partial<VehicleInsert>>({
     marque: '',
+    ww: '',
     immatriculation: '',
     modele: '',
     annee: new Date().getFullYear(),
@@ -254,6 +255,16 @@ export default function NouveauVehicule() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ww">WW (Matricule provisoire)</Label>
+              <Input
+                id="ww"
+                value={formData.ww || ''}
+                onChange={(e) => setFormData({ ...formData, ww: e.target.value })}
+                placeholder="Ex: WW-1234-2024"
+              />
             </div>
 
             <div className="space-y-2">

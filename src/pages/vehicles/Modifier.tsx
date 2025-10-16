@@ -49,6 +49,7 @@ export default function ModifierVehicule() {
   const [formData, setFormData] = useState({
     marque: '',
     modele: '',
+    ww: '',
     immatriculation: '',
     annee: new Date().getFullYear(),
     categorie: 'A' as any,
@@ -102,6 +103,7 @@ export default function ModifierVehicule() {
       setFormData({
         marque: data.marque || '',
         modele: data.modele || '',
+        ww: data.ww || '',
         immatriculation: data.immatriculation || '',
         annee: data.annee || new Date().getFullYear(),
         categorie: data.categorie || 'A',
@@ -337,6 +339,21 @@ export default function ModifierVehicule() {
               <p className="text-xs text-muted-foreground mt-2">
                 Sélectionnez toutes les catégories applicables pour les contrats d'assistance
               </p>
+            </div>
+
+            {/* WW (Matricule provisoire) */}
+            <div>
+              <Label htmlFor="ww">WW (Matricule provisoire)</Label>
+              <Input 
+                id="ww" 
+                value={formData.ww || ''} 
+                onChange={e => setFormData({
+                  ...formData,
+                  ww: e.target.value
+                })} 
+                placeholder="Ex: WW-1234-2024"
+                disabled={isAgent} 
+              />
             </div>
 
             {/* Matricule */}
