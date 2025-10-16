@@ -460,18 +460,18 @@ export default function LocationDetails() {
     try {
       // Récupérer le tarif du nouveau véhicule
       const selectedVehicle = availableVehicles.find(v => v.id === changeVehicleData.new_vehicle_id);
-      if (!selectedVehicle?.tarif_journalier) {
-        throw new Error("Tarif journalier du véhicule non disponible");
+      const oldDailyRate = Number(contract.daily_rate) || 0;
+      let newDailyRate = Number(selectedVehicle?.tarif_journalier);
+      // Si le tarif du nouveau véhicule est indisponible ou égal à 0, on conserve l'ancien tarif
+      if (!newDailyRate || newDailyRate <= 0) {
+        newDailyRate = oldDailyRate;
       }
-
-      const oldDailyRate = contract.daily_rate || 0;
-      const newDailyRate = selectedVehicle.tarif_journalier;
       const totalDuration = contract.duration || 1;
       
-      // Calculer le jour du changement basé sur les dates
-      const startDate = new Date(contract.date_debut);
-      const changeDate = new Date(changeVehicleData.change_date);
-      const endDate = new Date(contract.date_fin);
+      // Calculer le jour du changement basé sur les dates (normalisées à 00:00)
+      const startDate = new Date(`${contract.date_debut}T00:00:00`);
+      const changeDate = new Date(`${changeVehicleData.change_date}T00:00:00`);
+      const endDate = new Date(`${contract.date_fin}T00:00:00`);
       
       // Validation de la date de changement
       if (changeDate < startDate || changeDate > endDate) {
@@ -485,7 +485,8 @@ export default function LocationDetails() {
       
       // Calculer le nombre de jours entre le début et le changement
       // On compte le jour du changement inclus pour l'ancien véhicule
-      const daysWithOldVehicle = Math.floor((changeDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const dayMs = 1000 * 60 * 60 * 24;
+      const daysWithOldVehicle = Math.floor((changeDate.getTime() - startDate.getTime()) / dayMs) + 1;
       const daysWithNewVehicle = totalDuration - daysWithOldVehicle;
       
       if (daysWithNewVehicle < 0) {
@@ -535,7 +536,7 @@ export default function LocationDetails() {
           new_vehicle_id: changeVehicleData.new_vehicle_id,
           reason: changeVehicleData.reason,
           notes: calculationNote,
-          change_date: new Date().toISOString().split('T')[0],
+          change_date: changeVehicleData.change_date,
         }]);
 
       if (changeError) throw changeError;
@@ -2140,11 +2141,12 @@ export default function LocationDetails() {
 
                   const oldRate = contract.daily_rate || 0;
                   const newRate = selectedVehicle.tarif_journalier;
-                  const startDate = new Date(contract.date_debut);
-                  const changeDate = new Date(changeVehicleData.change_date);
-                  const totalDays = contract.duration;
-                  const daysWithOld = Math.ceil((changeDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-                  const daysWithNew = totalDays - daysWithOld;
+                   const startDate = new Date(`${contract.date_debut}T00:00:00`);
+                   const changeDate = new Date(`${changeVehicleData.change_date}T00:00:00`);
+                   const totalDays = contract.duration;
+                   const dayMs = 1000 * 60 * 60 * 24;
+                   const daysWithOld = Math.floor((changeDate.getTime() - startDate.getTime()) / dayMs) + 1;
+                   const daysWithNew = totalDays - daysWithOld;
                   
                   if (daysWithOld < 0 || daysWithNew <= 0) {
                     return (
