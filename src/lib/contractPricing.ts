@@ -41,8 +41,17 @@ export function safeRemaining(total: number, advance: number | null | undefined)
 }
 
 export function resolveRates(contract: any, selectedVehicle: any) {
-  const oldRate = Number(contract?.daily_rate) || Number(contract?.vehicles?.tarif_journalier) || 0;
-  const newRateCandidate = Number(selectedVehicle?.tarif_journalier);
-  const newRate = !newRateCandidate || newRateCandidate <= 0 ? oldRate : newRateCandidate;
+  // Récupérer le tarif de l'ancien véhicule de manière explicite
+  let oldRate = 0;
+  if (contract?.daily_rate && Number(contract.daily_rate) > 0) {
+    oldRate = Number(contract.daily_rate);
+  } else if (contract?.vehicles?.tarif_journalier && Number(contract.vehicles.tarif_journalier) > 0) {
+    oldRate = Number(contract.vehicles.tarif_journalier);
+  }
+
+  // Récupérer le tarif du nouveau véhicule
+  const newRateCandidate = Number(selectedVehicle?.tarif_journalier) || 0;
+  const newRate = newRateCandidate > 0 ? newRateCandidate : oldRate;
+  
   return { oldRate, newRate };
 }
