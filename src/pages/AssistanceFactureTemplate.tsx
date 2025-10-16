@@ -344,7 +344,7 @@ export default function AssistanceFactureTemplate() {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="footer mt-auto mb-[10mm] border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
+        <div className="footer mt-auto mb-[20mm] border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
           <p>
             {settings?.raison_sociale || "Nom de l'entreprise"}
             {settings?.rc && ` - RC: ${settings.rc}`}
@@ -354,7 +354,6 @@ export default function AssistanceFactureTemplate() {
             {settings?.patente && ` - Patente: ${settings.patente}`}
           </p>
           {settings?.adresse && <p>Siège social : {settings.adresse}</p>}
-          <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
         </div>
       )}
     </div>
