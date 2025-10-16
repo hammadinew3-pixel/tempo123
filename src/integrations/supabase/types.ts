@@ -346,11 +346,17 @@ export type Database = {
           created_at: string | null
           date_echeance: string
           date_emission: string
+          date_encaissement: string | null
+          date_paiement: string | null
+          depense_id: string | null
+          fournisseur: string | null
           id: string
           montant: number
           note: string | null
           numero_cheque: string
+          revenu_id: string | null
           statut: string | null
+          type_cheque: string
           updated_at: string | null
         }
         Insert: {
@@ -360,11 +366,17 @@ export type Database = {
           created_at?: string | null
           date_echeance: string
           date_emission: string
+          date_encaissement?: string | null
+          date_paiement?: string | null
+          depense_id?: string | null
+          fournisseur?: string | null
           id?: string
           montant: number
           note?: string | null
           numero_cheque: string
+          revenu_id?: string | null
           statut?: string | null
+          type_cheque: string
           updated_at?: string | null
         }
         Update: {
@@ -374,11 +386,17 @@ export type Database = {
           created_at?: string | null
           date_echeance?: string
           date_emission?: string
+          date_encaissement?: string | null
+          date_paiement?: string | null
+          depense_id?: string | null
+          fournisseur?: string | null
           id?: string
           montant?: number
           note?: string | null
           numero_cheque?: string
+          revenu_id?: string | null
           statut?: string | null
+          type_cheque?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -394,6 +412,20 @@ export type Database = {
             columns: ["contract_id"]
             isOneToOne: false
             referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheques_depense_id_fkey"
+            columns: ["depense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheques_revenu_id_fkey"
+            columns: ["revenu_id"]
+            isOneToOne: false
+            referencedRelation: "revenus"
             referencedColumns: ["id"]
           },
         ]
@@ -1037,66 +1069,6 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_sinistres_vehicle_id"
-            columns: ["vehicle_id"]
-            isOneToOne: false
-            referencedRelation: "vehicles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      traites: {
-        Row: {
-          banque: string | null
-          contract_id: string | null
-          created_at: string | null
-          date_echeance: string
-          fournisseur: string | null
-          id: string
-          montant: number
-          note: string | null
-          reference_traite: string
-          statut: string | null
-          updated_at: string | null
-          vehicle_id: string | null
-        }
-        Insert: {
-          banque?: string | null
-          contract_id?: string | null
-          created_at?: string | null
-          date_echeance: string
-          fournisseur?: string | null
-          id?: string
-          montant: number
-          note?: string | null
-          reference_traite: string
-          statut?: string | null
-          updated_at?: string | null
-          vehicle_id?: string | null
-        }
-        Update: {
-          banque?: string | null
-          contract_id?: string | null
-          created_at?: string | null
-          date_echeance?: string
-          fournisseur?: string | null
-          id?: string
-          montant?: number
-          note?: string | null
-          reference_traite?: string
-          statut?: string | null
-          updated_at?: string | null
-          vehicle_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "traites_contract_id_fkey"
-            columns: ["contract_id"]
-            isOneToOne: false
-            referencedRelation: "contracts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "traites_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
