@@ -469,26 +469,15 @@ export default function InfractionDetails() {
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(file.uploaded_at), "dd/MM/yyyy HH:mm", { locale: fr })}
                   </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => window.open(file.file_url, "_blank")}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Voir
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleDownloadFile(file)}
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2 rotate-90" />
-                      Télécharger
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleDownloadFile(file)}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2 rotate-90" />
+                    Télécharger
+                  </Button>
                 </div>
               ))}
             </div>
