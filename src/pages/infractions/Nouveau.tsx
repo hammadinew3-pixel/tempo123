@@ -63,25 +63,71 @@ export default function NouvelleInfraction() {
 
   const findContractForDate = async () => {
     try {
-      const { data, error } = await supabase
+      // Chercher d'abord les contrats pour le véhicule sélectionné
+      const { data: contractsData, error: contractsError } = await supabase
         .from("contracts")
         .select("*, clients(id, nom, prenom, telephone, cin_url, permis_url)")
         .eq("vehicle_id", formData.vehicle_id)
         .lte("date_debut", formData.date_infraction)
         .gte("date_fin", formData.date_infraction)
-        .order("date_debut", { ascending: false })
-        .limit(1);
+        .order("date_debut", { ascending: false });
 
-      if (error) throw error;
+      if (contractsError) throw contractsError;
 
-      if (data && data.length > 0) {
-        const contract = data[0];
+      // Vérifier aussi les changements de véhicule
+      const { data: changesData, error: changesError } = await supabase
+        .from("vehicle_changes")
+        .select("*, contracts!inner(*, clients(id, nom, prenom, telephone, cin_url, permis_url))")
+        .or(`old_vehicle_id.eq.${formData.vehicle_id},new_vehicle_id.eq.${formData.vehicle_id}`)
+        .lte("change_date", formData.date_infraction);
+
+      if (changesError) throw changesError;
+
+      // Combiner les résultats et trouver le contrat approprié
+      let foundContract = null;
+
+      // D'abord vérifier les contrats directs
+      if (contractsData && contractsData.length > 0) {
+        foundContract = contractsData[0];
+      }
+
+      // Vérifier les changements de véhicule
+      if (changesData && changesData.length > 0) {
+        for (const change of changesData) {
+          const contract = change.contracts;
+          if (!contract) continue;
+          
+          const changeDate = new Date(change.change_date);
+          const infractionDate = new Date(formData.date_infraction);
+          const startDate = new Date(contract.date_debut);
+          const endDate = new Date(contract.date_fin);
+
+          // Si l'infraction est après le changement et le véhicule actuel est le nouveau véhicule
+          if (infractionDate >= changeDate && 
+              infractionDate >= startDate && 
+              infractionDate <= endDate &&
+              change.new_vehicle_id === formData.vehicle_id) {
+            foundContract = contract;
+            break;
+          }
+          // Si l'infraction est avant le changement et le véhicule actuel est l'ancien véhicule
+          if (infractionDate < changeDate && 
+              infractionDate >= startDate && 
+              infractionDate <= endDate &&
+              change.old_vehicle_id === formData.vehicle_id) {
+            foundContract = contract;
+            break;
+          }
+        }
+      }
+
+      if (foundContract) {
         setFormData(prev => ({
           ...prev,
-          contract_id: contract.id,
-          client_id: contract.client_id,
+          contract_id: foundContract.id,
+          client_id: foundContract.client_id,
         }));
-        setContracts([contract]);
+        setContracts([foundContract]);
       } else {
         setFormData(prev => ({
           ...prev,
