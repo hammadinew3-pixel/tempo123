@@ -206,12 +206,16 @@ export default function AssistanceFactureTemplate() {
           overflow: hidden;
           box-sizing: border-box;
           padding: 15mm;
+          page-break-after: avoid;
+          page-break-inside: avoid;
         }
         @media print {
           body { margin: 0; padding: 0; }
           @page { size: A4 portrait; margin: 0; }
           #facture-content {
             padding: 15mm;
+            page-break-after: avoid;
+            page-break-inside: avoid;
           }
         }
         table {
@@ -219,6 +223,10 @@ export default function AssistanceFactureTemplate() {
           width: 100%;
         }
         .footer {
+          page-break-inside: avoid;
+          page-break-before: avoid;
+        }
+        .flex-1 {
           page-break-inside: avoid;
         }
       `}</style>
