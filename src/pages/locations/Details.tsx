@@ -2135,8 +2135,8 @@ export default function LocationDetails() {
                   const selectedVehicle = availableVehicles.find(v => v.id === changeVehicleData.new_vehicle_id);
                   if (!selectedVehicle) return null;
 
-                  const oldRate = contract.daily_rate || 0;
-                  const newRate = selectedVehicle.tarif_journalier;
+                  const oldRate = Number(contract.daily_rate ?? contract.vehicles?.tarif_journalier) || 0;
+                  const newRate = Number(selectedVehicle.tarif_journalier) || oldRate;
                    const startDate = new Date(`${contract.date_debut}T00:00:00`);
                    const changeDate = new Date(`${changeVehicleData.change_date}T00:00:00`);
                    const endDate = new Date(`${contract.date_fin}T00:00:00`);
