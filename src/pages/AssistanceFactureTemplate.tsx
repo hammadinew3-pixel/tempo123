@@ -350,16 +350,14 @@ export default function AssistanceFactureTemplate() {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="footer mt-auto mb-[8mm] border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
-          <p>
-            {settings?.raison_sociale || "Nom de l'entreprise"}
-            {settings?.rc && ` - RC: ${settings.rc}`}
-            {settings?.if_number && ` - IF: ${settings.if_number}`}
-            {settings?.ice && ` - ICE: ${settings.ice}`}
-            {settings?.cnss && ` - CNSS: ${settings.cnss}`}
-            {settings?.patente && ` - Patente: ${settings.patente}`}
-          </p>
-          {settings?.adresse && <p>Siège social : {settings.adresse}</p>}
+        <div className="text-center text-[7pt] text-gray-600 mt-2 pt-2 border-t border-gray-400">
+          {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
+          {settings?.ice && <> | ICE: {settings.ice}</>}
+          {settings?.rc && <> | RC: {settings.rc}</>}
+          <br/>
+          {settings?.adresse && <>Adresse: {settings.adresse}</>}
+          {settings?.telephone && <> | Tél: {settings.telephone}</>}
+          {settings?.email && <> | Email: {settings.email}</>}
         </div>
       )}
     </div>
