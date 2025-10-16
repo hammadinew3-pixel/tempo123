@@ -358,11 +358,11 @@ export default function ModifierVehicule() {
 
             {/* Matricule */}
             <div>
-              <Label htmlFor="immatriculation">Matricule *</Label>
+              <Label htmlFor="immatriculation">Matricule</Label>
               <Input id="immatriculation" value={formData.immatriculation} onChange={e => setFormData({
               ...formData,
               immatriculation: e.target.value
-            })} required disabled={isAgent} />
+            })} disabled={isAgent} />
             </div>
 
             {/* Dernier kilométrage */}

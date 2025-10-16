@@ -268,13 +268,12 @@ export default function NouveauVehicule() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="matricule">Matricule *</Label>
+              <Label htmlFor="matricule">Matricule</Label>
               <Input
                 id="matricule"
                 value={formData.immatriculation}
                 onChange={(e) => setFormData({ ...formData, immatriculation: e.target.value })}
                 placeholder="Ex: 1234-A-67"
-                required
               />
             </div>
 
