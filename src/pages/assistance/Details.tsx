@@ -692,20 +692,14 @@ export default function AssistanceDetails() {
         throw error;
       }
 
-      // The response is the PDF blob - trigger download
-      const blob = new Blob([data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `facture-${assistance?.num_dossier || id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Open the PDF URL
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
 
       toast({
-        title: 'Facture téléchargée',
-        description: 'La facture PDF a été téléchargée avec succès',
+        title: 'Facture générée',
+        description: 'La facture PDF a été générée avec succès',
       });
     } catch (error: any) {
       console.error('Erreur génération facture:', error);

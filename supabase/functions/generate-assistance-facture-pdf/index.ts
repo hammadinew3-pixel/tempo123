@@ -75,7 +75,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const fileName = isGrouped 
       ? `facture-groupee-${Date.now()}.pdf`
-      : `facture-${assistanceId}-${Date.now()}.pdf`;
+      : `facture-${ids[0]}-${Date.now()}.pdf`;
     
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('assistance-pdfs')
@@ -89,21 +89,25 @@ serve(async (req) => {
       throw uploadError;
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    // Create a signed URL (1 hour)
+    const { data: signed, error: signError } = await supabase.storage
       .from('assistance-pdfs')
-      .getPublicUrl(fileName);
+      .createSignedUrl(fileName, 60 * 60);
 
-    console.log('✅ PDF generated and stored successfully:', publicUrl);
+    if (signError || !signed?.signedUrl) {
+      console.error('Signed URL error:', signError);
+      throw new Error('Could not create a signed URL for the PDF');
+    }
 
-    // Return the PDF directly for download
-    return new Response(pdfBuffer, {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-      },
-    });
+    console.log('✅ PDF generated and stored successfully:', fileName);
+
+    return new Response(
+      JSON.stringify({ url: signed.signedUrl, fileName }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error('Error generating facture:', error);
     return new Response(
