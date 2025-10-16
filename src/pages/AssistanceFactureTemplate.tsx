@@ -170,7 +170,79 @@ export default function AssistanceFactureTemplate() {
     );
   }
 
-  // Calculate totals for grouped invoice
+  // Convert number to French words
+  const numberToFrench = (num: number): string => {
+    const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf'];
+    const teens = ['dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+    const tens = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante-dix', 'quatre-vingt', 'quatre-vingt-dix'];
+    
+    if (num === 0) return 'zéro';
+    
+    const convertHundreds = (n: number): string => {
+      let result = '';
+      
+      const hundred = Math.floor(n / 100);
+      const remainder = n % 100;
+      
+      if (hundred > 0) {
+        result += hundred === 1 ? 'cent' : units[hundred] + ' cent';
+        if (remainder === 0 && hundred > 1) result += 's';
+        if (remainder > 0) result += ' ';
+      }
+      
+      if (remainder >= 20) {
+        const ten = Math.floor(remainder / 10);
+        const unit = remainder % 10;
+        result += tens[ten];
+        if (unit === 1 && ten < 8) {
+          result += ' et un';
+        } else if (unit > 0) {
+          result += ten === 7 || ten === 9 ? '-' : '-';
+          if (ten === 7) result += teens[unit];
+          else if (ten === 9) result += teens[unit];
+          else result += units[unit];
+        }
+        if (ten === 8 && unit === 0) result += 's';
+      } else if (remainder >= 10) {
+        result += teens[remainder - 10];
+      } else if (remainder > 0) {
+        result += units[remainder];
+      }
+      
+      return result;
+    };
+    
+    const intPart = Math.floor(num);
+    const decPart = Math.round((num - intPart) * 100);
+    
+    let words = '';
+    let remaining = intPart;
+    
+    if (remaining >= 1000000) {
+      const millions = Math.floor(remaining / 1000000);
+      words += (millions === 1 ? 'un million' : convertHundreds(millions) + ' millions') + ' ';
+      remaining %= 1000000;
+    }
+    
+    if (remaining >= 1000) {
+      const thousands = Math.floor(remaining / 1000);
+      words += (thousands === 1 ? 'mille' : convertHundreds(thousands) + ' mille') + ' ';
+      remaining %= 1000;
+    }
+    
+    if (remaining > 0) {
+      words += convertHundreds(remaining);
+    }
+    
+    words = words.trim() + ' dirhams';
+    
+    if (decPart > 0) {
+      words += ' et ' + convertHundreds(decPart) + ' centimes';
+    }
+    
+    return words;
+  };
+
   const calculateTotals = () => {
     let totalHT = 0;
     assistances.forEach(assistance => {
@@ -345,6 +417,11 @@ export default function AssistanceFactureTemplate() {
             <div className="flex justify-between py-3 border-t-2 border-gray-400">
               <span className="font-bold text-lg">TOTAL TTC :</span>
               <span className="font-bold text-lg">{totalTTC.toFixed(2)} DH</span>
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-300">
+              <p className="text-sm italic">
+                Arrêtée la présente facture à la somme de : <span className="font-semibold">{numberToFrench(totalTTC)}</span>
+              </p>
             </div>
           </div>
         </div>
