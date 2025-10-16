@@ -63,60 +63,56 @@ export default function NouvelleInfraction() {
 
   const findContractForDate = async () => {
     try {
-      // Chercher d'abord les contrats pour le véhicule sélectionné
-      const { data: contractsData, error: contractsError } = await supabase
+      const infractionDate = new Date(formData.date_infraction);
+      
+      // 1. Chercher tous les contrats actifs à la date de l'infraction
+      const { data: allContracts, error: contractsError } = await supabase
         .from("contracts")
         .select("*, clients(id, nom, prenom, telephone, cin_url, permis_url)")
-        .eq("vehicle_id", formData.vehicle_id)
         .lte("date_debut", formData.date_infraction)
-        .gte("date_fin", formData.date_infraction)
-        .order("date_debut", { ascending: false });
+        .gte("date_fin", formData.date_infraction);
 
       if (contractsError) throw contractsError;
 
-      // Vérifier aussi les changements de véhicule
-      const { data: changesData, error: changesError } = await supabase
-        .from("vehicle_changes")
-        .select("*, contracts!inner(*, clients(id, nom, prenom, telephone, cin_url, permis_url))")
-        .or(`old_vehicle_id.eq.${formData.vehicle_id},new_vehicle_id.eq.${formData.vehicle_id}`)
-        .lte("change_date", formData.date_infraction);
-
-      if (changesError) throw changesError;
-
-      // Combiner les résultats et trouver le contrat approprié
       let foundContract = null;
 
-      // D'abord vérifier les contrats directs
-      if (contractsData && contractsData.length > 0) {
-        foundContract = contractsData[0];
-      }
-
-      // Vérifier les changements de véhicule
-      if (changesData && changesData.length > 0) {
-        for (const change of changesData) {
-          const contract = change.contracts;
-          if (!contract) continue;
-          
-          const changeDate = new Date(change.change_date);
-          const infractionDate = new Date(formData.date_infraction);
-          const startDate = new Date(contract.date_debut);
-          const endDate = new Date(contract.date_fin);
-
-          // Si l'infraction est après le changement et le véhicule actuel est le nouveau véhicule
-          if (infractionDate >= changeDate && 
-              infractionDate >= startDate && 
-              infractionDate <= endDate &&
-              change.new_vehicle_id === formData.vehicle_id) {
+      // 2. Pour chaque contrat, vérifier si le véhicule correspond
+      if (allContracts && allContracts.length > 0) {
+        for (const contract of allContracts) {
+          // Cas 1: Le contrat a directement ce véhicule
+          if (contract.vehicle_id === formData.vehicle_id) {
             foundContract = contract;
             break;
           }
-          // Si l'infraction est avant le changement et le véhicule actuel est l'ancien véhicule
-          if (infractionDate < changeDate && 
-              infractionDate >= startDate && 
-              infractionDate <= endDate &&
-              change.old_vehicle_id === formData.vehicle_id) {
-            foundContract = contract;
-            break;
+
+          // Cas 2: Vérifier les changements de véhicule pour ce contrat
+          const { data: changes, error: changesError } = await supabase
+            .from("vehicle_changes")
+            .select("*")
+            .eq("contract_id", contract.id)
+            .order("change_date", { ascending: true });
+
+          if (!changesError && changes && changes.length > 0) {
+            // Déterminer quel véhicule était actif à la date de l'infraction
+            let activeVehicleId = contract.vehicle_id;
+
+            for (const change of changes) {
+              const changeDate = new Date(change.change_date);
+              if (infractionDate >= changeDate) {
+                // Le changement a eu lieu avant ou le jour de l'infraction
+                activeVehicleId = change.new_vehicle_id;
+              } else {
+                // Le changement est après l'infraction, on garde l'ancien véhicule
+                activeVehicleId = change.old_vehicle_id;
+                break;
+              }
+            }
+
+            // Vérifier si le véhicule actif correspond au véhicule de l'infraction
+            if (activeVehicleId === formData.vehicle_id) {
+              foundContract = contract;
+              break;
+            }
           }
         }
       }
