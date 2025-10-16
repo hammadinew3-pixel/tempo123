@@ -432,7 +432,7 @@ export default function AssistanceFactureTemplate() {
 
         {/* Footer */}
         {!settings?.masquer_pied_page && (
-          <div className="mt-auto text-center text-[8pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+          <div className="mt-auto text-center text-[9pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
             {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
             {settings?.ice && <> | ICE: {settings.ice}</>}
             {settings?.rc && <> | RC: {settings.rc}</>}
