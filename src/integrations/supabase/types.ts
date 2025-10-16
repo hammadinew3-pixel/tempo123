@@ -338,6 +338,66 @@ export type Database = {
         }
         Relationships: []
       }
+      cheques: {
+        Row: {
+          banque: string | null
+          client_id: string | null
+          contract_id: string | null
+          created_at: string | null
+          date_echeance: string
+          date_emission: string
+          id: string
+          montant: number
+          note: string | null
+          numero_cheque: string
+          statut: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          banque?: string | null
+          client_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          date_echeance: string
+          date_emission: string
+          id?: string
+          montant: number
+          note?: string | null
+          numero_cheque: string
+          statut?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          banque?: string | null
+          client_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          date_echeance?: string
+          date_emission?: string
+          id?: string
+          montant?: number
+          note?: string | null
+          numero_cheque?: string
+          statut?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cheques_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheques_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           adresse: string | null
@@ -562,32 +622,57 @@ export type Database = {
       expenses: {
         Row: {
           categorie: string | null
+          contract_id: string | null
           created_at: string | null
           date_depense: string
           description: string
+          fournisseur: string | null
           id: string
+          mode_paiement: string | null
           montant: number
+          statut: string | null
+          type_depense: string | null
+          updated_at: string | null
           vehicle_id: string | null
         }
         Insert: {
           categorie?: string | null
+          contract_id?: string | null
           created_at?: string | null
           date_depense: string
           description: string
+          fournisseur?: string | null
           id?: string
+          mode_paiement?: string | null
           montant: number
+          statut?: string | null
+          type_depense?: string | null
+          updated_at?: string | null
           vehicle_id?: string | null
         }
         Update: {
           categorie?: string | null
+          contract_id?: string | null
           created_at?: string | null
           date_depense?: string
           description?: string
+          fournisseur?: string | null
           id?: string
+          mode_paiement?: string | null
           montant?: number
+          statut?: string | null
+          type_depense?: string | null
+          updated_at?: string | null
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "expenses_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "expenses_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -734,6 +819,63 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      revenus: {
+        Row: {
+          client_id: string | null
+          contract_id: string | null
+          created_at: string | null
+          date_encaissement: string
+          id: string
+          mode_paiement: string | null
+          montant: number
+          note: string | null
+          source_revenu: string
+          statut: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          date_encaissement: string
+          id?: string
+          mode_paiement?: string | null
+          montant: number
+          note?: string | null
+          source_revenu?: string
+          statut?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          date_encaissement?: string
+          id?: string
+          mode_paiement?: string | null
+          montant?: number
+          note?: string | null
+          source_revenu?: string
+          statut?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenus_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenus_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       secondary_drivers: {
         Row: {
@@ -895,6 +1037,66 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_sinistres_vehicle_id"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traites: {
+        Row: {
+          banque: string | null
+          contract_id: string | null
+          created_at: string | null
+          date_echeance: string
+          fournisseur: string | null
+          id: string
+          montant: number
+          note: string | null
+          reference_traite: string
+          statut: string | null
+          updated_at: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          banque?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          date_echeance: string
+          fournisseur?: string | null
+          id?: string
+          montant: number
+          note?: string | null
+          reference_traite: string
+          statut?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          banque?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          date_echeance?: string
+          fournisseur?: string | null
+          id?: string
+          montant?: number
+          note?: string | null
+          reference_traite?: string
+          statut?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traites_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traites_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
