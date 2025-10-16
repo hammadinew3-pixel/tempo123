@@ -497,7 +497,19 @@ export default function LocationDetails() {
       }
 
       // Résoudre les tarifs
-      const { oldRate: oldDailyRate, newRate: newDailyRate } = resolveRates(contract, selectedVehicle);
+      let { oldRate: oldDailyRate, newRate: newDailyRate } = resolveRates(contract, selectedVehicle);
+
+      // Fallback: si le tarif ancien est 0, récupérer depuis la table vehicles
+      if (!oldDailyRate || oldDailyRate <= 0) {
+        const { data: oldVeh, error: oldVehErr } = await supabase
+          .from('vehicles')
+          .select('tarif_journalier')
+          .eq('id', contract.vehicle_id)
+          .maybeSingle();
+        if (!oldVehErr && oldVeh?.tarif_journalier) {
+          oldDailyRate = Number(oldVeh.tarif_journalier) || 0;
+        }
+      }
 
       // Calculs robustes (jours et montants)
       const { totalDays, daysOld, daysNew, amountOld, amountNew, total } = computeChangeAmounts({
