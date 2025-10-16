@@ -333,7 +333,7 @@ export default function NouveauVehicule() {
           {/* Right Column */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="categorie">Catégories (Assistance) *</Label>
+              <Label htmlFor="categorie">Catégories (Assistance)</Label>
               <div className="space-y-2">
                 {assistanceCategories.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Aucune catégorie disponible</p>
