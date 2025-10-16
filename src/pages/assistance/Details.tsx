@@ -1529,15 +1529,15 @@ export default function AssistanceDetails() {
                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                         />
                         {ordreMissionPreview ? (
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2 p-2 border rounded-md bg-muted flex-1">
-                              <span className="text-sm flex-1 truncate">{ordreMissionPreview}</span>
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                              <span className="text-sm flex-1 truncate min-w-0">{ordreMissionPreview}</span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
                                 onClick={removeFile}
-                                className="h-6 w-6"
+                                className="h-6 w-6 flex-shrink-0"
                               >
                                 <X className="h-4 w-4" />
                               </Button>
@@ -1547,6 +1547,7 @@ export default function AssistanceDetails() {
                               size="sm"
                               onClick={handleUploadOrdreMission}
                               disabled={uploadingOrdreMission}
+                              className="w-full"
                             >
                               {uploadingOrdreMission ? 'Upload...' : 'Enregistrer'}
                             </Button>
