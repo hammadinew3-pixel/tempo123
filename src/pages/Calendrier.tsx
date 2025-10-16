@@ -214,10 +214,17 @@ export default function Calendrier() {
 
   const getContractsForDay = (day: number) => {
     const date = new Date(currentYear, currentMonth, day);
+    date.setHours(0, 0, 0, 0);
+    
     return contracts.filter(contract => {
-      const start = parseISO(contract.date_debut);
-      const end = parseISO(contract.date_fin);
-      return isWithinInterval(date, { start, end }) || isSameDay(date, start) || isSameDay(date, end);
+      const [startYear, startMonth, startDay] = contract.date_debut.split('-').map(Number);
+      const [endYear, endMonth, endDay] = contract.date_fin.split('-').map(Number);
+      const start = new Date(startYear, startMonth - 1, startDay);
+      const end = new Date(endYear, endMonth - 1, endDay);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      
+      return date >= start && date <= end;
     });
   };
 
@@ -234,8 +241,12 @@ export default function Calendrier() {
     const monthEnd = new Date(currentYear, currentMonth + 1, 0);
 
     contracts.forEach((contract) => {
-      const contractStart = parseISO(contract.date_debut);
-      const contractEnd = parseISO(contract.date_fin);
+      const [cStartYear, cStartMonth, cStartDay] = contract.date_debut.split('-').map(Number);
+      const [cEndYear, cEndMonth, cEndDay] = contract.date_fin.split('-').map(Number);
+      const contractStart = new Date(cStartYear, cStartMonth - 1, cStartDay);
+      const contractEnd = new Date(cEndYear, cEndMonth - 1, cEndDay);
+      contractStart.setHours(0, 0, 0, 0);
+      contractEnd.setHours(0, 0, 0, 0);
 
       // Skip if contract doesn't overlap with current month
       if (contractEnd < monthStart || contractStart > monthEnd) return;
@@ -244,12 +255,12 @@ export default function Calendrier() {
       const displayStart = contractStart < monthStart ? monthStart : contractStart;
       const displayEnd = contractEnd > monthEnd ? monthEnd : contractEnd;
       
-      const startDay = displayStart.getDate();
-      const endDay = displayEnd.getDate();
-      const duration = endDay - startDay + 1;
+      const barStartDay = displayStart.getDate();
+      const barEndDay = displayEnd.getDate();
+      const duration = barEndDay - barStartDay + 1;
 
       // Calculate column position (accounting for empty cells at start)
-      const startCol = firstDayOfMonth + startDay - 1;
+      const startCol = firstDayOfMonth + barStartDay - 1;
       
       // Find available row for this contract
       let row = 0;
