@@ -344,7 +344,7 @@ export default function AssistanceFactureTemplate() {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="footer mt-auto border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
+        <div className="footer mt-auto mb-[10mm] border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
           <p>
             {settings?.raison_sociale || "Nom de l'entreprise"}
             {settings?.rc && ` - RC: ${settings.rc}`}
