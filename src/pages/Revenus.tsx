@@ -108,6 +108,19 @@ export default function Revenus() {
 
       if (paymentsError) throw paymentsError;
 
+      // Charger les paiements d'assistance
+      const { data: assistanceData, error: assistanceError } = await supabase
+        .from('assistance')
+        .select(`
+          *,
+          clients (nom, prenom)
+        `)
+        .neq('montant_paye', 0)
+        .not('montant_paye', 'is', null)
+        .order('date_debut', { ascending: false });
+
+      if (assistanceError) throw assistanceError;
+
       // Formater les revenus manuels
       const formattedRevenus: Revenue[] = (revenusData || []).map(r => ({
         id: r.id,
@@ -137,8 +150,22 @@ export default function Revenus() {
         contracts: { numero_contrat: p.contracts?.numero_contrat },
       }));
 
+      // Formater les paiements d'assistance comme des revenus
+      const formattedAssistance: Revenue[] = (assistanceData || []).map((a: any) => ({
+        id: a.id,
+        date_encaissement: a.date_debut,
+        source_revenu: 'autre',
+        montant: a.montant_paye,
+        mode_paiement: 'virement',
+        statut: a.etat_paiement === 'paye' ? 'paye' : 'partiel',
+        client_id: a.client_id,
+        note: `Paiement assistance ${a.num_dossier || ''}`,
+        clients: a.clients,
+        contracts: null,
+      }));
+
       // Combiner et trier tous les revenus
-      const allRevenues = [...formattedRevenus, ...formattedPayments].sort((a, b) =>
+      const allRevenues = [...formattedRevenus, ...formattedPayments, ...formattedAssistance].sort((a, b) =>
         new Date(b.date_encaissement).getTime() - new Date(a.date_encaissement).getTime()
       );
 
