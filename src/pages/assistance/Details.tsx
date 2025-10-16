@@ -679,61 +679,33 @@ export default function AssistanceDetails() {
   const handleGenerateFacturePDF = async () => {
     try {
       toast({
-        title: "Génération de la facture PDF",
+        title: "Génération de la facture",
         description: "Veuillez patienter...",
       });
 
-      // Use html2pdf for client-side PDF generation
-      const { default: html2pdf } = await import('html2pdf.js');
-      
-      // Open template in hidden iframe
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = 'none';
-      document.body.appendChild(iframe);
-
-      // Load template
-      iframe.src = `/assistance-facture-template?id=${id}&print=true`;
-
-      // Wait for iframe to load
-      await new Promise((resolve) => {
-        iframe.onload = resolve;
+      // Call the edge function to generate PDF
+      const { data, error } = await supabase.functions.invoke('generate-assistance-facture-pdf', {
+        body: { assistanceId: id }
       });
 
-      // Wait a bit more for content to render
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      
-      if (!iframeDoc) {
-        throw new Error('Unable to access iframe document');
+      if (error) {
+        throw error;
       }
 
-      const element = iframeDoc.body;
-
-      const opt: any = {
-        margin: [10, 10, 10, 10],
-        filename: `facture-${assistance?.num_dossier || id}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      await html2pdf().set(opt).from(element).save();
-
-      document.body.removeChild(iframe);
-
-      toast({
-        title: 'Facture téléchargée',
-        description: 'La facture PDF a été téléchargée avec succès',
-      });
+      // Open the PDF URL in new tab
+      if (data?.pdfUrl) {
+        window.open(data.pdfUrl, '_blank');
+        
+        toast({
+          title: 'Facture générée',
+          description: 'La facture a été ouverte dans un nouvel onglet',
+        });
+      }
     } catch (error: any) {
       console.error('Erreur génération facture:', error);
       toast({
-        title: 'Erreur de génération',
-        description: error.message || 'Impossible de générer la facture',
+        title: 'Erreur',
+        description: error.message || 'Une erreur est survenue lors de la génération de la facture',
         variant: 'destructive',
       });
     }
