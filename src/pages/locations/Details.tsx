@@ -152,7 +152,7 @@ export default function LocationDetails() {
         .select(`
           *,
           clients (nom, prenom, telephone, email, cin, permis_conduire),
-          vehicles (immatriculation, marque, modele, kilometrage)
+          vehicles (immatriculation, marque, modele, kilometrage, tarif_journalier)
         `)
         .eq("id", id)
         .single();
