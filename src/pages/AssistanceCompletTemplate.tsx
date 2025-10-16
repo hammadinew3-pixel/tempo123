@@ -62,10 +62,11 @@ export default function AssistanceCompletTemplate() {
   }, [id]);
 
   useEffect(() => {
-    if (!loading && data) {
+    const downloadMode = searchParams.get('download') === 'true';
+    if (!loading && data && !downloadMode) {
       setTimeout(() => window.print(), 500);
     }
-  }, [loading, data]);
+  }, [loading, data, searchParams]);
 
   if (loading || !data) {
     return <div className="p-8">Chargement...</div>;

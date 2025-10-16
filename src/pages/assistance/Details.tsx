@@ -1091,11 +1091,42 @@ export default function AssistanceDetails() {
                   Permis Client
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => {
-                const url = `/assistance-complet-template?id=${id}`;
-                window.open(url, '_blank');
+              <DropdownMenuItem onClick={async () => {
+                try {
+                  toast({
+                    title: "Génération en cours",
+                    description: "Le dossier complet est en cours de génération...",
+                  });
+
+                  const { data, error } = await supabase.functions.invoke('generate-assistance-dossier-complet', {
+                    body: { assistanceId: id }
+                  });
+
+                  if (error) throw error;
+
+                  if (data?.url) {
+                    const link = document.createElement('a');
+                    link.href = data.url;
+                    link.download = data.fileName || 'dossier-complet.pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    toast({
+                      title: "Succès",
+                      description: "Le dossier complet a été téléchargé",
+                    });
+                  }
+                } catch (error: any) {
+                  console.error('Error generating dossier complet:', error);
+                  toast({
+                    variant: "destructive",
+                    title: "Erreur",
+                    description: "Impossible de générer le dossier complet",
+                  });
+                }
               }}>
-                <FileText className="w-4 h-4 mr-2" />
+                <FileDown className="w-4 h-4 mr-2" />
                 Dossier complet
               </DropdownMenuItem>
             </DropdownMenuContent>

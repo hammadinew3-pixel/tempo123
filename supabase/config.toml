@@ -22,3 +22,6 @@ verify_jwt = true
 
 [functions.generate-assistance-pdf]
 verify_jwt = true
+
+[functions.generate-assistance-dossier-complet]
+verify_jwt = true
