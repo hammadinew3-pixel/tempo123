@@ -163,11 +163,23 @@ export default function InfractionDetails() {
           filename: `contrat_${infraction.contracts?.numero_contrat || 'document'}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
-        // Générer et télécharger le PDF
-        await html2pdf().set(options).from(content).save();
+        // Générer et télécharger le PDF directement sans popup d'impression
+        const worker = html2pdf().set(options).from(content);
+        const pdf = await worker.outputPdf('blob');
+        
+        // Créer un lien de téléchargement direct
+        const url = URL.createObjectURL(pdf);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = options.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
         // Nettoyer l'iframe
         document.body.removeChild(iframe);
