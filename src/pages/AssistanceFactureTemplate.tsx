@@ -122,7 +122,7 @@ export default function AssistanceFactureTemplate() {
             : `Facture_${assistances[0]?.num_dossier || assistanceId}`;
           
           const opt = {
-            margin: 10,
+            margin: 0,
             filename: `${invoiceNumber}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: { 
@@ -194,7 +194,7 @@ export default function AssistanceFactureTemplate() {
   const assuranceInfo = firstAssistance.assurances || { nom: firstAssistance.assureur_nom };
 
   return (
-    <div id="facture-content" className="flex flex-col min-h-[297mm] w-[210mm] mx-auto p-8 bg-white print:p-0">
+    <div id="facture-content" className="flex flex-col min-h-[297mm] w-[210mm] mx-auto p-6 bg-white print:p-0">
       <style>{`
         * {
           box-sizing: border-box;
@@ -204,13 +204,19 @@ export default function AssistanceFactureTemplate() {
           min-height: 297mm;
           margin: auto;
           overflow: hidden;
+          box-sizing: border-box;
+          padding: 15mm;
         }
         @media print {
           body { margin: 0; padding: 0; }
-          @page { size: A4 portrait; margin: 15mm; }
+          @page { size: A4 portrait; margin: 0; }
+          #facture-content {
+            padding: 15mm;
+          }
         }
         table {
           page-break-inside: avoid;
+          width: 100%;
         }
         .footer {
           page-break-inside: avoid;
