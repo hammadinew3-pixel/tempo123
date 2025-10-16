@@ -435,7 +435,10 @@ export default function AssistanceFactureTemplate() {
           <div className="mt-auto text-center text-[9pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
             {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
             {settings?.ice && <> | ICE: {settings.ice}</>}
+            {settings?.if_number && <> | IF: {settings.if_number}</>}
             {settings?.rc && <> | RC: {settings.rc}</>}
+            {settings?.cnss && <> | CNSS: {settings.cnss}</>}
+            {settings?.patente && <> | Patente: {settings.patente}</>}
             <br/>
             {settings?.adresse && <>Adresse: {settings.adresse}</>}
             {settings?.telephone && <> | Tél: {settings.telephone}</>}
