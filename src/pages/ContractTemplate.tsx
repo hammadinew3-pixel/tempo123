@@ -266,7 +266,7 @@ export default function ContractTemplate() {
                 <div><strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
                 <div><strong>Durée:</strong> {duration} jour(s)</div>
                 <div><strong>Prix/Jr:</strong> {dailyRate.toFixed(2)} DH</div>
-                <div><strong>Prix TTC:</strong> {totalAmount.toFixed(2)} DH</div>
+                <div><strong>Prix total:</strong> {totalAmount.toFixed(2)} DH</div>
                 <div><strong>Caution:</strong> {contract.caution_montant?.toFixed(2)} DH</div>
               </div>
             </div>
@@ -314,37 +314,6 @@ export default function ContractTemplate() {
                     <strong>#{idx + 1}:</strong> {change.old_vehicle?.immatriculation} → {change.new_vehicle?.immatriculation} - {formatReason(change.reason)}
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* Paiements */}
-          {payments && payments.length > 0 && (
-            <div className="border-2 border-green-500 bg-green-50 mb-3">
-              <div className="bg-green-200 border-b-2 border-green-500 p-2 text-center">
-                <strong className="text-[10pt]">💰 PAIEMENTS EFFECTUÉS</strong>
-              </div>
-              <div className="p-3">
-                <div className="grid grid-cols-3 gap-2 mb-2 text-[8pt] font-bold border-b border-green-300 pb-1">
-                  <div>Date</div>
-                  <div>Méthode</div>
-                  <div className="text-right">Montant</div>
-                </div>
-                {payments.map((payment: any, i: number) => (
-                  <div key={i} className="grid grid-cols-3 gap-2 text-[9pt] mb-1">
-                    <div>{payment.date_paiement ? format(new Date(payment.date_paiement), 'dd/MM/yyyy') : ''}</div>
-                    <div className="capitalize">{payment.methode === 'carte_bancaire' ? 'Carte' : payment.methode}</div>
-                    <div className="text-right font-semibold">{parseFloat(payment.montant).toFixed(2)} DH</div>
-                  </div>
-                ))}
-                <div className="grid grid-cols-3 gap-2 text-[9pt] font-bold border-t-2 border-green-500 pt-2 mt-2">
-                  <div className="col-span-2">Total payé:</div>
-                  <div className="text-right text-green-700">{paidAmount.toFixed(2)} DH</div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-[9pt] font-bold">
-                  <div className="col-span-2">Reste à payer:</div>
-                  <div className="text-right text-red-700">{remainingAmount.toFixed(2)} DH</div>
-                </div>
               </div>
             </div>
           )}
