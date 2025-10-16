@@ -49,7 +49,7 @@ serve(async (req) => {
       throw new Error('assistanceId is required');
     }
 
-    const HTML2PDF_APP_KEY = Deno.env.get('HTML2PDF_APP_KEY');
+    const HTML2PDF_APP_KEY = Deno.env.get('HTML2PDF_APP_KEY')?.trim();
     const BROWSERLESS_TOKEN = Deno.env.get('BROWSERLESS_TOKEN');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 
@@ -64,7 +64,7 @@ serve(async (req) => {
       console.log('Using html2pdf.app for PDF generation');
       
       try {
-        const html2pdfUrl = `https://api.html2pdf.app/v1/generate?apiKey=${HTML2PDF_APP_KEY}&url=${encodeURIComponent(templateUrl)}&pageSize=A4&orientation=portrait&margin=10mm&printBackground=true`;
+        const html2pdfUrl = `https://api.html2pdf.app/v1/generate?apiKey=${encodeURIComponent(HTML2PDF_APP_KEY)}&url=${encodeURIComponent(templateUrl)}&pageSize=A4&orientation=portrait&margin=10&printBackground=true`;
         console.log('Calling html2pdf.app:', html2pdfUrl.substring(0, 200) + '...');
         
         const pdfResponse = await fetch(html2pdfUrl, {
