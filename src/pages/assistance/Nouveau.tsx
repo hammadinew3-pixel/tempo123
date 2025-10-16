@@ -129,7 +129,7 @@ export default function NouveauAssistance() {
     
     let filtered = vehicles;
     
-    if (categoryCode) {
+    if (categoryCode && categoryCode !== 'ALL') {
       filtered = vehicles.filter(v => 
         v.categories && Array.isArray(v.categories) && v.categories.includes(categoryCode)
       );
@@ -138,7 +138,7 @@ export default function NouveauAssistance() {
     setFilteredVehicles(filtered);
     
     // Reset vehicle selection if current vehicle is not in filtered list
-    if (formData.vehicle_id) {
+    if (formData.vehicle_id && categoryCode !== 'ALL') {
       const isVehicleInFiltered = filtered.some(v => v.id === formData.vehicle_id);
       if (!isVehicleInFiltered) {
         setFormData({ ...formData, vehicle_id: undefined });
@@ -328,7 +328,7 @@ export default function NouveauAssistance() {
                     <SelectValue placeholder="Toutes les catégories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Toutes les catégories</SelectItem>
+                    <SelectItem value="ALL">Toutes les catégories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.code} value={category.code}>
                         {category.nom}
@@ -359,7 +359,7 @@ export default function NouveauAssistance() {
                     ))}
                   </SelectContent>
                 </Select>
-                {selectedCategory && (
+                {selectedCategory && selectedCategory !== 'ALL' && (
                   <p className="text-xs text-muted-foreground">
                     Filtré par catégorie {selectedCategory} ({filteredVehicles.length} véhicule(s))
                   </p>
