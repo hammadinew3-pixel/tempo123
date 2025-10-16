@@ -63,58 +63,18 @@ export default function NouvelleInfraction() {
 
   const findContractForDate = async () => {
     try {
-      const infractionDate = new Date(formData.date_infraction);
-      
-      // 1. Chercher tous les contrats actifs à la date de l'infraction
-      const { data: allContracts, error: contractsError } = await supabase
-        .from("contracts")
-        .select("*, clients(id, nom, prenom, telephone, cin_url, permis_url)")
+      // Chercher le véhicule actif à la date d'infraction via vehicle_affectations
+      const { data: affectations, error: affectationsError } = await supabase
+        .from("vehicle_affectations")
+        .select("contract_id, contracts(*, clients(id, nom, prenom, telephone, cin_url, permis_url))")
+        .eq("vehicle_id", formData.vehicle_id)
         .lte("date_debut", formData.date_infraction)
-        .gte("date_fin", formData.date_infraction);
+        .or(`date_fin.gte.${formData.date_infraction},date_fin.is.null`);
 
-      if (contractsError) throw contractsError;
+      if (affectationsError) throw affectationsError;
 
-      let foundContract = null;
-
-      // 2. Pour chaque contrat, vérifier si le véhicule correspond
-      if (allContracts && allContracts.length > 0) {
-        for (const contract of allContracts) {
-          // Cas 1: Le contrat a directement ce véhicule
-          if (contract.vehicle_id === formData.vehicle_id) {
-            foundContract = contract;
-            break;
-          }
-
-          // Cas 2: Vérifier les changements de véhicule pour ce contrat
-          const { data: changes, error: changesError } = await supabase
-            .from("vehicle_changes")
-            .select("*")
-            .eq("contract_id", contract.id)
-            .order("change_date", { ascending: true });
-
-          if (!changesError && changes && changes.length > 0) {
-            // Déterminer le véhicule actif à la date cible en partant du véhicule initial (old_vehicle du 1er changement)
-            let activeVehicleId = changes[0]?.old_vehicle_id || contract.vehicle_id;
-
-            for (const change of changes) {
-              const changeDate = new Date(change.change_date);
-              if (infractionDate >= changeDate) {
-                activeVehicleId = change.new_vehicle_id;
-              } else {
-                break;
-              }
-            }
-
-            // Vérifier si le véhicule actif correspond au véhicule de l'infraction
-            if (activeVehicleId === formData.vehicle_id) {
-              foundContract = contract;
-              break;
-            }
-          }
-        }
-      }
-
-      if (foundContract) {
+      if (affectations && affectations.length > 0) {
+        const foundContract = affectations[0].contracts;
         setFormData(prev => ({
           ...prev,
           contract_id: foundContract.id,
@@ -170,43 +130,17 @@ export default function NouvelleInfraction() {
       let resolvedClientId = formData.client_id;
 
       if ((!resolvedContractId || !resolvedClientId) && formData.vehicle_id && infDate) {
-        const { data: allContracts } = await supabase
-          .from("contracts")
-          .select("*, clients(id, nom, prenom, telephone, cin_url, permis_url)")
+        const { data: affectations } = await supabase
+          .from("vehicle_affectations")
+          .select("contract_id, contracts!inner(id, client_id)")
+          .eq("vehicle_id", formData.vehicle_id)
           .lte("date_debut", infDate)
-          .gte("date_fin", infDate);
+          .or(`date_fin.gte.${infDate},date_fin.is.null`);
 
-        if (allContracts && allContracts.length > 0) {
-          const targetDate = new Date(infDate);
-          for (const contract of allContracts) {
-            if (contract.vehicle_id === formData.vehicle_id) {
-              resolvedContractId = contract.id;
-              resolvedClientId = contract.client_id;
-              break;
-            }
-            const { data: changes } = await supabase
-              .from("vehicle_changes")
-              .select("*")
-              .eq("contract_id", contract.id)
-              .order("change_date", { ascending: true });
-
-            if (changes && changes.length > 0) {
-              let activeVehicleId = changes[0]?.old_vehicle_id || contract.vehicle_id;
-              for (const change of changes) {
-                const cDate = new Date(change.change_date);
-                if (targetDate >= cDate) {
-                  activeVehicleId = change.new_vehicle_id;
-                } else {
-                  break;
-                }
-              }
-              if (activeVehicleId === formData.vehicle_id) {
-                resolvedContractId = contract.id;
-                resolvedClientId = contract.client_id;
-                break;
-              }
-            }
-          }
+        if (affectations && affectations.length > 0) {
+          const contract = affectations[0].contracts;
+          resolvedContractId = contract.id;
+          resolvedClientId = contract.client_id;
         }
       }
 

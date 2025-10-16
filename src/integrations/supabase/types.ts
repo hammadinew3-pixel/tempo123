@@ -916,6 +916,48 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_affectations: {
+        Row: {
+          contract_id: string
+          created_at: string | null
+          date_debut: string
+          date_fin: string | null
+          id: string
+          vehicle_id: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string | null
+          date_debut: string
+          date_fin?: string | null
+          id?: string
+          vehicle_id: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string | null
+          date_debut?: string
+          date_fin?: string | null
+          id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_contract"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_vehicle"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_assistance_categories: {
         Row: {
           actif: boolean | null
