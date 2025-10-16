@@ -3,11 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import html2pdf from 'html2pdf.js';
 
 export default function AssistanceFactureTemplate() {
   const [searchParams] = useSearchParams();
   const assistanceId = searchParams.get("id");
   const assistanceIds = searchParams.get("ids");
+  const downloadMode = searchParams.get("download") === "true";
   const shouldPrint = searchParams.get("print") === "true";
   const [assistances, setAssistances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,10 +111,48 @@ export default function AssistanceFactureTemplate() {
   };
 
   useEffect(() => {
-    if (assistances.length > 0 && !loading && shouldPrint) {
-      setTimeout(() => window.print(), 500);
+    if (assistances.length > 0 && !loading) {
+      if (downloadMode) {
+        setTimeout(() => {
+          const element = document.getElementById('facture-content');
+          if (!element) return;
+          
+          const invoiceNumber = isGrouped 
+            ? `Facture_Groupee_${assistanceIds?.replace(/,/g, '_')}` 
+            : `Facture_${assistances[0]?.num_dossier || assistanceId}`;
+          
+          const opt = {
+            margin: 10,
+            filename: `${invoiceNumber}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { 
+              scale: 2, 
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            },
+            jsPDF: { 
+              unit: 'mm' as const, 
+              format: 'a4' as const, 
+              orientation: 'portrait' as const
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+          };
+          
+          html2pdf().set(opt).from(element).save().then(() => {
+            setTimeout(() => {
+              if (window.parent !== window) {
+                window.parent.document.querySelector('iframe')?.remove();
+              }
+            }, 1000);
+          });
+        }, 500);
+      } else if (shouldPrint) {
+        setTimeout(() => window.print(), 500);
+      }
     }
-  }, [assistances, loading, shouldPrint]);
+  }, [assistances, loading, downloadMode, shouldPrint, assistanceId, assistanceIds, isGrouped]);
 
   if (loading) {
     return (
@@ -154,8 +194,14 @@ export default function AssistanceFactureTemplate() {
   const assuranceInfo = firstAssistance.assurances || { nom: firstAssistance.assureur_nom };
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white print:p-0">
+    <div id="facture-content" className="max-w-4xl mx-auto p-8 bg-white print:p-0">
       <style>{`
+        #facture-content {
+          width: 100%;
+          max-width: 190mm;
+          margin: auto;
+          overflow: hidden;
+        }
         @media print {
           body { margin: 0; padding: 20px; }
           @page { size: A4; margin: 15mm; }

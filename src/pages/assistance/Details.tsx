@@ -677,12 +677,15 @@ export default function AssistanceDetails() {
   };
 
   const handleGenerateFacturePDF = () => {
-    // Ouvrir la facture dans un nouvel onglet avec mode print
-    window.open(`/assistance-facture-template?id=${id}&print=true`, '_blank');
+    // Créer un iframe caché pour générer le PDF automatiquement
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `/assistance-facture-template?id=${id}&download=true`;
+    document.body.appendChild(iframe);
     
     toast({
       title: 'Facture générée',
-      description: 'La facture a été ouverte dans un nouvel onglet. Utilisez Ctrl+P pour la sauvegarder en PDF.',
+      description: 'Le téléchargement du PDF va démarrer automatiquement.',
     });
   };
 

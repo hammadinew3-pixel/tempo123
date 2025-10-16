@@ -137,7 +137,13 @@ export default function FacturesAssurance() {
   const handleGroupInvoice = () => {
     if (selectedForInvoice.length === 0) return;
     const ids = selectedForInvoice.join(',');
-    window.open(`/assistance-facture-template?ids=${ids}&print=true`, '_blank');
+    
+    // Créer un iframe caché pour générer le PDF
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `/assistance-facture-template?ids=${ids}&download=true`;
+    document.body.appendChild(iframe);
+    
     setShowGroupDialog(false);
     setSelectedForInvoice([]);
     setGroupDialogAssurance('all');
@@ -200,8 +206,11 @@ export default function FacturesAssurance() {
   };
 
   const handleDownloadInvoice = (assistanceId: string) => {
-    // Ouvrir la facture dans un nouvel onglet avec mode print
-    window.open(`/assistance-facture-template?id=${assistanceId}&print=true`, '_blank');
+    // Créer un iframe caché pour générer le PDF
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `/assistance-facture-template?id=${assistanceId}&download=true`;
+    document.body.appendChild(iframe);
   };
 
   const handleEditInvoice = (assistanceId: string) => {
