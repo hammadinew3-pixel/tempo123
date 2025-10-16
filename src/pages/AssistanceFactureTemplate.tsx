@@ -287,7 +287,7 @@ export default function AssistanceFactureTemplate() {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          padding: 0 0 8mm 0;
+          padding: 0 0 5mm 0;
           background: white;
         }
         @media print {
@@ -435,7 +435,7 @@ export default function AssistanceFactureTemplate() {
 
         {/* Footer */}
         {!settings?.masquer_pied_page && (
-          <div className="mt-auto text-center text-[9pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+          <div className="mt-auto text-center text-[10pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
             {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
             {settings?.ice && <> | ICE: {settings.ice}</>}
             {settings?.if_number && <> | IF: {settings.if_number}</>}
