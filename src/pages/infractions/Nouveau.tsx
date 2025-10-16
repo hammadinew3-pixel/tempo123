@@ -93,17 +93,14 @@ export default function NouvelleInfraction() {
             .order("change_date", { ascending: true });
 
           if (!changesError && changes && changes.length > 0) {
-            // Déterminer quel véhicule était actif à la date de l'infraction
-            let activeVehicleId = contract.vehicle_id;
+            // Déterminer le véhicule actif à la date cible en partant du véhicule initial (old_vehicle du 1er changement)
+            let activeVehicleId = changes[0]?.old_vehicle_id || contract.vehicle_id;
 
             for (const change of changes) {
               const changeDate = new Date(change.change_date);
               if (infractionDate >= changeDate) {
-                // Le changement a eu lieu avant ou le jour de l'infraction
                 activeVehicleId = change.new_vehicle_id;
               } else {
-                // Le changement est après l'infraction, on garde l'ancien véhicule
-                activeVehicleId = change.old_vehicle_id;
                 break;
               }
             }
@@ -194,13 +191,12 @@ export default function NouvelleInfraction() {
               .order("change_date", { ascending: true });
 
             if (changes && changes.length > 0) {
-              let activeVehicleId = contract.vehicle_id;
+              let activeVehicleId = changes[0]?.old_vehicle_id || contract.vehicle_id;
               for (const change of changes) {
                 const cDate = new Date(change.change_date);
                 if (targetDate >= cDate) {
                   activeVehicleId = change.new_vehicle_id;
                 } else {
-                  activeVehicleId = change.old_vehicle_id;
                   break;
                 }
               }
