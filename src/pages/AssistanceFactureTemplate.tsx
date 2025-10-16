@@ -343,39 +343,6 @@ export default function AssistanceFactureTemplate() {
         </div>
       </div>
 
-      {/* Payment info */}
-      <div className="mb-8 bg-gray-50 p-4 rounded">
-        <h3 className="font-bold mb-2">INFORMATIONS DE PAIEMENT</h3>
-        {isGrouped ? (
-          <p className="text-sm text-orange-600 font-semibold">
-            ⏳ Facture groupée en attente de paiement
-          </p>
-        ) : firstAssistance.etat_paiement === 'paye' && firstAssistance.date_paiement_assurance ? (
-          <p className="text-sm text-green-600 font-semibold">
-            ✓ Facture réglée le {format(new Date(firstAssistance.date_paiement_assurance), 'dd/MM/yyyy', { locale: fr })}
-          </p>
-        ) : firstAssistance.etat_paiement === 'partiellement_paye' ? (
-          <>
-            <p className="text-sm text-orange-600 font-semibold">
-              Partiellement payé : {firstAssistance.montant_paye?.toFixed(2)} DH / {totalTTC.toFixed(2)} DH
-            </p>
-            <p className="text-sm text-gray-600">
-              Reste à payer : {(totalTTC - (firstAssistance.montant_paye || 0)).toFixed(2)} DH
-            </p>
-          </>
-        ) : (
-          <p className="text-sm text-red-600 font-semibold">
-            ⏳ En attente de paiement
-          </p>
-        )}
-      </div>
-
-      {/* Notes */}
-      <div className="mb-8 text-sm text-gray-600">
-        <h3 className="font-bold mb-2">CONDITIONS :</h3>
-        <p>Paiement par l'assurance selon les conditions convenues.</p>
-        <p>TVA non applicable, article 293 B du CGI.</p>
-      </div>
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
