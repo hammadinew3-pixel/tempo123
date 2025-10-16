@@ -30,7 +30,7 @@ async function generateWithBrowserless(templateUrl: string, browserlessToken: st
   if (!pdfResponse.ok) {
     const errorText = await pdfResponse.text();
     console.error('Browserless error:', errorText);
-    throw new Error(`Failed to generate PDF with Browserless: ${pdfResponse.statusText}`);
+    throw new Error(`Failed to generate PDF with Browserless: ${pdfResponse.status} ${pdfResponse.statusText}`);
   }
 
   return await pdfResponse.arrayBuffer();
@@ -64,16 +64,18 @@ serve(async (req) => {
       console.log('Using html2pdf.app for PDF generation');
       
       try {
-        const html2pdfUrl = `https://api.html2pdf.app/v1/generate?apiKey=${HTML2PDF_APP_KEY}&html=${encodeURIComponent(templateUrl)}&pageSize=A4&orientation=portrait&margin=10&printBackground=true`;
+        const html2pdfUrl = `https://api.html2pdf.app/v1/generate?apiKey=${HTML2PDF_APP_KEY}&url=${encodeURIComponent(templateUrl)}&pageSize=A4&orientation=portrait&margin=10mm&printBackground=true`;
+        console.log('Calling html2pdf.app:', html2pdfUrl.substring(0, 200) + '...');
         
         const pdfResponse = await fetch(html2pdfUrl, {
           method: 'GET',
         });
+        console.log('html2pdf.app status:', pdfResponse.status, pdfResponse.statusText);
 
         if (!pdfResponse.ok) {
           const errorText = await pdfResponse.text();
-          console.error('html2pdf.app error:', errorText);
-          throw new Error(`html2pdf.app failed: ${pdfResponse.statusText}`);
+          console.error('html2pdf.app error body:', errorText);
+          throw new Error(`html2pdf.app failed: ${pdfResponse.status} ${pdfResponse.statusText}`);
         }
 
         pdfBuffer = await pdfResponse.arrayBuffer();
