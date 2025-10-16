@@ -1098,25 +1098,18 @@ export default function AssistanceDetails() {
                     description: "Le dossier complet est en cours de génération...",
                   });
 
-                  const { data, error } = await supabase.functions.invoke('generate-assistance-dossier-complet', {
-                    body: { assistanceId: id, baseUrl: window.location.origin }
-                  });
-
-                  if (error) throw error;
-
-                  if (data?.url) {
-                    const link = document.createElement('a');
-                    link.href = data.url;
-                    link.download = data.fileName || 'dossier-complet.pdf';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    toast({
-                      title: "Succès",
-                      description: "Le dossier complet a été téléchargé",
-                    });
-                  }
+                  const url = `${window.location.origin}/assistance-complet-template?id=${id}&download=true`;
+                  const iframe = document.createElement('iframe');
+                  iframe.style.display = 'none';
+                  iframe.src = url;
+                  document.body.appendChild(iframe);
+                  
+                  // Sécurité: cleanup forcé après 60s si le template ne se ferme pas lui-même
+                  setTimeout(() => {
+                    if (iframe.parentNode) {
+                      document.body.removeChild(iframe);
+                    }
+                  }, 60000);
                 } catch (error: any) {
                   console.error('Error generating dossier complet:', error);
                   toast({
