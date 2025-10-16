@@ -122,7 +122,7 @@ export default function AssistanceFactureTemplate() {
             : `Facture_${assistances[0]?.num_dossier || assistanceId}`;
           
           const opt = {
-            margin: 10,
+            margin: [15, 15, 15, 15] as [number, number, number, number],
             filename: `${invoiceNumber}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: { 
@@ -194,19 +194,37 @@ export default function AssistanceFactureTemplate() {
   const assuranceInfo = firstAssistance.assurances || { nom: firstAssistance.assureur_nom };
 
   return (
-    <div id="facture-content" className="max-w-4xl mx-auto p-8 bg-white print:p-0">
+    <div id="facture-content" className="flex flex-col min-h-[297mm] w-[210mm] mx-auto p-8 bg-white print:p-0">
       <style>{`
+        * {
+          box-sizing: border-box;
+        }
         #facture-content {
-          width: 100%;
-          max-width: 190mm;
+          width: 210mm;
+          min-height: 297mm;
           margin: auto;
           overflow: hidden;
+          box-sizing: border-box;
         }
         @media print {
-          body { margin: 0; padding: 20px; }
-          @page { size: A4; margin: 15mm; }
+          body { 
+            margin: 0; 
+            padding: 0; 
+          }
+          @page { 
+            size: A4 portrait; 
+            margin: 15mm; 
+          }
+        }
+        table {
+          page-break-inside: avoid;
+        }
+        .footer {
+          page-break-inside: avoid;
         }
       `}</style>
+
+      <div className="flex-1">
 
       {/* Header */}
       {!settings?.masquer_entete && (
@@ -220,20 +238,12 @@ export default function AssistanceFactureTemplate() {
               />
             </div>
           )}
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
-              <p className="text-sm text-gray-600">N° {invoiceNumber}</p>
-              <p className="text-sm text-gray-600">
-                Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-bold text-lg">{settings?.raison_sociale || "Nom de l'entreprise"}</p>
-              {settings?.adresse && <p className="text-sm">{settings.adresse}</p>}
-              {settings?.telephone && <p className="text-sm">Téléphone : {settings.telephone}</p>}
-              {settings?.email && <p className="text-sm">Email : {settings.email}</p>}
-            </div>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
+            <p className="text-sm text-gray-600">N° {invoiceNumber}</p>
+            <p className="text-sm text-gray-600">
+              Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
+            </p>
           </div>
 
           <div className="border-t-2 border-gray-300 pt-4">
@@ -260,24 +270,11 @@ export default function AssistanceFactureTemplate() {
                     {firstAssistance.clients?.cin && (
                       <p className="text-sm">CIN : {firstAssistance.clients.cin}</p>
                     )}
-                    {firstAssistance.clients?.telephone && (
-                      <p className="text-sm">Tél : {firstAssistance.clients.telephone}</p>
-                    )}
                   </>
                 )}
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Dossier information */}
-      {!isGrouped && (
-        <div className="mb-6 bg-gray-50 p-4 rounded">
-          <p className="text-sm"><span className="font-semibold">Dossier N° :</span> {firstAssistance.num_dossier}</p>
-          <p className="text-sm">
-            <span className="font-semibold">Période :</span> Du {format(new Date(firstAssistance.date_debut), 'dd/MM/yyyy', { locale: fr })} au {format(new Date(firstAssistance.date_fin || new Date()), 'dd/MM/yyyy', { locale: fr })}
-          </p>
         </div>
       )}
 
@@ -343,43 +340,11 @@ export default function AssistanceFactureTemplate() {
         </div>
       </div>
 
-      {/* Payment info */}
-      <div className="mb-8 bg-gray-50 p-4 rounded">
-        <h3 className="font-bold mb-2">INFORMATIONS DE PAIEMENT</h3>
-        {isGrouped ? (
-          <p className="text-sm text-orange-600 font-semibold">
-            ⏳ Facture groupée en attente de paiement
-          </p>
-        ) : firstAssistance.etat_paiement === 'paye' && firstAssistance.date_paiement_assurance ? (
-          <p className="text-sm text-green-600 font-semibold">
-            ✓ Facture réglée le {format(new Date(firstAssistance.date_paiement_assurance), 'dd/MM/yyyy', { locale: fr })}
-          </p>
-        ) : firstAssistance.etat_paiement === 'partiellement_paye' ? (
-          <>
-            <p className="text-sm text-orange-600 font-semibold">
-              Partiellement payé : {firstAssistance.montant_paye?.toFixed(2)} DH / {totalTTC.toFixed(2)} DH
-            </p>
-            <p className="text-sm text-gray-600">
-              Reste à payer : {(totalTTC - (firstAssistance.montant_paye || 0)).toFixed(2)} DH
-            </p>
-          </>
-        ) : (
-          <p className="text-sm text-red-600 font-semibold">
-            ⏳ En attente de paiement
-          </p>
-        )}
-      </div>
-
-      {/* Notes */}
-      <div className="mb-8 text-sm text-gray-600">
-        <h3 className="font-bold mb-2">CONDITIONS :</h3>
-        <p>Paiement par l'assurance selon les conditions convenues.</p>
-        <p>TVA non applicable, article 293 B du CGI.</p>
       </div>
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
+        <div className="footer mt-auto border-t-2 border-gray-300 pt-4 text-center text-xs text-gray-500">
           <p>
             {settings?.raison_sociale || "Nom de l'entreprise"}
             {settings?.rc && ` - RC: ${settings.rc}`}
@@ -389,7 +354,6 @@ export default function AssistanceFactureTemplate() {
             {settings?.patente && ` - Patente: ${settings.patente}`}
           </p>
           {settings?.adresse && <p>Siège social : {settings.adresse}</p>}
-          <p className="mt-2">Document généré le {format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })}</p>
         </div>
       )}
     </div>
