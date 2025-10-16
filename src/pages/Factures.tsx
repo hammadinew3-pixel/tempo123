@@ -53,6 +53,7 @@ export default function FacturesAssurance() {
           vehicles (marque, modele, immatriculation),
           assurances (nom)
         `)
+        .not('assureur_id', 'is', null)
         .order('created_at', { ascending: false });
 
       const { data: assurancesData } = await supabase
