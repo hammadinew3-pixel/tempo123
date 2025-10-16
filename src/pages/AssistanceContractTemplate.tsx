@@ -331,10 +331,13 @@ export default function AssistanceContractTemplate() {
 
           {/* Footer */}
           {!agenceSettings?.masquer_pied_page && (
-            <div className="text-center text-[7pt] text-gray-600 mt-2 pt-2 border-t border-gray-400">
+            <div className="text-center text-[10pt] text-gray-600 mt-2 pt-2 border-t border-gray-400">
               {agenceSettings?.raison_sociale && <><strong>{agenceSettings.raison_sociale}</strong></>}
               {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
+              {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
               {agenceSettings?.rc && <> | RC: {agenceSettings.rc}</>}
+              {agenceSettings?.cnss && <> | CNSS: {agenceSettings.cnss}</>}
+              {agenceSettings?.patente && <> | Patente: {agenceSettings.patente}</>}
               <br/>
               {agenceSettings?.adresse && <>Adresse: {agenceSettings.adresse}</>}
               {agenceSettings?.telephone && <> | Tél: {agenceSettings.telephone}</>}
