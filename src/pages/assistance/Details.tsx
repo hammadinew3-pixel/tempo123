@@ -679,17 +679,55 @@ export default function AssistanceDetails() {
   const handleGenerateFacturePDF = async () => {
     try {
       toast({
-        title: "Génération de la facture",
+        title: "Génération de la facture PDF",
         description: "Veuillez patienter...",
       });
 
-      // Open facture template in new tab
-      const factureUrl = `/assistance-facture-template?id=${id}`;
-      window.open(factureUrl, '_blank');
+      // Use html2pdf for client-side PDF generation
+      const { default: html2pdf } = await import('html2pdf.js');
+      
+      // Open template in hidden iframe
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      // Load template
+      iframe.src = `/assistance-facture-template?id=${id}&print=true`;
+
+      // Wait for iframe to load
+      await new Promise((resolve) => {
+        iframe.onload = resolve;
+      });
+
+      // Wait a bit more for content to render
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      
+      if (!iframeDoc) {
+        throw new Error('Unable to access iframe document');
+      }
+
+      const element = iframeDoc.body;
+
+      const opt: any = {
+        margin: [10, 10, 10, 10],
+        filename: `facture-${assistance?.num_dossier || id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+
+      document.body.removeChild(iframe);
 
       toast({
-        title: 'Facture générée',
-        description: 'La facture a été ouverte dans un nouvel onglet',
+        title: 'Facture téléchargée',
+        description: 'La facture PDF a été téléchargée avec succès',
       });
     } catch (error: any) {
       console.error('Erreur génération facture:', error);
