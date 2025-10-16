@@ -965,12 +965,10 @@ export default function LocationDetails() {
     ? `${contract.clients.nom} ${contract.clients.prenom || ""}`.trim()
     : "Client inconnu";
 
+  const totalAmount = contract.total_amount || 0;
+  const paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.montant), 0);
+  const remainingAmount = totalAmount - paidAmount;
   const duration = calculateDuration(contract.date_debut, contract.date_fin);
-  const dailyRateNumber = Number(contract.daily_rate) || 0;
-  const computedTotal = duration * dailyRateNumber;
-  const totalAmount = Number(contract.total_amount) > 0 ? Number(contract.total_amount) : computedTotal;
-  const paidAmount = payments.reduce((sum, p) => sum + Number(p.montant || 0), 0);
-  const remainingAmount = Math.max(totalAmount - paidAmount, 0);
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
