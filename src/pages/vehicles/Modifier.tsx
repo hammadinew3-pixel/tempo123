@@ -105,7 +105,7 @@ export default function ModifierVehicule() {
         immatriculation: data.immatriculation || '',
         annee: data.annee || new Date().getFullYear(),
         categorie: data.categorie || 'A',
-        categories: [],
+        categories: data.categories || [],
         kilometrage: data.kilometrage || 0,
         tarif_journalier: data.tarif_journalier || 0,
         valeur_achat: data.valeur_achat || 0,
