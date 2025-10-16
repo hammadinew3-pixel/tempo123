@@ -22,7 +22,6 @@ import AssistanceDetails from "./pages/assistance/Details";
 import Assurances from "./pages/Assurances";
 import Factures from "./pages/Factures";
 import Calendrier from "./pages/Calendrier";
-import Statistiques from "./pages/Statistiques";
 import Revenus from "./pages/Revenus";
 import Charges from "./pages/Charges";
 import Cheques from "./pages/Cheques";
@@ -210,14 +209,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Factures /></Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/statistiques"
-              element={
-                <ProtectedRoute>
-                  <Layout><Statistiques /></Layout>
                 </ProtectedRoute>
               }
             />

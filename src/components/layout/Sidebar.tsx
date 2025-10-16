@@ -99,7 +99,6 @@ const getMainNavItems = (isAdmin: boolean): NavItem[] => [
   { title: "Chèques", href: "/cheques", icon: CreditCard },
   { title: "Revenus", href: "/revenus", icon: TrendingUp },
   { title: "Charges", href: "/charges", icon: DollarSign },
-  { title: "Statistiques", href: "/statistiques", icon: BarChart },
   { title: "Rapports", href: "/rapports", icon: BarChart3 },
   { title: "Historique", href: "/historique", icon: Clock },
   { title: "Importer", href: "/importer", icon: Upload },
