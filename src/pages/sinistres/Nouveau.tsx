@@ -161,6 +161,19 @@ export default function NouveauSinistre() {
 
       if (sinistreError) throw sinistreError;
 
+      // Mettre le véhicule en statut "immobilisé" si un véhicule est associé
+      if (formData.vehicle_id) {
+        const { error: vehicleError } = await supabase
+          .from('vehicles')
+          .update({ statut: 'immobilise' })
+          .eq('id', formData.vehicle_id);
+
+        if (vehicleError) {
+          console.error('Erreur lors de la mise à jour du statut du véhicule:', vehicleError);
+          // On continue même en cas d'erreur pour ne pas bloquer la création du sinistre
+        }
+      }
+
       // Upload files if any
       if (uploadedFiles.length > 0 && sinistre) {
         for (const file of uploadedFiles) {
