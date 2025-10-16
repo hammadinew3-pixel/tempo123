@@ -1,252 +1,535 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+import { Plus, Download, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { exportToExcel } from '@/lib/exportUtils';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DollarSign, TrendingUp, Calendar, FileText, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { useUserRole } from "@/hooks/use-user-role";
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-type Revenue = {
+interface Revenue {
   id: string;
-  numero_contrat: string;
-  date_debut: string;
-  date_fin: string;
-  total_amount: number;
-  advance_payment: number;
-  remaining_amount: number;
+  date_encaissement: string;
+  source_revenu: string;
+  montant: number;
+  mode_paiement: string;
   statut: string;
-  client?: {
-    nom: string;
-    prenom: string;
-  };
-  vehicle?: {
-    marque: string;
-    modele: string;
-    immatriculation: string;
-  };
-};
+  client_id?: string;
+  contract_id?: string;
+  note?: string;
+  clients?: { nom: string; prenom: string };
+  contracts?: { numero_contrat: string };
+}
 
 export default function Revenus() {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
   const [revenues, setRevenues] = useState<Revenue[]>([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [filteredRevenue, setFilteredRevenue] = useState(0);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [filteredRevenues, setFilteredRevenues] = useState<Revenue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterSource, setFilterSource] = useState('all');
+  const [filterStatut, setFilterStatut] = useState('all');
+  const [filterPeriod, setFilterPeriod] = useState('all');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const { isAdmin } = useUserRole();
+
+  const [formData, setFormData] = useState({
+    date_encaissement: new Date().toISOString().split('T')[0],
+    source_revenu: 'contrat',
+    montant: '',
+    mode_paiement: 'espece',
+    statut: 'paye',
+    note: '',
+  });
 
   useEffect(() => {
     loadRevenues();
   }, []);
 
+  useEffect(() => {
+    applyFilters();
+  }, [revenues, searchTerm, filterSource, filterStatut, filterPeriod]);
+
   const loadRevenues = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('contracts')
+        .from('revenus')
         .select(`
           *,
           clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
+          contracts (numero_contrat)
         `)
-        .in('statut', ['contrat_valide', 'livre', 'retour_effectue', 'termine'])
-        .order('date_debut', { ascending: false });
+        .order('date_encaissement', { ascending: false });
 
       if (error) throw error;
-
-      const revenuesData = data as Revenue[];
-      setRevenues(revenuesData);
-      
-      const total = revenuesData.reduce((sum, r) => sum + (r.total_amount || 0), 0);
-      setTotalRevenue(total);
-      setFilteredRevenue(total);
-    } catch (error: any) {
+      setRevenues(data || []);
+    } catch (error) {
+      console.error('Error loading revenues:', error);
       toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
+        title: "Erreur",
+        description: "Impossible de charger les revenus",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const filterRevenues = () => {
-    let filtered = revenues;
+  const applyFilters = () => {
+    let filtered = [...revenues];
 
-    if (startDate) {
-      filtered = filtered.filter(r => r.date_debut >= startDate);
+    if (searchTerm) {
+      filtered = filtered.filter(r =>
+        r.note?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.clients?.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.contracts?.numero_contrat.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    if (endDate) {
-      filtered = filtered.filter(r => r.date_debut <= endDate);
+    if (filterSource !== 'all') {
+      filtered = filtered.filter(r => r.source_revenu === filterSource);
     }
 
-    const total = filtered.reduce((sum, r) => sum + (r.total_amount || 0), 0);
-    setFilteredRevenue(total);
+    if (filterStatut !== 'all') {
+      filtered = filtered.filter(r => r.statut === filterStatut);
+    }
+
+    if (filterPeriod !== 'all') {
+      const now = new Date();
+      const startOfPeriod = new Date();
+      
+      if (filterPeriod === 'month') {
+        startOfPeriod.setMonth(now.getMonth());
+        startOfPeriod.setDate(1);
+      } else if (filterPeriod === 'week') {
+        startOfPeriod.setDate(now.getDate() - 7);
+      }
+      
+      filtered = filtered.filter(r => new Date(r.date_encaissement) >= startOfPeriod);
+    }
+
+    setFilteredRevenues(filtered);
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      contrat_valide: 'bg-blue-100 text-blue-800',
-      livre: 'bg-green-100 text-green-800',
-      retour_effectue: 'bg-amber-100 text-amber-800',
-      termine: 'bg-indigo-100 text-indigo-800',
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('revenus')
+        .insert([{
+          ...formData,
+          montant: parseFloat(formData.montant),
+        }]);
 
-    const labels: Record<string, string> = {
-      contrat_valide: 'Validé',
-      livre: 'En cours',
-      retour_effectue: 'Retourné',
-      termine: 'Terminé',
-    };
+      if (error) throw error;
 
-    return (
-      <Badge className={`${styles[status]} border-0`}>
-        {labels[status] || status}
-      </Badge>
-    );
+      toast({
+        title: "Succès",
+        description: "Revenu ajouté avec succès",
+      });
+      setIsDialogOpen(false);
+      setFormData({
+        date_encaissement: new Date().toISOString().split('T')[0],
+        source_revenu: 'contrat',
+        montant: '',
+        mode_paiement: 'espece',
+        statut: 'paye',
+        note: '',
+      });
+      loadRevenues();
+    } catch (error) {
+      console.error('Error adding revenue:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter le revenu",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce revenu ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('revenus')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Revenu supprimé",
+      });
+      loadRevenues();
+    } catch (error) {
+      console.error('Error deleting revenue:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le revenu",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getTotalAmount = () => {
+    return filteredRevenues.reduce((sum, r) => sum + r.montant, 0);
+  };
+
+  const getMonthlyData = () => {
+    const monthlyTotals: Record<string, number> = {};
+    filteredRevenues.forEach(r => {
+      const month = format(new Date(r.date_encaissement), 'MMM yyyy', { locale: fr });
+      monthlyTotals[month] = (monthlyTotals[month] || 0) + r.montant;
+    });
+    return Object.entries(monthlyTotals).map(([month, total]) => ({ month, total }));
+  };
+
+  const exportData = () => {
+    const exportData = filteredRevenues.map(r => ({
+      'Date': r.date_encaissement,
+      'Source': r.source_revenu,
+      'Montant (DH)': r.montant.toFixed(2),
+      'Mode Paiement': r.mode_paiement,
+      'Statut': r.statut,
+      'Client': r.clients ? `${r.clients.nom} ${r.clients.prenom}` : '',
+      'Contrat': r.contracts?.numero_contrat || '',
+      'Note': r.note || '',
+    }));
+    exportToExcel(exportData, 'revenus');
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Chargement des revenus...</p>
-      </div>
-    );
+    return <div className="text-center py-8 text-muted-foreground">Chargement...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Revenus</h1>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <TrendingUp className="w-6 h-6" />
+            Revenus & Encaissements
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Suivi des revenus générés par les locations
+            Suivez tous vos encaissements et revenus
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportData}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporter
+          </Button>
+          {isAdmin && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvel Encaissement
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Ajouter un Encaissement</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Date</Label>
+                      <Input
+                        type="date"
+                        value={formData.date_encaissement}
+                        onChange={(e) => setFormData({ ...formData, date_encaissement: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Source</Label>
+                      <Select value={formData.source_revenu} onValueChange={(value) => setFormData({ ...formData, source_revenu: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="contrat">Contrat</SelectItem>
+                          <SelectItem value="vente">Vente</SelectItem>
+                          <SelectItem value="remboursement">Remboursement</SelectItem>
+                          <SelectItem value="autre">Autre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Montant (DH)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.montant}
+                        onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mode de paiement</Label>
+                      <Select value={formData.mode_paiement} onValueChange={(value) => setFormData({ ...formData, mode_paiement: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="espece">Espèce</SelectItem>
+                          <SelectItem value="virement">Virement</SelectItem>
+                          <SelectItem value="cheque">Chèque</SelectItem>
+                          <SelectItem value="carte">Carte</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Statut</Label>
+                      <Select value={formData.statut} onValueChange={(value) => setFormData({ ...formData, statut: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="paye">Payé</SelectItem>
+                          <SelectItem value="partiel">Partiel</SelectItem>
+                          <SelectItem value="en_attente">En attente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Note</Label>
+                    <Textarea
+                      value={formData.note}
+                      onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                      placeholder="Informations complémentaires..."
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">Ajouter</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenu total</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-sm">Total Encaissé</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRevenue.toFixed(2)} DH</div>
-            <p className="text-xs text-muted-foreground">
-              Tous les contrats
+            <p className="text-3xl font-bold text-green-600">
+              {getTotalAmount().toFixed(2)} DH
             </p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenu filtré</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-sm">Nombre d'Encaissements</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{filteredRevenue.toFixed(2)} DH</div>
-            <p className="text-xs text-muted-foreground">
-              Période sélectionnée
+            <p className="text-3xl font-bold text-primary">{filteredRevenues.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">En Attente</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-orange-600">
+              {filteredRevenues.filter(r => r.statut === 'en_attente').reduce((sum, r) => sum + r.montant, 0).toFixed(2)} DH
             </p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Contrats</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-sm">Moyenne par Encaissement</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{revenues.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Total des locations
+            <p className="text-3xl font-bold text-blue-600">
+              {filteredRevenues.length > 0 ? (getTotalAmount() / filteredRevenues.length).toFixed(2) : 0} DH
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Graphique */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Encaissements par Mois</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={getMonthlyData()}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="total" fill="hsl(var(--primary))" name="Total (DH)" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Filtres */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Filtrer par période</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            Filtres
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>Date de début</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+              <Label>Rechercher</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Client, contrat, note..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Date de fin</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+              <Label>Source</Label>
+              <Select value={filterSource} onValueChange={setFilterSource}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="contrat">Contrat</SelectItem>
+                  <SelectItem value="vente">Vente</SelectItem>
+                  <SelectItem value="remboursement">Remboursement</SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-end">
-              <Button onClick={filterRevenues} className="w-full">
-                <Search className="w-4 h-4 mr-2" />
-                Filtrer
-              </Button>
+            <div className="space-y-2">
+              <Label>Statut</Label>
+              <Select value={filterStatut} onValueChange={setFilterStatut}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="paye">Payé</SelectItem>
+                  <SelectItem value="partiel">Partiel</SelectItem>
+                  <SelectItem value="en_attente">En attente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Période</Label>
+              <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="week">Cette semaine</SelectItem>
+                  <SelectItem value="month">Ce mois</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Liste des revenus */}
+      {/* Tableau */}
       <Card>
         <CardHeader>
-          <CardTitle>Détails des revenus</CardTitle>
+          <CardTitle>Liste des Encaissements</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {revenues.map((revenue) => (
-              <div
-                key={revenue.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold">{revenue.numero_contrat}</p>
-                    {getStatusBadge(revenue.statut)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {revenue.client?.nom} {revenue.client?.prenom} • {revenue.vehicle?.marque} {revenue.vehicle?.modele}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <Calendar className="w-3 h-3 inline mr-1" />
-                    {format(new Date(revenue.date_debut), 'dd MMM yyyy', { locale: fr })} - {format(new Date(revenue.date_fin), 'dd MMM yyyy', { locale: fr })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-primary">{revenue.total_amount?.toFixed(2)} DH</p>
-                  <p className="text-xs text-muted-foreground">
-                    Acompte: {revenue.advance_payment?.toFixed(2)} DH
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Reste: {revenue.remaining_amount?.toFixed(2)} DH
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            {revenues.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                Aucun revenu enregistré
-              </div>
-            )}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Contrat</TableHead>
+                  <TableHead className="text-right">Montant</TableHead>
+                  <TableHead>Mode Paiement</TableHead>
+                  <TableHead>Statut</TableHead>
+                  {isAdmin && <TableHead>Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRevenues.map((revenue) => (
+                  <TableRow key={revenue.id}>
+                    <TableCell>{format(new Date(revenue.date_encaissement), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell className="capitalize">{revenue.source_revenu}</TableCell>
+                    <TableCell>
+                      {revenue.clients ? `${revenue.clients.nom} ${revenue.clients.prenom}` : '-'}
+                    </TableCell>
+                    <TableCell>{revenue.contracts?.numero_contrat || '-'}</TableCell>
+                    <TableCell className="text-right font-medium text-green-600">
+                      {revenue.montant.toFixed(2)} DH
+                    </TableCell>
+                    <TableCell className="capitalize">{revenue.mode_paiement}</TableCell>
+                    <TableCell>
+                      <Badge variant={revenue.statut === 'paye' ? 'default' : revenue.statut === 'partiel' ? 'secondary' : 'outline'}>
+                        {revenue.statut === 'paye' ? 'Payé' : 
+                         revenue.statut === 'partiel' ? 'Partiel' : 'En attente'}
+                      </Badge>
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(revenue.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

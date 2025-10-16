@@ -1,195 +1,173 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+import { Plus, Download, TrendingDown, Filter, Search, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { exportToExcel } from '@/lib/exportUtils';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, DollarSign, TrendingDown, FileText, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { useUserRole } from "@/hooks/use-user-role";
 
-type Expense = {
+interface Expense {
   id: string;
-  categorie: string;
-  montant: number;
   date_depense: string;
-  description: string | null;
-  vehicle_id: string | null;
-  vehicle?: {
-    marque: string;
-    modele: string;
-    immatriculation: string;
-  };
-  source?: 'expense' | 'traite'; // Pour différencier les sources
-};
+  type_depense: string;
+  montant: number;
+  mode_paiement: string;
+  description: string;
+  statut: string;
+  vehicle_id?: string;
+  contract_id?: string;
+  fournisseur?: string;
+  vehicles?: { immatriculation: string; marque: string; modele: string };
+  contracts?: { numero_contrat: string };
+}
+
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function Charges() {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [filterStatut, setFilterStatut] = useState('all');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
-  const [loading, setLoading] = useState(true);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [totalExpenses, setTotalExpenses] = useState(0);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const [formData, setFormData] = useState({
-    categorie: 'entretien' as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'traite' | 'autres',
-    montant: 0,
-    date_depense: format(new Date(), 'yyyy-MM-dd'),
+    date_depense: new Date().toISOString().split('T')[0],
+    type_depense: 'autre',
+    montant: '',
+    mode_paiement: 'espece',
     description: '',
-    vehicle_id: '',
+    statut: 'paye',
+    fournisseur: '',
   });
 
   useEffect(() => {
     loadExpenses();
-    loadVehicles();
   }, []);
 
+  useEffect(() => {
+    applyFilters();
+  }, [expenses, searchTerm, filterType, filterStatut]);
+
   const loadExpenses = async () => {
+    setLoading(true);
     try {
-      // Charger les dépenses normales
-      const { data: expensesData, error: expensesError } = await supabase
+      const { data, error } = await supabase
         .from('expenses')
         .select(`
           *,
-          vehicles (marque, modele, immatriculation)
+          vehicles (immatriculation, marque, modele),
+          contracts (numero_contrat)
         `)
         .order('date_depense', { ascending: false });
 
-      if (expensesError) throw expensesError;
-
-      // Charger les traites payées
-      const { data: traitesData, error: traitesError } = await supabase
-        .from('vehicules_traites_echeances')
-        .select(`
-          *,
-          vehicles:vehicle_id (marque, modele, immatriculation)
-        `) as any;
-
-      if (traitesError) throw traitesError;
-
-      // Formater les dépenses normales
-      const formattedExpenses: Expense[] = (expensesData || []).map(e => ({
-        id: e.id,
-        categorie: e.categorie,
-        montant: e.montant || 0,
-        date_depense: e.date_depense,
-        description: e.description,
-        vehicle_id: e.vehicle_id,
-        vehicle: e.vehicles,
-        source: 'expense' as const
-      }));
-
-      // Formater les traites comme des charges
-      const formattedTraites: Expense[] = (traitesData || []).map(t => ({
-        id: t.id,
-        categorie: 'traite',
-        montant: t.montant ? parseFloat(t.montant.toString()) : 0,
-        date_depense: t.date_paiement || t.date_echeance,
-        description: t.notes || `Traite bancaire - Échéance du ${format(new Date(t.date_echeance), 'dd/MM/yyyy')}`,
-        vehicle_id: t.vehicle_id,
-        vehicle: t.vehicles,
-        source: 'traite' as const
-      }));
-
-      // Combiner et trier toutes les charges par date
-      const allExpenses = [...formattedExpenses, ...formattedTraites].sort((a, b) => 
-        new Date(b.date_depense).getTime() - new Date(a.date_depense).getTime()
-      );
-
-      setExpenses(allExpenses);
-      
-      const total = allExpenses.reduce((sum, e) => sum + (e.montant || 0), 0);
-      setTotalExpenses(total);
-    } catch (error: any) {
+      if (error) throw error;
+      setExpenses(data || []);
+    } catch (error) {
+      console.error('Error loading expenses:', error);
       toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
+        title: "Erreur",
+        description: "Impossible de charger les dépenses",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const loadVehicles = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('*')
-        .order('marque');
+  const applyFilters = () => {
+    let filtered = [...expenses];
 
-      if (error) throw error;
-      setVehicles(data || []);
-    } catch (error: any) {
-      console.error('Erreur chargement véhicules:', error);
+    if (searchTerm) {
+      filtered = filtered.filter(e =>
+        e.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        e.fournisseur?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
+
+    if (filterType !== 'all') {
+      filtered = filtered.filter(e => e.type_depense === filterType);
+    }
+
+    if (filterStatut !== 'all') {
+      filtered = filtered.filter(e => e.statut === filterStatut);
+    }
+
+    setFilteredExpenses(filtered);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
     try {
-      // Empêcher l'ajout manuel de traites (elles sont auto-générées)
-      if (formData.categorie === 'traite') {
-        toast({
-          title: 'Information',
-          description: 'Les traites bancaires sont gérées automatiquement depuis la page du véhicule',
-          variant: 'default',
-        });
-        setLoading(false);
-        return;
-      }
-
-      const { error } = await supabase.from('expenses').insert([{
-        categorie: formData.categorie as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'autres',
-        montant: formData.montant,
-        date_depense: formData.date_depense,
-        description: formData.description || null,
-        vehicle_id: formData.vehicle_id || null,
-      }]);
+      const { error } = await supabase
+        .from('expenses')
+        .insert([{
+          ...formData,
+          montant: parseFloat(formData.montant),
+        }]);
 
       if (error) throw error;
 
       toast({
-        title: 'Succès',
-        description: 'Charge ajoutée avec succès',
+        title: "Succès",
+        description: "Dépense ajoutée avec succès",
       });
-
       setIsDialogOpen(false);
-      resetForm();
-      loadExpenses();
-    } catch (error: any) {
-      toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
+      setFormData({
+        date_depense: new Date().toISOString().split('T')[0],
+        type_depense: 'autre',
+        montant: '',
+        mode_paiement: 'espece',
+        description: '',
+        statut: 'paye',
+        fournisseur: '',
       });
-    } finally {
-      setLoading(false);
+      loadExpenses();
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter la dépense",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleDelete = async (id: string, source: 'expense' | 'traite' = 'expense') => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette charge ?')) return;
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette dépense ?')) return;
 
     try {
-      if (source === 'traite') {
-        // Ne pas permettre la suppression des traites depuis cette page
-        toast({
-          title: 'Information',
-          description: 'Les traites bancaires doivent être gérées depuis la page du véhicule',
-          variant: 'default',
-        });
-        return;
-      }
-
       const { error } = await supabase
         .from('expenses')
         .delete()
@@ -198,259 +176,342 @@ export default function Charges() {
       if (error) throw error;
 
       toast({
-        title: 'Succès',
-        description: 'Charge supprimée',
+        title: "Succès",
+        description: "Dépense supprimée",
       });
-
       loadExpenses();
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error deleting expense:', error);
       toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
+        title: "Erreur",
+        description: "Impossible de supprimer la dépense",
+        variant: "destructive",
       });
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      categorie: 'entretien' as 'entretien' | 'assurance' | 'loyer' | 'marketing' | 'salaires' | 'traite' | 'autres',
-      montant: 0,
-      date_depense: format(new Date(), 'yyyy-MM-dd'),
-      description: '',
-      vehicle_id: '',
+  const getTotalByType = () => {
+    const totals: Record<string, number> = {};
+    filteredExpenses.forEach(e => {
+      totals[e.type_depense] = (totals[e.type_depense] || 0) + e.montant;
     });
+    return Object.entries(totals).map(([name, value]) => ({ name, value }));
   };
 
-  const getCategoryBadge = (category: string) => {
-    const styles: Record<string, string> = {
-      entretien: 'bg-blue-100 text-blue-800',
-      assurance: 'bg-purple-100 text-purple-800',
-      loyer: 'bg-amber-100 text-amber-800',
-      marketing: 'bg-green-100 text-green-800',
-      salaires: 'bg-indigo-100 text-indigo-800',
-      traite: 'bg-rose-100 text-rose-800',
-      autres: 'bg-gray-100 text-gray-800',
-    };
+  const getTotalAmount = () => {
+    return filteredExpenses.reduce((sum, e) => sum + e.montant, 0);
+  };
 
-    return (
-      <Badge className={`${styles[category] || styles.autres} border-0`}>
-        {category.charAt(0).toUpperCase() + category.slice(1)}
-      </Badge>
-    );
+  const exportData = () => {
+    const exportData = filteredExpenses.map(e => ({
+      'Date': e.date_depense,
+      'Type': e.type_depense,
+      'Montant (DH)': e.montant.toFixed(2),
+      'Mode Paiement': e.mode_paiement,
+      'Statut': e.statut,
+      'Fournisseur': e.fournisseur || '',
+      'Description': e.description,
+    }));
+    exportToExcel(exportData, 'charges');
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-muted-foreground">Chargement des charges...</p>
-      </div>
-    );
+    return <div className="text-center py-8 text-muted-foreground">Chargement...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Charges</h1>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <TrendingDown className="w-6 h-6" />
+            Charges & Dépenses
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Gestion des dépenses et charges
+            Gérez toutes vos dépenses et charges de l'agence
           </p>
         </div>
-        {isAdmin && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle charge
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Ajouter une charge</DialogTitle>
-              <DialogDescription>
-                Enregistrez une nouvelle dépense
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Catégorie *</Label>
-                <Select
-                  value={formData.categorie}
-                  onValueChange={(value) => setFormData({ ...formData, categorie: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entretien">Entretien</SelectItem>
-                    <SelectItem value="assurance">Assurance</SelectItem>
-                    <SelectItem value="loyer">Loyer</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="salaires">Salaires</SelectItem>
-                    <SelectItem value="traite">Traite</SelectItem>
-                    <SelectItem value="autres">Autres</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Véhicule (optionnel)</Label>
-                <Select
-                  value={formData.vehicle_id}
-                  onValueChange={(value) => setFormData({ ...formData, vehicle_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un véhicule" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vehicles.map((vehicle) => (
-                      <SelectItem key={vehicle.id} value={vehicle.id}>
-                        {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Montant (DH) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={formData.montant}
-                  onChange={(e) => setFormData({ ...formData, montant: parseFloat(e.target.value) })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Date *</Label>
-                <Input
-                  type="date"
-                  value={formData.date_depense}
-                  onChange={(e) => setFormData({ ...formData, date_depense: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Détails de la dépense..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Annuler
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportData}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporter
+          </Button>
+          {isAdmin && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvelle Dépense
                 </Button>
-                <Button type="submit" disabled={loading}>
-                  Ajouter
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-        )}
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Ajouter une Dépense</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Date</Label>
+                      <Input
+                        type="date"
+                        value={formData.date_depense}
+                        onChange={(e) => setFormData({ ...formData, date_depense: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Type de dépense</Label>
+                      <Select value={formData.type_depense} onValueChange={(value) => setFormData({ ...formData, type_depense: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="carburant">Carburant</SelectItem>
+                          <SelectItem value="entretien">Entretien</SelectItem>
+                          <SelectItem value="assurance">Assurance</SelectItem>
+                          <SelectItem value="amende">Amende</SelectItem>
+                          <SelectItem value="reparation">Réparation</SelectItem>
+                          <SelectItem value="autre">Autre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Montant (DH)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.montant}
+                        onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mode de paiement</Label>
+                      <Select value={formData.mode_paiement} onValueChange={(value) => setFormData({ ...formData, mode_paiement: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="espece">Espèce</SelectItem>
+                          <SelectItem value="virement">Virement</SelectItem>
+                          <SelectItem value="cheque">Chèque</SelectItem>
+                          <SelectItem value="carte">Carte</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Statut</Label>
+                      <Select value={formData.statut} onValueChange={(value) => setFormData({ ...formData, statut: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="paye">Payé</SelectItem>
+                          <SelectItem value="en_attente">En attente</SelectItem>
+                          <SelectItem value="recurrente">Récurrente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Fournisseur</Label>
+                      <Input
+                        value={formData.fournisseur}
+                        onChange={(e) => setFormData({ ...formData, fournisseur: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Détails de la dépense..."
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">Ajouter</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
-      {/* Statistiques */}
+      {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total des charges</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-sm">Total des Dépenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{totalExpenses.toFixed(2)} DH</div>
-            <p className="text-xs text-muted-foreground">
-              Toutes catégories confondues
+            <p className="text-3xl font-bold text-destructive">
+              {getTotalAmount().toFixed(2)} DH
             </p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nombre de charges</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-sm">Nombre de Dépenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{expenses.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Dépenses enregistrées
-            </p>
+            <p className="text-3xl font-bold text-primary">{filteredExpenses.length}</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Moyenne par charge</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-sm">En Attente</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {expenses.length > 0 ? (totalExpenses / expenses.length).toFixed(2) : 0} DH
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Montant moyen
+            <p className="text-3xl font-bold text-orange-600">
+              {filteredExpenses.filter(e => e.statut === 'en_attente').length}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Liste des charges */}
+      {/* Graphique */}
       <Card>
         <CardHeader>
-          <CardTitle>Liste des charges</CardTitle>
+          <CardTitle>Répartition par Type</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {expenses.map((expense) => (
-              <div
-                key={expense.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={getTotalByType()}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    {getCategoryBadge(expense.categorie)}
-                    {expense.vehicle && (
-                      <span className="text-sm text-muted-foreground">
-                        {expense.vehicle.marque} {expense.vehicle.modele}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm">{expense.description || 'Aucune description'}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(expense.date_depense), 'dd MMMM yyyy', { locale: fr })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <p className="text-lg font-bold text-red-600">{expense.montant.toFixed(2)} DH</p>
-                  {isAdmin && expense.source !== 'traite' && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(expense.id, expense.source)}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  )}
-                  {expense.source === 'traite' && (
-                    <Badge variant="outline" className="text-xs">Auto</Badge>
-                  )}
-                </div>
-              </div>
-            ))}
+                {getTotalByType().map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-            {expenses.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                Aucune charge enregistrée
+      {/* Filtres */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Filter className="w-4 h-4" />
+            Filtres
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Rechercher</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Description, fournisseur..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
               </div>
-            )}
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="carburant">Carburant</SelectItem>
+                  <SelectItem value="entretien">Entretien</SelectItem>
+                  <SelectItem value="assurance">Assurance</SelectItem>
+                  <SelectItem value="amende">Amende</SelectItem>
+                  <SelectItem value="reparation">Réparation</SelectItem>
+                  <SelectItem value="autre">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Statut</Label>
+              <Select value={filterStatut} onValueChange={setFilterStatut}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="paye">Payé</SelectItem>
+                  <SelectItem value="en_attente">En attente</SelectItem>
+                  <SelectItem value="recurrente">Récurrente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tableau */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Dépenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Fournisseur</TableHead>
+                  <TableHead className="text-right">Montant</TableHead>
+                  <TableHead>Mode Paiement</TableHead>
+                  <TableHead>Statut</TableHead>
+                  {isAdmin && <TableHead>Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredExpenses.map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell>{expense.date_depense}</TableCell>
+                    <TableCell className="capitalize">{expense.type_depense}</TableCell>
+                    <TableCell>{expense.description}</TableCell>
+                    <TableCell>{expense.fournisseur || '-'}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {expense.montant.toFixed(2)} DH
+                    </TableCell>
+                    <TableCell className="capitalize">{expense.mode_paiement}</TableCell>
+                    <TableCell>
+                      <Badge variant={expense.statut === 'paye' ? 'default' : expense.statut === 'en_attente' ? 'secondary' : 'outline'}>
+                        {expense.statut === 'paye' ? 'Payé' : 
+                         expense.statut === 'en_attente' ? 'En attente' : 'Récurrente'}
+                      </Badge>
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(expense.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
