@@ -167,6 +167,53 @@ export default function NouvelleInfraction() {
 
       const reference = refData;
 
+      // Résoudre le contrat/client actif à la date donnée (sécurité supplémentaire)
+      const infDate = formData.date_infraction;
+      let resolvedContractId = formData.contract_id;
+      let resolvedClientId = formData.client_id;
+
+      if ((!resolvedContractId || !resolvedClientId) && formData.vehicle_id && infDate) {
+        const { data: allContracts } = await supabase
+          .from("contracts")
+          .select("*, clients(id, nom, prenom, telephone, cin_url, permis_url)")
+          .lte("date_debut", infDate)
+          .gte("date_fin", infDate);
+
+        if (allContracts && allContracts.length > 0) {
+          const targetDate = new Date(infDate);
+          for (const contract of allContracts) {
+            if (contract.vehicle_id === formData.vehicle_id) {
+              resolvedContractId = contract.id;
+              resolvedClientId = contract.client_id;
+              break;
+            }
+            const { data: changes } = await supabase
+              .from("vehicle_changes")
+              .select("*")
+              .eq("contract_id", contract.id)
+              .order("change_date", { ascending: true });
+
+            if (changes && changes.length > 0) {
+              let activeVehicleId = contract.vehicle_id;
+              for (const change of changes) {
+                const cDate = new Date(change.change_date);
+                if (targetDate >= cDate) {
+                  activeVehicleId = change.new_vehicle_id;
+                } else {
+                  activeVehicleId = change.old_vehicle_id;
+                  break;
+                }
+              }
+              if (activeVehicleId === formData.vehicle_id) {
+                resolvedContractId = contract.id;
+                resolvedClientId = contract.client_id;
+                break;
+              }
+            }
+          }
+        }
+      }
+
       // Create infraction
       const { data: infractionData, error: infractionError } = await supabase
         .from("infractions")
@@ -177,8 +224,8 @@ export default function NouvelleInfraction() {
             lieu: formData.lieu,
             type_infraction: formData.type_infraction,
             vehicle_id: formData.vehicle_id,
-            contract_id: formData.contract_id || null,
-            client_id: formData.client_id || null,
+            contract_id: resolvedContractId || null,
+            client_id: resolvedClientId || null,
             description: formData.description || null,
             montant: parseFloat(formData.montant) || 0,
             statut_traitement: "nouveau",
