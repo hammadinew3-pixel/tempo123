@@ -679,7 +679,7 @@ export default function AssistanceDetails() {
   const handleGenerateFacturePDF = async () => {
     try {
       toast({
-        title: "Génération de la facture",
+        title: "Génération de la facture PDF",
         description: "Veuillez patienter...",
       });
 
@@ -692,15 +692,21 @@ export default function AssistanceDetails() {
         throw error;
       }
 
-      // Open the PDF URL in new tab
-      if (data?.pdfUrl) {
-        window.open(data.pdfUrl, '_blank');
-        
-        toast({
-          title: 'Facture générée',
-          description: 'La facture a été ouverte dans un nouvel onglet',
-        });
-      }
+      // The response is the PDF blob - trigger download
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facture-${assistance?.num_dossier || id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: 'Facture téléchargée',
+        description: 'La facture PDF a été téléchargée avec succès',
+      });
     } catch (error: any) {
       console.error('Erreur génération facture:', error);
       toast({

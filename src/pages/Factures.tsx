@@ -134,15 +134,36 @@ export default function FacturesAssurance() {
     window.open(`/assistance-facture-template?id=${assistanceId}&print=true`, '_blank');
   };
 
-  const handleGroupInvoice = () => {
+  const handleGroupInvoice = async () => {
     if (selectedForInvoice.length === 0) return;
-    const ids = selectedForInvoice.join(',');
-    window.open(`/assistance-facture-template?ids=${ids}&print=true`, '_blank');
-    setShowGroupDialog(false);
-    setSelectedForInvoice([]);
-    setGroupDialogAssurance('all');
-    setGroupDialogDateRange({});
-    setGroupDialogSearch('');
+    
+    try {
+      const ids = selectedForInvoice.join(',');
+      const { data, error } = await supabase.functions.invoke('generate-assistance-facture-pdf', {
+        body: { assistanceIds: ids }
+      });
+
+      if (error) throw error;
+
+      // The response is the PDF blob - trigger download
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facture-groupee.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      setShowGroupDialog(false);
+      setSelectedForInvoice([]);
+      setGroupDialogAssurance('all');
+      setGroupDialogDateRange({});
+      setGroupDialogSearch('');
+    } catch (error) {
+      console.error('Error generating group invoice:', error);
+    }
   };
 
   const toggleInvoiceSelection = (id: string) => {
@@ -199,9 +220,27 @@ export default function FacturesAssurance() {
     return (assistance.montant_facture || assistance.montant_total || 0).toFixed(2);
   };
 
-  const handleDownloadInvoice = (assistanceId: string) => {
-    // Ouvre la facture dans un nouvel onglet - l'utilisateur peut l'enregistrer en PDF via son navigateur
-    window.open(`/assistance-facture-template?id=${assistanceId}`, '_blank');
+  const handleDownloadInvoice = async (assistanceId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-assistance-facture-pdf', {
+        body: { assistanceId }
+      });
+
+      if (error) throw error;
+
+      // The response is the PDF blob - trigger download
+      const blob = new Blob([data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `facture-${assistanceId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+    }
   };
 
   const handleEditInvoice = (assistanceId: string) => {

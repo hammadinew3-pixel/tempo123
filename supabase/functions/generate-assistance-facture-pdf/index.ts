@@ -12,72 +12,98 @@ serve(async (req) => {
   }
 
   try {
-    const { assistanceId } = await req.json();
+    const { assistanceId, assistanceIds } = await req.json();
 
-    if (!assistanceId) {
-      throw new Error('Assistance ID is required');
+    if (!assistanceId && !assistanceIds) {
+      throw new Error('Assistance ID or IDs are required');
     }
 
-    console.log('📄 Generating assistance facture PDF for:', assistanceId);
+    const isGrouped = !!assistanceIds;
+    const ids = isGrouped ? assistanceIds.split(',') : [assistanceId];
+
+    console.log('📄 Generating assistance facture PDF for:', ids);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const browserlessToken = Deno.env.get('BROWSERLESS_TOKEN');
 
-    // Get assistance data with related client, vehicle, and insurance
-    const { data: assistance, error: assistanceError } = await supabase
-      .from('assistance')
-      .select(`
-        *,
-        clients (nom, prenom, cin, telephone, email),
-        vehicles (marque, modele, immatriculation)
-      `)
-      .eq('id', assistanceId)
-      .single();
-
-    if (assistanceError) throw assistanceError;
-    if (!assistance) throw new Error('Assistance not found');
-
-    // Get insurance data if assureur_id exists
-    let insuranceData = null;
-    if (assistance.assureur_id) {
-      const { data: insurance } = await supabase
-        .from('assurances')
-        .select('nom, contact_nom, contact_telephone, contact_email')
-        .eq('id', assistance.assureur_id)
-        .single();
-      
-      insuranceData = insurance;
+    if (!browserlessToken) {
+      throw new Error('BROWSERLESS_TOKEN is not configured');
     }
 
-    // Get agency settings
-    const { data: agenceSettings } = await supabase
-      .from('agence_settings')
-      .select('*')
-      .single();
-
-    console.log('✅ Assistance data loaded successfully');
-
-    // Generate the PDF URL - point to the template page
+    // Generate the template URL
     const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'https://32923ba1-bb0f-4cee-9b16-6c46841649d6.lovableproject.com';
-    const pdfUrl = `${origin}/assistance-facture-template?id=${assistanceId}&print=true`;
+    const templateUrl = isGrouped 
+      ? `${origin}/assistance-facture-template?ids=${assistanceIds}&print=true`
+      : `${origin}/assistance-facture-template?id=${assistanceId}&print=true`;
 
-    console.log('📄 Generated PDF URL:', pdfUrl);
+    console.log('📄 Template URL:', templateUrl);
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        pdfUrl,
-        assistanceData: assistance,
-        insuranceData,
-        agenceSettings,
-        message: 'Facture generated successfully' 
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+    // Generate PDF using Browserless
+    const browserlessUrl = `https://chrome.browserless.io/pdf?token=${browserlessToken}`;
+    
+    const pdfResponse = await fetch(browserlessUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: templateUrl,
+        options: {
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '10mm',
+            right: '10mm',
+            bottom: '10mm',
+            left: '10mm'
+          }
+        },
+        waitFor: 3000 // Wait for page to fully load
+      })
+    });
+
+    if (!pdfResponse.ok) {
+      const errorText = await pdfResponse.text();
+      console.error('Browserless error:', errorText);
+      throw new Error(`Browserless API error: ${pdfResponse.statusText}`);
+    }
+
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+
+    // Store PDF in Supabase Storage
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const fileName = isGrouped 
+      ? `facture-groupee-${Date.now()}.pdf`
+      : `facture-${assistanceId}-${Date.now()}.pdf`;
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('assistance-pdfs')
+      .upload(fileName, pdfBuffer, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      throw uploadError;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('assistance-pdfs')
+      .getPublicUrl(fileName);
+
+    console.log('✅ PDF generated and stored successfully:', publicUrl);
+
+    // Return the PDF directly for download
+    return new Response(pdfBuffer, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+      },
+    });
   } catch (error) {
     console.error('Error generating facture:', error);
     return new Response(
