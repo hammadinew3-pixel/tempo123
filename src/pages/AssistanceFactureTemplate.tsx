@@ -420,7 +420,10 @@ export default function AssistanceFactureTemplate() {
             </div>
             <div className="mt-3 pt-3 border-t border-gray-300">
               <p className="text-sm italic">
-                Arrêtée la présente facture à la somme de : <span className="font-semibold">{numberToFrench(totalTTC)}</span>
+                Arrêtée la présente facture à la somme de :
+              </p>
+              <p className="text-sm font-semibold italic mt-1">
+                {numberToFrench(totalTTC)}
               </p>
             </div>
           </div>
@@ -429,7 +432,7 @@ export default function AssistanceFactureTemplate() {
 
         {/* Footer */}
         {!settings?.masquer_pied_page && (
-          <div className="mt-auto text-center text-[7pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+          <div className="mt-auto text-center text-[8pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
             {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
             {settings?.ice && <> | ICE: {settings.ice}</>}
             {settings?.rc && <> | RC: {settings.rc}</>}
