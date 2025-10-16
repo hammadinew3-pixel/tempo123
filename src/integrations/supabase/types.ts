@@ -206,6 +206,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "assistance_assureur_id_fkey"
+            columns: ["assureur_id"]
+            isOneToOne: false
+            referencedRelation: "assurances"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "assistance_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false

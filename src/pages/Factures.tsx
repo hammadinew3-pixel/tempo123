@@ -50,8 +50,7 @@ export default function FacturesAssurance() {
         .select(`
           *,
           clients (nom, prenom),
-          vehicles (marque, modele, immatriculation),
-          assurances (nom)
+          vehicles (marque, modele, immatriculation)
         `)
         .not('assureur_id', 'is', null)
         .order('created_at', { ascending: false });
@@ -62,8 +61,17 @@ export default function FacturesAssurance() {
         .eq('actif', true)
         .order('nom');
 
-      setAssistances(assistanceData || []);
-      setFilteredAssistances(assistanceData || []);
+      // Enrichir les données d'assistance avec le nom de l'assurance
+      const enrichedAssistances = (assistanceData || []).map(assistance => {
+        const assurance = (assurancesData || []).find(a => a.id === assistance.assureur_id);
+        return {
+          ...assistance,
+          assurances: assurance ? { nom: assurance.nom } : null
+        };
+      });
+
+      setAssistances(enrichedAssistances);
+      setFilteredAssistances(enrichedAssistances);
       setAssurances(assurancesData || []);
     } catch (error) {
       console.error('Error loading data:', error);
