@@ -25,6 +25,7 @@ import Calendrier from "./pages/Calendrier";
 import Revenus from "./pages/Revenus";
 import Charges from "./pages/Charges";
 import Cheques from "./pages/Cheques";
+import Maintenance from "./pages/Maintenance";
 import Alertes from "./pages/Alertes";
 import Historique from "./pages/Historique";
 import Rapports from "./pages/Rapports";
@@ -233,6 +234,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Cheques /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/maintenance"
+              element={
+                <ProtectedRoute>
+                  <Layout><Maintenance /></Layout>
                 </ProtectedRoute>
               }
             />

@@ -819,6 +819,87 @@ export type Database = {
           },
         ]
       }
+      interventions: {
+        Row: {
+          contact_garage: string | null
+          created_at: string | null
+          date_intervention: string
+          depense_id: string | null
+          details_intervention: string[] | null
+          facturee: boolean | null
+          garage_externe: boolean | null
+          id: string
+          kilometrage_actuel: number
+          montant_ht: number | null
+          montant_ttc: number
+          montant_tva: number | null
+          nom_garage: string | null
+          notes: string | null
+          reference_facture: string | null
+          telephone_garage: string | null
+          type_intervention: string
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          contact_garage?: string | null
+          created_at?: string | null
+          date_intervention: string
+          depense_id?: string | null
+          details_intervention?: string[] | null
+          facturee?: boolean | null
+          garage_externe?: boolean | null
+          id?: string
+          kilometrage_actuel: number
+          montant_ht?: number | null
+          montant_ttc: number
+          montant_tva?: number | null
+          nom_garage?: string | null
+          notes?: string | null
+          reference_facture?: string | null
+          telephone_garage?: string | null
+          type_intervention: string
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          contact_garage?: string | null
+          created_at?: string | null
+          date_intervention?: string
+          depense_id?: string | null
+          details_intervention?: string[] | null
+          facturee?: boolean | null
+          garage_externe?: boolean | null
+          id?: string
+          kilometrage_actuel?: number
+          montant_ht?: number | null
+          montant_ttc?: number
+          montant_tva?: number | null
+          nom_garage?: string | null
+          notes?: string | null
+          reference_facture?: string | null
+          telephone_garage?: string | null
+          type_intervention?: string
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interventions_depense_id_fkey"
+            columns: ["depense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           actif: boolean | null
