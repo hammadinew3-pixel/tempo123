@@ -46,6 +46,7 @@ interface Revenue {
   client_id?: string;
   contract_id?: string;
   note?: string;
+  num_dossier?: string;
   clients?: { nom: string; prenom: string };
   contracts?: { numero_contrat: string };
 }
@@ -155,11 +156,12 @@ export default function Revenus() {
       const formattedAssistance: Revenue[] = (assistanceData || []).map((a: any) => ({
         id: a.id,
         date_encaissement: a.date_debut,
-        source_revenu: 'autre',
+        source_revenu: 'assistance',
         montant: a.montant_paye,
         mode_paiement: 'virement',
         statut: a.etat_paiement === 'paye' ? 'paye' : 'partiel',
         client_id: a.client_id,
+        num_dossier: a.num_dossier,
         note: `Paiement assistance ${a.num_dossier || ''}`,
         clients: a.clients,
         contracts: null,
@@ -578,7 +580,11 @@ export default function Revenus() {
                 {filteredRevenues.map((revenue) => (
                   <TableRow key={revenue.id}>
                     <TableCell>{format(new Date(revenue.date_encaissement), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell className="capitalize">{revenue.source_revenu}</TableCell>
+                    <TableCell className="capitalize">
+                      {revenue.source_revenu === 'assistance' && revenue.num_dossier
+                        ? `Assistance ${revenue.num_dossier}`
+                        : revenue.source_revenu}
+                    </TableCell>
                     <TableCell>
                       {revenue.clients ? `${revenue.clients.nom} ${revenue.clients.prenom}` : '-'}
                     </TableCell>
