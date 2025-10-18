@@ -87,6 +87,7 @@ export default function RapportEncaissement({ dateRange }: Props) {
           date_fin,
           total_amount,
           daily_rate,
+          duration,
           statut,
           clients (
             nom,
@@ -115,10 +116,16 @@ export default function RapportEncaissement({ dateRange }: Props) {
         // Montant total du contrat - calculer depuis daily_rate * durée si total_amount est null
         let montant_contrat = c.total_amount || 0;
         if (!montant_contrat && c.daily_rate) {
-          const dateDebut = new Date(c.date_debut);
-          const dateFin = new Date(c.date_fin || c.date_debut);
-          const durationDays = Math.ceil((dateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-          montant_contrat = (c.daily_rate || 0) * durationDays;
+          // Utiliser duration si disponible
+          if (c.duration) {
+            montant_contrat = (c.daily_rate || 0) * c.duration;
+          } else if (c.date_fin) {
+            // Sinon calculer depuis les dates
+            const dateDebut = new Date(c.date_debut);
+            const dateFin = new Date(c.date_fin);
+            const durationDays = Math.ceil((dateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            montant_contrat = (c.daily_rate || 0) * durationDays;
+          }
         }
         
         // Reste à payer (ne peut jamais être négatif)
