@@ -1268,7 +1268,7 @@ export default function AssistanceDetails() {
               <div>
                 <p className="font-medium text-indigo-900">Dossier clôturé</p>
                 <p className="text-sm text-indigo-700">
-                  Le dossier est complètement clôturé. Paiement reçu le {assistance.date_paiement_assurance ? format(new Date(assistance.date_paiement_assurance), 'dd/MM/yyyy', { locale: fr }) : 'N/A'}
+                  Le dossier est complètement clôturé.{assistance.date_paiement_assurance ? ` Paiement reçu le ${format(new Date(assistance.date_paiement_assurance), 'dd/MM/yyyy', { locale: fr })}` : ''}
                 </p>
               </div>
             </div>
