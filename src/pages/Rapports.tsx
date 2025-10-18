@@ -4,11 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Car, DollarSign, Shield } from 'lucide-react';
+import { BarChart3, Car, DollarSign, Shield, Users } from 'lucide-react';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import RapportParVoiture from '@/components/rapports/RapportParVoiture';
 import RapportEncaissement from '@/components/rapports/RapportEncaissement';
 import RapportAssurance from '@/components/rapports/RapportAssurance';
+import RapportParClient from '@/components/rapports/RapportParClient';
 
 export default function Rapports() {
   const [dateRange, setDateRange] = useState({
@@ -59,7 +60,7 @@ export default function Rapports() {
       </Card>
 
       <Tabs defaultValue="vehicles" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="vehicles">
             <Car className="w-4 h-4 mr-2" />
             Par Voiture
@@ -71,6 +72,10 @@ export default function Rapports() {
           <TabsTrigger value="assurance">
             <Shield className="w-4 h-4 mr-2" />
             Assurance
+          </TabsTrigger>
+          <TabsTrigger value="clients">
+            <Users className="w-4 h-4 mr-2" />
+            Par Client
           </TabsTrigger>
         </TabsList>
 
@@ -84,6 +89,10 @@ export default function Rapports() {
 
         <TabsContent value="assurance" className="space-y-4">
           <RapportAssurance dateRange={dateRange} />
+        </TabsContent>
+
+        <TabsContent value="clients" className="space-y-4">
+          <RapportParClient dateRange={dateRange} />
         </TabsContent>
       </Tabs>
     </div>
