@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,178 +116,176 @@ export default function Maintenance() {
   };
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Wrench className="h-8 w-8 text-primary" />
-              Maintenance & Interventions
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Gestion complète des interventions mécaniques
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleExport} variant="outline">
-              <FileDown className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-            <Button onClick={() => setShowAddDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle intervention
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Wrench className="h-8 w-8 text-primary" />
+            Maintenance & Interventions
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gestion complète des interventions mécaniques
+          </p>
         </div>
-
-        <MaintenanceStats interventions={interventions} />
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filtres
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Input
-                placeholder="Rechercher..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Type d'intervention" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  {TYPES_INTERVENTION.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Véhicule" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les véhicules</SelectItem>
-                  {vehicles.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.immatriculation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={statutFilter} onValueChange={setStatutFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Statut facturation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="facturee">Facturée</SelectItem>
-                  <SelectItem value="non_facturee">Non facturée</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Liste des interventions ({filteredInterventions.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-center text-muted-foreground py-8">Chargement...</p>
-            ) : filteredInterventions.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                Aucune intervention trouvée
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Véhicule</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Km</TableHead>
-                      <TableHead>Garage</TableHead>
-                      <TableHead className="text-right">Montant TTC</TableHead>
-                      <TableHead>Statut</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredInterventions.map((intervention) => (
-                      <TableRow key={intervention.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell>
-                          {safeFormatDate(intervention.date_intervention, "dd/MM/yyyy", { locale: fr })}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {intervention.vehicles?.immatriculation || "-"}
-                          <div className="text-xs text-muted-foreground">
-                            {intervention.vehicles?.marque} {intervention.vehicles?.modele}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {intervention.type_intervention}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{intervention.kilometrage_actuel?.toLocaleString()} km</TableCell>
-                        <TableCell>
-                          {intervention.garage_externe ? (
-                            <div>
-                              <div className="font-medium">{intervention.nom_garage || "Externe"}</div>
-                              {intervention.contact_garage && (
-                                <div className="text-xs text-muted-foreground">
-                                  {intervention.contact_garage}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">Interne</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          {intervention.montant_ttc?.toLocaleString()} DH
-                        </TableCell>
-                        <TableCell>
-                          {intervention.facturee ? (
-                            <Badge className="bg-green-500">Facturée</Badge>
-                          ) : (
-                            <Badge variant="secondary">Non facturée</Badge>
-                          )}
-                          {intervention.reference_facture && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {intervention.reference_facture}
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <AddInterventionDialog
-          open={showAddDialog}
-          onOpenChange={setShowAddDialog}
-          onSuccess={loadData}
-        />
+        <div className="flex gap-2">
+          <Button onClick={handleExport} variant="outline">
+            <FileDown className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+          <Button onClick={() => setShowAddDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle intervention
+          </Button>
+        </div>
       </div>
-    </Layout>
+
+      <MaintenanceStats interventions={interventions} />
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filtres
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Input
+              placeholder="Rechercher..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Type d'intervention" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les types</SelectItem>
+                {TYPES_INTERVENTION.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Véhicule" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les véhicules</SelectItem>
+                {vehicles.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.immatriculation}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statutFilter} onValueChange={setStatutFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Statut facturation" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="facturee">Facturée</SelectItem>
+                <SelectItem value="non_facturee">Non facturée</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Liste des interventions ({filteredInterventions.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-center text-muted-foreground py-8">Chargement...</p>
+          ) : filteredInterventions.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              Aucune intervention trouvée
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Véhicule</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Km</TableHead>
+                    <TableHead>Garage</TableHead>
+                    <TableHead className="text-right">Montant TTC</TableHead>
+                    <TableHead>Statut</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInterventions.map((intervention) => (
+                    <TableRow key={intervention.id} className="cursor-pointer hover:bg-muted/50">
+                      <TableCell>
+                        {safeFormatDate(intervention.date_intervention, "dd/MM/yyyy", { locale: fr })}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {intervention.vehicles?.immatriculation || "-"}
+                        <div className="text-xs text-muted-foreground">
+                          {intervention.vehicles?.marque} {intervention.vehicles?.modele}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {intervention.type_intervention}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{intervention.kilometrage_actuel?.toLocaleString()} km</TableCell>
+                      <TableCell>
+                        {intervention.garage_externe ? (
+                          <div>
+                            <div className="font-medium">{intervention.nom_garage || "Externe"}</div>
+                            {intervention.contact_garage && (
+                              <div className="text-xs text-muted-foreground">
+                                {intervention.contact_garage}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">Interne</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {intervention.montant_ttc?.toLocaleString()} DH
+                      </TableCell>
+                      <TableCell>
+                        {intervention.facturee ? (
+                          <Badge className="bg-green-500">Facturée</Badge>
+                        ) : (
+                          <Badge variant="secondary">Non facturée</Badge>
+                        )}
+                        {intervention.reference_facture && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {intervention.reference_facture}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AddInterventionDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onSuccess={loadData}
+      />
+    </div>
   );
 }
