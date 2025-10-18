@@ -83,10 +83,20 @@ export default function RapportEncaissement({ dateRange }: Props) {
 
       if (!contracts) return;
 
+      // Charger tous les paiements pour calculer le montant total payé
+      const { data: allPayments } = await supabase
+        .from('contract_payments')
+        .select('contract_id, montant')
+        .in('contract_id', contracts.map(c => c.id));
+
       const data: EncaissementData[] = contracts.map((c: any) => {
-        const montant_paye = c.advance_payment || 0;
+        // Calculer la somme de tous les paiements pour ce contrat
+        const payments = allPayments?.filter(p => p.contract_id === c.id) || [];
+        const totalPaid = payments.reduce((sum, p) => sum + (p.montant || 0), 0);
+        
+        const montant_paye = (c.advance_payment || 0) + totalPaid;
         const montant_contrat = c.total_amount || 0;
-        const montant_restant = c.remaining_amount || (montant_contrat - montant_paye);
+        const montant_restant = montant_contrat - montant_paye;
 
         let statut = 'en_attente';
         if (montant_restant <= 0) statut = 'paye';
