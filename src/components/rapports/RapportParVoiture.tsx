@@ -304,6 +304,66 @@ export default function RapportParVoiture({ dateRange }: Props) {
         </Card>
       </div>
 
+      {/* Tableau détaillé */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Détail par Véhicule</CardTitle>
+          <Button variant="outline" size="sm" onClick={exportReport}>
+            <Download className="w-4 h-4 mr-2" />
+            Exporter CSV
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Immatriculation</TableHead>
+                  <TableHead>Marque/Modèle</TableHead>
+                  <TableHead className="text-right">Nb Contrats</TableHead>
+                  <TableHead className="text-right">Revenus</TableHead>
+                  <TableHead className="text-right">Dépenses</TableHead>
+                  <TableHead className="text-right">Résultat Net</TableHead>
+                  <TableHead className="text-right">Kilométrage</TableHead>
+                  <TableHead>Dernière Vidange</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vehicles.map((vehicle) => (
+                  <TableRow
+                    key={vehicle.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleVehicleClick(vehicle.id)}
+                  >
+                    <TableCell className="font-medium">{vehicle.immatriculation}</TableCell>
+                    <TableCell>{vehicle.marque} {vehicle.modele}</TableCell>
+                    <TableCell className="text-right">{vehicle.nombre_contrats}</TableCell>
+                    <TableCell className="text-right text-green-600">
+                      {vehicle.revenu_total.toFixed(2)} DH
+                    </TableCell>
+                    <TableCell className="text-right text-red-600">
+                      {vehicle.depenses_total.toFixed(2)} DH
+                    </TableCell>
+                    <TableCell className="text-right font-bold">
+                      <span className={vehicle.resultat_net >= 0 ? 'text-blue-600' : 'text-red-600'}>
+                        {vehicle.resultat_net.toFixed(2)} DH
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">{vehicle.kilometrage.toLocaleString()} km</TableCell>
+                    <TableCell>
+                      {vehicle.derniere_vidange ? safeFormatDate(vehicle.derniere_vidange, 'dd/MM/yyyy') : '-'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Cliquez sur un véhicule pour voir le graphique détaillé
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Graphique pour véhicule sélectionné */}
       {selectedVehicle && chartData.length > 0 && (
         <Card>
@@ -430,66 +490,6 @@ export default function RapportParVoiture({ dateRange }: Props) {
           </Card>
         </>
       )}
-
-      {/* Tableau détaillé */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Détail par Véhicule</CardTitle>
-          <Button variant="outline" size="sm" onClick={exportReport}>
-            <Download className="w-4 h-4 mr-2" />
-            Exporter CSV
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Immatriculation</TableHead>
-                  <TableHead>Marque/Modèle</TableHead>
-                  <TableHead className="text-right">Nb Contrats</TableHead>
-                  <TableHead className="text-right">Revenus</TableHead>
-                  <TableHead className="text-right">Dépenses</TableHead>
-                  <TableHead className="text-right">Résultat Net</TableHead>
-                  <TableHead className="text-right">Kilométrage</TableHead>
-                  <TableHead>Dernière Vidange</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vehicles.map((vehicle) => (
-                  <TableRow
-                    key={vehicle.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleVehicleClick(vehicle.id)}
-                  >
-                    <TableCell className="font-medium">{vehicle.immatriculation}</TableCell>
-                    <TableCell>{vehicle.marque} {vehicle.modele}</TableCell>
-                    <TableCell className="text-right">{vehicle.nombre_contrats}</TableCell>
-                    <TableCell className="text-right text-green-600">
-                      {vehicle.revenu_total.toFixed(2)} DH
-                    </TableCell>
-                    <TableCell className="text-right text-red-600">
-                      {vehicle.depenses_total.toFixed(2)} DH
-                    </TableCell>
-                    <TableCell className="text-right font-bold">
-                      <span className={vehicle.resultat_net >= 0 ? 'text-blue-600' : 'text-red-600'}>
-                        {vehicle.resultat_net.toFixed(2)} DH
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">{vehicle.kilometrage.toLocaleString()} km</TableCell>
-                    <TableCell>
-                      {vehicle.derniere_vidange ? safeFormatDate(vehicle.derniere_vidange, 'dd/MM/yyyy') : '-'}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Cliquez sur un véhicule pour voir le graphique détaillé
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
