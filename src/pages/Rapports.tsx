@@ -65,6 +65,10 @@ export default function Rapports() {
             <Car className="w-4 h-4 mr-2" />
             Par Voiture
           </TabsTrigger>
+          <TabsTrigger value="clients">
+            <Users className="w-4 h-4 mr-2" />
+            Par Client
+          </TabsTrigger>
           <TabsTrigger value="encaissement">
             <DollarSign className="w-4 h-4 mr-2" />
             Encaissement
@@ -73,14 +77,14 @@ export default function Rapports() {
             <Shield className="w-4 h-4 mr-2" />
             Assurance
           </TabsTrigger>
-          <TabsTrigger value="clients">
-            <Users className="w-4 h-4 mr-2" />
-            Par Client
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="vehicles" className="space-y-4">
           <RapportParVoiture dateRange={dateRange} />
+        </TabsContent>
+
+        <TabsContent value="clients" className="space-y-4">
+          <RapportParClient dateRange={dateRange} />
         </TabsContent>
 
         <TabsContent value="encaissement" className="space-y-4">
@@ -89,10 +93,6 @@ export default function Rapports() {
 
         <TabsContent value="assurance" className="space-y-4">
           <RapportAssurance dateRange={dateRange} />
-        </TabsContent>
-
-        <TabsContent value="clients" className="space-y-4">
-          <RapportParClient dateRange={dateRange} />
         </TabsContent>
       </Tabs>
     </div>
