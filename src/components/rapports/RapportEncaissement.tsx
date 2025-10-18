@@ -84,7 +84,9 @@ export default function RapportEncaissement({ dateRange }: Props) {
           id,
           numero_contrat,
           date_debut,
+          date_fin,
           total_amount,
+          daily_rate,
           statut,
           clients (
             nom,
