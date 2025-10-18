@@ -113,20 +113,9 @@ export default function RapportEncaissement({ dateRange }: Props) {
         // Calculer le total payé
         const montant_paye = payments.reduce((sum, p) => sum + (p.montant || 0), 0);
         
-        // Montant total du contrat - calculer depuis daily_rate * durée si total_amount est null
-        let montant_contrat = c.total_amount || 0;
-        if (!montant_contrat && c.daily_rate) {
-          // Utiliser duration si disponible
-          if (c.duration) {
-            montant_contrat = (c.daily_rate || 0) * c.duration;
-          } else if (c.date_fin) {
-            // Sinon calculer depuis les dates
-            const dateDebut = new Date(c.date_debut);
-            const dateFin = new Date(c.date_fin);
-            const durationDays = Math.ceil((dateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-            montant_contrat = (c.daily_rate || 0) * durationDays;
-          }
-        }
+        // Montant total du contrat: utiliser la valeur enregistrée sur le contrat
+        const montant_contrat = Number(c.total_amount || 0);
+        
         
         // Reste à payer (ne peut jamais être négatif)
         const montant_restant = Math.max(0, montant_contrat - montant_paye);
