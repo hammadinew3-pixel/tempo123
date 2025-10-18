@@ -438,11 +438,42 @@ export default function VehiculeDetails() {
     const alerts = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    // Check oil change alerts
+    if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
+      const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+      
+      if (kmUntilOilChange <= 300) {
+        alerts.push({
+          message: kmUntilOilChange <= 0 
+            ? `Vidange en retard de ${Math.abs(kmUntilOilChange)} km`
+            : `Vidange critique - ${kmUntilOilChange} km restants`,
+          action: "FAIRE VIDANGE",
+          onClick: () => {/* Scroll to maintenance section */},
+          severity: "critical"
+        });
+      } else if (kmUntilOilChange <= 1000) {
+        alerts.push({
+          message: `Vidange à faire dans ${kmUntilOilChange} km`,
+          action: "PLANIFIER VIDANGE",
+          onClick: () => {/* Scroll to maintenance section */},
+          severity: "warning"
+        });
+      }
+    } else if (!vehicle.dernier_kilometrage_vidange) {
+      alerts.push({
+        message: "Aucune vidange enregistrée",
+        action: "AJOUTER VIDANGE",
+        onClick: () => {/* Scroll to maintenance section */},
+        severity: "high"
+      });
+    }
+    
     if (insurances.length === 0) {
       alerts.push({
         message: "Véhicule sans assurance ajoutée.",
         action: "CRÉER ASSURANCE",
-        link: "/vehicules",
+        onClick: () => setShowInsuranceDialog(true),
         severity: "high"
       });
     } else {
@@ -456,14 +487,14 @@ export default function VehiculeDetails() {
           alerts.push({
             message: "Assurance expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).",
             action: "RENOUVELER",
-            link: "/vehicules",
+            onClick: () => setShowInsuranceDialog(true),
             severity: "critical"
           });
         } else if (daysUntilExpiration <= 30) {
           alerts.push({
             message: `Assurance expire dans ${daysUntilExpiration} jour(s).`,
             action: "RENOUVELER",
-            link: "/vehicules",
+            onClick: () => setShowInsuranceDialog(true),
             severity: "warning"
           });
         }
@@ -473,7 +504,7 @@ export default function VehiculeDetails() {
       alerts.push({
         message: "Véhicule sans visite technique ajoutée.",
         action: "CRÉER VISITE",
-        link: "/vehicules",
+        onClick: () => setShowInspectionDialog(true),
         severity: "high"
       });
     } else {
@@ -487,14 +518,14 @@ export default function VehiculeDetails() {
           alerts.push({
             message: "Visite technique expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).",
             action: "RENOUVELER",
-            link: "/vehicules",
+            onClick: () => setShowInspectionDialog(true),
             severity: "critical"
           });
         } else if (daysUntilExpiration <= 30) {
           alerts.push({
             message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`,
             action: "RENOUVELER",
-            link: "/vehicules",
+            onClick: () => setShowInspectionDialog(true),
             severity: "warning"
           });
         }
@@ -504,7 +535,7 @@ export default function VehiculeDetails() {
       alerts.push({
         message: "Véhicule sans vignette ajoutée.",
         action: "CRÉER VIGNETTE",
-        link: "/vehicules",
+        onClick: () => setShowVignetteDialog(true),
         severity: "high"
       });
     } else {
@@ -518,14 +549,14 @@ export default function VehiculeDetails() {
           alerts.push({
             message: "Vignette expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).",
             action: "RENOUVELER",
-            link: "/vehicules",
+            onClick: () => setShowVignetteDialog(true),
             severity: "critical"
           });
         } else if (daysUntilExpiration <= 30) {
           alerts.push({
             message: `Vignette expire dans ${daysUntilExpiration} jour(s).`,
             action: "RENOUVELER",
-            link: "/vehicules",
+            onClick: () => setShowVignetteDialog(true),
             severity: "warning"
           });
         }
@@ -647,6 +678,7 @@ export default function VehiculeDetails() {
                     variant="outline" 
                     size="sm" 
                     className={`ml-4 ${alert.severity === 'critical' ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' : 'border-warning text-warning hover:bg-warning hover:text-white'}`}
+                    onClick={alert.onClick}
                   >
                     {alert.action}
                   </Button>
