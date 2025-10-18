@@ -60,6 +60,24 @@ export default function RapportEncaissement({ dateRange }: Props) {
   const loadEncaissements = async () => {
     setLoading(true);
     try {
+      // D'abord, charger tous les paiements dans la période
+      const { data: paymentsInPeriod } = await supabase
+        .from('contract_payments')
+        .select('contract_id, montant, methode, date_paiement')
+        .gte('date_paiement', dateRange.startDate)
+        .lte('date_paiement', dateRange.endDate);
+
+      if (!paymentsInPeriod || paymentsInPeriod.length === 0) {
+        setEncaissements([]);
+        generateChartData([]);
+        setLoading(false);
+        return;
+      }
+
+      // Récupérer les IDs uniques des contrats qui ont des paiements
+      const contractIds = [...new Set(paymentsInPeriod.map(p => p.contract_id))];
+
+      // Charger les contrats correspondants
       const { data: contracts } = await supabase
         .from('contracts')
         .select(`
@@ -73,18 +91,17 @@ export default function RapportEncaissement({ dateRange }: Props) {
             prenom
           )
         `)
-        .gte('date_debut', dateRange.startDate)
-        .lte('date_debut', dateRange.endDate)
+        .in('id', contractIds)
         .neq('statut', 'annule')
         .order('date_debut', { ascending: false });
 
       if (!contracts) return;
 
-      // Charger tous les paiements pour tous les contrats
+      // Charger TOUS les paiements de ces contrats (pas seulement ceux de la période)
       const { data: allPayments } = await supabase
         .from('contract_payments')
-        .select('contract_id, montant, methode')
-        .in('contract_id', contracts.map(c => c.id));
+        .select('contract_id, montant, methode, date_paiement')
+        .in('contract_id', contractIds);
 
       const data: EncaissementData[] = contracts.map((c: any) => {
         // Filtrer les paiements de ce contrat
