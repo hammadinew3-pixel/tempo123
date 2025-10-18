@@ -876,9 +876,11 @@ export default function VehiculeDetails() {
                     {(() => {
                       if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
                         const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
-                        if (kmUntilOilChange <= 0) {
-                          return <Badge variant="destructive" className="ml-2">Vidange en retard</Badge>;
-                        } else if (kmUntilOilChange <= 500) {
+                        if (kmUntilOilChange <= 300) {
+                          return <Badge variant="destructive" className="ml-2">
+                            {kmUntilOilChange <= 0 ? 'Vidange en retard' : 'Vidange critique'}
+                          </Badge>;
+                        } else if (kmUntilOilChange <= 1000) {
                           return <Badge className="ml-2 bg-warning text-warning-foreground">Vidange urgente</Badge>;
                         }
                       } else if (!vehicle.dernier_kilometrage_vidange) {

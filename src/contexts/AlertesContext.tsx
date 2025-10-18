@@ -94,8 +94,8 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
         if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
           const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
           
-          // Alert if within 500 km or overdue
-          if (kmUntilOilChange <= 500) {
+          // Alert if within 1000 km or overdue
+          if (kmUntilOilChange <= 1000) {
             count++;
           }
         } else if (!vehicle.dernier_kilometrage_vidange) {

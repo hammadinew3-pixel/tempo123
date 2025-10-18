@@ -198,16 +198,18 @@ const Alertes = () => {
       if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
         const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
         
-        if (kmUntilOilChange <= 0) {
+        if (kmUntilOilChange <= 300) {
           alerts.push({
             vehicleId: vehicle.id,
             vehicleName,
-            message: `vidange en retard de ${Math.abs(kmUntilOilChange)} km`,
+            message: kmUntilOilChange <= 0 
+              ? `vidange en retard de ${Math.abs(kmUntilOilChange)} km`
+              : `vidange critique - ${kmUntilOilChange} km restants`,
             severity: "critical",
             type: "vidange",
             actionText: "FAIRE VIDANGE",
           });
-        } else if (kmUntilOilChange <= 500) {
+        } else if (kmUntilOilChange <= 1000) {
           alerts.push({
             vehicleId: vehicle.id,
             vehicleName,

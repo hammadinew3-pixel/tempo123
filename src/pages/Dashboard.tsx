@@ -403,14 +403,14 @@ export default function Dashboard() {
       if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
         const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
         
-        if (kmUntilOilChange <= 0) {
+        if (kmUntilOilChange <= 300) {
           alerts.push({
             vehicleId: vehicle.id,
             vehicleInfo,
-            message: `Vidange en retard de ${Math.abs(kmUntilOilChange)} km`,
+            message: `Vidange ${kmUntilOilChange <= 0 ? 'en retard de ' + Math.abs(kmUntilOilChange) : 'critique - ' + kmUntilOilChange} km`,
             severity: "critical"
           });
-        } else if (kmUntilOilChange <= 500) {
+        } else if (kmUntilOilChange <= 1000) {
           alerts.push({
             vehicleId: vehicle.id,
             vehicleInfo,
