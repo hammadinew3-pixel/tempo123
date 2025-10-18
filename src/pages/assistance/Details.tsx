@@ -1082,12 +1082,9 @@ export default function AssistanceDetails() {
                 <FileText className="w-4 h-4 mr-2" />
                 Contrat de location assistance
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => {
-                const url = `/assistance-facture-template?id=${id}`;
-                window.open(url, '_blank');
-              }}>
-                <FileText className="w-4 h-4 mr-2" />
-                Facture
+              <DropdownMenuItem onClick={handleGenerateFacturePDF}>
+                <FileDown className="w-4 h-4 mr-2" />
+                Télécharger facture
               </DropdownMenuItem>
               {assistance.ordre_mission_url && (
                 <DropdownMenuItem onClick={handleDownloadOrdreMission}>
