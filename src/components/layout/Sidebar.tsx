@@ -79,14 +79,14 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean): NavItem[] => {
     { title: "Maintenance", href: "/maintenance", icon: Wrench },
     { title: "Sinistre", href: "/sinistres", icon: AlertTriangle },
     { title: "Infraction", href: "/infractions", icon: Shield },
-    { title: "Chèque", href: "/cheques", icon: CreditCard },
     { title: "Charges", href: "/charges", icon: DollarSign },
     { title: "Revenus", href: "/revenus", icon: TrendingUp },
     { title: "Rapport", href: "/rapports", icon: BarChart },
   ];
 
-  // "Historique" et "Importer" masqués pour les agents
+  // "Chèque", "Historique" et "Importer" masqués pour les agents
   if (!isAgent) {
+    items.splice(10, 0, { title: "Chèque", href: "/cheques", icon: CreditCard });
     items.push({ title: "Historique", href: "/historique", icon: Clock });
     items.push({ title: "Importer", href: "/importer", icon: Upload });
   }
