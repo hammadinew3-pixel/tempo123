@@ -42,6 +42,7 @@ export default function VehiculeDetails() {
   const [insurances, setInsurances] = useState<any[]>([]);
   const [technicalInspections, setTechnicalInspections] = useState<any[]>([]);
   const [vignettes, setVignettes] = useState<any[]>([]);
+  const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showContractsList, setShowContractsList] = useState(false);
 
@@ -169,23 +170,19 @@ export default function VehiculeDetails() {
   }, [vehicle]);
   const loadVehicle = async () => {
     try {
-      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, traitesRes, echeancesRes] = await Promise.all([supabase.from('vehicles').select('*').eq('id', id).single(), supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
-        ascending: false
-      }), supabase.from('assistance').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
-        ascending: false
-      }), supabase.from('expenses').select('*').eq('vehicle_id', id).order('date_depense', {
-        ascending: false
-      }), supabase.from('vehicle_insurance').select('*').eq('vehicle_id', id).order('date_debut', {
-        ascending: false
-      }), supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', id).order('date_visite', {
-        ascending: false
-      }), supabase.from('vehicle_vignette').select('*').eq('vehicle_id', id).order('annee', {
-        ascending: false
-      }), supabase.from('vehicules_traite').select('*').eq('vehicle_id', id).order('created_at', {
-        ascending: false
-      }), supabase.from('vehicules_traites_echeances').select('*').eq('vehicle_id', id).order('date_echeance', {
-        ascending: true
-      })]);
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, traitesRes, echeancesRes, categoriesRes] = await Promise.all([
+        supabase.from('vehicles').select('*').eq('id', id).single(), 
+        supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }), 
+        supabase.from('assistance').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }), 
+        supabase.from('expenses').select('*').eq('vehicle_id', id).order('date_depense', { ascending: false }), 
+        supabase.from('vehicle_insurance').select('*').eq('vehicle_id', id).order('date_debut', { ascending: false }), 
+        supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', id).order('date_visite', { ascending: false }), 
+        supabase.from('vehicle_vignette').select('*').eq('vehicle_id', id).order('annee', { ascending: false }), 
+        supabase.from('vehicules_traite').select('*').eq('vehicle_id', id).order('created_at', { ascending: false }), 
+        supabase.from('vehicules_traites_echeances').select('*').eq('vehicle_id', id).order('date_echeance', { ascending: true }),
+        supabase.from('vehicle_assistance_categories').select('*').eq('actif', true).order('ordre', { ascending: true })
+      ]);
+      
       if (vehicleRes.error) throw vehicleRes.error;
       setVehicle(vehicleRes.data);
       setContracts(contractsRes.data || []);
@@ -196,6 +193,7 @@ export default function VehiculeDetails() {
       setVignettes(vignettesRes.data || []);
       setTraites(traitesRes.data || []);
       setEcheances(echeancesRes.data || []);
+      setAssistanceCategories(categoriesRes.data || []);
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -836,8 +834,17 @@ export default function VehiculeDetails() {
                   <p className="font-medium mt-1">{vehicle.annee}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Catégorie</Label>
-                  <p className="font-medium mt-1">{vehicle.categorie || 'Non spécifiée'}</p>
+                  <Label className="text-muted-foreground">Catégories Assistance</Label>
+                  <p className="font-medium mt-1">
+                    {vehicle.categories && vehicle.categories.length > 0
+                      ? vehicle.categories
+                          .map(code => {
+                            const category = assistanceCategories.find(c => c.code === code);
+                            return category ? category.nom : code;
+                          })
+                          .join(', ')
+                      : 'Non spécifiée'}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Statut</Label>
