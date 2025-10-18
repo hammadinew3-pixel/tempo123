@@ -79,6 +79,7 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean): NavItem[] => {
     { title: "Maintenance", href: "/maintenance", icon: Wrench },
     { title: "Sinistre", href: "/sinistres", icon: AlertTriangle },
     { title: "Infraction", href: "/infractions", icon: Shield },
+    { title: "Chèque", href: "/cheques", icon: CreditCard },
     { title: "Charges", href: "/charges", icon: DollarSign },
     { title: "Revenus", href: "/revenus", icon: TrendingUp },
     { title: "Rapport", href: "/rapports", icon: BarChart },
