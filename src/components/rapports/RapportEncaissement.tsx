@@ -33,7 +33,7 @@ interface EncaissementData {
   montant_contrat: number;
   montant_paye: number;
   montant_restant: number;
-  mode_paiement: string;
+  modes_paiement: string;
   statut_paiement: string;
 }
 
@@ -67,9 +67,6 @@ export default function RapportEncaissement({ dateRange }: Props) {
           numero_contrat,
           date_debut,
           total_amount,
-          advance_payment,
-          remaining_amount,
-          payment_method,
           statut,
           clients (
             nom,
@@ -83,24 +80,40 @@ export default function RapportEncaissement({ dateRange }: Props) {
 
       if (!contracts) return;
 
-      // Charger tous les paiements pour calculer le montant total payé
+      // Charger tous les paiements pour tous les contrats
       const { data: allPayments } = await supabase
         .from('contract_payments')
-        .select('contract_id, montant')
+        .select('contract_id, montant, methode')
         .in('contract_id', contracts.map(c => c.id));
 
       const data: EncaissementData[] = contracts.map((c: any) => {
-        // Calculer la somme de tous les paiements pour ce contrat
+        // Filtrer les paiements de ce contrat
         const payments = allPayments?.filter(p => p.contract_id === c.id) || [];
-        const totalPaid = payments.reduce((sum, p) => sum + (p.montant || 0), 0);
         
-        const montant_paye = (c.advance_payment || 0) + totalPaid;
+        // Calculer le total payé
+        const montant_paye = payments.reduce((sum, p) => sum + (p.montant || 0), 0);
+        
+        // Montant total du contrat
         const montant_contrat = c.total_amount || 0;
-        const montant_restant = montant_contrat - montant_paye;
-
-        let statut = 'en_attente';
-        if (montant_restant <= 0) statut = 'paye';
-        else if (montant_paye > 0) statut = 'partiel';
+        
+        // Reste à payer (ne peut jamais être négatif)
+        const montant_restant = Math.max(0, montant_contrat - montant_paye);
+        
+        // Modes de paiement (concat des modes uniques)
+        const uniqueModes = [...new Set(payments.map(p => p.methode || 'especes'))];
+        const modes_paiement = uniqueModes.join(', ') || 'especes';
+        
+        // Statut selon la logique fournie
+        let statut = 'invalide';
+        if (montant_contrat === 0) {
+          statut = 'invalide';
+        } else if (montant_paye === 0) {
+          statut = 'non_paye';
+        } else if (montant_paye < montant_contrat) {
+          statut = 'partiel';
+        } else if (montant_paye >= montant_contrat) {
+          statut = 'paye';
+        }
 
         return {
           id: c.id,
@@ -110,7 +123,7 @@ export default function RapportEncaissement({ dateRange }: Props) {
           montant_contrat,
           montant_paye,
           montant_restant,
-          mode_paiement: c.payment_method || 'especes',
+          modes_paiement,
           statut_paiement: statut,
         };
       });
@@ -136,7 +149,7 @@ export default function RapportEncaissement({ dateRange }: Props) {
     }
 
     if (filterPaymentMethod !== 'all') {
-      filtered = filtered.filter((e) => e.mode_paiement === filterPaymentMethod);
+      filtered = filtered.filter((e) => e.modes_paiement.includes(filterPaymentMethod));
     }
 
     setFilteredData(filtered);
@@ -166,13 +179,15 @@ export default function RapportEncaissement({ dateRange }: Props) {
     const variants: { [key: string]: any } = {
       paye: 'default',
       partiel: 'secondary',
-      en_attente: 'outline',
+      non_paye: 'destructive',
+      invalide: 'outline',
     };
 
     const labels: { [key: string]: string } = {
-      paye: 'Payé',
-      partiel: 'Partiel',
-      en_attente: 'En attente',
+      paye: '🟢 Payé',
+      partiel: '🟠 Partiel',
+      non_paye: '🔴 Non payé',
+      invalide: '⚪ Invalide',
     };
 
     return <Badge variant={variants[statut] || 'outline'}>{labels[statut] || statut}</Badge>;
@@ -186,7 +201,7 @@ export default function RapportEncaissement({ dateRange }: Props) {
       'Montant Contrat (DH)': e.montant_contrat.toFixed(2),
       'Montant Payé (DH)': e.montant_paye.toFixed(2),
       'Reste à Payer (DH)': e.montant_restant.toFixed(2),
-      'Mode Paiement': e.mode_paiement,
+      'Mode Paiement': e.modes_paiement,
       'Statut': e.statut_paiement,
     }));
     exportToExcel(exportData, 'rapport_encaissement');
@@ -323,7 +338,7 @@ export default function RapportEncaissement({ dateRange }: Props) {
                     <TableCell className="text-right text-orange-600">
                       {item.montant_restant.toFixed(2)} DH
                     </TableCell>
-                    <TableCell className="capitalize">{item.mode_paiement}</TableCell>
+                    <TableCell className="capitalize">{item.modes_paiement}</TableCell>
                     <TableCell>{getStatutBadge(item.statut_paiement)}</TableCell>
                   </TableRow>
                 ))}
