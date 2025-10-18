@@ -51,38 +51,47 @@ interface NavItem {
   action?: string;
 }
 
-const getMainNavItems = (isAdmin: boolean): NavItem[] => [
-  { title: "Tableau de bord", href: "/", icon: BarChart3 },
-  { title: "Calendrier", href: "/calendrier", icon: Calendar },
-  { title: "Clients", href: "/clients", icon: Users },
-  { title: "Véhicules", href: "/vehicules", icon: Car },
-  { 
-    title: "Locations", 
-    icon: MapPin,
-    submenu: [
-      { title: "Voir les locations", href: "/locations", icon: List },
-      { title: "Ajouter une location", href: "/locations/nouveau", icon: Plus },
-    ]
-  },
-  { 
-    title: "Assistance", 
-    icon: LifeBuoy,
-    submenu: [
-      { title: "Dossier d'assistance", href: "/assistance", icon: List },
-      { title: "Nouveau Dossier", href: "/assistance/nouveau", icon: Plus },
-      { title: "Listes des assurances", href: "/assurances", icon: Building2 },
-      { title: "Factures Assurances", href: "/factures", icon: FileText },
-    ]
-  },
-  { title: "Maintenance", href: "/maintenance", icon: Wrench },
-  { title: "Sinistre", href: "/sinistres", icon: AlertTriangle },
-  { title: "Infraction", href: "/infractions", icon: Shield },
-  { title: "Charges", href: "/charges", icon: DollarSign },
-  { title: "Revenus", href: "/revenus", icon: TrendingUp },
-  { title: "Rapport", href: "/rapports", icon: BarChart },
-  { title: "Historique", href: "/historique", icon: Clock },
-  { title: "Importer", href: "/importer", icon: Upload },
-];
+const getMainNavItems = (isAdmin: boolean, isAgent: boolean): NavItem[] => {
+  const items: NavItem[] = [
+    { title: "Tableau de bord", href: "/", icon: BarChart3 },
+    { title: "Calendrier", href: "/calendrier", icon: Calendar },
+    { title: "Clients", href: "/clients", icon: Users },
+    { title: "Véhicules", href: "/vehicules", icon: Car },
+    { 
+      title: "Locations", 
+      icon: MapPin,
+      submenu: [
+        { title: "Voir les locations", href: "/locations", icon: List },
+        { title: "Ajouter une location", href: "/locations/nouveau", icon: Plus },
+      ]
+    },
+    { 
+      title: "Assistance", 
+      icon: LifeBuoy,
+      submenu: [
+        { title: "Dossier d'assistance", href: "/assistance", icon: List },
+        { title: "Nouveau Dossier", href: "/assistance/nouveau", icon: Plus },
+        // "Listes des assurances" masqué pour les agents
+        ...(isAgent ? [] : [{ title: "Listes des assurances", href: "/assurances", icon: Building2 }]),
+        { title: "Factures Assurances", href: "/factures", icon: FileText },
+      ]
+    },
+    { title: "Maintenance", href: "/maintenance", icon: Wrench },
+    { title: "Sinistre", href: "/sinistres", icon: AlertTriangle },
+    { title: "Infraction", href: "/infractions", icon: Shield },
+    { title: "Charges", href: "/charges", icon: DollarSign },
+    { title: "Revenus", href: "/revenus", icon: TrendingUp },
+    { title: "Rapport", href: "/rapports", icon: BarChart },
+  ];
+
+  // "Historique" et "Importer" masqués pour les agents
+  if (!isAgent) {
+    items.push({ title: "Historique", href: "/historique", icon: Clock });
+    items.push({ title: "Importer", href: "/importer", icon: Upload });
+  }
+
+  return items;
+};
 
 const adminNavItems: NavItem[] = [
   { title: "Utilisateurs", href: "/utilisateurs", icon: Users },
@@ -96,10 +105,10 @@ interface SidebarProps {
 export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const location = useLocation();
   const { state } = useSidebar();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isAgent } = useUserRole();
   const collapsed = state === "collapsed";
   
-  const mainNavItems = getMainNavItems(isAdmin);
+  const mainNavItems = getMainNavItems(isAdmin, isAgent);
   
   // Track which groups are open
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
