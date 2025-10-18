@@ -108,7 +108,7 @@ export default function Revenus() {
 
       if (paymentsError) throw paymentsError;
 
-      // Charger les paiements d'assistance
+      // Charger les paiements d'assistance (seulement ceux qui sont payés)
       const { data: assistanceData, error: assistanceError } = await supabase
         .from('assistance')
         .select(`
@@ -117,6 +117,7 @@ export default function Revenus() {
         `)
         .neq('montant_paye', 0)
         .not('montant_paye', 'is', null)
+        .neq('etat_paiement', 'en_attente')
         .order('date_debut', { ascending: false });
 
       if (assistanceError) throw assistanceError;
