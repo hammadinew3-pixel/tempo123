@@ -1369,6 +1369,57 @@ export default function AssistanceDetails() {
         </Card>
       </div>
 
+      {/* Payment Information Card */}
+      <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+            <DollarSign className="w-4 h-4 text-emerald-600" />
+            <span className="font-semibold">PAIEMENT</span>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b">
+              <span className="text-sm text-muted-foreground">Montant facturé</span>
+              <span className="text-lg font-bold">{(assistance.montant_facture || 0).toFixed(2)} DH</span>
+            </div>
+            
+            <div className="flex justify-between items-center pb-3 border-b">
+              <span className="text-sm text-muted-foreground">Montant payé</span>
+              <span className="text-lg font-bold text-emerald-600">{(assistance.montant_paye || 0).toFixed(2)} DH</span>
+            </div>
+            
+            <div className="flex justify-between items-center pb-3 border-b">
+              <span className="text-sm text-muted-foreground">Reste à payer</span>
+              <span className="text-lg font-bold text-orange-600">
+                {((assistance.montant_facture || 0) - (assistance.montant_paye || 0)).toFixed(2)} DH
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Statut</span>
+              <Badge variant="outline" className={
+                assistance.etat_paiement === 'paye' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                assistance.etat_paiement === 'partiel' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                'bg-red-100 text-red-800 border-red-200'
+              }>
+                {assistance.etat_paiement === 'paye' && 'Payé'}
+                {assistance.etat_paiement === 'partiel' && 'Partiel'}
+                {assistance.etat_paiement === 'en_attente' && 'En attente'}
+              </Badge>
+            </div>
+            
+            {assistance.date_paiement_assurance && (
+              <div className="flex justify-between items-center pt-3 border-t">
+                <span className="text-sm text-muted-foreground">Date de paiement</span>
+                <span className="text-sm font-medium">
+                  {format(new Date(assistance.date_paiement_assurance), 'dd/MM/yyyy', { locale: fr })}
+                </span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Informations du dossier */}
