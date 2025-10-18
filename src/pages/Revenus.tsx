@@ -519,6 +519,7 @@ export default function Revenus() {
                 <SelectContent>
                   <SelectItem value="all">Toutes</SelectItem>
                   <SelectItem value="contrat">Contrat</SelectItem>
+                  <SelectItem value="assistance">Assistance</SelectItem>
                   <SelectItem value="vente">Vente</SelectItem>
                   <SelectItem value="remboursement">Remboursement</SelectItem>
                   <SelectItem value="autre">Autre</SelectItem>
@@ -580,11 +581,7 @@ export default function Revenus() {
                 {filteredRevenues.map((revenue) => (
                   <TableRow key={revenue.id}>
                     <TableCell>{format(new Date(revenue.date_encaissement), 'dd/MM/yyyy')}</TableCell>
-                    <TableCell className="capitalize">
-                      {revenue.source_revenu === 'assistance' && revenue.num_dossier
-                        ? `Assistance ${revenue.num_dossier}`
-                        : revenue.source_revenu}
-                    </TableCell>
+                    <TableCell className="capitalize">{revenue.source_revenu}</TableCell>
                     <TableCell>
                       {revenue.clients ? `${revenue.clients.nom} ${revenue.clients.prenom}` : '-'}
                     </TableCell>
