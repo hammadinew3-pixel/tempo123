@@ -47,18 +47,22 @@ interface Revenue {
   contract_id?: string;
   note?: string;
   num_dossier?: string;
+  vehicle_id?: string;
   clients?: { nom: string; prenom: string };
   contracts?: { numero_contrat: string };
+  vehicles?: { immatriculation: string; marque: string; modele: string };
 }
 
 export default function Revenus() {
   const [revenues, setRevenues] = useState<Revenue[]>([]);
   const [filteredRevenues, setFilteredRevenues] = useState<Revenue[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState('all');
   const [filterStatut, setFilterStatut] = useState('all');
   const [filterPeriod, setFilterPeriod] = useState('all');
+  const [filterVehicle, setFilterVehicle] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
@@ -74,11 +78,26 @@ export default function Revenus() {
 
   useEffect(() => {
     loadRevenues();
+    loadVehicles();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [revenues, searchTerm, filterSource, filterStatut, filterPeriod]);
+  }, [revenues, searchTerm, filterSource, filterStatut, filterPeriod, filterVehicle]);
+
+  const loadVehicles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('id, immatriculation, marque, modele')
+        .order('immatriculation');
+
+      if (error) throw error;
+      setVehicles(data || []);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    }
+  };
 
   const loadRevenues = async () => {
     setLoading(true);
@@ -89,7 +108,7 @@ export default function Revenus() {
         .select(`
           *,
           clients (nom, prenom),
-          contracts (numero_contrat)
+          contracts (numero_contrat, vehicle_id, vehicles (immatriculation, marque, modele))
         `)
         .order('date_encaissement', { ascending: false });
 
@@ -102,7 +121,9 @@ export default function Revenus() {
           *,
           contracts!inner (
             numero_contrat,
-            clients (nom, prenom)
+            vehicle_id,
+            clients (nom, prenom),
+            vehicles (immatriculation, marque, modele)
           )
         `)
         .order('date_paiement', { ascending: false });
@@ -114,7 +135,8 @@ export default function Revenus() {
         .from('assistance')
         .select(`
           *,
-          clients (nom, prenom)
+          clients (nom, prenom),
+          vehicles (immatriculation, marque, modele)
         `)
         .neq('montant_paye', 0)
         .not('montant_paye', 'is', null)
@@ -133,9 +155,11 @@ export default function Revenus() {
         statut: r.statut,
         client_id: r.client_id,
         contract_id: r.contract_id,
+        vehicle_id: r.contracts?.vehicle_id,
         note: r.note,
         clients: r.clients,
         contracts: r.contracts,
+        vehicles: r.contracts?.vehicles,
       }));
 
       // Formater les paiements de contrats comme des revenus
@@ -147,9 +171,11 @@ export default function Revenus() {
         mode_paiement: p.methode || 'espece',
         statut: 'paye',
         contract_id: p.contract_id,
+        vehicle_id: p.contracts?.vehicle_id,
         note: `Paiement contrat ${p.contracts?.numero_contrat || ''}`,
         clients: p.contracts?.clients,
         contracts: { numero_contrat: p.contracts?.numero_contrat },
+        vehicles: p.contracts?.vehicles,
       }));
 
       // Formater les paiements d'assistance comme des revenus
@@ -161,10 +187,12 @@ export default function Revenus() {
         mode_paiement: 'virement',
         statut: a.etat_paiement === 'paye' ? 'paye' : 'partiel',
         client_id: a.client_id,
+        vehicle_id: a.vehicle_id,
         num_dossier: a.num_dossier,
         note: `Paiement assistance ${a.num_dossier || ''}`,
         clients: a.clients,
         contracts: null,
+        vehicles: a.vehicles,
       }));
 
       // Combiner et trier tous les revenus
@@ -202,6 +230,10 @@ export default function Revenus() {
 
     if (filterStatut !== 'all') {
       filtered = filtered.filter(r => r.statut === filterStatut);
+    }
+
+    if (filterVehicle !== 'all') {
+      filtered = filtered.filter(r => r.vehicle_id === filterVehicle);
     }
 
     if (filterPeriod !== 'all') {
@@ -497,7 +529,7 @@ export default function Revenus() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="space-y-2">
               <Label>Rechercher</Label>
               <div className="relative">
@@ -537,6 +569,22 @@ export default function Revenus() {
                   <SelectItem value="paye">Payé</SelectItem>
                   <SelectItem value="partiel">Partiel</SelectItem>
                   <SelectItem value="en_attente">En attente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Véhicule</Label>
+              <Select value={filterVehicle} onValueChange={setFilterVehicle}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  {vehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.immatriculation} - {vehicle.marque} {vehicle.modele}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
