@@ -28,7 +28,7 @@ type ClientInsert = Database['public']['Tables']['clients']['Insert'];
 export default function Clients() {
   const navigate = useNavigate();
   const { isClientDialogOpen, setIsClientDialogOpen } = useLayoutContext();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isAgent } = useUserRole();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -469,7 +469,7 @@ export default function Clients() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {isAdmin && (
+          {(isAdmin || isAgent) && (
             <Dialog open={isClientDialogOpen} onOpenChange={(open) => { setIsClientDialogOpen(open); if (!open) resetForm(); }}>
               <DialogTrigger asChild>
                 <Button size="sm">
