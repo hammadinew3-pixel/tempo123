@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { useTenant } from "@/contexts/TenantContext";
 
 type Assurance = Database['public']['Tables']['assurances']['Row'];
 type AssuranceInsert = Database['public']['Tables']['assurances']['Insert'];

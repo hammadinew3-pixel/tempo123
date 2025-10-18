@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ContractWorkflow } from "@/components/workflow/ContractWorkflow";
 import { computeChangeAmounts, safeRemaining, resolveRates } from "@/lib/contractPricing";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function LocationDetails() {
   const { id } = useParams();

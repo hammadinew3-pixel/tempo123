@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Plus, Download, Filter, Search, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportToExcel } from '@/lib/exportUtils';
+import { useTenant } from '@/contexts/TenantContext';
 import {
   Table,
   TableBody,

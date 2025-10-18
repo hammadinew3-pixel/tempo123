@@ -15,6 +15,7 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Database } from "@/integrations/supabase/types";
+import { useTenant } from "@/contexts/TenantContext";
 
 type Bareme = Database["public"]["Tables"]["assurance_bareme"]["Row"];
 

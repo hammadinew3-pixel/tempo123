@@ -9,6 +9,7 @@ import { Plus, Download, TrendingDown, Filter, Search, Trash2 } from 'lucide-rea
 import { useToast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
+import { useTenant } from '@/contexts/TenantContext';
 import {
   Table,
   TableBody,

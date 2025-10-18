@@ -115,10 +115,10 @@ export default function Parametres() {
       const { error } = await supabase
         .from('vehicle_assistance_categories')
         .insert({
-          code: newCategoryCode.toUpperCase(),
           nom: newCategoryCode.toUpperCase(),
           label: newCategoryCode.toUpperCase(),
-          ordre: maxOrdre + 1
+          ordre: maxOrdre + 1,
+          actif: true
         });
 
       if (error) throw error;

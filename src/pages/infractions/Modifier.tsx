@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function ModifierInfraction() {
   const { id } = useParams();

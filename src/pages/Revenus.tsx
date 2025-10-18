@@ -9,6 +9,7 @@ import { Plus, Download, TrendingUp, Filter, Search, Trash2 } from 'lucide-react
 import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
+import { useTenant } from '@/contexts/TenantContext';
 import {
   Table,
   TableBody,
