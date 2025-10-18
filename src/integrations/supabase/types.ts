@@ -14,6 +14,337 @@ export type Database = {
   }
   public: {
     Tables: {
+      acc_accounts: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      acc_entries: {
+        Row: {
+          created_at: string | null
+          date_entry: string
+          doc_id: string | null
+          doc_type: string
+          id: string
+          is_locked: boolean | null
+          journal_id: string
+          memo: string | null
+          ref_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_entry: string
+          doc_id?: string | null
+          doc_type: string
+          id?: string
+          is_locked?: boolean | null
+          journal_id: string
+          memo?: string | null
+          ref_number: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_entry?: string
+          doc_id?: string | null
+          doc_type?: string
+          id?: string
+          is_locked?: boolean | null
+          journal_id?: string
+          memo?: string | null
+          ref_number?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acc_entries_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "acc_journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      acc_entry_lines: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          credit: number | null
+          debit: number | null
+          entry_id: string
+          id: string
+          partner_name: string | null
+          tax_code: string | null
+          updated_at: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          credit?: number | null
+          debit?: number | null
+          entry_id: string
+          id?: string
+          partner_name?: string | null
+          tax_code?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          credit?: number | null
+          debit?: number | null
+          entry_id?: string
+          id?: string
+          partner_name?: string | null
+          tax_code?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acc_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_entry_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "acc_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_entry_lines_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      acc_journals: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          sequence: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label: string
+          sequence?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          sequence?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      acc_settings: {
+        Row: {
+          ap_account_id: string | null
+          ar_account_id: string | null
+          bank_account_id: string | null
+          cash_account_id: string | null
+          cheque_issued_account_id: string | null
+          cheque_received_account_id: string | null
+          created_at: string | null
+          expense_default_account_id: string | null
+          id: string
+          next_ref_purchases: number | null
+          next_ref_sales: number | null
+          rounding_account_id: string | null
+          sales_account_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ap_account_id?: string | null
+          ar_account_id?: string | null
+          bank_account_id?: string | null
+          cash_account_id?: string | null
+          cheque_issued_account_id?: string | null
+          cheque_received_account_id?: string | null
+          created_at?: string | null
+          expense_default_account_id?: string | null
+          id?: string
+          next_ref_purchases?: number | null
+          next_ref_sales?: number | null
+          rounding_account_id?: string | null
+          sales_account_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ap_account_id?: string | null
+          ar_account_id?: string | null
+          bank_account_id?: string | null
+          cash_account_id?: string | null
+          cheque_issued_account_id?: string | null
+          cheque_received_account_id?: string | null
+          created_at?: string | null
+          expense_default_account_id?: string | null
+          id?: string
+          next_ref_purchases?: number | null
+          next_ref_sales?: number | null
+          rounding_account_id?: string | null
+          sales_account_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acc_settings_ap_account_id_fkey"
+            columns: ["ap_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_ar_account_id_fkey"
+            columns: ["ar_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_cash_account_id_fkey"
+            columns: ["cash_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_cheque_issued_account_id_fkey"
+            columns: ["cheque_issued_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_cheque_received_account_id_fkey"
+            columns: ["cheque_received_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_expense_default_account_id_fkey"
+            columns: ["expense_default_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_rounding_account_id_fkey"
+            columns: ["rounding_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_settings_sales_account_id_fkey"
+            columns: ["sales_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      acc_tax_settings: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          label: string
+          purchase_account_id: string | null
+          rate: number
+          sales_account_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          label: string
+          purchase_account_id?: string | null
+          rate: number
+          sales_account_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          label?: string
+          purchase_account_id?: string | null
+          rate?: number
+          sales_account_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "acc_tax_settings_purchase_account_id_fkey"
+            columns: ["purchase_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "acc_tax_settings_sales_account_id_fkey"
+            columns: ["sales_account_id"]
+            isOneToOne: false
+            referencedRelation: "acc_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agence_settings: {
         Row: {
           adresse: string | null
