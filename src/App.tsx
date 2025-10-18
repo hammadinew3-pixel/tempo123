@@ -40,11 +40,6 @@ import ModifierInfraction from "./pages/infractions/Modifier";
 import Auth from "./pages/Auth";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
-import Journaux from "./pages/comptabilite/Journaux";
-import GrandLivre from "./pages/comptabilite/GrandLivre";
-import Balance from "./pages/comptabilite/Balance";
-import TVA from "./pages/comptabilite/TVA";
-import ParametresComptabilite from "./pages/comptabilite/Parametres";
 
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -351,46 +346,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Parametres /></Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/comptabilite/journaux"
-              element={
-                <ProtectedRoute>
-                  <Layout><Journaux /></Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/comptabilite/grand-livre"
-              element={
-                <ProtectedRoute>
-                  <Layout><GrandLivre /></Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/comptabilite/balance"
-              element={
-                <ProtectedRoute>
-                  <Layout><Balance /></Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/comptabilite/tva"
-              element={
-                <ProtectedRoute>
-                  <Layout><TVA /></Layout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/comptabilite/parametres"
-              element={
-                <ProtectedRoute>
-                  <Layout><ParametresComptabilite /></Layout>
                 </ProtectedRoute>
               }
             />

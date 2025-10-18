@@ -25,10 +25,6 @@ import {
   AlertTriangle,
   Settings,
   Shield,
-  Calculator,
-  BookOpen,
-  Scale,
-  Receipt,
 } from "lucide-react";
 import {
   Sidebar as SidebarUI,
@@ -84,17 +80,6 @@ const getMainNavItems = (isAdmin: boolean): NavItem[] => [
   { title: "Charges", href: "/charges", icon: DollarSign },
   { title: "Revenus", href: "/revenus", icon: TrendingUp },
   { title: "Rapport", href: "/rapports", icon: BarChart },
-  { 
-    title: "Comptabilité", 
-    icon: Calculator,
-    submenu: [
-      { title: "Journaux", href: "/comptabilite/journaux", icon: BookOpen },
-      { title: "Grand-Livre", href: "/comptabilite/grand-livre", icon: List },
-      { title: "Balance", href: "/comptabilite/balance", icon: Scale },
-      { title: "TVA", href: "/comptabilite/tva", icon: Receipt },
-      { title: "Paramètres Compta", href: "/comptabilite/parametres", icon: Settings },
-    ]
-  },
   { title: "Historique", href: "/historique", icon: Clock },
   { title: "Importer", href: "/importer", icon: Upload },
 ];
@@ -120,7 +105,6 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     locations: true,
     assistance: true,
-    comptabilité: true,
   });
 
   const isActive = (href?: string) => {
