@@ -44,9 +44,11 @@ interface AddInterventionDialogProps {
   onSuccess: () => void;
   vehicleId?: string;
   defaultType?: string;
+  interventionToEdit?: any;
 }
 
-export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId, defaultType }: AddInterventionDialogProps) {
+export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId, defaultType, interventionToEdit }: AddInterventionDialogProps) {
+  const isEditMode = !!interventionToEdit;
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<string>(vehicleId || "");
@@ -68,15 +70,36 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
   useEffect(() => {
     if (open) {
       loadVehicles();
-      if (vehicleId) {
-        setSelectedVehicle(vehicleId);
-        loadVehicleKm(vehicleId);
-      }
-      if (defaultType) {
-        setTypeIntervention(defaultType);
+      
+      if (interventionToEdit) {
+        // Mode édition: charger les données de l'intervention
+        setSelectedVehicle(interventionToEdit.vehicle_id);
+        setDateIntervention(new Date(interventionToEdit.date_intervention));
+        setKilometrage(interventionToEdit.kilometrage_actuel.toString());
+        setTypeIntervention(interventionToEdit.type_intervention);
+        setDetailsIntervention(interventionToEdit.details_intervention || []);
+        setGarageExterne(interventionToEdit.garage_externe || false);
+        setNomGarage(interventionToEdit.nom_garage || "");
+        setContactGarage(interventionToEdit.contact_garage || "");
+        setTelephoneGarage(interventionToEdit.telephone_garage || "");
+        setMontantHT(interventionToEdit.montant_ht?.toString() || "");
+        setTauxTVA(interventionToEdit.montant_tva ? ((interventionToEdit.montant_tva / interventionToEdit.montant_ht) * 100).toString() : "20");
+        setFacturee(interventionToEdit.facturee || false);
+        setReferenceFature(interventionToEdit.reference_facture || "");
+        setNotes(interventionToEdit.notes || "");
+        setProchainKilometrageVidange(interventionToEdit.prochain_kilometrage_vidange?.toString() || "");
+      } else {
+        // Mode ajout
+        if (vehicleId) {
+          setSelectedVehicle(vehicleId);
+          loadVehicleKm(vehicleId);
+        }
+        if (defaultType) {
+          setTypeIntervention(defaultType);
+        }
       }
     }
-  }, [open, vehicleId, defaultType]);
+  }, [open, vehicleId, defaultType, interventionToEdit]);
 
   const loadVehicles = async () => {
     const { data } = await supabase
@@ -119,7 +142,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
       const tva = (ht * parseFloat(tauxTVA)) / 100;
       const ttc = calculateMontantTTC();
 
-      const { error } = await supabase.from("interventions").insert({
+      const interventionData = {
         vehicle_id: selectedVehicle,
         date_intervention: format(dateIntervention, "yyyy-MM-dd"),
         kilometrage_actuel: parseInt(kilometrage),
@@ -138,16 +161,32 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
         prochain_kilometrage_vidange: typeIntervention === "Vidange" && prochainKilometrageVidange 
           ? parseInt(prochainKilometrageVidange) 
           : null
-      });
+      };
 
-      if (error) throw error;
+      if (isEditMode) {
+        // Mode édition: UPDATE
+        const { error } = await supabase
+          .from("interventions")
+          .update(interventionData)
+          .eq("id", interventionToEdit.id);
 
-      toast.success("Intervention ajoutée avec succès");
+        if (error) throw error;
+        toast.success("Intervention modifiée avec succès");
+      } else {
+        // Mode ajout: INSERT
+        const { error } = await supabase
+          .from("interventions")
+          .insert(interventionData);
+
+        if (error) throw error;
+        toast.success("Intervention ajoutée avec succès");
+      }
+
       onSuccess();
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
-      toast.error("Erreur lors de l'ajout de l'intervention");
+      toast.error(isEditMode ? "Erreur lors de la modification de l'intervention" : "Erreur lors de l'ajout de l'intervention");
       console.error(error);
     } finally {
       setLoading(false);
@@ -184,7 +223,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nouvelle intervention</DialogTitle>
+          <DialogTitle>{isEditMode ? "Modifier l'intervention" : "Nouvelle intervention"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -194,7 +233,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
               <Select value={selectedVehicle} onValueChange={(value) => {
                 setSelectedVehicle(value);
                 loadVehicleKm(value);
-              }} disabled={!!vehicleId}>
+              }} disabled={!!vehicleId || isEditMode}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un véhicule" />
                 </SelectTrigger>
@@ -409,7 +448,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Enregistrement..." : "Valider"}
+              {loading ? "Enregistrement..." : isEditMode ? "Modifier" : "Valider"}
             </Button>
           </div>
         </form>

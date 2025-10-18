@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Wrench, AlertCircle, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
+import { Plus, Wrench, AlertCircle, CheckCircle2, XCircle, ExternalLink, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -42,6 +42,7 @@ export function VehicleMaintenanceSummary({
   const navigate = useNavigate();
   const [showInterventionDialog, setShowInterventionDialog] = useState(false);
   const [interventionType, setInterventionType] = useState<string | undefined>();
+  const [interventionToEdit, setInterventionToEdit] = useState<any>(null);
   const [interventions, setInterventions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState("Tous");
@@ -70,11 +71,19 @@ export function VehicleMaintenanceSummary({
 
   const handleAddVidange = () => {
     setInterventionType("Vidange");
+    setInterventionToEdit(null);
     setShowInterventionDialog(true);
   };
 
   const handleAddIntervention = () => {
     setInterventionType(undefined);
+    setInterventionToEdit(null);
+    setShowInterventionDialog(true);
+  };
+
+  const handleEditIntervention = (intervention: any) => {
+    setInterventionType(undefined);
+    setInterventionToEdit(intervention);
     setShowInterventionDialog(true);
   };
 
@@ -225,6 +234,7 @@ export function VehicleMaintenanceSummary({
                       <TableHead>Garage</TableHead>
                       <TableHead>Facturée</TableHead>
                       <TableHead>Dépense</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -265,7 +275,10 @@ export function VehicleMaintenanceSummary({
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => navigate("/charges")}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate("/charges");
+                              }}
                               className="gap-1 h-8 px-2"
                             >
                               <ExternalLink className="w-3 h-3" />
@@ -274,6 +287,20 @@ export function VehicleMaintenanceSummary({
                           ) : (
                             <span className="text-muted-foreground text-sm">—</span>
                           )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditIntervention(intervention);
+                            }}
+                            className="gap-1 h-8 px-2"
+                          >
+                            <Edit className="w-3 h-3" />
+                            Modifier
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -287,13 +314,20 @@ export function VehicleMaintenanceSummary({
 
       <AddInterventionDialog
         open={showInterventionDialog}
-        onOpenChange={setShowInterventionDialog}
+        onOpenChange={(open) => {
+          setShowInterventionDialog(open);
+          if (!open) {
+            setInterventionToEdit(null);
+            setInterventionType(undefined);
+          }
+        }}
         onSuccess={() => {
           loadInterventions();
           window.location.reload(); // Reload to update vehicle data
         }}
         vehicleId={vehicleId}
         defaultType={interventionType}
+        interventionToEdit={interventionToEdit}
       />
     </>
   );
