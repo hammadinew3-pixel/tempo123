@@ -54,10 +54,36 @@ export default function RapportParVoiture({ dateRange }: Props) {
 
       const reports: VehicleReport[] = await Promise.all(
         vehiclesData.map(async (vehicle) => {
+          // Paiements de contrats
+          const { data: payments } = await supabase
+            .from('contract_payments')
+            .select(`
+              montant,
+              contracts!inner (
+                vehicle_id,
+                date_debut,
+                date_fin
+              )
+            `)
+            .eq('contracts.vehicle_id', vehicle.id)
+            .gte('date_paiement', dateRange.startDate)
+            .lte('date_paiement', dateRange.endDate);
+
+          // Paiements d'assistance
+          const { data: assistance } = await supabase
+            .from('assistance')
+            .select('montant_paye')
+            .eq('vehicle_id', vehicle.id)
+            .gte('date_debut', dateRange.startDate)
+            .lte('date_fin', dateRange.endDate)
+            .neq('etat_paiement', 'en_attente')
+            .neq('montant_paye', 0)
+            .not('montant_paye', 'is', null);
+
           // Nombre de contrats
           const { data: contracts } = await supabase
             .from('contracts')
-            .select('total_amount')
+            .select('id')
             .eq('vehicle_id', vehicle.id)
             .gte('date_debut', dateRange.startDate)
             .lte('date_fin', dateRange.endDate)
@@ -79,7 +105,9 @@ export default function RapportParVoiture({ dateRange }: Props) {
             .order('date_vidange', { ascending: false })
             .limit(1);
 
-          const revenu_total = contracts?.reduce((sum, c) => sum + (c.total_amount || 0), 0) || 0;
+          const revenu_payments = payments?.reduce((sum, p) => sum + (p.montant || 0), 0) || 0;
+          const revenu_assistance = assistance?.reduce((sum, a) => sum + (a.montant_paye || 0), 0) || 0;
+          const revenu_total = revenu_payments + revenu_assistance;
           const depenses_total = expenses?.reduce((sum, e) => sum + (e.montant || 0), 0) || 0;
 
           return {
@@ -106,13 +134,29 @@ export default function RapportParVoiture({ dateRange }: Props) {
   };
 
   const loadVehicleChart = async (vehicleId: string) => {
-    const { data: contracts } = await supabase
-      .from('contracts')
-      .select('date_debut, total_amount')
+    // Paiements de contrats
+    const { data: payments } = await supabase
+      .from('contract_payments')
+      .select(`
+        date_paiement,
+        montant,
+        contracts!inner (vehicle_id)
+      `)
+      .eq('contracts.vehicle_id', vehicleId)
+      .gte('date_paiement', dateRange.startDate)
+      .lte('date_paiement', dateRange.endDate)
+      .order('date_paiement');
+
+    // Paiements d'assistance
+    const { data: assistance } = await supabase
+      .from('assistance')
+      .select('date_debut, montant_paye')
       .eq('vehicle_id', vehicleId)
       .gte('date_debut', dateRange.startDate)
       .lte('date_fin', dateRange.endDate)
-      .neq('statut', 'annule')
+      .neq('etat_paiement', 'en_attente')
+      .neq('montant_paye', 0)
+      .not('montant_paye', 'is', null)
       .order('date_debut');
 
     const { data: expenses } = await supabase
@@ -126,10 +170,16 @@ export default function RapportParVoiture({ dateRange }: Props) {
     // Grouper par mois
     const monthlyData: { [key: string]: { revenus: number; depenses: number } } = {};
 
-    contracts?.forEach((c) => {
-      const month = new Date(c.date_debut).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
+    payments?.forEach((p) => {
+      const month = new Date(p.date_paiement).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) monthlyData[month] = { revenus: 0, depenses: 0 };
-      monthlyData[month].revenus += c.total_amount || 0;
+      monthlyData[month].revenus += p.montant || 0;
+    });
+
+    assistance?.forEach((a) => {
+      const month = new Date(a.date_debut).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
+      if (!monthlyData[month]) monthlyData[month] = { revenus: 0, depenses: 0 };
+      monthlyData[month].revenus += a.montant_paye || 0;
     });
 
     expenses?.forEach((e) => {
