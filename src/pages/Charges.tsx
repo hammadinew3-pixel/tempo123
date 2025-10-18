@@ -54,10 +54,12 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', '#10b981', '#f59
 export default function Charges() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterStatut, setFilterStatut] = useState('all');
+  const [filterVehicle, setFilterVehicle] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
@@ -74,11 +76,26 @@ export default function Charges() {
 
   useEffect(() => {
     loadExpenses();
+    loadVehicles();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [expenses, searchTerm, filterType, filterStatut]);
+  }, [expenses, searchTerm, filterType, filterStatut, filterVehicle]);
+
+  const loadVehicles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('id, immatriculation, marque, modele')
+        .order('immatriculation');
+
+      if (error) throw error;
+      setVehicles(data || []);
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    }
+  };
 
   const loadExpenses = async () => {
     setLoading(true);
@@ -173,6 +190,10 @@ export default function Charges() {
 
     if (filterStatut !== 'all') {
       filtered = filtered.filter(e => e.statut === filterStatut);
+    }
+
+    if (filterVehicle !== 'all') {
+      filtered = filtered.filter(e => e.vehicle_id === filterVehicle);
     }
 
     setFilteredExpenses(filtered);
@@ -463,7 +484,7 @@ export default function Charges() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label>Rechercher</Label>
               <div className="relative">
@@ -504,6 +525,22 @@ export default function Charges() {
                   <SelectItem value="paye">Payé</SelectItem>
                   <SelectItem value="en_attente">En attente</SelectItem>
                   <SelectItem value="recurrente">Récurrente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Véhicule</Label>
+              <Select value={filterVehicle} onValueChange={setFilterVehicle}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les véhicules</SelectItem>
+                  {vehicles.map((vehicle) => (
+                    <SelectItem key={vehicle.id} value={vehicle.id}>
+                      {vehicle.immatriculation} - {vehicle.marque} {vehicle.modele}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
