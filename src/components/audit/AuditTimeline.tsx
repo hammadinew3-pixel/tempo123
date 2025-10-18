@@ -77,6 +77,57 @@ export function AuditTimeline({ tableName, recordId, limit = 20 }: AuditTimeline
     );
   };
 
+  const renderRecordDetails = (data: any, tableName: string) => {
+    if (!data) return null;
+
+    // Champs importants par table
+    const importantFields: Record<string, string[]> = {
+      contracts: ['numero_contrat', 'date_debut', 'date_fin', 'total_amount', 'statut'],
+      clients: ['nom', 'prenom', 'telephone', 'email', 'cin'],
+      vehicles: ['immatriculation', 'marque', 'modele', 'annee'],
+      assistance: ['num_dossier', 'date_debut', 'date_fin', 'montant_total', 'etat'],
+      infractions: ['reference', 'date_infraction', 'montant', 'type_infraction'],
+      sinistres: ['reference', 'date_sinistre', 'montant', 'type_sinistre'],
+      contract_payments: ['montant', 'date_paiement', 'methode'],
+      expenses: ['montant', 'date_depense', 'description', 'type_depense'],
+      revenus: ['montant', 'date_encaissement', 'source_revenu'],
+    };
+
+    const fields = importantFields[tableName] || Object.keys(data).slice(0, 5);
+    
+    return (
+      <div className="mt-3 space-y-1 border-t pt-3">
+        <p className="text-xs font-medium text-muted-foreground mb-2">Détails de l&apos;enregistrement:</p>
+        {fields.map((field) => {
+          if (data[field] !== undefined && data[field] !== null) {
+            const fieldLabel = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            let value = data[field];
+            
+            // Format dates
+            if (field.includes('date') && value) {
+              try {
+                value = format(new Date(value), 'dd/MM/yyyy', { locale: fr });
+              } catch {}
+            }
+            
+            // Format montants
+            if (field.includes('montant') && !isNaN(value)) {
+              value = `${Number(value).toFixed(2)} DH`;
+            }
+
+            return (
+              <div key={field} className="flex gap-4 py-1 text-sm">
+                <span className="font-medium text-muted-foreground min-w-[120px]">{fieldLabel}:</span>
+                <span className="flex-1">{value.toString()}</span>
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="text-center text-muted-foreground py-8">Chargement de l'historique...</div>;
   }
@@ -125,16 +176,22 @@ export function AuditTimeline({ tableName, recordId, limit = 20 }: AuditTimeline
                     </div>
                   )}
 
-                  {log.action === 'INSERT' && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Nouvel enregistrement créé
-                    </p>
+                  {log.action === 'INSERT' && log.new_data && (
+                    <div>
+                      <p className="text-sm text-green-600 mt-2 font-medium">
+                        Nouvel enregistrement créé
+                      </p>
+                      {renderRecordDetails(log.new_data, log.table_name)}
+                    </div>
                   )}
 
-                  {log.action === 'DELETE' && (
-                    <p className="text-sm text-destructive mt-2">
-                      Enregistrement supprimé
-                    </p>
+                  {log.action === 'DELETE' && log.old_data && (
+                    <div>
+                      <p className="text-sm text-destructive mt-2 font-medium">
+                        Enregistrement supprimé
+                      </p>
+                      {renderRecordDetails(log.old_data, log.table_name)}
+                    </div>
                   )}
                 </div>
               </div>
