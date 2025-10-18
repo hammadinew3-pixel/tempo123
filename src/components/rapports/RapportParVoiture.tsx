@@ -37,6 +37,8 @@ export default function RapportParVoiture({ dateRange }: Props) {
   const [loading, setLoading] = useState(true);
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [vehicleRevenus, setVehicleRevenus] = useState<any[]>([]);
+  const [vehicleDepenses, setVehicleDepenses] = useState<any[]>([]);
 
   useEffect(() => {
     loadVehicleReports();
@@ -138,51 +140,83 @@ export default function RapportParVoiture({ dateRange }: Props) {
     const { data: payments } = await supabase
       .from('contract_payments')
       .select(`
-        date_paiement,
-        montant,
-        contracts!inner (vehicle_id)
+        *,
+        contracts!inner (
+          vehicle_id,
+          numero_contrat,
+          clients (nom, prenom)
+        )
       `)
       .eq('contracts.vehicle_id', vehicleId)
       .gte('date_paiement', dateRange.startDate)
       .lte('date_paiement', dateRange.endDate)
-      .order('date_paiement');
+      .order('date_paiement', { ascending: false });
 
     // Paiements d'assistance
     const { data: assistance } = await supabase
       .from('assistance')
-      .select('date_debut, montant_paye')
+      .select(`
+        *,
+        clients (nom, prenom)
+      `)
       .eq('vehicle_id', vehicleId)
       .gte('date_debut', dateRange.startDate)
       .lte('date_fin', dateRange.endDate)
       .neq('etat_paiement', 'en_attente')
       .neq('montant_paye', 0)
       .not('montant_paye', 'is', null)
-      .order('date_debut');
+      .order('date_debut', { ascending: false });
 
     const { data: expenses } = await supabase
       .from('expenses')
-      .select('date_depense, montant')
+      .select('*')
       .eq('vehicle_id', vehicleId)
       .gte('date_depense', dateRange.startDate)
       .lte('date_depense', dateRange.endDate)
-      .order('date_depense');
+      .order('date_depense', { ascending: false });
 
-    // Grouper par mois
+    // Formater les revenus pour affichage
+    const revenusFromPayments = (payments || []).map((p: any) => ({
+      date: p.date_paiement,
+      source: 'Contrat',
+      reference: p.contracts?.numero_contrat || '',
+      client: p.contracts?.clients ? `${p.contracts.clients.nom} ${p.contracts.clients.prenom}` : '',
+      montant: p.montant,
+      mode_paiement: p.methode,
+    }));
+
+    const revenusFromAssistance = (assistance || []).map((a: any) => ({
+      date: a.date_debut,
+      source: 'Assistance',
+      reference: a.num_dossier || '',
+      client: a.clients ? `${a.clients.nom} ${a.clients.prenom}` : '',
+      montant: a.montant_paye,
+      mode_paiement: 'Virement',
+    }));
+
+    const allRevenus = [...revenusFromPayments, ...revenusFromAssistance].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    setVehicleRevenus(allRevenus);
+    setVehicleDepenses(expenses || []);
+
+    // Grouper par mois pour le graphique
     const monthlyData: { [key: string]: { revenus: number; depenses: number } } = {};
 
-    payments?.forEach((p) => {
+    payments?.forEach((p: any) => {
       const month = new Date(p.date_paiement).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) monthlyData[month] = { revenus: 0, depenses: 0 };
       monthlyData[month].revenus += p.montant || 0;
     });
 
-    assistance?.forEach((a) => {
+    assistance?.forEach((a: any) => {
       const month = new Date(a.date_debut).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) monthlyData[month] = { revenus: 0, depenses: 0 };
       monthlyData[month].revenus += a.montant_paye || 0;
     });
 
-    expenses?.forEach((e) => {
+    expenses?.forEach((e: any) => {
       const month = new Date(e.date_depense).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) monthlyData[month] = { revenus: 0, depenses: 0 };
       monthlyData[month].depenses += e.montant || 0;
@@ -292,6 +326,109 @@ export default function RapportParVoiture({ dateRange }: Props) {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+      )}
+
+      {/* Détails revenus et dépenses du véhicule sélectionné */}
+      {selectedVehicle && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenus - {selectedVehicleData?.immatriculation}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Référence</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead className="text-right">Montant</TableHead>
+                      <TableHead>Mode Paiement</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vehicleRevenus.length > 0 ? (
+                      vehicleRevenus.map((rev, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>{safeFormatDate(rev.date, 'dd/MM/yyyy')}</TableCell>
+                          <TableCell>{rev.source}</TableCell>
+                          <TableCell>{rev.reference}</TableCell>
+                          <TableCell>{rev.client}</TableCell>
+                          <TableCell className="text-right text-green-600 font-medium">
+                            {rev.montant.toFixed(2)} DH
+                          </TableCell>
+                          <TableCell className="capitalize">{rev.mode_paiement}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          Aucun revenu pour cette période
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <p className="text-lg font-bold text-green-600">
+                  Total: {vehicleRevenus.reduce((sum, r) => sum + r.montant, 0).toFixed(2)} DH
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Dépenses - {selectedVehicleData?.immatriculation}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Fournisseur</TableHead>
+                      <TableHead className="text-right">Montant</TableHead>
+                      <TableHead>Mode Paiement</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vehicleDepenses.length > 0 ? (
+                      vehicleDepenses.map((dep: any) => (
+                        <TableRow key={dep.id}>
+                          <TableCell>{safeFormatDate(dep.date_depense, 'dd/MM/yyyy')}</TableCell>
+                          <TableCell className="capitalize">{dep.type_depense}</TableCell>
+                          <TableCell>{dep.description}</TableCell>
+                          <TableCell>{dep.fournisseur || '-'}</TableCell>
+                          <TableCell className="text-right text-red-600 font-medium">
+                            {dep.montant.toFixed(2)} DH
+                          </TableCell>
+                          <TableCell className="capitalize">{dep.mode_paiement}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                          Aucune dépense pour cette période
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="mt-4 flex justify-end">
+                <p className="text-lg font-bold text-red-600">
+                  Total: {vehicleDepenses.reduce((sum: number, d: any) => sum + d.montant, 0).toFixed(2)} DH
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Tableau détaillé */}
