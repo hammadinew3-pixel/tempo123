@@ -338,6 +338,8 @@ export default function Charges() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="document">Document</SelectItem>
                           <SelectItem value="carburant">Carburant</SelectItem>
                           <SelectItem value="entretien">Entretien</SelectItem>
                           <SelectItem value="assurance">Assurance</SelectItem>
@@ -505,6 +507,8 @@ export default function Charges() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="document">Document</SelectItem>
                   <SelectItem value="carburant">Carburant</SelectItem>
                   <SelectItem value="entretien">Entretien</SelectItem>
                   <SelectItem value="assurance">Assurance</SelectItem>
