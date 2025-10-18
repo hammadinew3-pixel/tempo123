@@ -54,57 +54,34 @@ interface NavItem {
 const getMainNavItems = (isAdmin: boolean): NavItem[] => [
   { title: "Tableau de bord", href: "/", icon: BarChart3 },
   { title: "Calendrier", href: "/calendrier", icon: Calendar },
+  { title: "Clients", href: "/clients", icon: Users },
+  { title: "Véhicules", href: "/vehicules", icon: Car },
   { 
     title: "Locations", 
     icon: MapPin,
     submenu: [
-      { title: "Liste des locations", href: "/locations", icon: List },
-      { title: "Ajouter location", href: "/locations/nouveau", icon: Plus },
+      { title: "Voir les locations", href: "/locations", icon: List },
+      { title: "Ajouter une location", href: "/locations/nouveau", icon: Plus },
     ]
   },
   { 
     title: "Assistance", 
     icon: LifeBuoy,
     submenu: [
-      { title: "Dossiers d'assistance", href: "/assistance", icon: List },
-      { title: "Nouveau dossier", href: "/assistance/nouveau", icon: Plus },
-      { title: "Liste des assurances", href: "/assurances", icon: Building2 },
-      { title: "Factures Assurance", href: "/factures", icon: FileText },
+      { title: "Dossier d'assistance", href: "/assistance", icon: List },
+      { title: "Nouveau Dossier", href: "/assistance/nouveau", icon: Plus },
+      { title: "Listes des assurances", href: "/assurances", icon: Building2 },
+      { title: "Factures Assurances", href: "/factures", icon: FileText },
     ]
   },
-  { 
-    title: "Véhicules", 
-    icon: Car,
-    submenu: [
-      { title: "Voir les véhicules", href: "/vehicules", icon: List },
-      ...(isAdmin ? [{ title: "Ajouter véhicule", href: "/vehicules/nouveau", icon: Plus }] : []),
-    ]
-  },
-  { 
-    title: "Clients", 
-    icon: Users,
-    submenu: [
-      { title: "Voir les clients", href: "/clients", icon: List },
-      { title: "Ajouter client", action: "open-client-dialog", icon: Plus },
-    ]
-  },
-  { title: "Sinistres", href: "/sinistres", icon: AlertTriangle },
-  { 
-    title: "Infractions", 
-    icon: AlertTriangle,
-    submenu: [
-      { title: "Liste des infractions", href: "/infractions", icon: List },
-      { title: "Nouvelle infraction", href: "/infractions/nouveau", icon: Plus },
-    ]
-  },
-  { title: "Chèques", href: "/cheques", icon: CreditCard },
-  { title: "Revenus", href: "/revenus", icon: TrendingUp },
-  { title: "Charges", href: "/charges", icon: DollarSign },
   { title: "Maintenance", href: "/maintenance", icon: Wrench },
-  { title: "Rapports", href: "/rapports", icon: BarChart3 },
+  { title: "Sinistre", href: "/sinistres", icon: AlertTriangle },
+  { title: "Infraction", href: "/infractions", icon: Shield },
+  { title: "Charges", href: "/charges", icon: DollarSign },
+  { title: "Revenus", href: "/revenus", icon: TrendingUp },
+  { title: "Rapport", href: "/rapports", icon: BarChart },
   { title: "Historique", href: "/historique", icon: Clock },
   { title: "Importer", href: "/importer", icon: Upload },
-  { title: "Contact & Support", href: "/support", icon: HelpCircle },
 ];
 
 const adminNavItems: NavItem[] = [
@@ -127,8 +104,6 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   // Track which groups are open
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     locations: true,
-    vehicules: true,
-    clients: true,
     assistance: true,
   });
 
