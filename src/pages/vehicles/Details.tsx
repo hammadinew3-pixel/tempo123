@@ -869,9 +869,24 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Dernière vidange</Label>
-                  <p className="font-medium mt-1">
-                    {vehicle.date_derniere_vidange ? safeFormatDate(vehicle.date_derniere_vidange, 'dd/MM/yyyy', { locale: fr }) : 'Non renseignée'}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="font-medium">
+                      {vehicle.date_derniere_vidange ? safeFormatDate(vehicle.date_derniere_vidange, 'dd/MM/yyyy', { locale: fr }) : 'Non renseignée'}
+                    </p>
+                    {(() => {
+                      if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
+                        const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+                        if (kmUntilOilChange <= 0) {
+                          return <Badge variant="destructive" className="ml-2">Vidange en retard</Badge>;
+                        } else if (kmUntilOilChange <= 500) {
+                          return <Badge className="ml-2 bg-warning text-warning-foreground">Vidange urgente</Badge>;
+                        }
+                      } else if (!vehicle.dernier_kilometrage_vidange) {
+                        return <Badge variant="outline" className="ml-2">Aucune vidange</Badge>;
+                      }
+                      return null;
+                    })()}
+                  </div>
                 </div>
               </div>
             </TabsContent>

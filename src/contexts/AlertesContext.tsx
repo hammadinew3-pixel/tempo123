@@ -89,6 +89,19 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
             count++;
           }
         }
+
+        // Check oil change alerts
+        if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
+          const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+          
+          // Alert if within 500 km or overdue
+          if (kmUntilOilChange <= 500) {
+            count++;
+          }
+        } else if (!vehicle.dernier_kilometrage_vidange) {
+          // No oil change recorded
+          count++;
+        }
       }
     }
 

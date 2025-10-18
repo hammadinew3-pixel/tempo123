@@ -399,6 +399,34 @@ export default function Dashboard() {
         }
       }
 
+      // Check oil change alerts
+      if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
+        const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+        
+        if (kmUntilOilChange <= 0) {
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Vidange en retard de ${Math.abs(kmUntilOilChange)} km`,
+            severity: "critical"
+          });
+        } else if (kmUntilOilChange <= 500) {
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Vidange à faire dans ${kmUntilOilChange} km`,
+            severity: "warning"
+          });
+        }
+      } else if (!vehicle.dernier_kilometrage_vidange) {
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Aucune vidange enregistrée",
+          severity: "high"
+        });
+      }
+
       // Check traite bancaire alerts
       const { data: echeances } = await supabase
         .from('vehicules_traites_echeances')

@@ -194,6 +194,40 @@ const Alertes = () => {
         }
       }
 
+      // Oil change alerts
+      if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
+        const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+        
+        if (kmUntilOilChange <= 0) {
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleName,
+            message: `vidange en retard de ${Math.abs(kmUntilOilChange)} km`,
+            severity: "critical",
+            type: "vidange",
+            actionText: "FAIRE VIDANGE",
+          });
+        } else if (kmUntilOilChange <= 500) {
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleName,
+            message: `vidange à faire dans ${kmUntilOilChange} km`,
+            severity: "warning",
+            type: "vidange",
+            actionText: "PLANIFIER VIDANGE",
+          });
+        }
+      } else if (!vehicle.dernier_kilometrage_vidange) {
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleName,
+          message: "aucune vidange enregistrée",
+          severity: "missing",
+          type: "vidange",
+          actionText: "AJOUTER VIDANGE",
+        });
+      }
+
       // Traite bancaire alerts
       const { data: echeances } = await supabase
         .from("vehicules_traites_echeances")
