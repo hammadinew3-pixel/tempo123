@@ -835,6 +835,7 @@ export type Database = {
           montant_tva: number | null
           nom_garage: string | null
           notes: string | null
+          prochain_kilometrage_vidange: number | null
           reference_facture: string | null
           telephone_garage: string | null
           type_intervention: string
@@ -856,6 +857,7 @@ export type Database = {
           montant_tva?: number | null
           nom_garage?: string | null
           notes?: string | null
+          prochain_kilometrage_vidange?: number | null
           reference_facture?: string | null
           telephone_garage?: string | null
           type_intervention: string
@@ -877,6 +879,7 @@ export type Database = {
           montant_tva?: number | null
           nom_garage?: string | null
           notes?: string | null
+          prochain_kilometrage_vidange?: number | null
           reference_facture?: string | null
           telephone_garage?: string | null
           type_intervention?: string

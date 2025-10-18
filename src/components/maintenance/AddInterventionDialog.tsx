@@ -62,6 +62,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
   const [facturee, setFacturee] = useState(false);
   const [referenceFature, setReferenceFature] = useState("");
   const [notes, setNotes] = useState("");
+  const [prochainKilometrageVidange, setProchainKilometrageVidange] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -129,7 +130,10 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
         montant_ttc: ttc,
         facturee: facturee,
         reference_facture: facturee ? referenceFature : null,
-        notes: notes || null
+        notes: notes || null,
+        prochain_kilometrage_vidange: typeIntervention === "Vidange" && prochainKilometrageVidange 
+          ? parseInt(prochainKilometrageVidange) 
+          : null
       });
 
       if (error) throw error;
@@ -161,6 +165,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
     setFacturee(false);
     setReferenceFature("");
     setNotes("");
+    setProchainKilometrageVidange("");
   };
 
   const handleDetailToggle = (detail: string) => {
@@ -267,6 +272,25 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Prochain kilométrage vidange (only for Vidange) */}
+          {typeIntervention === "Vidange" && (
+            <div className="space-y-2">
+              <Label htmlFor="prochain-km-vidange">
+                Prochain kilométrage pour vidange (facultatif)
+              </Label>
+              <Input
+                id="prochain-km-vidange"
+                type="number"
+                value={prochainKilometrageVidange}
+                onChange={(e) => setProchainKilometrageVidange(e.target.value)}
+                placeholder="Ex: 55000"
+              />
+              <p className="text-xs text-muted-foreground">
+                Sera automatiquement synchronisé avec la fiche du véhicule
+              </p>
             </div>
           )}
 
