@@ -629,7 +629,11 @@ export default function VehiculeDetails() {
               <div className="flex-1">
                 <p className="text-sm font-medium text-muted-foreground mb-2">DÉPENSE TOTALE</p>
                 <p className="text-3xl font-bold text-foreground">{totalExpenses.toFixed(2)}<span className="text-lg">DH</span></p>
-                <Button variant="link" className="text-destructive hover:text-destructive/80 p-0 h-auto mt-2">
+                <Button 
+                  variant="link" 
+                  className="text-destructive hover:text-destructive/80 p-0 h-auto mt-2"
+                  onClick={() => navigate('/charges')}
+                >
                   → CONSULTER LES DÉTAILS
                 </Button>
               </div>
