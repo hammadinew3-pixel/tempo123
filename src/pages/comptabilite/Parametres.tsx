@@ -1,13 +1,34 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useAccountingSync } from "@/hooks/use-accounting-sync";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ParametresComptabilite() {
+  const { isSyncing, syncExistingData } = useAccountingSync();
+
+  const handleSync = async () => {
+    await syncExistingData();
+  };
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Paramètres Comptabilité</h1>
-        <p className="text-muted-foreground">Configuration des comptes et taux de TVA</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Paramètres Comptabilité</h1>
+          <p className="text-muted-foreground">Configuration des comptes et taux de TVA</p>
+        </div>
+        <Button onClick={handleSync} disabled={isSyncing}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+          {isSyncing ? 'Synchronisation...' : 'Synchroniser les données'}
+        </Button>
       </div>
+
+      <Alert>
+        <AlertDescription>
+          Cliquez sur "Synchroniser les données" pour générer automatiquement les écritures comptables à partir des contrats, revenus, dépenses et chèques existants.
+        </AlertDescription>
+      </Alert>
 
       <Tabs defaultValue="comptes">
         <TabsList>
