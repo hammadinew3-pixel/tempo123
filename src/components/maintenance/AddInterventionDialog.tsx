@@ -43,9 +43,10 @@ interface AddInterventionDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   vehicleId?: string;
+  defaultType?: string;
 }
 
-export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId }: AddInterventionDialogProps) {
+export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId, defaultType }: AddInterventionDialogProps) {
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<string>(vehicleId || "");
@@ -71,8 +72,11 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
         setSelectedVehicle(vehicleId);
         loadVehicleKm(vehicleId);
       }
+      if (defaultType) {
+        setTypeIntervention(defaultType);
+      }
     }
-  }, [open, vehicleId]);
+  }, [open, vehicleId, defaultType]);
 
   const loadVehicles = async () => {
     const { data } = await supabase

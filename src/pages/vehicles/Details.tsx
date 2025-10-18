@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EditInspectionDialog, EditVignetteDialog } from "@/components/vehicles/EditDialogs";
 import { useUserRole } from "@/hooks/use-user-role";
 import { safeFormatDate } from "@/lib/dateUtils";
+import { VehicleMaintenanceSummary } from "@/components/maintenance/VehicleMaintenanceSummary";
 
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 
@@ -43,10 +44,6 @@ export default function VehiculeDetails() {
   const [vignettes, setVignettes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showContractsList, setShowContractsList] = useState(false);
-  const [vidanges, setVidanges] = useState<any[]>([]);
-  const [showVidangeDialog, setShowVidangeDialog] = useState(false);
-  const [prochainKmVidange, setProchainKmVidange] = useState<string>('');
-  const [montantVidange, setMontantVidange] = useState<string>('');
 
   // Traite bancaire states
   const [traites, setTraites] = useState<any[]>([]);
@@ -172,7 +169,7 @@ export default function VehiculeDetails() {
   }, [vehicle]);
   const loadVehicle = async () => {
     try {
-      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, vidangesRes, traitesRes, echeancesRes] = await Promise.all([supabase.from('vehicles').select('*').eq('id', id).single(), supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, traitesRes, echeancesRes] = await Promise.all([supabase.from('vehicles').select('*').eq('id', id).single(), supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
         ascending: false
       }), supabase.from('assistance').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', {
         ascending: false
@@ -183,8 +180,6 @@ export default function VehiculeDetails() {
       }), supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', id).order('date_visite', {
         ascending: false
       }), supabase.from('vehicle_vignette').select('*').eq('vehicle_id', id).order('annee', {
-        ascending: false
-      }), supabase.from('vidanges').select('*').eq('vehicle_id', id).order('date_vidange', {
         ascending: false
       }), supabase.from('vehicules_traite').select('*').eq('vehicle_id', id).order('created_at', {
         ascending: false
@@ -199,7 +194,6 @@ export default function VehiculeDetails() {
       setInsurances(insurancesRes.data || []);
       setTechnicalInspections(inspectionsRes.data || []);
       setVignettes(vignettesRes.data || []);
-      setVidanges(vidangesRes.data || []);
       setTraites(traitesRes.data || []);
       setEcheances(echeancesRes.data || []);
     } catch (error: any) {
@@ -257,106 +251,6 @@ export default function VehiculeDetails() {
         variant: "destructive"
       });
       setDeleting(false);
-    }
-  };
-  const calculateKmDepuisVidange = () => {
-    if (!vehicle) return 0;
-    return vehicle.kilometrage - (vehicle.dernier_kilometrage_vidange || 0);
-  };
-  const needsOilChange = () => {
-    if (!vehicle) return false;
-    if (vehicle.prochain_kilometrage_vidange) {
-      return vehicle.kilometrage >= vehicle.prochain_kilometrage_vidange;
-    }
-    const kmDepuis = calculateKmDepuisVidange();
-    return kmDepuis > 8000;
-  };
-  const getOilChangeAlertLevel = () => {
-    if (!vehicle) return 'ok';
-    if (vehicle.prochain_kilometrage_vidange) {
-      const kmRestants = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
-      if (kmRestants <= 0) return 'critical';
-      if (kmRestants <= 1000) return 'warning';
-      return 'ok';
-    }
-    const kmDepuis = calculateKmDepuisVidange();
-    if (kmDepuis > 10000) return 'critical';
-    if (kmDepuis > 8000) return 'warning';
-    return 'ok';
-  };
-  const handleMarkOilChangeDone = async () => {
-    if (!vehicle) return;
-    
-    try {
-      setLoading(true); // Disable button during processing
-      
-      const prochainKm = prochainKmVidange ? parseInt(prochainKmVidange) : null;
-      const montant = montantVidange ? parseFloat(montantVidange) : null;
-      if (prochainKm && prochainKm <= vehicle.kilometrage) {
-        toast({
-          title: "Erreur",
-          description: "Le prochain kilométrage de vidange doit être supérieur au kilométrage actuel",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
-      }
-      if (montant !== null && montant < 0) {
-        toast({
-          title: "Erreur",
-          description: "Le montant doit être positif",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
-      }
-      const {
-        error: vidangeError
-      } = await supabase.from('vidanges').insert({
-        vehicle_id: vehicle.id,
-        kilometrage: vehicle.kilometrage,
-        date_vidange: new Date().toISOString().split('T')[0],
-        type_vidange: 'Vidange complète',
-        montant: montant,
-        remarques: prochainKm ? `Prochain kilométrage prévu: ${prochainKm} km` : null
-      });
-      if (vidangeError) throw vidangeError;
-      if (montant !== null && montant > 0) {
-        const {
-          error: expenseError
-        } = await supabase.from('expenses').insert([{
-          vehicle_id: vehicle.id,
-          categorie: 'entretien',
-          montant: montant,
-          date_depense: new Date().toISOString().split('T')[0],
-          description: `Vidange complète à ${vehicle.kilometrage.toLocaleString()} km`
-        }]);
-        if (expenseError) throw expenseError;
-      }
-      const {
-        error: updateError
-      } = await supabase.from('vehicles').update({
-        dernier_kilometrage_vidange: vehicle.kilometrage,
-        date_derniere_vidange: new Date().toISOString().split('T')[0],
-        prochain_kilometrage_vidange: prochainKm
-      }).eq('id', vehicle.id);
-      if (updateError) throw updateError;
-      toast({
-        title: "Succès",
-        description: montant ? `Vidange enregistrée avec succès. Dépense de ${montant.toFixed(2)} DH ajoutée.` : "Vidange enregistrée avec succès"
-      });
-      setShowVidangeDialog(false);
-      setProchainKmVidange('');
-      setMontantVidange('');
-      setLoading(false);
-      loadVehicle();
-    } catch (error: any) {
-      setLoading(false);
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive"
-      });
     }
   };
 
@@ -751,11 +645,11 @@ export default function VehiculeDetails() {
                 <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
                 <AlertDescription className="flex items-center justify-between">
                   <span className="text-sm">{alert.message}</span>
-                  <Button variant="outline" size="sm" className={`ml-4 ${alert.severity === 'critical' ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' : 'border-warning text-warning hover:bg-warning hover:text-white'}`} onClick={() => {
-              if (alert.action === "EFFECTUER VIDANGE") {
-                setShowVidangeDialog(true);
-              }
-            }}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={`ml-4 ${alert.severity === 'critical' ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' : 'border-warning text-warning hover:bg-warning hover:text-white'}`}
+                  >
                     {alert.action}
                   </Button>
                 </AlertDescription>
@@ -763,13 +657,13 @@ export default function VehiculeDetails() {
           </CardContent>
         </Card>}
 
-      {/* Vidange Status Card */}
-      <Card className={`border-l-4 ${getOilChangeAlertLevel() === 'critical' ? 'border-l-destructive bg-destructive/5' : getOilChangeAlertLevel() === 'warning' ? 'border-l-warning bg-warning/5' : 'border-l-success bg-success/5'}`}>
+      {/* Kilométrage Card - Simplified */}
+      <Card>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-start gap-4 flex-1">
-              <div className={`p-3 rounded-lg ${getOilChangeAlertLevel() === 'critical' ? 'bg-destructive/20' : getOilChangeAlertLevel() === 'warning' ? 'bg-warning/20' : 'bg-success/20'}`}>
-                <Gauge className={`w-8 h-8 ${getOilChangeAlertLevel() === 'critical' ? 'text-destructive' : getOilChangeAlertLevel() === 'warning' ? 'text-warning' : 'text-success'}`} />
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Gauge className="w-8 h-8 text-primary" />
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground mb-1">Kilométrage actuel</p>
@@ -779,34 +673,7 @@ export default function VehiculeDetails() {
                 <p className="text-xs text-muted-foreground mt-1">
                   Dernière mise à jour : {safeFormatDate(vehicle.updated_at, 'dd/MM/yyyy à HH:mm', { locale: fr })}
                 </p>
-                
-                {vehicle.dernier_kilometrage_vidange > 0 && <div className="mt-3">
-                    <p className="text-sm text-muted-foreground">
-                      Kilométrage depuis dernière vidange : 
-                      <span className={`font-semibold ml-1 ${getOilChangeAlertLevel() === 'critical' ? 'text-destructive' : getOilChangeAlertLevel() === 'warning' ? 'text-warning' : 'text-success'}`}>
-                        {calculateKmDepuisVidange().toLocaleString()} km
-                      </span>
-                    </p>
-                    {vehicle.prochain_kilometrage_vidange && <p className="text-sm text-muted-foreground mt-1">
-                        Prochain kilométrage prévu : <span className="font-semibold">{vehicle.prochain_kilometrage_vidange.toLocaleString()} km</span>
-                      </p>}
-                  </div>}
               </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              {getOilChangeAlertLevel() === 'critical' && <Badge variant="destructive" className="whitespace-nowrap">
-                  Vidange urgente
-                </Badge>}
-              {getOilChangeAlertLevel() === 'warning' && <Badge className="bg-warning text-white whitespace-nowrap">
-                  Vidange à prévoir
-                </Badge>}
-              {getOilChangeAlertLevel() === 'ok' && <Badge className="bg-success text-white whitespace-nowrap">
-                  Vidange OK
-                </Badge>}
-              {needsOilChange() && <Button size="sm" onClick={() => setShowVidangeDialog(true)} className="whitespace-nowrap">
-                  <Wrench className="w-4 h-4 mr-2" />
-                  Effectuer vidange
-                </Button>}
             </div>
           </div>
         </CardContent>
@@ -1146,50 +1013,12 @@ export default function VehiculeDetails() {
             </TabsContent>
 
             <TabsContent value="vidange" className="mt-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-lg ${getOilChangeAlertLevel() === 'critical' ? 'bg-destructive/20' : getOilChangeAlertLevel() === 'warning' ? 'bg-warning/20' : 'bg-success/20'}`}>
-                      <Wrench className={`w-6 h-6 ${getOilChangeAlertLevel() === 'critical' ? 'text-destructive' : getOilChangeAlertLevel() === 'warning' ? 'text-warning' : 'text-success'}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Kilométrage depuis dernière vidange</p>
-                      <p className={`text-2xl font-bold ${getOilChangeAlertLevel() === 'critical' ? 'text-destructive' : getOilChangeAlertLevel() === 'warning' ? 'text-warning' : 'text-success'}`}>
-                        {calculateKmDepuisVidange().toLocaleString()} km
-                      </p>
-                    </div>
-                  </div>
-                  <Button onClick={() => setShowVidangeDialog(true)} className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    EFFECTUER VIDANGE
-                  </Button>
-                </div>
-
-                {vidanges.length > 0 ? <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Kilométrage</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Montant</TableHead>
-                        <TableHead>Remarques</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vidanges.map(vidange => <TableRow key={vidange.id}>
-                          <TableCell>{format(new Date(vidange.date_vidange), 'dd/MM/yyyy', {
-                        locale: fr
-                      })}</TableCell>
-                          <TableCell>{vidange.kilometrage.toLocaleString()} km</TableCell>
-                          <TableCell>{vidange.type || '-'}</TableCell>
-                          <TableCell className="text-right">{vidange.montant?.toFixed(2) || '-'} DH</TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{vidange.remarques || '-'}</TableCell>
-                        </TableRow>)}
-                    </TableBody>
-                  </Table> : <div className="text-center py-8 text-muted-foreground">
-                    Aucune vidange enregistrée
-                  </div>}
-              </div>
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Cette section a été déplacée vers "Maintenance & Interventions" ci-dessous pour centraliser toutes les interventions d'entretien.
+                </AlertDescription>
+              </Alert>
             </TabsContent>
 
             <TabsContent value="vignette" className="mt-6">
@@ -1558,6 +1387,15 @@ export default function VehiculeDetails() {
         </CardContent>
       </Card>
 
+      {/* Maintenance & Interventions Section - NEW */}
+      <VehicleMaintenanceSummary
+        vehicleId={vehicle.id}
+        currentKm={vehicle.kilometrage}
+        dateLastVidange={vehicle.date_derniere_vidange}
+        kmLastVidange={vehicle.dernier_kilometrage_vidange}
+        nextKmVidange={vehicle.prochain_kilometrage_vidange}
+      />
+
       {/* Dialog for contracts list */}
       <Dialog open={showContractsList} onOpenChange={setShowContractsList}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -1627,42 +1465,6 @@ export default function VehiculeDetails() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog for marking vidange as done */}
-      <Dialog open={showVidangeDialog} onOpenChange={setShowVidangeDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Effectuer la vidange</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="prochainKm">Prochain kilométrage de vidange (optionnel)</Label>
-              <Input id="prochainKm" type="number" value={prochainKmVidange} onChange={e => setProchainKmVidange(e.target.value)} placeholder={`Ex: ${(vehicle?.kilometrage || 0) + 8000}`} />
-              <p className="text-xs text-muted-foreground mt-1">
-                Laissez vide pour utiliser le calcul automatique (8000 km)
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="montant">Montant (optionnel)</Label>
-              <Input id="montant" type="number" step="0.01" value={montantVidange} onChange={e => setMontantVidange(e.target.value)} placeholder="0.00" />
-              <p className="text-xs text-muted-foreground mt-1">
-                Si renseigné, une dépense sera créée automatiquement
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-            setShowVidangeDialog(false);
-            setProchainKmVidange('');
-            setMontantVidange('');
-          }}>
-              Annuler
-            </Button>
-            <Button type="button" onClick={handleMarkOilChangeDone} disabled={loading}>
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialog for adding traite bancaire */}
       <Dialog open={showTraiteDialog} onOpenChange={setShowTraiteDialog}>
