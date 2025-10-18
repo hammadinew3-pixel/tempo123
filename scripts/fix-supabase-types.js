@@ -24,17 +24,17 @@ const tables = [
 tables.forEach(table => {
   // Pattern pour trouver Insert type avec tenant_id: string
   const pattern = new RegExp(
-    `(${table}:\\s*{[^}]*Insert:\\s*{[^}]*tenant_id:)\\s*string`,
+    `(${table}:\\s*{[^}]*Insert:\\s*{[^}]*tenant_id)\\s*:\\s*string`,
     'gs'
   );
   
-  content = content.replace(pattern, '$1 string | null');
+  content = content.replace(pattern, '$1?: string');
 });
 
 // Aussi rendre user_id optionnel dans user_roles Insert car géré par trigger
 content = content.replace(
-  /(user_roles:\s*{[^}]*Insert:\s*{[^}]*user_id:)\s*string/gs,
-  '$1 string | null'
+  /(user_roles:\s*{[^}]*Insert:\s*{[^}]*user_id)\s*:\s*string/gs,
+  '$1?: string'
 );
 
 fs.writeFileSync(typesPath, content, 'utf8');
