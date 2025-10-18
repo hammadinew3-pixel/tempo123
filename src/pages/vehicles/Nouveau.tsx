@@ -38,6 +38,8 @@ export default function NouveauVehicule() {
     sous_location: false,
   });
 
+  const [carburant, setCarburant] = useState<string>('diesel');
+
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   // Mapping marque -> modèles
@@ -115,10 +117,20 @@ export default function NouveauVehicule() {
 
     try {
       // Validation
-      if (!formData.marque || !formData.immatriculation || !formData.tarif_journalier) {
+      if (!formData.marque || !formData.modele || !formData.tarif_journalier || !carburant) {
         toast({
           title: "Erreur",
-          description: "Veuillez remplir tous les champs obligatoires",
+          description: "Veuillez remplir tous les champs obligatoires (Marque, Modèle, Carburant, Prix location)",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (formData.kilometrage === undefined || formData.kilometrage === null) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez indiquer le dernier kilométrage",
           variant: "destructive"
         });
         setLoading(false);
@@ -279,7 +291,7 @@ export default function NouveauVehicule() {
 
             <div className="space-y-2">
               <Label htmlFor="carburant">Carburant *</Label>
-              <Select defaultValue="diesel">
+              <Select value={carburant} onValueChange={setCarburant}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
