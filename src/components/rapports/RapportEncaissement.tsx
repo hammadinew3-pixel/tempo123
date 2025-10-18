@@ -8,6 +8,7 @@ import { Download, DollarSign } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
 import { safeFormatDate } from '@/lib/dateUtils';
+import { daysBetweenInclusive } from '@/lib/contractPricing';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -89,6 +90,7 @@ export default function RapportEncaissement({ dateRange }: Props) {
           daily_rate,
           duration,
           statut,
+          vehicle_id,
           clients (
             nom,
             prenom
@@ -99,6 +101,18 @@ export default function RapportEncaissement({ dateRange }: Props) {
         .order('date_debut', { ascending: false });
 
       if (!contracts) return;
+
+      // Charger les tarifs des véhicules
+      const vehicleIds = [...new Set(contracts.map(c => c.vehicle_id).filter(Boolean))];
+      const { data: vehicles } = await supabase
+        .from('vehicles')
+        .select('id, tarif_journalier')
+        .in('id', vehicleIds);
+
+      const vehiclesMap = (vehicles || []).reduce((acc, v) => {
+        acc[v.id] = { tarif_journalier: v.tarif_journalier };
+        return acc;
+      }, {} as Record<string, { tarif_journalier: number }>);
 
       // Charger TOUS les paiements de ces contrats (pas seulement ceux de la période)
       const { data: allPayments } = await supabase
@@ -113,9 +127,18 @@ export default function RapportEncaissement({ dateRange }: Props) {
         // Calculer le total payé
         const montant_paye = payments.reduce((sum, p) => sum + (p.montant || 0), 0);
         
-        // Montant total du contrat: utiliser la valeur enregistrée sur le contrat
-        const montant_contrat = Number(c.total_amount || 0);
-        
+        // Montant total du contrat: calcul robuste
+        let montant_contrat = 0;
+        if (Number(c.total_amount) > 0) {
+          montant_contrat = Number(c.total_amount);
+        } else {
+          // Calcul de secours
+          const rate = 
+            (Number(c.daily_rate) > 0 ? Number(c.daily_rate) : 0) ||
+            (vehiclesMap[c.vehicle_id]?.tarif_journalier ? Number(vehiclesMap[c.vehicle_id].tarif_journalier) : 0);
+          const days = daysBetweenInclusive(c.date_debut, c.date_fin);
+          montant_contrat = rate > 0 && days > 0 ? rate * days : 0;
+        }
         
         // Reste à payer (ne peut jamais être négatif)
         const montant_restant = Math.max(0, montant_contrat - montant_paye);
