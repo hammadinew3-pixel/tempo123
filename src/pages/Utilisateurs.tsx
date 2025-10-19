@@ -206,12 +206,15 @@ export default function Utilisateurs() {
 
       if (error) {
         let serverMessage = (data as any)?.error as string | undefined;
+        let errorCode = (data as any)?.code as string | undefined;
+        
         // Try to extract detailed error from Supabase Functions error context
         const anyErr: any = error as any;
         if (!serverMessage && anyErr?.context?.response) {
           try {
-            const json = await anyErr.context.response.json();
+            const json = await anyErr.context.response.clone().json();
             serverMessage = json?.error || json?.message || json?.details;
+            errorCode = json?.code;
           } catch {
             try {
               const text = await anyErr.context.response.text();
@@ -219,6 +222,16 @@ export default function Utilisateurs() {
             } catch {}
           }
         }
+        
+        // Map specific error codes/messages to user-friendly text
+        if (errorCode === 'QUOTA_EXCEEDED') {
+          serverMessage = serverMessage || 'Quota utilisateurs atteint';
+        } else if (serverMessage?.includes('already registered') || serverMessage?.includes('User already registered')) {
+          serverMessage = 'Cet email est déjà utilisé';
+        } else if (serverMessage?.includes('Unauthorized') || error.message?.includes('401')) {
+          serverMessage = 'Non autorisé. Veuillez vous reconnecter.';
+        }
+        
         throw new Error(serverMessage || error.message || 'Erreur inconnue');
       }
       if ((data as any)?.error) throw new Error((data as any).error);

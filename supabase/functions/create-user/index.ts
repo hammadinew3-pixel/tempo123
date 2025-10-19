@@ -12,15 +12,16 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header to identify the calling user
+    console.log('STEP A: Checking authorization header');
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
+        JSON.stringify({ error: 'No authorization header', step: 'A' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
+    console.log('STEP B: Creating Supabase clients');
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -32,7 +33,6 @@ serve(async (req) => {
       }
     );
 
-    // Create a client with the user's token to get their info
     const supabaseUser = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -43,16 +43,18 @@ serve(async (req) => {
       }
     );
 
-    // Get the current user
+    console.log('STEP C: Fetching current user');
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
+      console.error('create-user: user fetch failed', userError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', step: 'C' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
+    console.log('STEP C: User fetched OK, user_id:', user.id);
 
-    // Get the tenant_id of the calling user (admin)
+    console.log('STEP D: Fetching admin tenant');
     const { data: userTenantData, error: tenantError } = await supabaseAdmin
       .from('user_tenants')
       .select('tenant_id')
@@ -63,21 +65,22 @@ serve(async (req) => {
     if (tenantError) {
       console.error('create-user: tenant lookup error', tenantError);
       return new Response(
-        JSON.stringify({ error: 'Erreur lors de la vérification du tenant' }),
+        JSON.stringify({ error: 'Erreur lors de la vérification du tenant', step: 'D' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     if (!userTenantData?.tenant_id) {
       return new Response(
-        JSON.stringify({ error: "Aucun tenant actif n'est associé à cet administrateur" }),
+        JSON.stringify({ error: "Aucun tenant actif n'est associé à cet administrateur", step: 'D' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     const adminTenantId = userTenantData.tenant_id;
+    console.log('STEP D: Admin tenant resolved, adminTenantId:', adminTenantId);
 
-    // Verify that the calling user is an admin
+    console.log('STEP E: Verifying admin role');
     const { data: roleData, error: roleCheckError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
@@ -88,40 +91,40 @@ serve(async (req) => {
     if (roleCheckError) {
       console.error('create-user: role lookup error', roleCheckError);
       return new Response(
-        JSON.stringify({ error: 'Erreur lors de la vérification du rôle' }),
+        JSON.stringify({ error: 'Erreur lors de la vérification du rôle', step: 'E' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     if (roleData?.role !== 'admin') {
       return new Response(
-        JSON.stringify({ error: 'Seuls les administrateurs peuvent créer des utilisateurs' }),
+        JSON.stringify({ error: 'Seuls les administrateurs peuvent créer des utilisateurs', step: 'E' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
+    console.log('STEP E: Admin role verified');
 
+    console.log('STEP F: Parsing payload');
     const { email, password, nom, role, tenant_id } = await req.json();
 
-    // Validate input
     if (!email || !password || !nom) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, password, nom' }),
+        JSON.stringify({ error: 'Missing required fields: email, password, nom', step: 'F' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
+    console.log('STEP F: Payload parsed OK, email:', email, 'nom:', nom);
 
-    // Use provided tenant_id or fallback to admin's tenant
     const targetTenantId = tenant_id || adminTenantId;
 
-    // Verify admin has access to target tenant
     if (tenant_id && tenant_id !== adminTenantId) {
       return new Response(
-        JSON.stringify({ error: 'Vous ne pouvez créer des utilisateurs que dans votre propre agence' }),
+        JSON.stringify({ error: 'Vous ne pouvez créer des utilisateurs que dans votre propre agence', step: 'F' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
 
-    // Check quota before creating user
+    console.log('STEP G: Checking user quota');
     const { data: tenantData, error: quotaError } = await supabaseAdmin
       .from('tenants')
       .select('max_users')
@@ -131,7 +134,7 @@ serve(async (req) => {
     if (quotaError) {
       console.error('create-user: quota check error', quotaError);
       return new Response(
-        JSON.stringify({ error: 'Erreur lors de la vérification du quota' }),
+        JSON.stringify({ error: 'Erreur lors de la vérification du quota', step: 'G' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -143,41 +146,43 @@ serve(async (req) => {
       .eq('is_active', true);
 
     if (currentUsers !== null && tenantData.max_users && currentUsers >= tenantData.max_users) {
+      console.log('STEP G: Quota exceeded', currentUsers, '/', tenantData.max_users);
       return new Response(
         JSON.stringify({ 
           error: `Quota utilisateurs atteint (${currentUsers}/${tenantData.max_users})`,
-          code: 'QUOTA_EXCEEDED'
+          code: 'QUOTA_EXCEEDED',
+          step: 'G'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
+    console.log('STEP G: Quota OK, current:', currentUsers, '/', tenantData.max_users);
 
-    // Force role to be 'agent' - only admins can create agents
     const newUserRole = 'agent';
 
-    // Create user with admin API
+    console.log('STEP H: Creating user via auth.admin.createUser');
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
       user_metadata: {
         nom,
-        skip_tenant_creation: 'true'  // Prevent handle_new_user trigger from creating a tenant
+        skip_tenant_creation: 'true'
       }
     });
 
     if (authError) {
+      console.error('create-user: auth.admin.createUser failed', authError);
       throw authError;
     }
 
     if (!authData.user) {
+      console.error('create-user: authData.user is null');
       throw new Error('User creation failed');
     }
+    console.log('STEP H: User created OK, id:', authData.user.id);
 
-    // Profile is automatically created by handle_new_user trigger
-    // No need to insert it here
-
-    // Link user to the target tenant
+    console.log('STEP I: Linking user to tenant');
     const { error: userTenantError } = await supabaseAdmin
       .from('user_tenants')
       .insert({
@@ -187,12 +192,13 @@ serve(async (req) => {
       });
 
     if (userTenantError) {
-      // Cleanup: delete the created user
+      console.error('create-user: user_tenants insert failed', userTenantError);
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       throw userTenantError;
     }
+    console.log('STEP I: user_tenants insert OK');
 
-    // Assign agent role in the target tenant
+    console.log('STEP J: Assigning agent role');
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({ 
@@ -202,11 +208,13 @@ serve(async (req) => {
       });
 
     if (roleError) {
-      // Cleanup: delete the created user
+      console.error('create-user: user_roles insert failed', roleError);
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       throw roleError;
     }
+    console.log('STEP J: user_roles insert OK');
 
+    console.log('STEP K: Success, returning user data');
     return new Response(
       JSON.stringify({ 
         success: true,
@@ -224,16 +232,19 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorDetails = (error as any)?.details;
-    const errorCode = (error as any)?.code;
-    const errorHint = (error as any)?.hint;
+    const err = error as any;
+    const errorMessage = err?.message || err?.error_description || err?.error || err?.msg || JSON.stringify(err);
+    const errorDetails = err?.details;
+    const errorCode = err?.code;
+    const errorHint = err?.hint;
+    const status = typeof err?.status === 'number' ? err.status : 400;
     
-    console.error('create-user: error', { 
+    console.error('create-user: EXCEPTION CAUGHT', { 
       message: errorMessage, 
       details: errorDetails, 
       hint: errorHint, 
       code: errorCode,
+      status,
       raw: error 
     });
     
@@ -241,11 +252,12 @@ serve(async (req) => {
       JSON.stringify({ 
         error: errorMessage,
         details: errorDetails,
-        code: errorCode
+        code: errorCode,
+        hint: errorHint
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-        status: 400 
+        status 
       }
     );
   }
