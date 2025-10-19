@@ -25,6 +25,8 @@ import {
   AlertTriangle,
   Settings,
   Shield,
+  Globe,
+  Building,
 } from "lucide-react";
 import {
   Sidebar as SidebarUI,
@@ -99,6 +101,11 @@ const adminNavItems: NavItem[] = [
   { title: "Paramètres", href: "/parametres", icon: Settings },
 ];
 
+const superAdminNavItems: NavItem[] = [
+  { title: "Dashboard Global", href: "/admin/dashboard", icon: Globe },
+  { title: "Gestion Tenants", href: "/admin/tenants", icon: Building },
+];
+
 interface SidebarProps {
   onOpenClientDialog?: () => void;
 }
@@ -106,7 +113,7 @@ interface SidebarProps {
 export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const location = useLocation();
   const { state } = useSidebar();
-  const { isAdmin, isAgent } = useUserRole();
+  const { isAdmin, isAgent, isSuperAdmin } = useUserRole();
   const collapsed = state === "collapsed";
   
   const mainNavItems = getMainNavItems(isAdmin, isAgent);
@@ -229,12 +236,37 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
         </SidebarGroup>
 
         {/* Admin Navigation */}
-        {isAdmin && (
+        {isAdmin && !isSuperAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminNavItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      className={getNavCls(isActive(item.href!))}
+                      tooltip={item.title}
+                    >
+                      <NavLink to={item.href!}>
+                        <item.icon className="h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Super Admin Navigation */}
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Super Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {superAdminNavItems.map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild

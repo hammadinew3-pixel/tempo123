@@ -6,7 +6,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { TenantProvider } from "./contexts/TenantContext";
 import { Layout } from "./components/layout/Layout";
+import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/admin/Dashboard";
+import Tenants from "./pages/admin/Tenants";
+import Suspended from "./pages/Suspended";
 import Locations from "./pages/Locations";
 import NouveauLocation from "./pages/locations/Nouveau";
 import LocationDetails from "./pages/locations/Details";
@@ -391,6 +395,33 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/suspended"
+              element={
+                <ProtectedRoute>
+                  <Suspended />
+                </ProtectedRoute>
+              }
+            />
+            {/* Super Admin Routes */}
+            <Route path="/admin" element={<SuperAdminRoute />}>
+              <Route
+                path="dashboard"
+                element={
+                  <Layout>
+                    <AdminDashboard />
+                  </Layout>
+                }
+              />
+              <Route
+                path="tenants"
+                element={
+                  <Layout>
+                    <Tenants />
+                  </Layout>
+                }
+              />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>

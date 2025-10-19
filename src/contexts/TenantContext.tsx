@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
+import { useSuperAdmin } from '@/hooks/use-super-admin';
+import { useNavigate } from 'react-router-dom';
 
 interface Tenant {
   id: string;
@@ -20,19 +22,29 @@ const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { isSuperAdmin, loading: superAdminLoading } = useSuperAdmin();
+  const navigate = useNavigate();
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    // Si super_admin, pas besoin de tenant
+    if (!superAdminLoading && isSuperAdmin) {
+      setCurrentTenant(null);
+      setTenants([]);
+      setLoading(false);
+      return;
+    }
+
+    if (user && !isSuperAdmin) {
       loadUserTenants();
-    } else {
+    } else if (!user) {
       setCurrentTenant(null);
       setTenants([]);
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isSuperAdmin, superAdminLoading]);
 
   const loadUserTenants = async () => {
     try {
@@ -61,7 +73,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
       const activeTenant = userTenants.find(ut => ut.is_active)?.tenants;
       if (activeTenant) {
-        setCurrentTenant(activeTenant as Tenant);
+        const tenant = activeTenant as Tenant;
+        setCurrentTenant(tenant);
+
+        // Rediriger si tenant suspendu
+        if (!tenant.is_active) {
+          navigate('/suspended');
+        }
       }
     } catch (error) {
       console.error('Error loading tenants:', error);
