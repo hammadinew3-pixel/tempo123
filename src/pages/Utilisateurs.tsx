@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
+import { z } from 'zod';
 
 interface UserWithRole {
   id: string;
@@ -168,6 +169,20 @@ export default function Utilisateurs() {
 
   const createUser = async () => {
     try {
+      const userSchema = z.object({
+        email: z.string().trim().email({ message: 'Email invalide' }),
+        password: z.string().min(6, { message: 'Mot de passe de 6 caractères minimum' }),
+        nom: z.string().trim().min(1, { message: 'Le nom est requis' }),
+        role: z.enum(['admin','agent'])
+      });
+
+      const parsed = userSchema.safeParse(newUser);
+      if (!parsed.success) {
+        const first = parsed.error.errors[0];
+        toast({ title: 'Validation', description: first.message, variant: 'destructive' });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('create-user', {
         body: {
           email: newUser.email,
@@ -177,8 +192,11 @@ export default function Utilisateurs() {
         }
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        const serverMessage = (data as any)?.error;
+        throw new Error(serverMessage || error.message || 'Erreur inconnue');
+      }
+      if ((data as any)?.error) throw new Error((data as any).error);
 
       toast({
         title: "Utilisateur créé",

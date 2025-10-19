@@ -58,11 +58,19 @@ serve(async (req) => {
       .select('tenant_id')
       .eq('user_id', user.id)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
-    if (tenantError || !userTenantData) {
+    if (tenantError) {
+      console.error('create-user: tenant lookup error', tenantError);
       return new Response(
-        JSON.stringify({ error: 'Could not find tenant for admin user' }),
+        JSON.stringify({ error: 'Erreur lors de la vérification du tenant' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (!userTenantData?.tenant_id) {
+      return new Response(
+        JSON.stringify({ error: "Aucun tenant actif n'est associé à cet administrateur" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -75,11 +83,19 @@ serve(async (req) => {
       .select('role')
       .eq('user_id', user.id)
       .eq('tenant_id', adminTenantId)
-      .single();
+      .maybeSingle();
 
-    if (roleCheckError || roleData?.role !== 'admin') {
+    if (roleCheckError) {
+      console.error('create-user: role lookup error', roleCheckError);
       return new Response(
-        JSON.stringify({ error: 'Only admins can create users' }),
+        JSON.stringify({ error: 'Erreur lors de la vérification du rôle' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (roleData?.role !== 'admin') {
+      return new Response(
+        JSON.stringify({ error: 'Seuls les administrateurs peuvent créer des utilisateurs' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
@@ -180,6 +196,7 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('create-user: error', errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { 
