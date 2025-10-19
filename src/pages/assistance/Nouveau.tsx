@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
+import { useTenantPlan } from "@/hooks/useTenantPlan";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 type AssistanceInsert = Database['public']['Tables']['assistance']['Insert'];
 type Client = Database['public']['Tables']['clients']['Row'];
@@ -20,6 +23,7 @@ type Bareme = Database['public']['Tables']['assurance_bareme']['Row'];
 export default function NouveauAssistance() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { hasModuleAccess } = useTenantPlan();
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -225,6 +229,22 @@ export default function NouveauAssistance() {
       setLoading(false);
     }
   };
+
+  // Vérifier l'accès au module Assistance
+  if (!hasModuleAccess('assistance')) {
+    return (
+      <div className="container mx-auto py-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Accès refusé</AlertTitle>
+          <AlertDescription>
+            Le module Assistance/Assurance n'est pas inclus dans votre plan actuel. 
+            Veuillez contacter votre administrateur pour mettre à niveau votre abonnement.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

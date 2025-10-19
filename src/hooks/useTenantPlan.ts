@@ -5,7 +5,7 @@ import { useTenant } from '@/contexts/TenantContext';
 export function useTenantPlan() {
   const { currentTenant } = useTenant();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['tenant-plan', currentTenant?.id],
     queryFn: async () => {
       if (!currentTenant) return null;
@@ -88,4 +88,18 @@ export function useTenantPlan() {
     enabled: !!currentTenant,
     staleTime: 30000, // Cache 30 secondes
   });
+
+  // Helper pour vérifier l'accès à un module
+  const hasModuleAccess = (moduleName: 'assistance'): boolean => {
+    if (!query.data) return false;
+    // Si pas de plan (null), tous les modules sont accessibles
+    if (!query.data.plan) return true;
+    // Si plan assigné, vérifier les permissions du module
+    return query.data.modules[moduleName] === true;
+  };
+
+  return {
+    ...query,
+    hasModuleAccess,
+  };
 }

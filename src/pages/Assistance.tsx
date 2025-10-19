@@ -17,12 +17,16 @@ import { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 import { useRealtime } from "@/hooks/use-realtime";
+import { useTenantPlan } from "@/hooks/useTenantPlan";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Assistance = Database['public']['Tables']['assistance']['Row'];
 
 export default function Assistance() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  const { hasModuleAccess } = useTenantPlan();
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -243,6 +247,22 @@ export default function Assistance() {
       description: `${filteredAssistances.length} dossier(s) exporté(s) en ${exportFormat.toUpperCase()}`,
     });
   };
+
+  // Vérifier l'accès au module Assistance
+  if (!hasModuleAccess('assistance')) {
+    return (
+      <div className="container mx-auto py-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Accès refusé</AlertTitle>
+          <AlertDescription>
+            Le module Assistance/Assurance n'est pas inclus dans votre plan actuel. 
+            Veuillez contacter votre administrateur pour mettre à niveau votre abonnement.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
