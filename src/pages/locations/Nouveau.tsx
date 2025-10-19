@@ -27,7 +27,7 @@ export default function NouveauLocation() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const { data: planData, isLoading: loadingPlan } = useTenantPlan();
+  const { data: planData, isLoading: loadingPlan, hasModuleAccess } = useTenantPlan();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [allVehicles, setAllVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -455,12 +455,14 @@ export default function NouveauLocation() {
                 Contrat standard
               </Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="assistance" id="assistance" />
-              <Label htmlFor="assistance" className="cursor-pointer font-normal">
-                Contrat assistance
-              </Label>
-            </div>
+            {hasModuleAccess('assistance') && (
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="assistance" id="assistance" />
+                <Label htmlFor="assistance" className="cursor-pointer font-normal">
+                  Contrat assistance
+                </Label>
+              </div>
+            )}
           </RadioGroup>
         </div>
 
