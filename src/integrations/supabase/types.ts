@@ -2323,6 +2323,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      tenant_has_module_assistance: {
+        Args: { _tenant_id: string }
+        Returns: boolean
+      }
       tenant_is_active: {
         Args: { _user_id: string }
         Returns: boolean
