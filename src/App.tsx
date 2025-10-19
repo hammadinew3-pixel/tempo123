@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { TenantProvider } from "./contexts/TenantContext";
 import { Layout } from "./components/layout/Layout";
+import { AdminLayout } from "./components/layout/AdminLayout";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { useSuperAdmin } from "./hooks/use-super-admin";
 import LoginSuperAdmin from "./pages/admin/LoginSuperAdmin";
+import AdminDashboard from "./pages/admin/Dashboard";
 import Dashboard from "./pages/Dashboard";
 import DashboardGlobal from "./pages/admin/DashboardGlobal";
 import Tenants from "./pages/admin/Tenants";
@@ -437,17 +439,25 @@ const App = () => (
               <Route
                 path="dashboard"
                 element={
-                  <Layout>
+                  <AdminLayout>
+                    <AdminDashboard />
+                  </AdminLayout>
+                }
+              />
+              <Route
+                path="global-dashboard"
+                element={
+                  <AdminLayout>
                     <DashboardGlobal />
-                  </Layout>
+                  </AdminLayout>
                 }
               />
               <Route
                 path="tenants"
                 element={
-                  <Layout>
+                  <AdminLayout>
                     <Tenants />
-                  </Layout>
+                  </AdminLayout>
                 }
               />
             </Route>
