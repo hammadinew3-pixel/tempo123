@@ -103,7 +103,8 @@ serve(async (req) => {
       password,
       email_confirm: true,
       user_metadata: {
-        nom
+        nom,
+        skip_tenant_creation: 'true'  // Prevent handle_new_user trigger from creating a tenant
       }
     });
 
