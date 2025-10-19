@@ -136,6 +136,12 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const { isAdmin, isAgent, isSuperAdmin } = useUserRole();
   const collapsed = state === "collapsed";
   const { data: planData, isLoading } = useTenantPlan();
+  
+  // Track which groups are open - DOIT être appelé avant tout return conditionnel
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    locations: true,
+    assistance: true,
+  });
 
   // Attendre le chargement des données du plan
   if (isLoading) {
@@ -156,12 +162,6 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   };
   
   const mainNavItems = getMainNavItems(isAdmin, isAgent, modules);
-  
-  // Track which groups are open
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    locations: true,
-    assistance: true,
-  });
 
   const isActive = (href?: string) => {
     if (!href) return false;
