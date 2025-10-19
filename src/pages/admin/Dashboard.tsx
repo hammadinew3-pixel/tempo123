@@ -1,10 +1,11 @@
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building, Users, Car, FileText, ShieldCheck, UserCircle } from "lucide-react";
+import { Building, Users, Car, FileText, ShieldCheck, UserCircle, Power } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -21,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface TenantStats {
   tenant_id: string;
@@ -34,6 +36,7 @@ interface TenantStats {
 }
 
 export default function AdminDashboard() {
+  const queryClient = useQueryClient();
   const [selectedTenant, setSelectedTenant] = useState<TenantStats | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -93,6 +96,33 @@ export default function AdminDashboard() {
       return tenantsWithStats;
     },
   });
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase
+        .from('tenants')
+        .update({ is_active: !is_active })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tenants-list'] });
+      toast.success(
+        variables.is_active 
+          ? "Agence suspendue avec succès" 
+          : "Agence réactivée avec succès"
+      );
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de la modification du statut: " + error.message);
+    },
+  });
+
+  const handleToggleStatus = (tenant: TenantStats, e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleStatusMutation.mutate({ id: tenant.tenant_id, is_active: tenant.is_active });
+  };
 
   const handleTenantClick = (tenant: TenantStats) => {
     setSelectedTenant(tenant);
@@ -193,6 +223,7 @@ export default function AdminDashboard() {
                 <TableHead className="text-center text-gray-400">Clients</TableHead>
                 <TableHead className="text-center text-gray-400">Contrats</TableHead>
                 <TableHead className="text-gray-400">Date création</TableHead>
+                <TableHead className="text-right text-gray-400">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -217,6 +248,22 @@ export default function AdminDashboard() {
                   <TableCell className="text-center text-gray-300">{tenant.contracts_count}</TableCell>
                   <TableCell className="text-gray-400">
                     {new Date(tenant.created_at).toLocaleDateString("fr-FR")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => handleToggleStatus(tenant, e)}
+                      disabled={toggleStatusMutation.isPending}
+                      className={
+                        tenant.is_active
+                          ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                          : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+                      }
+                    >
+                      <Power className="h-4 w-4 mr-1" />
+                      {tenant.is_active ? "Suspendre" : "Activer"}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

@@ -1,15 +1,16 @@
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building, Eye } from "lucide-react";
+import { Building, Eye, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function TenantsList() {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const { data: tenants, isLoading } = useQuery({
+  const { data: tenants = [], isLoading } = useQuery({
     queryKey: ['all-tenants'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -22,13 +23,39 @@ export default function TenantsList() {
     },
   });
 
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase
+        .from('tenants')
+        .update({ is_active: !is_active })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['all-tenants'] });
+      toast.success(
+        variables.is_active 
+          ? "Agence suspendue avec succès" 
+          : "Agence réactivée avec succès"
+      );
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de la modification du statut: " + error.message);
+    },
+  });
+
+  const handleToggleStatus = (tenant: any) => {
+    toggleStatusMutation.mutate({ id: tenant.id, is_active: tenant.is_active });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Building className="h-8 w-8 text-emerald-500" />
-          Liste des Agences
-        </h1>
+          <h1 className="text-3xl font-bold text-white">Liste des Agences</h1>
+        </div>
         <div className="space-y-2">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-16 bg-slate-800" />
@@ -46,7 +73,7 @@ export default function TenantsList() {
           Liste des Agences
         </h1>
         <p className="text-gray-400 text-sm">
-          {tenants?.length || 0} agence(s) au total
+          {tenants.length} agence(s) au total
         </p>
       </div>
 
@@ -76,7 +103,7 @@ export default function TenantsList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {tenants?.map((tenant) => (
+              {tenants.map((tenant) => (
                 <tr key={tenant.id} className="hover:bg-slate-800/50 transition">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -91,31 +118,43 @@ export default function TenantsList() {
                     {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        tenant.is_active
-                          ? "bg-emerald-500/10 text-emerald-400"
-                          : "bg-red-500/10 text-red-400"
-                      }`}
+                    <Badge
+                      variant={tenant.is_active ? "default" : "destructive"}
+                      className={tenant.is_active ? "bg-emerald-500/10 text-emerald-400" : ""}
                     >
-                      {tenant.is_active ? "Actif" : "Inactif"}
-                    </span>
+                      {tenant.is_active ? "Actif" : "Suspendu"}
+                    </Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex px-2 py-1 text-xs font-medium rounded bg-slate-700 text-gray-300">
                       {tenant.subscription_plan}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-emerald-400 hover:text-emerald-300 hover:bg-slate-800"
-                      onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Détails
-                    </Button>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-emerald-400 hover:text-emerald-300 hover:bg-slate-800"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Détails
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleToggleStatus(tenant)}
+                        disabled={toggleStatusMutation.isPending}
+                        className={
+                          tenant.is_active
+                            ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                            : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+                        }
+                      >
+                        <Power className="h-4 w-4 mr-1" />
+                        {tenant.is_active ? "Suspendre" : "Activer"}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -124,7 +163,7 @@ export default function TenantsList() {
         </div>
       </Card>
 
-      {tenants?.length === 0 && (
+      {tenants.length === 0 && (
         <div className="text-center py-12">
           <Building className="h-12 w-12 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400">Aucune agence enregistrée</p>
