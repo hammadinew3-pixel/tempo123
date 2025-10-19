@@ -22,7 +22,7 @@ export function useTenantPlan() {
 
       if (error) throw error;
 
-      // Si pas de plan assigné, retourner valeurs par défaut (accès illimité)
+      // Si pas de plan assigné, retourner valeurs par défaut (accès illimité mais sans assistance)
       if (!tenant.plans) {
         return {
           plan: null,
@@ -33,7 +33,7 @@ export function useTenantPlan() {
             clients: { current: 0, max: Infinity, canAdd: true, percentage: 0 },
           },
           modules: {
-            assistance: true, // Tous les modules accessibles par défaut sans plan
+            assistance: false, // Module Assistance désactivé par défaut
           },
         };
       }
@@ -92,9 +92,7 @@ export function useTenantPlan() {
   // Helper pour vérifier l'accès à un module
   const hasModuleAccess = (moduleName: 'assistance'): boolean => {
     if (!query.data) return false;
-    // Si pas de plan (null), tous les modules sont accessibles
-    if (!query.data.plan) return true;
-    // Si plan assigné, vérifier les permissions du module
+    // Vérifier les permissions du module selon le plan
     return query.data.modules[moduleName] === true;
   };
 
