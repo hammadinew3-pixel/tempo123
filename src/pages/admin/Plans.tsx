@@ -400,24 +400,27 @@ export default function Plans() {
               <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wide">
                 Modules activés
               </h3>
-              <div className="grid grid-cols-2 gap-3 bg-slate-800/50 p-4 rounded-lg">
-                {[
-                  ["module_assistance", "🆘 Module Assistance"],
-                  ["module_sinistres", "🚗 Module Sinistres"],
-                  ["module_infractions", "⚠️ Module Infractions"],
-                  ["module_alertes", "🔔 Module Alertes"],
-                  ["module_rapports", "📊 Module Rapports"],
-                ].map(([key, label]) => (
-                  <div key={key} className="flex items-center justify-between p-2 rounded bg-slate-900/50">
-                    <Label className="text-gray-300 cursor-pointer">{label}</Label>
-                    <Switch
-                      checked={(form as any)[key]}
-                      onCheckedChange={(v) =>
-                        setForm({ ...form, [key]: v } as any)
-                      }
-                    />
+              <div className="bg-slate-800/50 p-4 rounded-lg space-y-3">
+                {/* Message explicatif */}
+                <p className="text-xs text-gray-400">
+                  ✓ Modules de base inclus dans tous les plans : Sinistres, Infractions, Alertes, Rapports
+                </p>
+                
+                {/* Seul module premium */}
+                <div className="flex items-center justify-between p-3 rounded bg-slate-900/50 border border-slate-700">
+                  <div className="space-y-1">
+                    <Label className="text-gray-300 font-medium cursor-pointer">
+                      🆘 Module Assistance/Assurance
+                    </Label>
+                    <p className="text-xs text-gray-500">
+                      Inclut : Dossiers assistance, Liste des assurances, Factures assurances
+                    </p>
                   </div>
-                ))}
+                  <Switch
+                    checked={form.module_assistance}
+                    onCheckedChange={(v) => setForm({ ...form, module_assistance: v })}
+                  />
+                </div>
               </div>
             </div>
           </div>

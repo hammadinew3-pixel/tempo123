@@ -16,15 +16,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUserRole } from "@/hooks/use-user-role";
-import { useTenantPlan } from "@/hooks/useTenantPlan";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AssistanceDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
-  const { hasModuleAccess } = useTenantPlan();
   const [assistance, setAssistance] = useState<any>(null);
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1030,21 +1027,6 @@ export default function AssistanceDetails() {
     return diff;
   };
 
-  // Vérifier l'accès au module Assistance
-  if (!hasModuleAccess('assistance')) {
-    return (
-      <div className="container mx-auto py-8">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Accès refusé</AlertTitle>
-          <AlertDescription>
-            Le module Assistance/Assurance n'est pas inclus dans votre plan actuel. 
-            Veuillez contacter votre administrateur pour mettre à niveau votre abonnement.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

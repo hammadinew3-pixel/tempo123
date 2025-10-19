@@ -8,6 +8,7 @@ import { TenantProvider } from "./contexts/TenantContext";
 import { Layout } from "./components/layout/Layout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
+import { AssistanceRoute } from "./components/AssistanceRoute";
 import { useSuperAdmin } from "./hooks/use-super-admin";
 import LoginSuperAdmin from "./pages/admin/LoginSuperAdmin";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -218,7 +219,11 @@ const App = () => (
               path="/assistance"
               element={
                 <ProtectedRoute>
-                  <Layout><Assistance /></Layout>
+                  <Layout>
+                    <AssistanceRoute>
+                      <Assistance />
+                    </AssistanceRoute>
+                  </Layout>
                 </ProtectedRoute>
               }
             />
@@ -226,7 +231,11 @@ const App = () => (
               path="/assistance/nouveau"
               element={
                 <ProtectedRoute>
-                  <Layout><NouveauAssistance /></Layout>
+                  <Layout>
+                    <AssistanceRoute>
+                      <NouveauAssistance />
+                    </AssistanceRoute>
+                  </Layout>
                 </ProtectedRoute>
               }
             />
@@ -234,7 +243,11 @@ const App = () => (
               path="/assistance/:id"
               element={
                 <ProtectedRoute>
-                  <Layout><AssistanceDetails /></Layout>
+                  <Layout>
+                    <AssistanceRoute>
+                      <AssistanceDetails />
+                    </AssistanceRoute>
+                  </Layout>
                 </ProtectedRoute>
               }
             />
@@ -242,7 +255,11 @@ const App = () => (
               path="/assurances"
               element={
                 <ProtectedRoute>
-                  <Layout><Assurances /></Layout>
+                  <Layout>
+                    <AssistanceRoute>
+                      <Assurances />
+                    </AssistanceRoute>
+                  </Layout>
                 </ProtectedRoute>
               }
             />
@@ -250,7 +267,11 @@ const App = () => (
               path="/factures"
               element={
                 <ProtectedRoute>
-                  <Layout><Factures /></Layout>
+                  <Layout>
+                    <AssistanceRoute>
+                      <Factures />
+                    </AssistanceRoute>
+                  </Layout>
                 </ProtectedRoute>
               }
             />
@@ -402,7 +423,9 @@ const App = () => (
               path="/assistance-contract-template"
               element={
                 <ProtectedRoute>
-                  <AssistanceContractTemplate />
+                  <AssistanceRoute>
+                    <AssistanceContractTemplate />
+                  </AssistanceRoute>
                 </ProtectedRoute>
               }
             />
@@ -410,7 +433,9 @@ const App = () => (
               path="/assistance-dossier-template"
               element={
                 <ProtectedRoute>
-                  <AssistanceDossierTemplate />
+                  <AssistanceRoute>
+                    <AssistanceDossierTemplate />
+                  </AssistanceRoute>
                 </ProtectedRoute>
               }
             />
@@ -418,7 +443,9 @@ const App = () => (
               path="/assistance-facture-template"
               element={
                 <ProtectedRoute>
-                  <AssistanceFactureTemplate />
+                  <AssistanceRoute>
+                    <AssistanceFactureTemplate />
+                  </AssistanceRoute>
                 </ProtectedRoute>
               }
             />
@@ -426,7 +453,9 @@ const App = () => (
               path="/assistance-complet-template"
               element={
                 <ProtectedRoute>
-                  <AssistanceCompletTemplate />
+                  <AssistanceRoute>
+                    <AssistanceCompletTemplate />
+                  </AssistanceRoute>
                 </ProtectedRoute>
               }
             />
