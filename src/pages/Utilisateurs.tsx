@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
+import { useTenant } from '@/contexts/TenantContext';
 import { z } from 'zod';
 
 interface UserWithRole {
@@ -25,6 +26,7 @@ interface UserWithRole {
 
 export default function Utilisateurs() {
   const { withTenantId } = useTenantInsert();
+  const { currentTenant } = useTenant();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -168,6 +170,15 @@ export default function Utilisateurs() {
   };
 
   const createUser = async () => {
+    if (!currentTenant?.id) {
+      toast({
+        title: "Erreur",
+        description: "Aucune agence active",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const userSchema = z.object({
         email: z.string().trim().email({ message: 'Email invalide' }),
@@ -188,7 +199,8 @@ export default function Utilisateurs() {
           email: newUser.email,
           password: newUser.password,
           nom: newUser.nom,
-          role: newUser.role
+          role: newUser.role,
+          tenant_id: currentTenant.id
         }
       });
 

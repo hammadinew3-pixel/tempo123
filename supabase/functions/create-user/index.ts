@@ -100,13 +100,55 @@ serve(async (req) => {
       );
     }
 
-    const { email, password, nom, role } = await req.json();
+    const { email, password, nom, role, tenant_id } = await req.json();
 
     // Validate input
     if (!email || !password || !nom) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: email, password, nom' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Use provided tenant_id or fallback to admin's tenant
+    const targetTenantId = tenant_id || adminTenantId;
+
+    // Verify admin has access to target tenant
+    if (tenant_id && tenant_id !== adminTenantId) {
+      return new Response(
+        JSON.stringify({ error: 'Vous ne pouvez créer des utilisateurs que dans votre propre agence' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
+    // Check quota before creating user
+    const { data: tenantData, error: quotaError } = await supabaseAdmin
+      .from('tenants')
+      .select('max_users')
+      .eq('id', targetTenantId)
+      .single();
+
+    if (quotaError) {
+      console.error('create-user: quota check error', quotaError);
+      return new Response(
+        JSON.stringify({ error: 'Erreur lors de la vérification du quota' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    const { count: currentUsers } = await supabaseAdmin
+      .from('user_tenants')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('tenant_id', targetTenantId)
+      .eq('is_active', true);
+
+    if (currentUsers !== null && tenantData.max_users && currentUsers >= tenantData.max_users) {
+      return new Response(
+        JSON.stringify({ 
+          error: `Quota utilisateurs atteint (${currentUsers}/${tenantData.max_users})`,
+          code: 'QUOTA_EXCEEDED'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
 
@@ -132,28 +174,15 @@ serve(async (req) => {
       throw new Error('User creation failed');
     }
 
-    // Create profile
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
-        email: authData.user.email,
-        nom,
-        actif: true
-      });
+    // Profile is automatically created by handle_new_user trigger
+    // No need to insert it here
 
-    if (profileError) {
-      // Cleanup: delete the created user
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      throw profileError;
-    }
-
-    // Link user to the same tenant as the admin
+    // Link user to the target tenant
     const { error: userTenantError } = await supabaseAdmin
       .from('user_tenants')
       .insert({
         user_id: authData.user.id,
-        tenant_id: adminTenantId,
+        tenant_id: targetTenantId,
         is_active: true
       });
 
@@ -163,12 +192,12 @@ serve(async (req) => {
       throw userTenantError;
     }
 
-    // Assign agent role in the admin's tenant
+    // Assign agent role in the target tenant
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({ 
         user_id: authData.user.id, 
-        tenant_id: adminTenantId,
+        tenant_id: targetTenantId,
         role: newUserRole
       });
 
@@ -185,7 +214,7 @@ serve(async (req) => {
           id: authData.user.id,
           email: authData.user.email,
           role: newUserRole,
-          tenant_id: adminTenantId
+          tenant_id: targetTenantId
         }
       }),
       { 
@@ -196,9 +225,24 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('create-user: error', errorMessage);
+    const errorDetails = (error as any)?.details;
+    const errorCode = (error as any)?.code;
+    const errorHint = (error as any)?.hint;
+    
+    console.error('create-user: error', { 
+      message: errorMessage, 
+      details: errorDetails, 
+      hint: errorHint, 
+      code: errorCode,
+      raw: error 
+    });
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: errorDetails,
+        code: errorCode
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
         status: 400 
