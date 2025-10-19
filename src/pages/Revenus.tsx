@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
+import { useUserRole } from '@/hooks/use-user-role';
+import { useTenantPlan } from '@/hooks/useTenantPlan';
 import {
   Table,
   TableBody,
@@ -33,7 +35,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useUserRole } from "@/hooks/use-user-role";
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -56,6 +57,7 @@ interface Revenue {
 
 export default function Revenus() {
   const { withTenantId } = useTenantInsert();
+  const { hasModuleAccess } = useTenantPlan();
   const [revenues, setRevenues] = useState<Revenue[]>([]);
   const [filteredRevenues, setFilteredRevenues] = useState<Revenue[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -132,20 +134,24 @@ export default function Revenus() {
 
       if (paymentsError) throw paymentsError;
 
-      // Charger les paiements d'assistance (seulement ceux qui sont payés)
-      const { data: assistanceData, error: assistanceError } = await supabase
-        .from('assistance')
-        .select(`
-          *,
-          clients (nom, prenom),
-          vehicles (immatriculation, marque, modele)
-        `)
-        .neq('montant_paye', 0)
-        .not('montant_paye', 'is', null)
-        .neq('etat_paiement', 'en_attente')
-        .order('date_debut', { ascending: false });
+      // Charger les paiements d'assistance SEULEMENT si le module est accessible
+      let assistanceData = [];
+      if (hasModuleAccess('assistance')) {
+        const { data, error: assistanceError } = await supabase
+          .from('assistance')
+          .select(`
+            *,
+            clients (nom, prenom),
+            vehicles (immatriculation, marque, modele)
+          `)
+          .neq('montant_paye', 0)
+          .not('montant_paye', 'is', null)
+          .neq('etat_paiement', 'en_attente')
+          .order('date_debut', { ascending: false });
 
-      if (assistanceError) throw assistanceError;
+        if (assistanceError) throw assistanceError;
+        assistanceData = data || [];
+      }
 
       // Formater les revenus manuels
       const formattedRevenus: Revenue[] = (revenusData || []).map(r => ({
@@ -398,6 +404,9 @@ export default function Revenus() {
                           <SelectItem value="contrat">Contrat</SelectItem>
                           <SelectItem value="vente">Vente</SelectItem>
                           <SelectItem value="remboursement">Remboursement</SelectItem>
+                          {hasModuleAccess('assistance') && (
+                            <SelectItem value="assistance">Assistance</SelectItem>
+                          )}
                           <SelectItem value="autre">Autre</SelectItem>
                         </SelectContent>
                       </Select>

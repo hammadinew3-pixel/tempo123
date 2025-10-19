@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useTenantPlan } from "@/hooks/useTenantPlan";
 interface DashboardStats {
   vehiclesCount: number;
   reservationsCount: number;
@@ -30,6 +31,7 @@ interface VehicleAlert {
 }
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { hasModuleAccess } = useTenantPlan();
   const [stats, setStats] = useState<DashboardStats>({
     vehiclesCount: 0,
     reservationsCount: 0,
@@ -58,7 +60,7 @@ export default function Dashboard() {
   useEffect(() => {
     loadDashboardData();
 
-    // Subscribe to real-time updates for contracts and assistance
+    // Subscribe to real-time updates for contracts
     const contractsChannel = supabase.channel('dashboard-contracts-changes').on('postgres_changes', {
       event: '*',
       schema: 'public',
@@ -66,18 +68,26 @@ export default function Dashboard() {
     }, () => {
       loadDeparturesAndReturns();
     }).subscribe();
-    const assistanceChannel = supabase.channel('dashboard-assistance-changes').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'assistance'
-    }, () => {
-      loadDeparturesAndReturns();
-    }).subscribe();
+    
+    // Subscribe to assistance ONLY if module is accessible
+    let assistanceChannel;
+    if (hasModuleAccess('assistance')) {
+      assistanceChannel = supabase.channel('dashboard-assistance-changes').on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'assistance'
+      }, () => {
+        loadDeparturesAndReturns();
+      }).subscribe();
+    }
+    
     return () => {
       supabase.removeChannel(contractsChannel);
-      supabase.removeChannel(assistanceChannel);
+      if (assistanceChannel) {
+        supabase.removeChannel(assistanceChannel);
+      }
     };
-  }, []);
+  }, [hasModuleAccess]);
   const loadDeparturesAndReturns = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -93,14 +103,16 @@ export default function Dashboard() {
         ascending: true
       });
 
-      // Load today's departures from assistance
-      const {
-        data: todayAssistanceDepartures
-      } = await supabase.from('assistance').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_debut', today);
+      // Load today's departures from assistance ONLY if module is accessible
+      let todayAssistanceDepartures = [];
+      if (hasModuleAccess('assistance')) {
+        const { data } = await supabase.from('assistance').select(`
+            *,
+            clients (nom, prenom),
+            vehicles (marque, modele, immatriculation)
+          `).eq('date_debut', today);
+        todayAssistanceDepartures = data || [];
+      }
 
       // Load today's returns from contracts
       const {
@@ -113,14 +125,16 @@ export default function Dashboard() {
         ascending: true
       });
 
-      // Load today's returns from assistance
-      const {
-        data: todayAssistanceReturns
-      } = await supabase.from('assistance').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_fin', today);
+      // Load today's returns from assistance ONLY if module is accessible
+      let todayAssistanceReturns = [];
+      if (hasModuleAccess('assistance')) {
+        const { data } = await supabase.from('assistance').select(`
+            *,
+            clients (nom, prenom),
+            vehicles (marque, modele, immatriculation)
+          `).eq('date_fin', today);
+        todayAssistanceReturns = data || [];
+      }
 
       // Load tomorrow's returns (J+1) from contracts
       const tomorrow = new Date();
@@ -136,14 +150,16 @@ export default function Dashboard() {
         ascending: true
       });
 
-      // Load tomorrow's returns (J+1) from assistance
-      const {
-        data: tomorrowAssistanceReturns
-      } = await supabase.from('assistance').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_fin', tomorrowStr);
+      // Load tomorrow's returns (J+1) from assistance ONLY if module is accessible
+      let tomorrowAssistanceReturns = [];
+      if (hasModuleAccess('assistance')) {
+        const { data } = await supabase.from('assistance').select(`
+            *,
+            clients (nom, prenom),
+            vehicles (marque, modele, immatriculation)
+          `).eq('date_fin', tomorrowStr);
+        tomorrowAssistanceReturns = data || [];
+      }
 
       // Combine departures (contracts + assistance)
       const allDepartures = [...(todayDepartures || []).map(d => ({
@@ -225,16 +241,18 @@ export default function Dashboard() {
         ascending: false
       }).limit(4);
 
-      // Load recent assistance
-      const {
-        data: assistance
-      } = await supabase.from('assistance').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).order('created_at', {
-        ascending: false
-      }).limit(4);
+      // Load recent assistance ONLY if module is accessible
+      let assistance = [];
+      if (hasModuleAccess('assistance')) {
+        const { data } = await supabase.from('assistance').select(`
+            *,
+            clients (nom, prenom),
+            vehicles (marque, modele, immatriculation)
+          `).order('created_at', {
+          ascending: false
+        }).limit(4);
+        assistance = data || [];
+      }
 
       // Load sinistres statistics
       const { data: sinistres } = await supabase

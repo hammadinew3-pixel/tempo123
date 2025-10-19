@@ -18,6 +18,7 @@ import { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { exportToExcel, exportToCSV } from "@/lib/exportUtils";
 import { useRealtime } from "@/hooks/use-realtime";
+import { useTenantPlan } from "@/hooks/useTenantPlan";
 
 type Contract = Database['public']['Tables']['contracts']['Row'];
 type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
@@ -25,6 +26,7 @@ type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
 export default function Locations() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  const { hasModuleAccess } = useTenantPlan();
   const [contracts, setContracts] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -94,25 +96,31 @@ export default function Locations() {
     },
   });
 
-  // Synchronisation en temps réel pour les assistances
+  // Synchronisation en temps réel pour les assistances (seulement si le module est actif)
   useRealtime<any>({
     table: 'assistance',
     onInsert: (payload) => {
-      loadData();
-      toast({
-        title: 'Nouveau dossier assistance',
-        description: `Dossier ${payload.num_dossier} créé`,
-      });
+      if (hasModuleAccess('assistance')) {
+        loadData();
+        toast({
+          title: 'Nouveau dossier assistance',
+          description: `Dossier ${payload.num_dossier} créé`,
+        });
+      }
     },
     onUpdate: (payload) => {
-      loadData();
+      if (hasModuleAccess('assistance')) {
+        loadData();
+      }
     },
     onDelete: ({ old }) => {
-      loadData();
-      toast({
-        title: 'Dossier supprimé',
-        description: `Dossier ${old.num_dossier} supprimé`,
-      });
+      if (hasModuleAccess('assistance')) {
+        loadData();
+        toast({
+          title: 'Dossier supprimé',
+          description: `Dossier ${old.num_dossier} supprimé`,
+        });
+      }
     },
   });
 
@@ -120,7 +128,8 @@ export default function Locations() {
     try {
       console.log('🔄 Chargement des données...');
       
-      const [contractsRes, assistancesRes, vehiclesRes, clientsRes] = await Promise.all([
+      // Charger les assistances seulement si le module est actif
+      const promises = [
         supabase
           .from('contracts')
           .select(`
@@ -129,14 +138,16 @@ export default function Locations() {
             vehicles (immatriculation, marque, modele, tarif_journalier)
           `)
           .order('created_at', { ascending: false }),
-        supabase
-          .from('assistance')
-          .select(`
-            *,
-            clients (nom, prenom, telephone),
-            vehicles (immatriculation, marque, modele, tarif_journalier)
-          `)
-          .order('created_at', { ascending: false }),
+        hasModuleAccess('assistance') 
+          ? supabase
+              .from('assistance')
+              .select(`
+                *,
+                clients (nom, prenom, telephone),
+                vehicles (immatriculation, marque, modele, tarif_journalier)
+              `)
+              .order('created_at', { ascending: false })
+          : Promise.resolve({ data: null, error: null }),
         supabase
           .from('vehicles')
           .select('*')
@@ -144,7 +155,9 @@ export default function Locations() {
         supabase
           .from('clients')
           .select('*')
-      ]);
+      ];
+      
+      const [contractsRes, assistancesRes, vehiclesRes, clientsRes] = await Promise.all(promises);
 
       if (contractsRes.error) {
         console.error('❌ Erreur contrats:', contractsRes.error);
@@ -718,23 +731,25 @@ export default function Locations() {
               <button 
                 onClick={() => setFilterType('location')}
                 className={`pb-2 transition-colors ${
-                  filterType === 'location' 
+                  filterType === 'location'
                     ? 'text-primary border-b-2 border-primary' 
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 LOCATIONS ({contracts.filter(c => c.type_contrat === 'location').length})
               </button>
-              <button 
-                onClick={() => setFilterType('assistance')}
-                className={`pb-2 transition-colors ${
-                  filterType === 'assistance' 
-                    ? 'text-primary border-b-2 border-primary' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                ASSISTANCES ({contracts.filter(c => c.type_contrat === 'assistance').length})
-              </button>
+              {hasModuleAccess('assistance') && (
+                <button 
+                  onClick={() => setFilterType('assistance')}
+                  className={`pb-2 transition-colors ${
+                    filterType === 'assistance' 
+                      ? 'text-primary border-b-2 border-primary' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  ASSISTANCES ({contracts.filter(c => c.type_contrat === 'assistance').length})
+                </button>
+              )}
             </div>
             {selectedIds.size > 0 && (
               <Button 

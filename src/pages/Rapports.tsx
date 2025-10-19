@@ -10,8 +10,10 @@ import RapportParVoiture from '@/components/rapports/RapportParVoiture';
 import RapportEncaissement from '@/components/rapports/RapportEncaissement';
 import RapportAssurance from '@/components/rapports/RapportAssurance';
 import RapportParClient from '@/components/rapports/RapportParClient';
+import { useTenantPlan } from '@/hooks/useTenantPlan';
 
 export default function Rapports() {
+  const { hasModuleAccess } = useTenantPlan();
   const [dateRange, setDateRange] = useState({
     startDate: format(startOfMonth(subMonths(new Date(), 2)), 'yyyy-MM-dd'),
     endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
@@ -69,14 +71,16 @@ export default function Rapports() {
             <Users className="w-4 h-4 mr-2" />
             Par Client
           </TabsTrigger>
-          <TabsTrigger value="encaissement">
-            <DollarSign className="w-4 h-4 mr-2" />
-            Encaissement
-          </TabsTrigger>
-          <TabsTrigger value="assurance">
-            <Shield className="w-4 h-4 mr-2" />
-            Assurance
-          </TabsTrigger>
+            <TabsTrigger value="encaissement">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Encaissement
+            </TabsTrigger>
+            {hasModuleAccess('assistance') && (
+              <TabsTrigger value="assurance">
+                <Shield className="w-4 h-4 mr-2" />
+                Assurance
+              </TabsTrigger>
+            )}
         </TabsList>
 
         <TabsContent value="vehicles" className="space-y-4">
@@ -87,13 +91,15 @@ export default function Rapports() {
           <RapportParClient dateRange={dateRange} />
         </TabsContent>
 
-        <TabsContent value="encaissement" className="space-y-4">
-          <RapportEncaissement dateRange={dateRange} />
-        </TabsContent>
+          <TabsContent value="encaissement" className="space-y-4">
+            <RapportEncaissement dateRange={dateRange} />
+          </TabsContent>
 
-        <TabsContent value="assurance" className="space-y-4">
-          <RapportAssurance dateRange={dateRange} />
-        </TabsContent>
+          {hasModuleAccess('assistance') && (
+            <TabsContent value="assurance" className="space-y-4">
+              <RapportAssurance dateRange={dateRange} />
+            </TabsContent>
+          )}
       </Tabs>
     </div>
   );

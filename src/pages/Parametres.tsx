@@ -13,6 +13,7 @@ import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2 } from "lucide-react";
 import { CurrentPlanCard } from "@/components/settings/CurrentPlanCard";
 import { PlanSelectionDialog } from "@/components/settings/PlanSelectionDialog";
+import { useTenantPlan } from "@/hooks/useTenantPlan";
 
 interface AgenceSettings {
   id: string;
@@ -43,6 +44,7 @@ interface AgenceSettings {
 export default function Parametres() {
   const { withTenantId } = useTenantInsert();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  const { hasModuleAccess } = useTenantPlan();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [settings, setSettings] = useState<AgenceSettings | null>(null);
@@ -68,9 +70,11 @@ export default function Parametres() {
   useEffect(() => {
     if (isAdmin) {
       loadSettings();
-      loadAssistanceCategories();
+      if (hasModuleAccess('assistance')) {
+        loadAssistanceCategories();
+      }
     }
-  }, [isAdmin]);
+  }, [isAdmin, hasModuleAccess]);
 
   const loadSettings = async () => {
     try {
@@ -678,12 +682,13 @@ export default function Parametres() {
 
       {/* Second row - Categories + Print settings */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Gestion des catégories d'assistance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Tag className="w-5 h-5" />
-              Catégories d'assistance
+        {/* Gestion des catégories d'assistance - Masquer si module non accessible */}
+        {hasModuleAccess('assistance') && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="w-5 h-5" />
+                Catégories d'assistance
             </CardTitle>
             <CardDescription>
               Gérez les catégories disponibles pour les contrats d'assistance
@@ -724,6 +729,7 @@ export default function Parametres() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Paramètres d'impression */}
         <Card>
