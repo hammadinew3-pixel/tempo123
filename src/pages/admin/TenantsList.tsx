@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building, Eye, Power, Layers } from "lucide-react";
+import { Building, Eye, Power, Layers, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +9,24 @@ import { toast } from "sonner";
 import { AssignPlanDialog } from "@/components/admin/AssignPlanDialog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function TenantsList() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [tenantToDelete, setTenantToDelete] = useState<any>(null);
 
   const { data: tenants = [], isLoading } = useQuery({
     queryKey: ['all-tenants'],
@@ -54,8 +66,40 @@ export default function TenantsList() {
     },
   });
 
+  const deleteTenantMutation = useMutation({
+    mutationFn: async (tenantId: string) => {
+      // Supprimer toutes les données liées au tenant
+      const { error } = await supabase
+        .from('tenants')
+        .delete()
+        .eq('id', tenantId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-tenants'] });
+      toast.success("Agence supprimée avec succès");
+      setShowDeleteDialog(false);
+      setTenantToDelete(null);
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de la suppression: " + error.message);
+    },
+  });
+
   const handleToggleStatus = (tenant: any) => {
     toggleStatusMutation.mutate({ id: tenant.id, is_active: tenant.is_active });
+  };
+
+  const handleDeleteClick = (tenant: any) => {
+    setTenantToDelete(tenant);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (tenantToDelete) {
+      deleteTenantMutation.mutate(tenantToDelete.id);
+    }
   };
 
   if (isLoading) {
@@ -176,6 +220,16 @@ export default function TenantsList() {
                         <Power className="h-4 w-4 mr-1" />
                         {tenant.is_active ? "Suspendre" : "Activer"}
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteClick(tenant)}
+                        disabled={deleteTenantMutation.isPending}
+                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -200,6 +254,29 @@ export default function TenantsList() {
           tenant={selectedTenant}
         />
       )}
+
+      {/* Dialog de confirmation de suppression */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer l'agence "{tenantToDelete?.name}" ?
+              Cette action est irréversible et supprimera toutes les données associées
+              (utilisateurs, véhicules, clients, contrats, etc.).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Supprimer définitivement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
