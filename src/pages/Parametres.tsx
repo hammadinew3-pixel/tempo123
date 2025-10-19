@@ -44,7 +44,7 @@ interface AgenceSettings {
 export default function Parametres() {
   const { withTenantId } = useTenantInsert();
   const { isAdmin, loading: roleLoading } = useUserRole();
-  const { hasModuleAccess } = useTenantPlan();
+  const { data: planData, isLoading: planLoading, hasModuleAccess } = useTenantPlan();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [settings, setSettings] = useState<AgenceSettings | null>(null);
@@ -70,11 +70,11 @@ export default function Parametres() {
   useEffect(() => {
     if (isAdmin) {
       loadSettings();
-      if (hasModuleAccess('assistance')) {
+      if (planData?.modules?.assistance) {
         loadAssistanceCategories();
       }
     }
-  }, [isAdmin, hasModuleAccess]);
+  }, [isAdmin, planData]);
 
   const loadSettings = async () => {
     try {
@@ -401,7 +401,7 @@ export default function Parametres() {
     }
   };
 
-  if (roleLoading || !isAdmin || loading) {
+  if (roleLoading || planLoading || !isAdmin || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
