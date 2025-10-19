@@ -135,9 +135,22 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const { state } = useSidebar();
   const { isAdmin, isAgent, isSuperAdmin } = useUserRole();
   const collapsed = state === "collapsed";
-  const { data: planData } = useTenantPlan();
+  const { data: planData, isLoading } = useTenantPlan();
 
-  // Modules disponibles selon le plan
+  // Attendre le chargement des données du plan
+  if (isLoading) {
+    return (
+      <SidebarUI collapsible="icon" className="border-r border-sidebar-border">
+        <SidebarContent>
+          <div className="flex items-center justify-center p-4">
+            <p className="text-sm text-muted-foreground">Chargement...</p>
+          </div>
+        </SidebarContent>
+      </SidebarUI>
+    );
+  }
+
+  // Modules disponibles selon le plan (données déjà chargées ici)
   const modules = planData?.modules || {
     assistance: false, // Seul module premium
   };

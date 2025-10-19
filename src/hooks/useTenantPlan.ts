@@ -86,7 +86,7 @@ export function useTenantPlan() {
       };
     },
     enabled: !!currentTenant,
-    staleTime: 30000, // Cache 30 secondes
+    staleTime: 5000, // Cache 5 secondes
   });
 
   // Helper pour vérifier l'accès à un module

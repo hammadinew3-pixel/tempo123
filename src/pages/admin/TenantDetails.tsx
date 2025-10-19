@@ -29,6 +29,12 @@ export default function TenantDetails() {
   const queryClient = useQueryClient();
   const [showPlanDialog, setShowPlanDialog] = useState(false);
 
+  // Handler pour rafraîchir après assignation de plan
+  const handlePlanAssigned = () => {
+    queryClient.invalidateQueries({ queryKey: ['tenant-details', id] });
+    queryClient.invalidateQueries({ queryKey: ['tenant-plan'] });
+  };
+
   // Récupérer les détails du tenant avec son plan
   const { data: tenant, isLoading } = useQuery({
     queryKey: ['tenant-details', id],
@@ -311,7 +317,10 @@ export default function TenantDetails() {
       {/* Dialog d'assignation de plan */}
       <AssignPlanDialog
         open={showPlanDialog}
-        onOpenChange={setShowPlanDialog}
+        onOpenChange={(open) => {
+          setShowPlanDialog(open);
+          if (!open) handlePlanAssigned();
+        }}
         tenant={tenant}
         currentUsage={usage}
       />
