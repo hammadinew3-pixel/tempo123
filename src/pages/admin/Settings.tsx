@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Save, Globe, Shield, Bell, FileText } from "lucide-react";
+import { Settings as SettingsIcon, Save, Globe, Bell, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,6 @@ interface SuperAdminSettings {
   platform_name: string;
   support_email: string | null;
   maintenance_mode: boolean;
-  default_max_vehicles: number;
-  default_max_users: number;
-  trial_duration_days: number;
   enable_email_alerts: boolean;
   log_retention_days: number;
 }
@@ -53,9 +50,6 @@ export default function AdminSettings() {
           platform_name: newSettings.platform_name,
           support_email: newSettings.support_email,
           maintenance_mode: newSettings.maintenance_mode,
-          default_max_vehicles: newSettings.default_max_vehicles,
-          default_max_users: newSettings.default_max_users,
-          trial_duration_days: newSettings.trial_duration_days,
           enable_email_alerts: newSettings.enable_email_alerts,
           log_retention_days: newSettings.log_retention_days,
         })
@@ -147,46 +141,6 @@ export default function AdminSettings() {
               id="maintenance_mode"
               checked={settings.maintenance_mode}
               onCheckedChange={(checked) => setSettings({ ...settings, maintenance_mode: checked })}
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Limites par Tenant */}
-      <Card className="bg-slate-900 border-slate-800 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Shield className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-xl font-semibold text-white">Limites par Agence</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="max_vehicles" className="text-gray-300">Véhicules max</Label>
-            <Input
-              id="max_vehicles"
-              type="number"
-              value={settings.default_max_vehicles}
-              onChange={(e) => setSettings({ ...settings, default_max_vehicles: parseInt(e.target.value) })}
-              className="bg-slate-800 border-slate-700 text-white mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor="max_users" className="text-gray-300">Utilisateurs max</Label>
-            <Input
-              id="max_users"
-              type="number"
-              value={settings.default_max_users}
-              onChange={(e) => setSettings({ ...settings, default_max_users: parseInt(e.target.value) })}
-              className="bg-slate-800 border-slate-700 text-white mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor="trial_duration" className="text-gray-300">Durée d'essai (jours)</Label>
-            <Input
-              id="trial_duration"
-              type="number"
-              value={settings.trial_duration_days}
-              onChange={(e) => setSettings({ ...settings, trial_duration_days: parseInt(e.target.value) })}
-              className="bg-slate-800 border-slate-700 text-white mt-1"
             />
           </div>
         </div>

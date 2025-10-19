@@ -1380,41 +1380,32 @@ export type Database = {
       super_admin_settings: {
         Row: {
           created_at: string | null
-          default_max_users: number | null
-          default_max_vehicles: number | null
           enable_email_alerts: boolean | null
           id: string
           log_retention_days: number | null
           maintenance_mode: boolean | null
           platform_name: string | null
           support_email: string | null
-          trial_duration_days: number | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          default_max_users?: number | null
-          default_max_vehicles?: number | null
           enable_email_alerts?: boolean | null
           id?: string
           log_retention_days?: number | null
           maintenance_mode?: boolean | null
           platform_name?: string | null
           support_email?: string | null
-          trial_duration_days?: number | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          default_max_users?: number | null
-          default_max_vehicles?: number | null
           enable_email_alerts?: boolean | null
           id?: string
           log_retention_days?: number | null
           maintenance_mode?: boolean | null
           platform_name?: string | null
           support_email?: string | null
-          trial_duration_days?: number | null
           updated_at?: string | null
         }
         Relationships: []
