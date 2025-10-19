@@ -12,8 +12,9 @@ import { useSuperAdmin } from "./hooks/use-super-admin";
 import LoginSuperAdmin from "./pages/admin/LoginSuperAdmin";
 import AdminDashboard from "./pages/admin/Dashboard";
 import TenantsList from "./pages/admin/TenantsList";
+import AdminUsers from "./pages/admin/Users";
+import AdminSettings from "./pages/admin/Settings";
 import Dashboard from "./pages/Dashboard";
-import DashboardGlobal from "./pages/admin/DashboardGlobal";
 import Tenants from "./pages/admin/Tenants";
 import Suspended from "./pages/Suspended";
 import Locations from "./pages/Locations";
@@ -445,15 +446,31 @@ const App = () => (
                   </AdminLayout>
                 }
               />
-              <Route
-                path="tenants"
-                element={
-                  <AdminLayout>
-                    <TenantsList />
-                  </AdminLayout>
-                }
-              />
-            </Route>
+            <Route
+              path="tenants"
+              element={
+                <AdminLayout>
+                  <TenantsList />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <AdminLayout>
+                  <AdminUsers />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <AdminLayout>
+                  <AdminSettings />
+                </AdminLayout>
+              }
+            />
+          </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>
