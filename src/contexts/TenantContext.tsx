@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 import { useSuperAdmin } from '@/hooks/use-super-admin';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface Tenant {
   id: string;
@@ -27,6 +28,38 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Écouter les changements de statut du tenant en temps réel
+  useEffect(() => {
+    if (!currentTenant) return;
+
+    const channel = supabase
+      .channel(`tenant-${currentTenant.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tenants',
+          filter: `id=eq.${currentTenant.id}`,
+        },
+        (payload) => {
+          const updatedTenant = payload.new as Tenant;
+          
+          // Si le tenant est suspendu, rediriger immédiatement
+          if (!updatedTenant.is_active) {
+            setCurrentTenant(updatedTenant);
+            navigate('/suspended');
+            toast.error("Votre agence a été suspendue");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentTenant?.id, navigate]);
 
   useEffect(() => {
     // Si super_admin, pas besoin de tenant
