@@ -1,4 +1,4 @@
-import { Home, Building, Users, Settings } from "lucide-react";
+import { Home, Building, Users, Settings, Layers } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -12,12 +12,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const menuItems = [
-  { title: "Dashboard", url: "/admin/dashboard", icon: Home },
-  { title: "Agences", url: "/admin/tenants", icon: Building },
-  { title: "Utilisateurs", url: "/admin/users", icon: Users },
-  { title: "Paramètres", url: "/admin/settings", icon: Settings },
-];
+  const menuItems = [
+    { title: "Dashboard", url: "/admin/dashboard", icon: Home },
+    { title: "Agences", url: "/admin/tenants", icon: Building },
+    { title: "Utilisateurs", url: "/admin/users", icon: Users },
+    { title: "Plans", url: "/admin/plans", icon: Layers },
+    { title: "Paramètres", url: "/admin/settings", icon: Settings },
+  ];
 
 export function AdminSidebar() {
   const { open } = useSidebar();

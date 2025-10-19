@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import TenantsList from "./pages/admin/TenantsList";
 import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
+import AdminPlans from "./pages/admin/Plans";
 import Dashboard from "./pages/Dashboard";
 import Tenants from "./pages/admin/Tenants";
 import Suspended from "./pages/Suspended";
@@ -462,15 +463,23 @@ const App = () => (
                 </AdminLayout>
               }
             />
-            <Route
-              path="settings"
-              element={
-                <AdminLayout>
-                  <AdminSettings />
-                </AdminLayout>
-              }
-            />
-          </Route>
+          <Route
+            path="settings"
+            element={
+              <AdminLayout>
+                <AdminSettings />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="plans"
+            element={
+              <AdminLayout>
+                <AdminPlans />
+              </AdminLayout>
+            }
+          />
+        </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1032,6 +1032,66 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          created_at: string | null
+          currency: string
+          description: string | null
+          id: string
+          is_active: boolean
+          max_clients: number
+          max_contracts: number
+          max_users: number
+          max_vehicles: number
+          module_alertes: boolean
+          module_assistance: boolean
+          module_infractions: boolean
+          module_rapports: boolean
+          module_sinistres: boolean
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_clients?: number
+          max_contracts?: number
+          max_users?: number
+          max_vehicles?: number
+          module_alertes?: boolean
+          module_assistance?: boolean
+          module_infractions?: boolean
+          module_rapports?: boolean
+          module_sinistres?: boolean
+          name: string
+          price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_clients?: number
+          max_contracts?: number
+          max_users?: number
+          max_vehicles?: number
+          module_alertes?: boolean
+          module_assistance?: boolean
+          module_infractions?: boolean
+          module_rapports?: boolean
+          module_sinistres?: boolean
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           actif: boolean | null
