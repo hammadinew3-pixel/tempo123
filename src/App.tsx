@@ -8,6 +8,7 @@ import { TenantProvider } from "./contexts/TenantContext";
 import { Layout } from "./components/layout/Layout";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { useSuperAdmin } from "./hooks/use-super-admin";
+import LoginSuperAdmin from "./pages/admin/LoginSuperAdmin";
 import Dashboard from "./pages/Dashboard";
 import DashboardGlobal from "./pages/admin/DashboardGlobal";
 import Tenants from "./pages/admin/Tenants";
@@ -102,6 +103,7 @@ const App = () => (
           <TenantProvider>
             <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin/login" element={<LoginSuperAdmin />} />
             <Route
               path="/"
               element={
