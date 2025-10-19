@@ -2196,6 +2196,26 @@ export type Database = {
         Args: Record<PropertyKey, never> | { p_tenant_id: string }
         Returns: string
       }
+      get_tenant_signups_by_month: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          count: number
+          mois: string
+        }[]
+      }
+      get_tenant_stats: {
+        Args: { tenant_uuid: string }
+        Returns: {
+          clients_count: number
+          contracts_count: number
+          created_at: string
+          is_active: boolean
+          tenant_id: string
+          tenant_name: string
+          users_count: number
+          vehicles_count: number
+        }[]
+      }
       get_user_tenant_id: {
         Args: { _user_id: string }
         Returns: string

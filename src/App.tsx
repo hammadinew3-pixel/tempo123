@@ -9,7 +9,7 @@ import { Layout } from "./components/layout/Layout";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { useSuperAdmin } from "./hooks/use-super-admin";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/admin/Dashboard";
+import DashboardGlobal from "./pages/admin/DashboardGlobal";
 import Tenants from "./pages/admin/Tenants";
 import Suspended from "./pages/Suspended";
 import Locations from "./pages/Locations";
@@ -436,7 +436,7 @@ const App = () => (
                 path="dashboard"
                 element={
                   <Layout>
-                    <AdminDashboard />
+                    <DashboardGlobal />
                   </Layout>
                 }
               />
