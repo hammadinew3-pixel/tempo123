@@ -86,26 +86,22 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean, modules: any): NavI
   }
 
   items.push({ title: "Maintenance", href: "/maintenance", icon: Wrench });
-
-  // Conditionnellement ajouter Sinistre
-  if (modules.sinistres) {
-    items.push({ title: "Sinistre", href: "/sinistres", icon: AlertTriangle });
-  }
-
-  // Conditionnellement ajouter Infraction
-  if (modules.infractions) {
-    items.push({ title: "Infraction", href: "/infractions", icon: Shield });
-  }
+  
+  // Modules de base toujours inclus
+  items.push({ title: "Sinistre", href: "/sinistres", icon: AlertTriangle });
+  items.push({ title: "Infraction", href: "/infractions", icon: Shield });
 
   items.push(
     { title: "Charges", href: "/charges", icon: DollarSign },
     { title: "Revenus", href: "/revenus", icon: TrendingUp }
   );
 
-  // Conditionnellement ajouter Rapport
-  if (modules.rapports) {
-    items.push({ title: "Rapport", href: "/rapports", icon: BarChart });
-  }
+  // Rapports toujours inclus
+  items.push({
+    title: "Rapport",
+    href: "/rapports",
+    icon: BarChart,
+  });
 
   // "Chèque", "Historique" et "Importer" masqués pour les agents
   if (!isAgent) {
@@ -141,13 +137,9 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const collapsed = state === "collapsed";
   const { data: planData } = useTenantPlan();
 
-  // Si pas de plan, afficher tous les modules (comportement par défaut)
+  // Modules disponibles selon le plan
   const modules = planData?.modules || {
-    assistance: true,
-    sinistres: true,
-    infractions: true,
-    alertes: true,
-    rapports: true,
+    assistance: false, // Seul module premium
   };
   
   const mainNavItems = getMainNavItems(isAdmin, isAgent, modules);

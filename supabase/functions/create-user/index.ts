@@ -125,38 +125,57 @@ serve(async (req) => {
     }
 
     console.log('STEP G: Checking user quota');
-    const { data: tenantData, error: quotaError } = await supabaseAdmin
+    
+    // Récupérer le quota effectif (priorité au plan, sinon tenant)
+    const { data: quotaData, error: quotaError } = await supabaseAdmin
       .from('tenants')
-      .select('max_users')
+      .select(`
+        max_users,
+        plan_id,
+        plans:plan_id (max_users)
+      `)
       .eq('id', targetTenantId)
-      .single();
-
+      .maybeSingle();
+    
     if (quotaError) {
-      console.error('create-user: quota check error', quotaError);
-      return new Response(
-        JSON.stringify({ error: 'Erreur lors de la vérification du quota', step: 'G' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      console.error('STEP G: Error fetching quota:', quotaError);
     }
-
-    const { count: currentUsers } = await supabaseAdmin
+    
+    // Si un plan est assigné, utiliser ses quotas en priorité
+    const effectiveMaxUsers = (quotaData?.plans as any)?.max_users || quotaData?.max_users || 10;
+    
+    // Compter uniquement les utilisateurs actifs
+    const { count: currentUsers, error: countError } = await supabaseAdmin
       .from('user_tenants')
       .select('user_id', { count: 'exact', head: true })
       .eq('tenant_id', targetTenantId)
       .eq('is_active', true);
 
-    if (currentUsers !== null && tenantData.max_users && currentUsers >= tenantData.max_users) {
-      console.log('STEP G: Quota exceeded', currentUsers, '/', tenantData.max_users);
+    if (countError) {
+      console.error('STEP G: Error counting users:', countError);
       return new Response(
         JSON.stringify({ 
-          error: `Quota utilisateurs atteint (${currentUsers}/${tenantData.max_users})`,
+          error: 'Erreur lors de la vérification des quotas',
+          details: countError,
+          step: 'G'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    if ((currentUsers || 0) >= effectiveMaxUsers) {
+      console.error(`STEP G: Quota exceeded, current: ${currentUsers} / ${effectiveMaxUsers}`);
+      return new Response(
+        JSON.stringify({ 
+          error: `Quota utilisateurs atteint (${currentUsers}/${effectiveMaxUsers})`,
           code: 'QUOTA_EXCEEDED',
           step: 'G'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
-    console.log('STEP G: Quota OK, current:', currentUsers, '/', tenantData.max_users);
+
+    console.info(`STEP G: Quota OK, current: ${currentUsers} / ${effectiveMaxUsers}`);
 
     const newUserRole = 'agent';
 

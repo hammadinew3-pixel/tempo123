@@ -124,33 +124,32 @@ export function CurrentPlanCard({ onChangePlan }: CurrentPlanCardProps) {
         {/* Section Modules */}
         {plan && (
           <div>
-            <h4 className="text-sm font-semibold text-gray-300 mb-3">🔌 Modules activés</h4>
+            <h4 className="text-sm font-semibold text-gray-300 mb-3">🔌 Modules</h4>
             <div className="flex flex-wrap gap-2">
-              {modules.assistance && (
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                  🆘 Assistance
-                </Badge>
-              )}
-              {modules.sinistres && (
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
-                  🚗 Sinistres
-                </Badge>
-              )}
-              {modules.infractions && (
-                <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
-                  ⚠️ Infractions
-                </Badge>
-              )}
-              {modules.alertes && (
-                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
-                  🔔 Alertes
-                </Badge>
-              )}
-              {modules.rapports && (
-                <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
-                  📊 Rapports
-                </Badge>
-              )}
+              {/* Modules de base toujours inclus */}
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                🚗 Sinistres ✓
+              </Badge>
+              <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
+                ⚠️ Infractions ✓
+              </Badge>
+              <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                🔔 Alertes ✓
+              </Badge>
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+                📊 Rapports ✓
+              </Badge>
+              
+              {/* Module premium */}
+              <Badge 
+                variant={modules.assistance ? "outline" : "secondary"} 
+                className={modules.assistance 
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                  : "bg-slate-700/50 text-slate-400 border-slate-600/20"
+                }
+              >
+                🆘 Assistance/Assurance {modules.assistance ? '✓' : '✗'}
+              </Badge>
             </div>
           </div>
         )}

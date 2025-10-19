@@ -1043,11 +1043,7 @@ export type Database = {
           max_contracts: number
           max_users: number
           max_vehicles: number
-          module_alertes: boolean
           module_assistance: boolean
-          module_infractions: boolean
-          module_rapports: boolean
-          module_sinistres: boolean
           name: string
           price: number
           updated_at: string | null
@@ -1062,11 +1058,7 @@ export type Database = {
           max_contracts?: number
           max_users?: number
           max_vehicles?: number
-          module_alertes?: boolean
           module_assistance?: boolean
-          module_infractions?: boolean
-          module_rapports?: boolean
-          module_sinistres?: boolean
           name: string
           price?: number
           updated_at?: string | null
@@ -1081,11 +1073,7 @@ export type Database = {
           max_contracts?: number
           max_users?: number
           max_vehicles?: number
-          module_alertes?: boolean
           module_assistance?: boolean
-          module_infractions?: boolean
-          module_rapports?: boolean
-          module_sinistres?: boolean
           name?: string
           price?: number
           updated_at?: string | null

@@ -33,19 +33,15 @@ export function useTenantPlan() {
             clients: { current: 0, max: Infinity, canAdd: true, percentage: 0 },
           },
           modules: {
-            assistance: true,
-            sinistres: true,
-            infractions: true,
-            alertes: true,
-            rapports: true,
+            assistance: true, // Tous les modules accessibles par défaut sans plan
           },
         };
       }
 
-      // Compter les ressources actuelles en parallèle
+      // Compter les ressources actuelles en parallèle (utilisateurs actifs uniquement)
       const [vehiclesRes, usersRes, contractsRes, clientsRes] = await Promise.all([
         supabase.from('vehicles').select('id', { count: 'exact', head: true }).eq('tenant_id', currentTenant.id),
-        supabase.from('user_tenants').select('id', { count: 'exact', head: true }).eq('tenant_id', currentTenant.id),
+        supabase.from('user_tenants').select('id', { count: 'exact', head: true }).eq('tenant_id', currentTenant.id).eq('is_active', true),
         supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('tenant_id', currentTenant.id),
         supabase.from('clients').select('id', { count: 'exact', head: true }).eq('tenant_id', currentTenant.id),
       ]);
@@ -85,10 +81,7 @@ export function useTenantPlan() {
         },
         modules: {
           assistance: tenant.plans.module_assistance,
-          sinistres: tenant.plans.module_sinistres,
-          infractions: tenant.plans.module_infractions,
-          alertes: tenant.plans.module_alertes,
-          rapports: tenant.plans.module_rapports,
+          // Sinistres, infractions, alertes, rapports toujours inclus
         },
       };
     },

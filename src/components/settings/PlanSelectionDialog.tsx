@@ -20,10 +20,6 @@ interface Plan {
   max_contracts: number;
   max_clients: number;
   module_assistance: boolean;
-  module_sinistres: boolean;
-  module_infractions: boolean;
-  module_alertes: boolean;
-  module_rapports: boolean;
 }
 
 interface PlanSelectionDialogProps {
@@ -202,14 +198,12 @@ export function PlanSelectionDialog({ open, onOpenChange }: PlanSelectionDialogP
 
                     {/* Modules */}
                     <div className="pt-2 border-t border-slate-700">
-                      <p className="text-xs text-gray-400 mb-2">Modules inclus :</p>
-                      <div className="flex flex-wrap gap-1">
-                        {plan.module_assistance && <Badge variant="outline" className="text-xs">🆘</Badge>}
-                        {plan.module_sinistres && <Badge variant="outline" className="text-xs">🚗</Badge>}
-                        {plan.module_infractions && <Badge variant="outline" className="text-xs">⚠️</Badge>}
-                        {plan.module_alertes && <Badge variant="outline" className="text-xs">🔔</Badge>}
-                        {plan.module_rapports && <Badge variant="outline" className="text-xs">📊</Badge>}
-                      </div>
+                      <p className="text-xs text-gray-400 mb-2">
+                        ✓ Modules de base inclus (Sinistres, Infractions, Alertes, Rapports)
+                      </p>
+                      <p className={`text-xs font-medium ${plan.module_assistance ? 'text-emerald-400' : 'text-gray-500'}`}>
+                        {plan.module_assistance ? '✓' : '✗'} Module Assistance/Assurance
+                      </p>
                     </div>
 
                     <Button

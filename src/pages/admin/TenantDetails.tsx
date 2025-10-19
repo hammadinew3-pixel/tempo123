@@ -278,31 +278,30 @@ export default function TenantDetails() {
             <div>
               <h4 className="text-sm font-semibold text-gray-300 mb-3">🔌 Modules activés</h4>
               <div className="flex flex-wrap gap-2">
-                {plan.module_assistance && (
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                    🆘 Assistance
-                  </Badge>
-                )}
-                {plan.module_sinistres && (
-                  <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
-                    🚗 Sinistres
-                  </Badge>
-                )}
-                {plan.module_infractions && (
-                  <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
-                    ⚠️ Infractions
-                  </Badge>
-                )}
-                {plan.module_alertes && (
-                  <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
-                    🔔 Alertes
-                  </Badge>
-                )}
-                {plan.module_rapports && (
-                  <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
-                    📊 Rapports
-                  </Badge>
-                )}
+                {/* Modules de base toujours inclus */}
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                  🚗 Sinistres ✓
+                </Badge>
+                <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
+                  ⚠️ Infractions ✓
+                </Badge>
+                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                  🔔 Alertes ✓
+                </Badge>
+                <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+                  📊 Rapports ✓
+                </Badge>
+                
+                {/* Module premium */}
+                <Badge 
+                  variant={plan.module_assistance ? "outline" : "secondary"} 
+                  className={plan.module_assistance 
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                    : "bg-slate-700/50 text-slate-400 border-slate-600/20"
+                  }
+                >
+                  🆘 Assistance/Assurance {plan.module_assistance ? '✓' : '✗'}
+                </Badge>
               </div>
             </div>
           </CardContent>

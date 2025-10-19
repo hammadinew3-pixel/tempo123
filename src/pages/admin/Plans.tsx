@@ -34,10 +34,6 @@ type Plan = {
   max_clients: number;
   max_contracts: number;
   module_assistance: boolean;
-  module_sinistres: boolean;
-  module_infractions: boolean;
-  module_alertes: boolean;
-  module_rapports: boolean;
   is_active: boolean;
 };
 
@@ -58,10 +54,6 @@ export default function Plans() {
     max_clients: 0,
     max_contracts: 0,
     module_assistance: false,
-    module_sinistres: false,
-    module_infractions: false,
-    module_alertes: false,
-    module_rapports: false,
     is_active: true,
   });
 
@@ -135,10 +127,6 @@ export default function Plans() {
       max_clients: 0,
       max_contracts: 0,
       module_assistance: false,
-      module_sinistres: false,
-      module_infractions: false,
-      module_alertes: false,
-      module_rapports: false,
       is_active: true,
     });
     loadPlans();
@@ -206,10 +194,6 @@ export default function Plans() {
               max_clients: 0,
               max_contracts: 0,
               module_assistance: false,
-              module_sinistres: false,
-              module_infractions: false,
-              module_alertes: false,
-              module_rapports: false,
               is_active: true,
             });
             setOpen(true);
@@ -247,12 +231,11 @@ export default function Plans() {
                     {p.max_contracts} contrats<br />
                     {p.max_clients} clients
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-400">
-                    {p.module_assistance && "🆘 Assistance "}{" "}
-                    {p.module_sinistres && "🚗 Sinistres "}{" "}
-                    {p.module_infractions && "⚠️ Infractions "}{" "}
-                    {p.module_alertes && "🔔 Alertes "}{" "}
-                    {p.module_rapports && "📊 Rapports"}
+                  <td className="px-6 py-4 text-sm">
+                    <div className="text-gray-400 text-xs mb-1">✓ Modules de base</div>
+                    <div className={p.module_assistance ? "text-emerald-400 font-medium" : "text-gray-500"}>
+                      {p.module_assistance ? "✓" : "✗"} Assistance
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     {p.is_active ? (
