@@ -141,13 +141,13 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const collapsed = state === "collapsed";
   const { data: planData } = useTenantPlan();
 
-  // Si pas de plan, afficher tous les modules (comportement par défaut)
+  // Utiliser les modules du plan réel, ou tous désactivés si pas de données
   const modules = planData?.modules || {
-    assistance: true,
-    sinistres: true,
-    infractions: true,
-    alertes: true,
-    rapports: true,
+    assistance: false,
+    sinistres: false,
+    infractions: false,
+    alertes: false,
+    rapports: false,
   };
   
   const mainNavItems = getMainNavItems(isAdmin, isAgent, modules);
