@@ -19,6 +19,7 @@ import { Shield } from "lucide-react";
 import logoCrsapp from "@/assets/logo-crsapp.png";
 import { useLayoutContext } from "@/components/layout/Layout";
 import { OfflineSyncButton } from "./OfflineSyncButton";
+import { useTenantSettings } from "@/hooks/use-tenant-settings";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
@@ -26,6 +27,7 @@ export const Header = () => {
   const { role } = useUserRole();
   const navigate = useNavigate();
   const { setIsClientDialogOpen } = useLayoutContext();
+  const { data: tenantSettings } = useTenantSettings();
 
   return (
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-10">
@@ -33,7 +35,11 @@ export const Header = () => {
         <div className="flex items-center space-x-2 md:space-x-4">
           <SidebarTrigger />
           <div className="flex items-center space-x-2">
-            <img src={logoCrsapp} alt="CRSapp" className="h-6 md:h-8" />
+            <img 
+              src={tenantSettings?.logo_url || logoCrsapp} 
+              alt={tenantSettings?.nom || "CRSapp"} 
+              className="h-6 md:h-8 object-contain" 
+            />
           </div>
         </div>
         <div className="flex items-center space-x-1 md:space-x-2">

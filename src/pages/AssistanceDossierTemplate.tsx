@@ -21,7 +21,7 @@ export default function AssistanceDossierTemplate() {
     try {
       // Load settings
       const { data: settingsData } = await supabase
-        .from("agence_settings")
+        .from("tenant_settings")
         .select("*")
         .maybeSingle();
       setSettings(settingsData);

@@ -61,7 +61,7 @@ serve(async (req) => {
 
     // Get agency settings
     const { data: agenceSettings } = await supabase
-      .from('agence_settings')
+      .from('tenant_settings')
       .select('*')
       .single();
 

@@ -23,7 +23,7 @@ export default function AssistanceFactureTemplate() {
     try {
       // Load settings
       const { data: settingsData } = await supabase
-        .from("agence_settings")
+        .from("tenant_settings")
         .select("*")
         .single();
       setSettings(settingsData);

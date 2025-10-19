@@ -55,7 +55,7 @@ export default function AssistanceContractTemplate() {
       }
       
       const settingsRes = await supabase
-        .from('agence_settings')
+        .from('tenant_settings')
         .select('*')
         .maybeSingle();
       

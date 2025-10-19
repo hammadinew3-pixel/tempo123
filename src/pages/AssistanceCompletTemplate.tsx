@@ -50,7 +50,7 @@ export default function AssistanceCompletTemplate() {
           }
         }
 
-        const settingsRes = await supabase.from('agence_settings').select('*').maybeSingle();
+        const settingsRes = await supabase.from('tenant_settings').select('*').maybeSingle();
         if (settingsRes.error) throw settingsRes.error;
 
         setData(assistanceData);

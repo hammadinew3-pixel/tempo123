@@ -85,7 +85,7 @@ export default function ContractTemplate() {
           .eq('contract_id', contractId)
           .order('date_paiement', { ascending: true }),
         supabase
-          .from('agence_settings')
+          .from('tenant_settings')
           .select('*')
           .single()
       ]);
