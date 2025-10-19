@@ -97,8 +97,10 @@ export default function NouveauVehicule() {
   };
 
   useEffect(() => {
-    loadAssistanceCategories();
-  }, []);
+    if (planData?.modules?.assistance) {
+      loadAssistanceCategories();
+    }
+  }, [planData]);
 
   const loadAssistanceCategories = async () => {
     try {
@@ -394,38 +396,40 @@ export default function NouveauVehicule() {
 
           {/* Right Column */}
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="categorie">Catégories (Assistance)</Label>
+            {planData?.modules?.assistance && (
               <div className="space-y-2">
-                {assistanceCategories.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Aucune catégorie disponible</p>
-                ) : (
-                  assistanceCategories.map((cat) => (
-                    <div key={cat.code} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`cat-${cat.code}`}
-                        checked={selectedCategories.includes(cat.code)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCategories([...selectedCategories, cat.code]);
-                          } else {
-                            setSelectedCategories(selectedCategories.filter(c => c !== cat.code));
-                          }
-                        }}
-                        className="h-4 w-4 rounded border-input"
-                      />
-                      <Label htmlFor={`cat-${cat.code}`} className="cursor-pointer font-normal">
-                        {cat.nom}
-                      </Label>
-                    </div>
-                  ))
-                )}
+                <Label htmlFor="categorie">Catégories (Assistance)</Label>
+                <div className="space-y-2">
+                  {assistanceCategories.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Aucune catégorie disponible</p>
+                  ) : (
+                    assistanceCategories.map((cat) => (
+                      <div key={cat.code} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`cat-${cat.code}`}
+                          checked={selectedCategories.includes(cat.code)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedCategories([...selectedCategories, cat.code]);
+                            } else {
+                              setSelectedCategories(selectedCategories.filter(c => c !== cat.code));
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-input"
+                        />
+                        <Label htmlFor={`cat-${cat.code}`} className="cursor-pointer font-normal">
+                          {cat.nom}
+                        </Label>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Catégories utilisées pour le calcul des tarifs d'assistance
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Catégories utilisées pour le calcul des tarifs d'assistance
-              </p>
-            </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="kilometrage">Dernier kilométrage *</Label>

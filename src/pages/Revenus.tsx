@@ -562,7 +562,9 @@ export default function Revenus() {
                 <SelectContent>
                   <SelectItem value="all">Toutes</SelectItem>
                   <SelectItem value="contrat">Contrat</SelectItem>
-                  <SelectItem value="assistance">Assistance</SelectItem>
+                  {hasModuleAccess('assistance') && (
+                    <SelectItem value="assistance">Assistance</SelectItem>
+                  )}
                   <SelectItem value="vente">Vente</SelectItem>
                   <SelectItem value="remboursement">Remboursement</SelectItem>
                   <SelectItem value="autre">Autre</SelectItem>
