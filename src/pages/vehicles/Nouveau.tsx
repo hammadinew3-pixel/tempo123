@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, Upload, ChevronUp, X } from "lucide-react";
+import { ChevronRight, Upload, ChevronUp, X, Loader2, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { useTenantPlan } from '@/hooks/useTenantPlan';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
 
@@ -23,6 +26,7 @@ export default function NouveauVehicule() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [assistanceCategories, setAssistanceCategories] = useState<Array<{code: string, nom: string}>>([]);
+  const { data: planData, isLoading: loadingPlan } = useTenantPlan();
 
   const [formData, setFormData] = useState<Partial<VehicleInsert>>({
     marque: '',
@@ -178,6 +182,42 @@ export default function NouveauVehicule() {
     }
   };
 
+  if (loadingPlan) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Bloquer si quota véhicules atteint
+  if (planData && !planData.usage.vehicles.canAdd) {
+    return (
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Limite de véhicules atteinte</AlertTitle>
+          <AlertDescription>
+            Vous avez atteint la limite de <strong>{planData.usage.vehicles.max} véhicules</strong> de votre plan actuel ({planData.plan?.name}).
+            <br />
+            Pour ajouter plus de véhicules, veuillez mettre à niveau votre plan.
+            <div className="mt-3">
+              <Button variant="outline" asChild>
+                <Link to="/parametres">
+                  <Layers className="h-4 w-4 mr-2" />
+                  Changer de plan
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Warning si proche de la limite
+  const showWarning = planData && planData.usage.vehicles.percentage > 80;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -191,6 +231,16 @@ export default function NouveauVehicule() {
           <span className="text-foreground">Nouveau</span>
         </div>
       </div>
+
+      {showWarning && (
+        <Alert className="bg-orange-900/20 border-orange-500/50">
+          <AlertCircle className="h-4 w-4 text-orange-400" />
+          <AlertDescription className="text-orange-200">
+            Vous approchez de la limite : {planData.usage.vehicles.current}/{planData.usage.vehicles.max} véhicules utilisés ({planData.usage.vehicles.percentage}%).
+            Pensez à mettre à niveau votre plan.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Toggles */}

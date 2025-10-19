@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useUserRole } from "@/hooks/use-user-role";
+import { useTenantPlan } from '@/hooks/useTenantPlan';
 
 interface NavItem {
   title: string;
@@ -53,7 +54,7 @@ interface NavItem {
   action?: string;
 }
 
-const getMainNavItems = (isAdmin: boolean, isAgent: boolean): NavItem[] => {
+const getMainNavItems = (isAdmin: boolean, isAgent: boolean, modules: any): NavItem[] => {
   const items: NavItem[] = [
     { title: "Tableau de bord", href: "/", icon: BarChart3 },
     { title: "Calendrier", href: "/calendrier", icon: Calendar },
@@ -67,7 +68,11 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean): NavItem[] => {
         { title: "Ajouter une location", href: "/locations/nouveau", icon: Plus },
       ]
     },
-    { 
+  ];
+
+  // Conditionnellement ajouter Assistance
+  if (modules.assistance) {
+    items.push({ 
       title: "Assistance", 
       icon: LifeBuoy,
       submenu: [
@@ -77,18 +82,37 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean): NavItem[] => {
         ...(isAgent ? [] : [{ title: "Listes des assurances", href: "/assurances", icon: Building2 }]),
         { title: "Factures Assurances", href: "/factures", icon: FileText },
       ]
-    },
-    { title: "Maintenance", href: "/maintenance", icon: Wrench },
-    { title: "Sinistre", href: "/sinistres", icon: AlertTriangle },
-    { title: "Infraction", href: "/infractions", icon: Shield },
+    });
+  }
+
+  items.push({ title: "Maintenance", href: "/maintenance", icon: Wrench });
+
+  // Conditionnellement ajouter Sinistre
+  if (modules.sinistres) {
+    items.push({ title: "Sinistre", href: "/sinistres", icon: AlertTriangle });
+  }
+
+  // Conditionnellement ajouter Infraction
+  if (modules.infractions) {
+    items.push({ title: "Infraction", href: "/infractions", icon: Shield });
+  }
+
+  items.push(
     { title: "Charges", href: "/charges", icon: DollarSign },
-    { title: "Revenus", href: "/revenus", icon: TrendingUp },
-    { title: "Rapport", href: "/rapports", icon: BarChart },
-  ];
+    { title: "Revenus", href: "/revenus", icon: TrendingUp }
+  );
+
+  // Conditionnellement ajouter Rapport
+  if (modules.rapports) {
+    items.push({ title: "Rapport", href: "/rapports", icon: BarChart });
+  }
 
   // "Chèque", "Historique" et "Importer" masqués pour les agents
   if (!isAgent) {
-    items.splice(10, 0, { title: "Chèque", href: "/cheques", icon: CreditCard });
+    const insertIndex = items.findIndex(item => item.title === "Charges");
+    if (insertIndex !== -1) {
+      items.splice(insertIndex, 0, { title: "Chèque", href: "/cheques", icon: CreditCard });
+    }
     items.push({ title: "Historique", href: "/historique", icon: Clock });
     items.push({ title: "Importer", href: "/importer", icon: Upload });
   }
@@ -115,8 +139,18 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const { state } = useSidebar();
   const { isAdmin, isAgent, isSuperAdmin } = useUserRole();
   const collapsed = state === "collapsed";
+  const { data: planData } = useTenantPlan();
+
+  // Si pas de plan, afficher tous les modules (comportement par défaut)
+  const modules = planData?.modules || {
+    assistance: true,
+    sinistres: true,
+    infractions: true,
+    alertes: true,
+    rapports: true,
+  };
   
-  const mainNavItems = getMainNavItems(isAdmin, isAgent);
+  const mainNavItems = getMainNavItems(isAdmin, isAgent, modules);
   
   // Track which groups are open
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({

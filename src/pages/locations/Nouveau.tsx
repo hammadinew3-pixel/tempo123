@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { CalendarIcon, Clock, Car, User as UserIcon, Plus, Upload, X } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { CalendarIcon, Clock, Car, User as UserIcon, Plus, Upload, X, Loader2, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,9 @@ import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Database } from "@/integrations/supabase/types";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
+import { useTenantPlan } from '@/hooks/useTenantPlan';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 type Bareme = Database["public"]["Tables"]["assurance_bareme"]["Row"];
 
@@ -24,6 +27,7 @@ export default function NouveauLocation() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { data: planData, isLoading: loadingPlan } = useTenantPlan();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [allVehicles, setAllVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -372,8 +376,54 @@ export default function NouveauLocation() {
     }
   };
 
+  if (loadingPlan) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Bloquer si quota contrats atteint
+  if (planData && !planData.usage.contracts.canAdd) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Limite de contrats atteinte</AlertTitle>
+          <AlertDescription>
+            Vous avez atteint la limite de <strong>{planData.usage.contracts.max} contrats</strong> de votre plan actuel ({planData.plan?.name}).
+            <br />
+            Pour créer plus de contrats, veuillez mettre à niveau votre plan.
+            <div className="mt-3">
+              <Button variant="outline" asChild>
+                <Link to="/parametres">
+                  <Layers className="h-4 w-4 mr-2" />
+                  Changer de plan
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Warning si proche de la limite
+  const showWarning = planData && planData.usage.contracts.percentage > 80;
+
   return (
     <div className="max-w-7xl mx-auto">
+      {showWarning && (
+        <Alert className="mb-6 bg-orange-900/20 border-orange-500/50">
+          <AlertCircle className="h-4 w-4 text-orange-400" />
+          <AlertDescription className="text-orange-200">
+            Vous approchez de la limite : {planData.usage.contracts.current}/{planData.usage.contracts.max} contrats utilisés ({planData.usage.contracts.percentage}%).
+            Pensez à mettre à niveau votre plan.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header with Breadcrumb */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-2">Ajouter une location courte durée</h1>

@@ -1537,6 +1537,7 @@ export type Database = {
           max_users: number | null
           max_vehicles: number | null
           name: string
+          plan_id: string | null
           slug: string
           subscription_plan: string | null
           updated_at: string | null
@@ -1548,6 +1549,7 @@ export type Database = {
           max_users?: number | null
           max_vehicles?: number | null
           name: string
+          plan_id?: string | null
           slug: string
           subscription_plan?: string | null
           updated_at?: string | null
@@ -1559,11 +1561,20 @@ export type Database = {
           max_users?: number | null
           max_vehicles?: number | null
           name?: string
+          plan_id?: string | null
           slug?: string
           subscription_plan?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
