@@ -43,8 +43,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
+    
     if (!error) {
-      navigate('/');
+      // Vérifier le rôle de l'utilisateur pour rediriger vers la bonne page
+      const { data: session } = await supabase.auth.getSession();
+      if (session?.session?.user) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role, tenant_id')
+          .eq('user_id', session.session.user.id);
+        
+        // Si l'utilisateur est super_admin (role = 'super_admin' et tenant_id = null)
+        const isSuperAdmin = roles?.some(r => r.role === 'super_admin' && r.tenant_id === null);
+        
+        if (isSuperAdmin) {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        navigate('/dashboard');
+      }
     }
     return { error };
   };

@@ -47,7 +47,32 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   }, [user, isSuperAdmin, superAdminLoading]);
 
   const loadUserTenants = async () => {
+    if (!user) {
+      setCurrentTenant(null);
+      setTenants([]);
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Vérifier d'abord si l'utilisateur est super_admin
+      const { data: superAdminRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'super_admin')
+        .is('tenant_id', null)
+        .maybeSingle();
+
+      // Si super_admin, ne pas charger de tenant
+      if (superAdminRole) {
+        setCurrentTenant(null);
+        setTenants([]);
+        setLoading(false);
+        return;
+      }
+
+      // Sinon, charger les tenants normalement
       const { data: userTenants, error } = await supabase
         .from('user_tenants')
         .select(`
@@ -60,7 +85,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
             is_active
           )
         `)
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('is_active', true);
 
       if (error) throw error;

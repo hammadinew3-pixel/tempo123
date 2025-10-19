@@ -153,115 +153,8 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   return (
     <SidebarUI collapsible="icon" className="border-r border-sidebar-border">
       <SidebarContent>
-        {/* Main Navigation */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNavItems.map((item) => {
-                const groupKey = item.title.toLowerCase();
-                const hasSubmenu = !!item.submenu;
-                const groupActive = isGroupActive(item.submenu);
-
-                if (hasSubmenu) {
-                  return (
-                    <Collapsible
-                      key={item.title}
-                      open={openGroups[groupKey]}
-                      onOpenChange={() => toggleGroup(groupKey)}
-                      className="group/collapsible"
-                    >
-                      <SidebarMenuItem>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton
-                            className={getNavCls(groupActive)}
-                            tooltip={item.title}
-                          >
-                            <item.icon className="h-4 w-4" />
-                            {!collapsed && <span>{item.title}</span>}
-                            {!collapsed && (
-                              <ChevronRight 
-                                className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" 
-                              />
-                            )}
-                          </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.submenu?.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.href || subItem.action}>
-                                <SidebarMenuSubButton
-                                  asChild={!!subItem.href}
-                                  className={getNavCls(isActive(subItem.href))}
-                                  onClick={() => !subItem.href && handleItemClick(subItem)}
-                                >
-                                  {subItem.href ? (
-                                    <NavLink to={subItem.href}>
-                                      <subItem.icon className="h-4 w-4" />
-                                      <span>{subItem.title}</span>
-                                    </NavLink>
-                                  ) : (
-                                    <div className="flex items-center gap-2 cursor-pointer">
-                                      <subItem.icon className="h-4 w-4" />
-                                      <span>{subItem.title}</span>
-                                    </div>
-                                  )}
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </SidebarMenuItem>
-                    </Collapsible>
-                  );
-                }
-
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      className={getNavCls(isActive(item.href!))}
-                      tooltip={item.title}
-                    >
-                      <NavLink to={item.href!}>
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Admin Navigation */}
-        {isAdmin && !isSuperAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminNavItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      className={getNavCls(isActive(item.href!))}
-                      tooltip={item.title}
-                    >
-                      <NavLink to={item.href!}>
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {/* Super Admin Navigation */}
-        {isSuperAdmin && (
+        {/* Si super_admin, afficher UNIQUEMENT les menus super admin */}
+        {isSuperAdmin ? (
           <SidebarGroup>
             <SidebarGroupLabel>Super Administration</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -283,6 +176,115 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+        ) : (
+          <>
+            {/* Main Navigation pour admin/agent */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {mainNavItems.map((item) => {
+                    const groupKey = item.title.toLowerCase();
+                    const hasSubmenu = !!item.submenu;
+                    const groupActive = isGroupActive(item.submenu);
+
+                    if (hasSubmenu) {
+                      return (
+                        <Collapsible
+                          key={item.title}
+                          open={openGroups[groupKey]}
+                          onOpenChange={() => toggleGroup(groupKey)}
+                          className="group/collapsible"
+                        >
+                          <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton
+                                className={getNavCls(groupActive)}
+                                tooltip={item.title}
+                              >
+                                <item.icon className="h-4 w-4" />
+                                {!collapsed && <span>{item.title}</span>}
+                                {!collapsed && (
+                                  <ChevronRight 
+                                    className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" 
+                                  />
+                                )}
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub>
+                                {item.submenu?.map((subItem) => (
+                                  <SidebarMenuSubItem key={subItem.href || subItem.action}>
+                                    <SidebarMenuSubButton
+                                      asChild={!!subItem.href}
+                                      className={getNavCls(isActive(subItem.href))}
+                                      onClick={() => !subItem.href && handleItemClick(subItem)}
+                                    >
+                                      {subItem.href ? (
+                                        <NavLink to={subItem.href}>
+                                          <subItem.icon className="h-4 w-4" />
+                                          <span>{subItem.title}</span>
+                                        </NavLink>
+                                      ) : (
+                                        <div className="flex items-center gap-2 cursor-pointer">
+                                          <subItem.icon className="h-4 w-4" />
+                                          <span>{subItem.title}</span>
+                                        </div>
+                                      )}
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </SidebarMenuItem>
+                        </Collapsible>
+                      );
+                    }
+
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          className={getNavCls(isActive(item.href!))}
+                          tooltip={item.title}
+                        >
+                          <NavLink to={item.href!}>
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Admin Navigation */}
+            {isAdmin && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Administration</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {adminNavItems.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          className={getNavCls(isActive(item.href!))}
+                          tooltip={item.title}
+                        >
+                          <NavLink to={item.href!}>
+                            <item.icon className="h-4 w-4" />
+                            {!collapsed && <span>{item.title}</span>}
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+          </>
         )}
       </SidebarContent>
     </SidebarUI>
