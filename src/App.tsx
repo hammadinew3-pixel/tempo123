@@ -11,6 +11,7 @@ import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { useSuperAdmin } from "./hooks/use-super-admin";
 import LoginSuperAdmin from "./pages/admin/LoginSuperAdmin";
 import AdminDashboard from "./pages/admin/Dashboard";
+import TenantsList from "./pages/admin/TenantsList";
 import Dashboard from "./pages/Dashboard";
 import DashboardGlobal from "./pages/admin/DashboardGlobal";
 import Tenants from "./pages/admin/Tenants";
@@ -445,18 +446,10 @@ const App = () => (
                 }
               />
               <Route
-                path="global-dashboard"
-                element={
-                  <AdminLayout>
-                    <DashboardGlobal />
-                  </AdminLayout>
-                }
-              />
-              <Route
                 path="tenants"
                 element={
                   <AdminLayout>
-                    <Tenants />
+                    <TenantsList />
                   </AdminLayout>
                 }
               />

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Building, Users, Car, FileText, ShieldCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
@@ -21,6 +22,14 @@ export default function AdminDashboard() {
         totalVehicles: vehicles.count || 0,
         totalContracts: contracts.count || 0,
       };
+    },
+  });
+
+  const { data: chartData } = useQuery({
+    queryKey: ['tenant-signups'],
+    queryFn: async () => {
+      const { data } = await supabase.rpc('get_tenant_signups_by_month');
+      return data || [];
     },
   });
 
@@ -50,8 +59,8 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 p-6 space-y-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
           <ShieldCheck className="h-8 w-8 text-emerald-500" />
           <h1 className="text-3xl font-bold text-white">Tableau de bord Super Admin</h1>
         </div>
@@ -65,8 +74,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
         <ShieldCheck className="h-8 w-8 text-emerald-500" />
         <h1 className="text-3xl font-bold text-white">Tableau de bord Super Admin</h1>
       </div>
@@ -84,6 +93,26 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      <Card className="bg-slate-900 border-slate-800 p-6">
+        <h2 className="text-xl font-semibold text-white mb-4">Agences créées par mois</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <XAxis dataKey="mois" stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#1e293b",
+                border: "1px solid #334155",
+                borderRadius: "8px",
+                color: "#fff",
+              }}
+            />
+            <Bar dataKey="count" fill="#10B981" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
 
       <Card className="bg-slate-900 border-slate-800 p-6">
         <p className="text-gray-400 text-center">
