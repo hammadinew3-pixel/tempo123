@@ -2189,11 +2189,11 @@ export type Database = {
         Returns: string
       }
       generate_infraction_reference: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { p_tenant_id: string }
         Returns: string
       }
       generate_sinistre_reference: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { p_tenant_id: string }
         Returns: string
       }
       get_user_tenant_id: {
