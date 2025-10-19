@@ -172,6 +172,25 @@ export default function Clients() {
           description: 'Client modifié avec succès',
         });
       } else {
+        // Vérification anti-doublon CIN (seulement si CIN renseigné)
+        if (clientData.cin && clientData.cin.trim() !== '') {
+          const { data: existingClient } = await supabase
+            .from('clients')
+            .select('id, nom, prenom')
+            .eq('cin', clientData.cin)
+            .maybeSingle();
+
+          if (existingClient) {
+            const confirm = window.confirm(
+              `Un client avec ce CIN existe déjà dans votre base (${existingClient.prenom} ${existingClient.nom}). Voulez-vous continuer ?`
+            );
+            if (!confirm) {
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
         // Création du client d'abord pour obtenir l'ID
         const { data: newClient, error: insertError } = await supabase
           .from('clients')
