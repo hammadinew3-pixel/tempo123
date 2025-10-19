@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 export default function ModifierSinistre() {
+  const { withTenantId } = useTenantInsert();
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -210,12 +211,12 @@ export default function ModifierSinistre() {
             .from('vehicle-documents')
             .getPublicUrl(fileName);
 
-          await supabase.from('sinistre_files').insert([{
+          await supabase.from('sinistre_files').insert([withTenantId({
             sinistre_id: id,
             file_name: file.name,
             file_url: publicUrl,
             file_type: 'autre' as any,
-          }]);
+          })]);
         }
       }
 

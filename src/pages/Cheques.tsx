@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Plus, Download, Filter, Search, CheckCircle, XCircle, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportToExcel } from '@/lib/exportUtils';
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import {
   Table,
   TableBody,
@@ -60,6 +60,7 @@ interface Cheque {
 const COLORS = ['hsl(var(--primary))', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function Cheques() {
+  const { withTenantId } = useTenantInsert();
   const [cheques, setCheques] = useState<Cheque[]>([]);
   const [filteredCheques, setFilteredCheques] = useState<Cheque[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,11 +145,11 @@ export default function Cheques() {
     try {
       const { error } = await supabase
         .from('cheques')
-        .insert([{
+        .insert([withTenantId({
           ...formData,
           type_cheque: dialogType,
           montant: parseFloat(formData.montant),
-        }]);
+        })]);
 
       if (error) throw error;
 

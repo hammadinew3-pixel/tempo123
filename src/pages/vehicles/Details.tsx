@@ -23,10 +23,12 @@ import { EditInspectionDialog, EditVignetteDialog } from "@/components/vehicles/
 import { useUserRole } from "@/hooks/use-user-role";
 import { safeFormatDate } from "@/lib/dateUtils";
 import { VehicleMaintenanceSummary } from "@/components/maintenance/VehicleMaintenanceSummary";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 
 export default function VehiculeDetails() {
+  const { withTenantId } = useTenantInsert();
   const {
     id
   } = useParams();
@@ -280,7 +282,7 @@ export default function VehiculeDetails() {
       }
 
       // Insert traite
-      const { data: traiteData, error } = await supabase.from('vehicules_traite').insert({
+      const { data: traiteData, error } = await supabase.from('vehicules_traite').insert(withTenantId({
         vehicle_id: vehicle.id,
         type_traitement: 'traite',
         date_traitement: traiteForm.date_debut,
@@ -296,7 +298,7 @@ export default function VehiculeDetails() {
         montant_mensuel: montantMensuel,
         duree_deja_paye: dureeDejaPaye,
         notes: traiteForm.plus_infos || null
-      }).select().single();
+      })).select().single();
 
       if (error) throw error;
 
@@ -1644,12 +1646,12 @@ export default function VehiculeDetails() {
               }
               const {
                 error
-              } = await supabase.from('vehicle_insurance').insert({
+              } = await supabase.from('vehicle_insurance').insert(withTenantId({
                 vehicle_id: vehicle!.id,
                 ...insuranceForm,
                 montant: parseFloat(insuranceForm.montant),
                 photo_url: photoUrl
-              });
+              }));
               if (error) throw error;
 
               // Update vehicle expiration date
@@ -1838,12 +1840,12 @@ export default function VehiculeDetails() {
               }
               const {
                 error
-              } = await supabase.from('vehicle_technical_inspection').insert({
+              } = await supabase.from('vehicle_technical_inspection').insert(withTenantId({
                 vehicle_id: vehicle!.id,
                 ...inspectionForm,
                 montant: inspectionForm.montant ? parseFloat(inspectionForm.montant) : null,
                 photo_url: photoUrl
-              });
+              }));
               if (error) throw error;
 
               // Update vehicle expiration date
@@ -2022,12 +2024,12 @@ export default function VehiculeDetails() {
               }
               const {
                 error
-              } = await supabase.from('vehicle_vignette').insert({
+              } = await supabase.from('vehicle_vignette').insert(withTenantId({
                 vehicle_id: vehicle!.id,
                 date_debut: vignetteForm.date_expiration,
                 date_expiration: vignetteForm.date_expiration,
                 montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null,
-              });
+              }));
               if (error) throw error;
 
               // Update vehicle expiration date

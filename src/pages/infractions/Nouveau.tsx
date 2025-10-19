@@ -11,8 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 export default function NouvelleInfraction() {
+  const { withTenantId } = useTenantInsert();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -150,7 +152,7 @@ export default function NouvelleInfraction() {
       const { data: infractionData, error: infractionError } = await supabase
         .from("infractions")
         .insert([
-          {
+          withTenantId({
             reference,
             date_infraction: formData.date_infraction,
             lieu: formData.lieu,
@@ -161,7 +163,7 @@ export default function NouvelleInfraction() {
             description: formData.description || null,
             montant: parseFloat(formData.montant) || 0,
             statut_traitement: "nouveau",
-          },
+          }),
         ])
         .select()
         .single();
@@ -186,12 +188,12 @@ export default function NouvelleInfraction() {
             .getPublicUrl(filePath);
 
           await supabase.from("infraction_files").insert([
-            {
+            withTenantId({
               infraction_id: infractionData.id,
               file_name: file.name,
               file_url: urlData.publicUrl,
               file_type: "pv",
-            },
+            }),
           ]);
         }
       }
@@ -205,24 +207,24 @@ export default function NouvelleInfraction() {
           // Add CIN if available
           if (client.cin_url) {
             await supabase.from("infraction_files").insert([
-              {
+              withTenantId({
                 infraction_id: infractionData.id,
                 file_name: `CIN_${client.nom}_${client.prenom || ''}`.trim(),
                 file_url: client.cin_url,
                 file_type: "cin",
-              },
+              }),
             ]);
           }
 
           // Add Permis if available
           if (client.permis_url) {
             await supabase.from("infraction_files").insert([
-              {
+              withTenantId({
                 infraction_id: infractionData.id,
                 file_name: `Permis_${client.nom}_${client.prenom || ''}`.trim(),
                 file_url: client.permis_url,
                 file_type: "permis",
-              },
+              }),
             ]);
           }
         }
@@ -230,12 +232,12 @@ export default function NouvelleInfraction() {
         // Add contract PDF if available
         if (contract.pdf_url) {
           await supabase.from("infraction_files").insert([
-            {
+            withTenantId({
               infraction_id: infractionData.id,
               file_name: `Contrat_${contract.numero_contrat}`,
               file_url: contract.pdf_url,
               file_type: "contrat",
-            },
+            }),
           ]);
         }
       }

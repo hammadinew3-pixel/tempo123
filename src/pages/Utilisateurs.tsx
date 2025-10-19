@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 interface UserWithRole {
   id: string;
@@ -23,6 +23,7 @@ interface UserWithRole {
 }
 
 export default function Utilisateurs() {
+  const { withTenantId } = useTenantInsert();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -121,7 +122,7 @@ export default function Utilisateurs() {
         // Insert new role
         const { error } = await supabase
           .from('user_roles')
-          .insert({ user_id: userId, role: newRole as any });
+          .insert(withTenantId({ user_id: userId, role: newRole as any }));
 
         if (error) throw error;
       }

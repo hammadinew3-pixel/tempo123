@@ -15,6 +15,7 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 interface PostCreationWorkflowProps {
   vehicleId: string;
@@ -27,6 +28,7 @@ interface PostCreationWorkflowProps {
 type Step = 'assurance' | 'visite_technique' | 'vignette' | 'complete';
 
 export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCreationWorkflowProps) {
+  const { withTenantId } = useTenantInsert();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<Step>('assurance');
@@ -83,14 +85,14 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     try {
       const { error } = await supabase
         .from('vehicle_insurance')
-        .insert([{
+        .insert([withTenantId({
           vehicle_id: vehicleId,
           ...assuranceData,
           date_debut: assuranceData.date_debut?.toISOString().split('T')[0],
           date_expiration: assuranceData.date_expiration?.toISOString().split('T')[0],
           date_paiement: assuranceData.date_paiement?.toISOString().split('T')[0],
           montant: parseFloat(assuranceData.montant),
-        }]);
+        })]);
 
       if (error) throw error;
 
@@ -119,14 +121,14 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     try {
       const { error } = await supabase
         .from('vehicle_technical_inspection')
-        .insert([{
+        .insert([withTenantId({
           vehicle_id: vehicleId,
           ...visiteData,
           date_visite: visiteData.date_visite?.toISOString().split('T')[0],
           date_expiration: visiteData.date_expiration?.toISOString().split('T')[0],
           date_paiement: visiteData.date_paiement?.toISOString().split('T')[0],
           montant: visiteData.montant ? parseFloat(visiteData.montant) : null,
-        }]);
+        })]);
 
       if (error) throw error;
 
@@ -155,13 +157,13 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     try {
       const { error } = await supabase
         .from('vehicle_vignette')
-        .insert([{
+        .insert([withTenantId({
           vehicle_id: vehicleId,
           date_debut: vignetteData.date_expiration?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
           date_expiration: vignetteData.date_expiration?.toISOString().split('T')[0],
           date_paiement: vignetteData.date_paiement?.toISOString().split('T')[0],
           montant: vignetteData.montant ? parseFloat(vignetteData.montant) : null,
-        }]);
+        })]);
 
       if (error) throw error;
 

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2 } from "lucide-react";
 
 interface AgenceSettings {
@@ -38,6 +39,7 @@ interface AgenceSettings {
 }
 
 export default function Parametres() {
+  const { withTenantId } = useTenantInsert();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -114,12 +116,13 @@ export default function Parametres() {
       
       const { error } = await supabase
         .from('vehicle_assistance_categories')
-        .insert({
+        .insert(withTenantId({
           nom: newCategoryCode.toUpperCase(),
           label: newCategoryCode.toUpperCase(),
           ordre: maxOrdre + 1,
-          actif: true
-        });
+          actif: true,
+          code: newCategoryCode.toUpperCase()
+        }));
 
       if (error) throw error;
 

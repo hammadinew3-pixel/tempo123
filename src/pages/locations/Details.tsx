@@ -16,9 +16,10 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ContractWorkflow } from "@/components/workflow/ContractWorkflow";
 import { computeChangeAmounts, safeRemaining, resolveRates } from "@/lib/contractPricing";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 export default function LocationDetails() {
+  const { withTenantId } = useTenantInsert();
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -320,7 +321,7 @@ export default function LocationDetails() {
     try {
       const { error } = await supabase
         .from("secondary_drivers")
-        .insert([{
+        .insert([withTenantId({
           contract_id: id,
           nom: driverData.nom,
           prenom: driverData.prenom,
@@ -328,7 +329,7 @@ export default function LocationDetails() {
           permis_conduire: driverData.permis_conduire,
           telephone: driverData.telephone || null,
           email: driverData.email || null
-        }]);
+        })]);
 
       if (error) throw error;
 
@@ -396,14 +397,16 @@ export default function LocationDetails() {
 
       const montantPaiement = parseFloat(paymentData.montant);
       
+      const methode = paymentData.methode === 'carte' ? 'carte_bancaire' : paymentData.methode;
+      
       const { error } = await supabase
         .from("contract_payments")
-        .insert([{
+        .insert([withTenantId({
           contract_id: id,
           montant: montantPaiement,
           date_paiement: paymentData.date_paiement,
-          methode: paymentData.methode === 'carte' ? 'carte_bancaire' : paymentData.methode,
-        }]);
+          methode: methode as 'especes' | 'cheque' | 'virement' | 'carte_bancaire',
+        })]);
 
       if (error) throw error;
 
@@ -534,14 +537,14 @@ export default function LocationDetails() {
       // 1) Historiser le changement
       const { error: changeError } = await supabase
         .from('vehicle_changes')
-        .insert([{ 
+        .insert([withTenantId({ 
           contract_id: id,
           old_vehicle_id: contract.vehicle_id,
           new_vehicle_id: changeVehicleData.new_vehicle_id,
           reason: changeVehicleData.reason,
           notes: calculationNote,
           change_date: changeVehicleData.change_date,
-        }]);
+        })]);
       if (changeError) throw changeError;
 
       // 2) Mettre à jour le contrat

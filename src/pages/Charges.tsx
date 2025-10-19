@@ -9,7 +9,7 @@ import { Plus, Download, TrendingDown, Filter, Search, Trash2 } from 'lucide-rea
 import { useToast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import {
   Table,
   TableBody,
@@ -53,6 +53,7 @@ interface Expense {
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function Charges() {
+  const { withTenantId } = useTenantInsert();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -205,10 +206,10 @@ export default function Charges() {
     try {
       const { error } = await supabase
         .from('expenses')
-        .insert([{
+        .insert([withTenantId({
           ...formData,
           montant: parseFloat(formData.montant),
-        }]);
+        })]);
 
       if (error) throw error;
 

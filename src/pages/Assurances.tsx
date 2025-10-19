@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 type Assurance = Database['public']['Tables']['assurances']['Row'];
 type AssuranceInsert = Database['public']['Tables']['assurances']['Insert'];
@@ -20,6 +20,7 @@ type Bareme = Database['public']['Tables']['assurance_bareme']['Row'];
 type BaremeInsert = Database['public']['Tables']['assurance_bareme']['Insert'];
 
 export default function Assurances() {
+  const { withTenantId } = useTenantInsert();
   const [assurances, setAssurances] = useState<Assurance[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -154,7 +155,7 @@ export default function Assurances() {
       } else {
         const { error } = await supabase
           .from('assurances')
-          .insert([formData as AssuranceInsert]);
+          .insert([withTenantId(formData as AssuranceInsert)]);
 
         if (error) throw error;
 
@@ -216,9 +217,9 @@ export default function Assurances() {
         .eq('assurance_id', selectedAssurance.id);
 
       // Insert new baremes
-      const baremeInserts: BaremeInsert[] = Object.entries(baremeForm)
+      const baremeInserts = Object.entries(baremeForm)
         .filter(([_, tarif]) => tarif > 0)
-        .map(([categorie, tarif]) => ({
+        .map(([categorie, tarif]) => withTenantId({
           assurance_id: selectedAssurance.id,
           categorie: categorie as any,
           tarif_journalier: tarif,

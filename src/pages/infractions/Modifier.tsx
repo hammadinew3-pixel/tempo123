@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 export default function ModifierInfraction() {
+  const { withTenantId } = useTenantInsert();
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -155,12 +156,12 @@ export default function ModifierInfraction() {
             .getPublicUrl(filePath);
 
           await supabase.from("infraction_files").insert([
-            {
+            withTenantId({
               infraction_id: id,
               file_name: file.name,
               file_url: urlData.publicUrl,
               file_type: "pv",
-            },
+            }),
           ]);
         }
       }

@@ -15,7 +15,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 const TYPES_INTERVENTION = [
   "Vidange",
@@ -50,6 +50,7 @@ interface AddInterventionDialogProps {
 
 export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId, defaultType, interventionToEdit }: AddInterventionDialogProps) {
   const isEditMode = !!interventionToEdit;
+  const { withTenantId } = useTenantInsert();
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<string>(vehicleId || "");
@@ -177,7 +178,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
         // Mode ajout: INSERT
         const { error } = await supabase
           .from("interventions")
-          .insert(interventionData);
+          .insert(withTenantId(interventionData));
 
         if (error) throw error;
         toast.success("Intervention ajoutée avec succès");

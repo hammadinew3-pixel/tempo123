@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 export default function NouveauSinistre() {
+  const { withTenantId } = useTenantInsert();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -142,7 +144,7 @@ export default function NouveauSinistre() {
       // Insert sinistre
       const { data: sinistre, error: sinistreError } = await supabase
         .from('sinistres')
-        .insert([{
+        .insert([withTenantId({
           reference: refData,
           type_sinistre: formData.type_sinistre as any,
           date_sinistre: formData.date_sinistre,
@@ -155,7 +157,7 @@ export default function NouveauSinistre() {
           description: formData.description,
           cout_estime: formData.cout_estime ? parseFloat(formData.cout_estime) : null,
           statut: 'ouvert' as any,
-        }])
+        })])
         .select()
         .single();
 
@@ -190,12 +192,12 @@ export default function NouveauSinistre() {
             .from('vehicle-documents')
             .getPublicUrl(fileName);
 
-          await supabase.from('sinistre_files').insert([{
+          await supabase.from('sinistre_files').insert([withTenantId({
             sinistre_id: sinistre.id,
             file_name: file.name,
             file_url: publicUrl,
             file_type: 'autre',
-          }]);
+          })]);
         }
       }
 

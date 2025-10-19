@@ -9,7 +9,7 @@ import { Plus, Download, TrendingUp, Filter, Search, Trash2 } from 'lucide-react
 import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
-import { useTenant } from '@/contexts/TenantContext';
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import {
   Table,
   TableBody,
@@ -55,6 +55,7 @@ interface Revenue {
 }
 
 export default function Revenus() {
+  const { withTenantId } = useTenantInsert();
   const [revenues, setRevenues] = useState<Revenue[]>([]);
   const [filteredRevenues, setFilteredRevenues] = useState<Revenue[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -259,10 +260,10 @@ export default function Revenus() {
     try {
       const { error } = await supabase
         .from('revenus')
-        .insert([{
+        .insert([withTenantId({
           ...formData,
           montant: parseFloat(formData.montant),
-        }]);
+        })]);
 
       if (error) throw error;
 

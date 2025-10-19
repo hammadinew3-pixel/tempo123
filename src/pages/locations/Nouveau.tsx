@@ -15,11 +15,12 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Database } from "@/integrations/supabase/types";
-import { useTenant } from "@/contexts/TenantContext";
+import { useTenantInsert } from '@/hooks/use-tenant-insert';
 
 type Bareme = Database["public"]["Tables"]["assurance_bareme"]["Row"];
 
 export default function NouveauLocation() {
+  const { withTenantId } = useTenantInsert();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -296,7 +297,7 @@ export default function NouveauLocation() {
       if (contractType === "standard") {
         // Créer un contrat standard
         const { error } = await supabase.from("contracts").insert([
-          {
+          withTenantId({
             numero_contrat: formData.numero_contrat,
             client_id: formData.client_id,
             vehicle_id: formData.vehicle_id,
@@ -304,7 +305,7 @@ export default function NouveauLocation() {
             date_fin: format(formData.date_fin, "yyyy-MM-dd"),
             start_time: formData.start_time || null,
             end_time: formData.end_time || null,
-            statut: "brouillon",
+            statut: "brouillon" as const,
             caution_montant: formData.franchise_montant,
             caution_statut: "bloquee",
             advance_payment: formData.advance_payment,
@@ -312,7 +313,7 @@ export default function NouveauLocation() {
             start_location: formData.start_location || null,
             end_location: formData.end_location || null,
             notes: formData.notes || null,
-          },
+          }),
         ]);
 
         if (error) throw error;
@@ -327,7 +328,7 @@ export default function NouveauLocation() {
         // Créer un dossier d'assistance
         const selectedAssurance = assurances.find((a) => a.id === formData.assurance_id);
         const { data, error } = await supabase.from("assistance").insert([
-          {
+          withTenantId({
             num_dossier: formData.num_dossier,
             client_id: formData.client_id,
             vehicle_id: formData.vehicle_id,
@@ -342,7 +343,7 @@ export default function NouveauLocation() {
             franchise_montant: formData.franchise_montant,
             remarques: formData.notes || null,
             ordre_mission_url: ordreMissionUrl,
-          },
+          }),
         ]).select();
 
         if (error) throw error;
