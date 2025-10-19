@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -302,117 +303,156 @@ export default function Plans() {
 
       {/* Dialog Création / Édition */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl">
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-xl font-bold">
               {editing ? "Modifier le plan" : "Créer un nouveau plan"}
             </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Configurez les paramètres et limites du plan d'abonnement
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <Input
-              placeholder="Nom du plan"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="bg-slate-800 border-slate-700"
-            />
-            <Input
-              placeholder="Prix"
-              type="number"
-              value={form.price}
-              onChange={(e) =>
-                setForm({ ...form, price: parseFloat(e.target.value) || 0 })
-              }
-              className="bg-slate-800 border-slate-700"
-            />
-
-            <Input
-              placeholder="Devise"
-              value={form.currency}
-              onChange={(e) => setForm({ ...form, currency: e.target.value })}
-              className="bg-slate-800 border-slate-700"
-            />
-            <Input
-              placeholder="Description"
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              className="bg-slate-800 border-slate-700"
-            />
-
-            <Input
-              placeholder="Véhicules max"
-              type="number"
-              value={form.max_vehicles}
-              onChange={(e) =>
-                setForm({ ...form, max_vehicles: parseInt(e.target.value) || 0 })
-              }
-              className="bg-slate-800 border-slate-700"
-            />
-            <Input
-              placeholder="Utilisateurs max"
-              type="number"
-              value={form.max_users}
-              onChange={(e) =>
-                setForm({ ...form, max_users: parseInt(e.target.value) || 0 })
-              }
-              className="bg-slate-800 border-slate-700"
-            />
-            <Input
-              placeholder="Clients max"
-              type="number"
-              value={form.max_clients}
-              onChange={(e) =>
-                setForm({ ...form, max_clients: parseInt(e.target.value) || 0 })
-              }
-              className="bg-slate-800 border-slate-700"
-            />
-            <Input
-              placeholder="Contrats max"
-              type="number"
-              value={form.max_contracts}
-              onChange={(e) =>
-                setForm({ ...form, max_contracts: parseInt(e.target.value) || 0 })
-              }
-              className="bg-slate-800 border-slate-700"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              ["module_assistance", "Module Assistance"],
-              ["module_sinistres", "Module Sinistres"],
-              ["module_infractions", "Module Infractions"],
-              ["module_alertes", "Module Alertes"],
-              ["module_rapports", "Module Rapports"],
-            ].map(([key, label]) => (
-              <div key={key} className="flex items-center justify-between">
-                <Label className="text-gray-300">{label}</Label>
-                <Switch
-                  checked={(form as any)[key]}
-                  onCheckedChange={(v) =>
-                    setForm({ ...form, [key]: v } as any)
-                  }
-                />
+          <div className="space-y-6 py-4">
+            {/* Informations générales */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wide">
+                Informations générales
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Nom du plan *</Label>
+                  <Input
+                    placeholder="Ex: Premium, Pro, Basic..."
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Prix (MAD) *</Label>
+                  <Input
+                    placeholder="0"
+                    type="number"
+                    value={form.price}
+                    onChange={(e) =>
+                      setForm({ ...form, price: parseFloat(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-gray-300">Description</Label>
+                  <Input
+                    placeholder="Description du plan..."
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Limites & Quotas */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wide">
+                Limites & Quotas
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Nombre maximum de véhicules</Label>
+                  <Input
+                    placeholder="0 = illimité"
+                    type="number"
+                    value={form.max_vehicles}
+                    onChange={(e) =>
+                      setForm({ ...form, max_vehicles: parseInt(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Nombre maximum d'utilisateurs</Label>
+                  <Input
+                    placeholder="0 = illimité"
+                    type="number"
+                    value={form.max_users}
+                    onChange={(e) =>
+                      setForm({ ...form, max_users: parseInt(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Nombre maximum de clients</Label>
+                  <Input
+                    placeholder="0 = illimité"
+                    type="number"
+                    value={form.max_clients}
+                    onChange={(e) =>
+                      setForm({ ...form, max_clients: parseInt(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Nombre maximum de contrats</Label>
+                  <Input
+                    placeholder="0 = illimité"
+                    type="number"
+                    value={form.max_contracts}
+                    onChange={(e) =>
+                      setForm({ ...form, max_contracts: parseInt(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modules activés */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wide">
+                Modules activés
+              </h3>
+              <div className="grid grid-cols-2 gap-3 bg-slate-800/50 p-4 rounded-lg">
+                {[
+                  ["module_assistance", "🆘 Module Assistance"],
+                  ["module_sinistres", "🚗 Module Sinistres"],
+                  ["module_infractions", "⚠️ Module Infractions"],
+                  ["module_alertes", "🔔 Module Alertes"],
+                  ["module_rapports", "📊 Module Rapports"],
+                ].map(([key, label]) => (
+                  <div key={key} className="flex items-center justify-between p-2 rounded bg-slate-900/50">
+                    <Label className="text-gray-300 cursor-pointer">{label}</Label>
+                    <Switch
+                      checked={(form as any)[key]}
+                      onCheckedChange={(v) =>
+                        setForm({ ...form, [key]: v } as any)
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 border-t border-slate-800">
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-slate-700 hover:bg-slate-800"
+              className="border-slate-700 hover:bg-slate-800 text-gray-300"
             >
               Annuler
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleSave}
               disabled={loading}
             >
-              Enregistrer
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>
