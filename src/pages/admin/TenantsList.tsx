@@ -1,21 +1,30 @@
 import { Card } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building, Eye, Power } from "lucide-react";
+import { Building, Eye, Power, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { AssignPlanDialog } from "@/components/admin/AssignPlanDialog";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function TenantsList() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<any>(null);
 
   const { data: tenants = [], isLoading } = useQuery({
     queryKey: ['all-tenants'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tenants')
-        .select('*')
+        .select(`
+          *,
+          plans (*)
+        `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -127,7 +136,7 @@ export default function TenantsList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-flex px-2 py-1 text-xs font-medium rounded bg-slate-700 text-gray-300">
-                      {tenant.subscription_plan}
+                      {tenant.plans?.name || tenant.subscription_plan || 'Aucun plan'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -135,10 +144,23 @@ export default function TenantsList() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
                         className="text-emerald-400 hover:text-emerald-300 hover:bg-slate-800"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Détails
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedTenant(tenant);
+                          setShowPlanDialog(true);
+                        }}
+                        className="text-blue-400 hover:text-blue-300 hover:bg-slate-800"
+                      >
+                        <Layers className="h-4 w-4 mr-1" />
+                        Plan
                       </Button>
                       <Button
                         size="sm"
@@ -168,6 +190,15 @@ export default function TenantsList() {
           <Building className="h-12 w-12 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400">Aucune agence enregistrée</p>
         </div>
+      )}
+
+      {/* Dialog d'assignation de plan */}
+      {selectedTenant && (
+        <AssignPlanDialog
+          open={showPlanDialog}
+          onOpenChange={setShowPlanDialog}
+          tenant={selectedTenant}
+        />
       )}
     </div>
   );

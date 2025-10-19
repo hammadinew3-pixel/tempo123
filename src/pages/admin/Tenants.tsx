@@ -39,7 +39,10 @@ export default function Tenants() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tenants')
-        .select('*')
+        .select(`
+          *,
+          plans (*)
+        `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -139,7 +142,9 @@ export default function Tenants() {
               <TableRow key={tenant.id}>
                 <TableCell className="font-medium">{tenant.name}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{tenant.subscription_plan}</Badge>
+                  <Badge variant="outline">
+                    {tenant.plans?.name || tenant.subscription_plan || 'Aucun plan'}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
@@ -151,7 +156,15 @@ export default function Tenants() {
                 </TableCell>
                 <TableCell>
                   <div className="text-sm text-muted-foreground">
-                    {tenant.max_users} users / {tenant.max_vehicles} véhicules
+                    {tenant.plans ? (
+                      <>
+                        {tenant.plans.max_users} users / {tenant.plans.max_vehicles} véhicules
+                        <br />
+                        {tenant.plans.max_contracts} contrats / {tenant.plans.max_clients} clients
+                      </>
+                    ) : (
+                      'N/A'
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-right">

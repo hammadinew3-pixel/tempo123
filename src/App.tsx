@@ -12,6 +12,7 @@ import { useSuperAdmin } from "./hooks/use-super-admin";
 import LoginSuperAdmin from "./pages/admin/LoginSuperAdmin";
 import AdminDashboard from "./pages/admin/Dashboard";
 import TenantsList from "./pages/admin/TenantsList";
+import TenantDetails from "./pages/admin/TenantDetails";
 import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
 import AdminPlans from "./pages/admin/Plans";
@@ -452,6 +453,14 @@ const App = () => (
               element={
                 <AdminLayout>
                   <TenantsList />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="tenants/:id"
+              element={
+                <AdminLayout>
+                  <TenantDetails />
                 </AdminLayout>
               }
             />
