@@ -205,7 +205,20 @@ export default function Utilisateurs() {
       });
 
       if (error) {
-        const serverMessage = (data as any)?.error;
+        let serverMessage = (data as any)?.error as string | undefined;
+        // Try to extract detailed error from Supabase Functions error context
+        const anyErr: any = error as any;
+        if (!serverMessage && anyErr?.context?.response) {
+          try {
+            const json = await anyErr.context.response.json();
+            serverMessage = json?.error || json?.message || json?.details;
+          } catch {
+            try {
+              const text = await anyErr.context.response.text();
+              serverMessage = text;
+            } catch {}
+          }
+        }
         throw new Error(serverMessage || error.message || 'Erreur inconnue');
       }
       if ((data as any)?.error) throw new Error((data as any).error);
