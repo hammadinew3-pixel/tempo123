@@ -22,7 +22,7 @@ export function useTenantPlan() {
 
       if (error) throw error;
 
-      // Si pas de plan assigné, retourner valeurs par défaut (quotas illimités mais modules désactivés)
+      // Si pas de plan assigné, retourner valeurs par défaut (accès illimité)
       if (!tenant.plans) {
         return {
           plan: null,
@@ -33,11 +33,11 @@ export function useTenantPlan() {
             clients: { current: 0, max: Infinity, canAdd: true, percentage: 0 },
           },
           modules: {
-            assistance: false,
-            sinistres: false,
-            infractions: false,
-            alertes: false,
-            rapports: false,
+            assistance: true,
+            sinistres: true,
+            infractions: true,
+            alertes: true,
+            rapports: true,
           },
         };
       }

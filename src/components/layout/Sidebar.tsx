@@ -27,7 +27,6 @@ import {
   Shield,
   Globe,
   Building,
-  Bell,
 } from "lucide-react";
 import {
   Sidebar as SidebarUI,
@@ -56,30 +55,20 @@ interface NavItem {
 }
 
 const getMainNavItems = (isAdmin: boolean, isAgent: boolean, modules: any): NavItem[] => {
-  const operationalEnabled = !!(modules.assistance || modules.sinistres || modules.infractions);
-
   const items: NavItem[] = [
     { title: "Tableau de bord", href: "/", icon: BarChart3 },
+    { title: "Calendrier", href: "/calendrier", icon: Calendar },
+    { title: "Clients", href: "/clients", icon: Users },
+    { title: "Véhicules", href: "/vehicules", icon: Car },
+    { 
+      title: "Locations", 
+      icon: MapPin,
+      submenu: [
+        { title: "Voir les locations", href: "/locations", icon: List },
+        { title: "Ajouter une location", href: "/locations/nouveau", icon: Plus },
+      ]
+    },
   ];
-
-  if (operationalEnabled) {
-    items.push(
-      { title: "Calendrier", href: "/calendrier", icon: Calendar },
-      { title: "Clients", href: "/clients", icon: Users },
-      { title: "Véhicules", href: "/vehicules", icon: Car },
-      { 
-        title: "Locations", 
-        icon: MapPin,
-        submenu: [
-          { title: "Voir les locations", href: "/locations", icon: List },
-          { title: "Ajouter une location", href: "/locations/nouveau", icon: Plus },
-        ]
-      },
-      { title: "Maintenance", href: "/maintenance", icon: Wrench },
-      { title: "Charges", href: "/charges", icon: DollarSign },
-      { title: "Revenus", href: "/revenus", icon: TrendingUp }
-    );
-  }
 
   // Conditionnellement ajouter Assistance
   if (modules.assistance) {
@@ -96,6 +85,8 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean, modules: any): NavI
     });
   }
 
+  items.push({ title: "Maintenance", href: "/maintenance", icon: Wrench });
+
   // Conditionnellement ajouter Sinistre
   if (modules.sinistres) {
     items.push({ title: "Sinistre", href: "/sinistres", icon: AlertTriangle });
@@ -106,18 +97,18 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean, modules: any): NavI
     items.push({ title: "Infraction", href: "/infractions", icon: Shield });
   }
 
-  // Alertes
-  if (modules.alertes) {
-    items.push({ title: "Alertes", href: "/alertes", icon: Bell });
-  }
+  items.push(
+    { title: "Charges", href: "/charges", icon: DollarSign },
+    { title: "Revenus", href: "/revenus", icon: TrendingUp }
+  );
 
-  // Rapports
+  // Conditionnellement ajouter Rapport
   if (modules.rapports) {
     items.push({ title: "Rapport", href: "/rapports", icon: BarChart });
   }
 
-  // "Chèque", "Historique" et "Importer" masqués pour les agents et affichés seulement si opérationnel actif
-  if (!isAgent && operationalEnabled) {
+  // "Chèque", "Historique" et "Importer" masqués pour les agents
+  if (!isAgent) {
     const insertIndex = items.findIndex(item => item.title === "Charges");
     if (insertIndex !== -1) {
       items.splice(insertIndex, 0, { title: "Chèque", href: "/cheques", icon: CreditCard });
@@ -150,13 +141,13 @@ export const Sidebar = ({ onOpenClientDialog }: SidebarProps = {}) => {
   const collapsed = state === "collapsed";
   const { data: planData } = useTenantPlan();
 
-  // Utiliser les modules du plan réel, ou tous désactivés si pas de données
+  // Si pas de plan, afficher tous les modules (comportement par défaut)
   const modules = planData?.modules || {
-    assistance: false,
-    sinistres: false,
-    infractions: false,
-    alertes: false,
-    rapports: false,
+    assistance: true,
+    sinistres: true,
+    infractions: true,
+    alertes: true,
+    rapports: true,
   };
   
   const mainNavItems = getMainNavItems(isAdmin, isAgent, modules);
