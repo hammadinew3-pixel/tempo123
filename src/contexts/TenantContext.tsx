@@ -132,12 +132,17 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       const activeTenant = userTenants.find(ut => ut.is_active)?.tenants;
       if (activeTenant) {
         const tenant = activeTenant as Tenant;
-        setCurrentTenant(tenant);
-
-        // Rediriger si tenant suspendu
+        
+        // Vérifier immédiatement si le tenant est suspendu
         if (!tenant.is_active) {
+          setCurrentTenant(null);
+          setTenants([]);
           navigate('/suspended');
+          toast.error("Votre agence est suspendue");
+          return;
         }
+        
+        setCurrentTenant(tenant);
       }
     } catch (error) {
       console.error('Error loading tenants:', error);
