@@ -52,7 +52,6 @@ export default function Locations() {
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<Partial<ContractInsert>>({
-    numero_contrat: `CTR-${Date.now()}`,
     client_id: '',
     vehicle_id: '',
     date_debut: '',
@@ -366,7 +365,6 @@ export default function Locations() {
 
   const resetForm = () => {
     setFormData({
-      numero_contrat: `CTR-${Date.now()}`,
       client_id: '',
       vehicle_id: '',
       date_debut: '',

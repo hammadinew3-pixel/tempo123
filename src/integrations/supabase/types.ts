@@ -2180,6 +2180,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_assistance_number: {
+        Args: { p_tenant_id: string }
+        Returns: string
+      }
+      generate_contract_number: {
+        Args: { p_tenant_id: string }
+        Returns: string
+      }
       generate_infraction_reference: {
         Args: Record<PropertyKey, never>
         Returns: string

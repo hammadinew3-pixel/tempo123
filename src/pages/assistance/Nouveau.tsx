@@ -33,7 +33,6 @@ export default function NouveauAssistance() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<AssistanceInsert>>({
-    num_dossier: `ASS-${Date.now()}`,
     client_id: undefined,
     vehicle_id: undefined,
     assureur_id: undefined,
