@@ -60,6 +60,7 @@ type Contract = {
   end_time?: string;
   delivery_km?: number;
   return_km?: number;
+  prolongations?: any;
   vehicles?: {
     immatriculation: string;
     marque: string;
@@ -244,10 +245,20 @@ export default function Calendrier() {
     
     return contracts.filter(contract => {
       const [startYear, startMonth, startDay] = contract.date_debut.split('-').map(Number);
-      const [endYear, endMonth, endDay] = contract.date_fin.split('-').map(Number);
       const start = new Date(startYear, startMonth - 1, startDay);
-      const end = new Date(endYear, endMonth - 1, endDay);
       start.setHours(0, 0, 0, 0);
+      
+      // Calculate effective end date with prolongations
+      let effectiveEndDate = contract.date_fin;
+      if (contract.prolongations && Array.isArray(contract.prolongations) && contract.prolongations.length > 0) {
+        const lastProlongation = contract.prolongations[contract.prolongations.length - 1];
+        if (lastProlongation.nouvelle_date_fin) {
+          effectiveEndDate = lastProlongation.nouvelle_date_fin;
+        }
+      }
+      
+      const [endYear, endMonth, endDay] = effectiveEndDate.split('-').map(Number);
+      const end = new Date(endYear, endMonth - 1, endDay);
       end.setHours(0, 0, 0, 0);
       
       return date >= start && date <= end;
@@ -268,10 +279,20 @@ export default function Calendrier() {
 
     contracts.forEach((contract) => {
       const [cStartYear, cStartMonth, cStartDay] = contract.date_debut.split('-').map(Number);
-      const [cEndYear, cEndMonth, cEndDay] = contract.date_fin.split('-').map(Number);
       const contractStart = new Date(cStartYear, cStartMonth - 1, cStartDay);
-      const contractEnd = new Date(cEndYear, cEndMonth - 1, cEndDay);
       contractStart.setHours(0, 0, 0, 0);
+      
+      // Calculate effective end date with prolongations
+      let effectiveEndDate = contract.date_fin;
+      if (contract.prolongations && Array.isArray(contract.prolongations) && contract.prolongations.length > 0) {
+        const lastProlongation = contract.prolongations[contract.prolongations.length - 1];
+        if (lastProlongation.nouvelle_date_fin) {
+          effectiveEndDate = lastProlongation.nouvelle_date_fin;
+        }
+      }
+      
+      const [cEndYear, cEndMonth, cEndDay] = effectiveEndDate.split('-').map(Number);
+      const contractEnd = new Date(cEndYear, cEndMonth - 1, cEndDay);
       contractEnd.setHours(0, 0, 0, 0);
 
       // Skip if contract doesn't overlap with current month
