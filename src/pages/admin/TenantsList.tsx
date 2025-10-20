@@ -212,7 +212,7 @@ export default function TenantsList() {
                         disabled={toggleStatusMutation.isPending}
                         className={
                           tenant.is_active
-                            ? "bg-red-500 hover:bg-red-600 text-white"
+                            ? "bg-[#c01533] hover:bg-[#9a0f26] text-white"
                             : "bg-green-500 hover:bg-green-600 text-white"
                         }
                       >
@@ -224,7 +224,7 @@ export default function TenantsList() {
                         variant="ghost"
                         onClick={() => handleDeleteClick(tenant)}
                         disabled={deleteTenantMutation.isPending}
-                        className="bg-red-50 hover:bg-red-100 text-red-600"
+                        className="bg-red-50 hover:bg-red-100 text-[#c01533] hover:text-[#9a0f26] font-medium"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Supprimer

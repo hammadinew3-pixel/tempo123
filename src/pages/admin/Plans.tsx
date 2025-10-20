@@ -292,7 +292,7 @@ export default function Plans() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-gray-700 border-gray-300 hover:bg-gray-100"
+                        className="text-gray-800 border-gray-300 hover:bg-gray-100 hover:text-black font-medium"
                         onClick={() => {
                           setEditing(p);
                           setForm(p);
@@ -304,7 +304,7 @@ export default function Plans() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-gray-700 border-gray-300 hover:bg-gray-100"
+                        className="text-gray-800 border-gray-300 hover:bg-gray-100 hover:text-black font-medium"
                         onClick={() => toggleActive(p)}
                       >
                         {p.is_active ? "Désactiver" : "Activer"}

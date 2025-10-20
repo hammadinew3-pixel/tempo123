@@ -28,7 +28,7 @@ export function AdminHeader() {
       </div>
       <button
         onClick={handleLogout}
-        className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+        className="flex items-center gap-2 bg-[#c01533] hover:bg-[#9a0f26] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
       >
         <LogOut className="h-4 w-4" />
         <span>Déconnexion</span>

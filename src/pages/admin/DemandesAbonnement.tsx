@@ -196,7 +196,7 @@ export default function DemandesAbonnement() {
                       action: 'approved' 
                     })}
                     disabled={handleActionMutation.isPending}
-                    className="bg-red-500 hover:bg-red-600 text-white"
+                    className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Approuver

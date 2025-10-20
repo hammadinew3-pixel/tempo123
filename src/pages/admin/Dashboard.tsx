@@ -269,7 +269,7 @@ export default function AdminDashboard() {
                       disabled={toggleStatusMutation.isPending}
                       className={
                         tenant.is_active
-                          ? "bg-red-500 hover:bg-red-600 text-white"
+                          ? "bg-[#c01533] hover:bg-[#9a0f26] text-white"
                           : "bg-green-500 hover:bg-green-600 text-white"
                       }
                     >
