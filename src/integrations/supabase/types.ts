@@ -2496,6 +2496,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      submit_payment_proof: {
+        Args: {
+          _proof_url: string
+          _reference: string
+          _subscription_id: string
+        }
+        Returns: undefined
+      }
       tenant_has_module_assistance: {
         Args: { _tenant_id: string }
         Returns: boolean

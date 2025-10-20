@@ -33,7 +33,7 @@ export default function Paiement() {
           tenant:tenants (*)
         `)
         .eq('id', subscriptionId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -121,24 +121,14 @@ export default function Paiement() {
         .from('payment-proofs')
         .getPublicUrl(fileName);
 
-      // Mettre à jour la subscription
-      const { error: updateError } = await supabase
-        .from('subscriptions')
-        .update({
-          payment_method: 'virement',
-          payment_reference: motif,
-          payment_proof_url: publicUrl,
-          status: 'awaiting_verification'
-        })
-        .eq('id', subscriptionId);
+      // Mettre à jour la subscription et le tenant via RPC sécurisée
+      const { error: rpcError } = await supabase.rpc('submit_payment_proof', {
+        _subscription_id: subscriptionId,
+        _proof_url: publicUrl,
+        _reference: motif
+      });
 
-      if (updateError) throw updateError;
-
-      // Mettre à jour le statut du tenant à "awaiting_verification"
-      await supabase
-        .from('tenants')
-        .update({ status: 'awaiting_verification' })
-        .eq('id', subscriptionData.tenant_id);
+      if (rpcError) throw rpcError;
 
       toast({
         title: "✅ Justificatif envoyé",
