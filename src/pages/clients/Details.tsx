@@ -22,6 +22,7 @@ export default function ClientDetails() {
   const [loading, setLoading] = useState(true);
   const [infoOpen, setInfoOpen] = useState(true);
   const [statsOpen, setStatsOpen] = useState(true);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -31,7 +32,7 @@ export default function ClientDetails() {
 
   const loadClientData = async () => {
     try {
-      const [clientRes, contractsRes] = await Promise.all([
+      const [clientRes, contractsRes, revenusRes] = await Promise.all([
         supabase
           .from('clients')
           .select('*')
@@ -44,7 +45,11 @@ export default function ClientDetails() {
             vehicles (marque, modele, immatriculation)
           `)
           .eq('client_id', id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('revenus')
+          .select('montant')
+          .eq('client_id', id)
       ]);
 
       if (clientRes.error) throw clientRes.error;
@@ -58,9 +63,14 @@ export default function ClientDetails() {
         return;
       }
       if (contractsRes.error) throw contractsRes.error;
+      if (revenusRes.error) throw revenusRes.error;
 
       setClient(clientRes.data);
       setContracts(contractsRes.data || []);
+      
+      // Calculer le revenu total depuis la table revenus
+      const total = (revenusRes.data || []).reduce((sum, revenu) => sum + (revenu.montant || 0), 0);
+      setTotalRevenue(total);
     } catch (error: any) {
       toast({
         title: 'Erreur',
@@ -73,9 +83,6 @@ export default function ClientDetails() {
     }
   };
 
-  const calculateTotalRevenue = () => {
-    return contracts.reduce((sum, contract) => sum + (contract.total_amount || 0), 0);
-  };
 
   const getContractStats = () => {
     const stats = {
@@ -160,7 +167,6 @@ export default function ClientDetails() {
   if (!client) return null;
 
   const stats = getContractStats();
-  const totalRevenue = calculateTotalRevenue();
   const isNewClient = contracts.length <= 2;
 
   return (
