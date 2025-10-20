@@ -9,6 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { AssignPlanDialog } from "@/components/admin/AssignPlanDialog";
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   ArrowLeft, 
   Building, 
@@ -114,6 +121,42 @@ export default function TenantDetails() {
     },
   });
 
+  // Mutation pour changer la durée de la subscription
+  const changeDurationMutation = useMutation({
+    mutationFn: async (newDuration: number) => {
+      if (!subscription?.id) throw new Error("Pas de subscription active");
+
+      const startDate = new Date(subscription.start_date);
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + newDuration);
+
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ 
+          duration: newDuration,
+          end_date: endDate.toISOString().split('T')[0]
+        })
+        .eq('id', subscription.id);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, newDuration) => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-details', id] });
+      toast({
+        title: "Succès",
+        description: `Durée modifiée à ${newDuration} mois`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de modifier la durée",
+      });
+      console.error(error);
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -196,7 +239,23 @@ export default function TenantDetails() {
             {plan ? plan.name : "Aucun plan assigné"}
           </CardTitle>
           {plan && subscription ? (
-            <div className="space-y-2 mt-2">
+            <div className="space-y-3 mt-2">
+              <div className="flex items-center gap-3">
+                <label className="text-sm text-gray-400 font-medium">Durée:</label>
+                <Select 
+                  value={duration.toString()} 
+                  onValueChange={(value) => changeDurationMutation.mutate(parseInt(value))}
+                  disabled={changeDurationMutation.isPending}
+                >
+                  <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="6" className="text-white hover:bg-slate-700">6 mois</SelectItem>
+                    <SelectItem value="12" className="text-white hover:bg-slate-700">12 mois</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-emerald-400" />
