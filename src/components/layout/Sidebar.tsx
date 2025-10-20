@@ -118,6 +118,7 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean, modules: any): NavI
 
 const adminNavItems: NavItem[] = [
   { title: "Utilisateurs", href: "/utilisateurs", icon: Users },
+  { title: "Mon Abonnement", href: "/mon-abonnement", icon: CreditCard },
   { title: "Paramètres", href: "/parametres", icon: Settings },
 ];
 

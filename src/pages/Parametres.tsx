@@ -11,8 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2 } from "lucide-react";
-import { CurrentPlanCard } from "@/components/settings/CurrentPlanCard";
-import { PlanSelectionDialog } from "@/components/settings/PlanSelectionDialog";
 import { useTenantPlan } from "@/hooks/useTenantPlan";
 
 interface AgenceSettings {
@@ -54,7 +52,6 @@ export default function Parametres() {
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [newCategoryCode, setNewCategoryCode] = useState("");
-  const [showPlanSelection, setShowPlanSelection] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -420,9 +417,6 @@ export default function Parametres() {
           Configurez les informations et préférences de votre agence
         </p>
       </div>
-
-      {/* NOUVEAU : Plan actuel - EN PREMIER */}
-      <CurrentPlanCard onChangePlan={() => setShowPlanSelection(true)} />
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Informations d'agence */}
@@ -799,12 +793,6 @@ export default function Parametres() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Modal de sélection de plan */}
-      <PlanSelectionDialog 
-        open={showPlanSelection} 
-        onOpenChange={setShowPlanSelection} 
-      />
     </div>
   );
 }

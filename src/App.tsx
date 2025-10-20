@@ -54,6 +54,7 @@ import ModifierInfraction from "./pages/infractions/Modifier";
 import Auth from "./pages/Auth";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
+import MonAbonnement from "./pages/MonAbonnement";
 
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -408,6 +409,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Layout><Parametres /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mon-abonnement"
+              element={
+                <ProtectedRoute>
+                  <Layout><MonAbonnement /></Layout>
                 </ProtectedRoute>
               }
             />
