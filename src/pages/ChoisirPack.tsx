@@ -162,16 +162,6 @@ export default function ChoisirPack() {
                   </Badge>
                 )}
 
-                {/* Modules inclus */}
-                <div className="pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-600 mb-2">Modules inclus :</p>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant="outline" className="text-xs">Sinistres</Badge>
-                    <Badge variant="outline" className="text-xs">Infractions</Badge>
-                    <Badge variant="outline" className="text-xs">Alertes</Badge>
-                    <Badge variant="outline" className="text-xs">Rapports</Badge>
-                  </div>
-                </div>
 
                 {/* Prix et boutons */}
                 <div className="space-y-3 pt-4">
