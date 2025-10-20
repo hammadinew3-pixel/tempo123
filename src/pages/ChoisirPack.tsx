@@ -158,7 +158,7 @@ export default function ChoisirPack() {
                 {plan.module_assistance && (
                   <Badge className="bg-green-50 text-green-600 border-green-200">
                     <Headset className="h-3 w-3 mr-1" />
-                    Module Assistance inclus
+                    Module Assistance / Assurances inclus
                   </Badge>
                 )}
 
