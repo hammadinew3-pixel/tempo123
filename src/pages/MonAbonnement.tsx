@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, Calendar, Users, Car, FileText, User, CheckCircle, XCircle } from "lucide-react";
 import { useTenantPlan } from "@/hooks/useTenantPlan";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,8 +19,9 @@ export default function MonAbonnement() {
   const queryClient = useQueryClient();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedDuration, setSelectedDuration] = useState<number>(12);
 
-  // Fetch all available plans
+  // Fetch all available plans sorted by price
   const { data: plans = [] } = useQuery({
     queryKey: ['available-plans'],
     queryFn: async () => {
@@ -27,7 +29,7 @@ export default function MonAbonnement() {
         .from('plans')
         .select('*')
         .eq('is_active', true)
-        .order('price');
+        .order('price_6_months', { ascending: true });
       
       if (error) throw error;
       return data;
@@ -55,7 +57,7 @@ export default function MonAbonnement() {
 
   // Create subscription request mutation
   const requestChangeMutation = useMutation({
-    mutationFn: async (planId: string) => {
+    mutationFn: async ({ planId, duration }: { planId: string; duration: number }) => {
       if (!currentTenant?.id) throw new Error("Tenant non trouvé");
       
       const { error } = await supabase
@@ -64,6 +66,7 @@ export default function MonAbonnement() {
           tenant_id: currentTenant.id,
           current_plan_id: planData?.plan?.id || null,
           requested_plan_id: planId,
+          notes: `Durée demandée: ${duration} mois`,
         });
       
       if (error) throw error;
@@ -75,6 +78,7 @@ export default function MonAbonnement() {
       });
       setOpenDialog(false);
       setSelectedPlan(null);
+      setSelectedDuration(12);
       queryClient.invalidateQueries({ queryKey: ['subscription-requests'] });
     },
     onError: (error) => {
@@ -213,7 +217,7 @@ export default function MonAbonnement() {
                   <span className="text-sm text-gray-400">Véhicules</span>
                 </div>
                 <p className="text-2xl font-bold text-white">
-                  {usage.vehicles.current} <span className="text-sm text-gray-400">/ {usage.vehicles.max}</span>
+                  {usage.vehicles.current} <span className="text-sm text-gray-400">/ {usage.vehicles.max === 0 ? 'Illimité' : usage.vehicles.max}</span>
                 </p>
               </div>
 
@@ -224,7 +228,7 @@ export default function MonAbonnement() {
                   <span className="text-sm text-gray-400">Utilisateurs</span>
                 </div>
                 <p className="text-2xl font-bold text-white">
-                  {usage.users.current} <span className="text-sm text-gray-400">/ {usage.users.max}</span>
+                  {usage.users.current} <span className="text-sm text-gray-400">/ {usage.users.max === 0 ? 'Illimité' : usage.users.max}</span>
                 </p>
               </div>
 
@@ -235,7 +239,7 @@ export default function MonAbonnement() {
                   <span className="text-sm text-gray-400">Contrats</span>
                 </div>
                 <p className="text-2xl font-bold text-white">
-                  {usage.contracts.current} <span className="text-sm text-gray-400">/ {usage.contracts.max}</span>
+                  {usage.contracts.current} <span className="text-sm text-gray-400">/ {usage.contracts.max === 0 ? 'Illimité' : usage.contracts.max}</span>
                 </p>
               </div>
 
@@ -246,7 +250,7 @@ export default function MonAbonnement() {
                   <span className="text-sm text-gray-400">Clients</span>
                 </div>
                 <p className="text-2xl font-bold text-white">
-                  {usage.clients.current} <span className="text-sm text-gray-400">/ {usage.clients.max}</span>
+                  {usage.clients.current} <span className="text-sm text-gray-400">/ {usage.clients.max === 0 ? 'Illimité' : usage.clients.max}</span>
                 </p>
               </div>
             </div>
@@ -296,13 +300,32 @@ export default function MonAbonnement() {
 
       {/* Dialog pour changer de plan */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-2xl">
+        <DialogContent className="bg-slate-900 border-slate-800 text-white max-w-3xl">
           <DialogHeader>
             <DialogTitle className="text-xl">Sélectionner un nouveau pack</DialogTitle>
           </DialogHeader>
+
+          {/* Sélection de la durée */}
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
+            <label className="text-sm font-medium text-gray-300">Durée de l'abonnement :</label>
+            <Select value={selectedDuration.toString()} onValueChange={(value) => setSelectedDuration(parseInt(value))}>
+              <SelectTrigger className="w-40 bg-slate-800 border-slate-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectItem value="6" className="text-white hover:bg-slate-700">6 mois</SelectItem>
+                <SelectItem value="12" className="text-white hover:bg-slate-700">12 mois</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
           <div className="space-y-3 max-h-[500px] overflow-y-auto">
-            {plans.map((p) => (
+            {plans.map((p) => {
+              const displayPrice = selectedDuration === 6 ? p.price_6_months : p.price_12_months;
+              const discount = selectedDuration === 6 ? p.discount_6_months : p.discount_12_months;
+              const finalPrice = discount > 0 ? displayPrice * (1 - discount / 100) : displayPrice;
+              
+              return (
               <Card
                 key={p.id}
                 className={`p-4 cursor-pointer transition-all ${
@@ -313,13 +336,24 @@ export default function MonAbonnement() {
                 onClick={() => setSelectedPlan(p)}
               >
                 <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-lg text-white">{p.name}</h3>
-                    <div className="text-sm text-gray-400 space-y-1">
-                      <p>💰 6 mois : <strong className="text-white">{p.price_6_months} {p.currency}</strong></p>
-                      <p>💰 12 mois : <strong className="text-white">{p.price_12_months} {p.currency}</strong></p>
-                      <p>🚗 {p.max_vehicles} véhicules • 👥 {p.max_users} utilisateurs</p>
-                      <p>📋 {p.max_contracts} contrats • 🧍 {p.max_clients} clients</p>
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg text-white">{p.name}</h3>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-emerald-400">
+                          {Math.round(finalPrice)} {p.currency}
+                        </p>
+                        <p className="text-xs text-gray-400">pour {selectedDuration} mois</p>
+                        {discount > 0 && (
+                          <p className="text-xs text-yellow-400">-{discount}% de réduction</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-400 space-y-1 mt-3">
+                      <p>🚗 {p.max_vehicles === 0 ? 'Véhicules illimités' : `${p.max_vehicles} véhicules`}</p>
+                      <p>👥 {p.max_users === 0 ? 'Utilisateurs illimités' : `${p.max_users} utilisateurs`}</p>
+                      <p>📋 {p.max_contracts === 0 ? 'Contrats illimités' : `${p.max_contracts} contrats`}</p>
+                      <p>🧍 {p.max_clients === 0 ? 'Clients illimités' : `${p.max_clients} clients`}</p>
                       {p.module_assistance && (
                         <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mt-2">
                           ✅ Module Assistance inclus
@@ -328,11 +362,12 @@ export default function MonAbonnement() {
                     </div>
                   </div>
                   {selectedPlan?.id === p.id && (
-                    <CheckCircle className="h-6 w-6 text-emerald-500" />
+                    <CheckCircle className="h-6 w-6 text-emerald-500 flex-shrink-0 ml-4" />
                   )}
                 </div>
               </Card>
-            ))}
+            );
+            })}
           </div>
 
           <DialogFooter className="flex gap-2">
@@ -341,13 +376,14 @@ export default function MonAbonnement() {
               onClick={() => {
                 setOpenDialog(false);
                 setSelectedPlan(null);
+                setSelectedDuration(12);
               }}
               className="border-slate-700"
             >
               Annuler
             </Button>
             <Button
-              onClick={() => requestChangeMutation.mutate(selectedPlan.id)}
+              onClick={() => requestChangeMutation.mutate({ planId: selectedPlan.id, duration: selectedDuration })}
               disabled={!selectedPlan || requestChangeMutation.isPending}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
