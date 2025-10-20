@@ -187,16 +187,17 @@ export default function Plans() {
   };
 
   return (
-    <div className="space-y-6 text-white">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Layers className="h-7 w-7 text-primary" />
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-semibold text-black flex items-center gap-3">
+          <Layers className="h-8 w-8 text-[#c01533]" />
           Plans d'abonnement
         </h1>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-500 mt-1">
           Tarifs et remises configurables pour chaque formule
         </p>
       </div>
+      
       <div className="flex items-center justify-between">
         <Button
           onClick={() => {
@@ -219,46 +220,46 @@ export default function Plans() {
             });
             setOpen(true);
           }}
-          className="bg-primary hover:bg-primary/90"
+          className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Nouveau Plan
         </Button>
       </div>
 
-      <Card className="bg-card border-border">
+      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <CardContent className="p-0">
-          <table className="min-w-full divide-y divide-slate-800">
-            <thead className="text-gray-400 text-sm">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left">Nom</th>
-                <th className="px-6 py-3 text-left">Prix 6 mois</th>
-                <th className="px-6 py-3 text-left">Prix 12 mois</th>
-                <th className="px-6 py-3 text-left">Remise 6M</th>
-                <th className="px-6 py-3 text-left">Remise 12M</th>
-                <th className="px-6 py-3 text-left">Quotas</th>
-                <th className="px-6 py-3 text-left">Assistance</th>
-                <th className="px-6 py-3 text-left">Statut</th>
-                <th className="px-6 py-3 text-right">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nom</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Prix 6 mois</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Prix 12 mois</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Remise 6M</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Remise 12M</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Quotas</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Assistance</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Statut</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-gray-200 bg-white">
               {plans.map((p) => (
-                <tr key={p.id} className="hover:bg-slate-800/60">
-                  <td className="px-6 py-4 font-semibold">{p.name}</td>
-                  <td className="px-6 py-4 text-gray-300">
+                <tr key={p.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 font-semibold text-black">{p.name}</td>
+                  <td className="px-6 py-4 text-gray-700">
                     {p.price_6_months || 0} DH
                   </td>
-                  <td className="px-6 py-4 text-gray-300">
+                  <td className="px-6 py-4 text-gray-700">
                     {p.price_12_months || 0} DH
                   </td>
-                  <td className="px-6 py-4 text-gray-300">
+                  <td className="px-6 py-4 text-gray-700">
                     {p.discount_6_months || 0}%
                   </td>
-                  <td className="px-6 py-4 text-gray-300">
+                  <td className="px-6 py-4 text-gray-700">
                     {p.discount_12_months || 0}%
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-400">
+                  <td className="px-6 py-4 text-sm text-gray-600">
                     {p.max_vehicles === 0 ? 'Illimité' : p.max_vehicles} véhicules<br />
                     {p.max_users === 0 ? 'Illimité' : p.max_users} utilisateurs<br />
                     {p.max_contracts === 0 ? 'Illimité' : p.max_contracts} contrats<br />
@@ -266,54 +267,56 @@ export default function Plans() {
                   </td>
                   <td className="px-6 py-4">
                     {p.module_assistance ? (
-                      <span className="px-2 py-1 rounded text-xs bg-primary/10 text-primary font-medium">
+                      <span className="px-2 py-1 rounded-full text-xs bg-green-50 text-green-600 border border-green-200 font-medium">
                         Oui
                       </span>
                     ) : (
-                      <span className="px-2 py-1 rounded text-xs bg-gray-500/10 text-gray-400">
+                      <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-500 border border-gray-200">
                         Non
                       </span>
                     )}
                   </td>
                   <td className="px-6 py-4">
                     {p.is_active ? (
-                      <span className="px-2 py-1 rounded text-xs bg-primary/10 text-primary inline-flex items-center gap-1">
+                      <span className="px-2 py-1 rounded-full text-xs bg-green-50 text-green-600 border border-green-200 inline-flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3" /> Actif
                       </span>
                     ) : (
-                      <span className="px-2 py-1 rounded text-xs bg-red-500/10 text-red-400 inline-flex items-center gap-1">
+                      <span className="px-2 py-1 rounded-full text-xs bg-red-50 text-red-600 border border-red-200 inline-flex items-center gap-1">
                         <XCircle className="h-3 w-3" /> Inactif
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-right flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-300 border-slate-700 hover:bg-slate-800"
-                      onClick={() => {
-                        setEditing(p);
-                        setForm(p);
-                        setOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4 mr-1" /> Modifier
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-gray-300 border-slate-700 hover:bg-slate-800"
-                      onClick={() => toggleActive(p)}
-                    >
-                      {p.is_active ? "Désactiver" : "Activer"}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(p.id!)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" /> Supprimer
-                    </Button>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-gray-700 border-gray-300 hover:bg-gray-100"
+                        onClick={() => {
+                          setEditing(p);
+                          setForm(p);
+                          setOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" /> Modifier
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-gray-700 border-gray-300 hover:bg-gray-100"
+                        onClick={() => toggleActive(p)}
+                      >
+                        {p.is_active ? "Désactiver" : "Activer"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleDelete(p.id!)}
+                        className="bg-red-500 hover:bg-red-600 text-white"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" /> Supprimer
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -324,12 +327,12 @@ export default function Plans() {
 
       {/* Dialog Création / Édition */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-white border-gray-200 text-black max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
+            <DialogTitle className="text-xl font-bold text-black">
               {editing ? "Modifier le plan" : "Créer un nouveau plan"}
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-500">
               Configurez les paramètres et limites du plan d'abonnement
             </DialogDescription>
           </DialogHeader>
@@ -337,24 +340,24 @@ export default function Plans() {
           <div className="space-y-6 py-4">
             {/* Informations générales */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-[#c01533] uppercase tracking-wide">
                 Informations générales
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-300">Nom du plan *</Label>
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-gray-700 font-medium">Nom du plan *</Label>
                   <Input
                     placeholder="Ex: Premium, Pro, Basic..."
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Prix 6 mois (DH HT) *</Label>
+                  <Label className="text-gray-700 font-medium">Prix 6 mois (DH HT) *</Label>
                   <Input
                     placeholder="0"
                     type="number"
@@ -362,11 +365,11 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, price_6_months: parseFloat(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Remise 6 mois (%)</Label>
+                  <Label className="text-gray-700 font-medium">Remise 6 mois (%)</Label>
                   <Input
                     placeholder="0"
                     type="number"
@@ -374,17 +377,17 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, discount_6_months: parseFloat(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
               </div>
 
               {/* Affichage du prix remisé pour 6 mois */}
               {form.discount_6_months && form.discount_6_months > 0 && (
-                <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
-                  <p className="text-sm text-primary">
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700">
                     💰 Prix remisé pour 6 mois :{" "}
-                    <strong className="text-primary">
+                    <strong className="text-green-800">
                       {Math.round((form.price_6_months || 0) * (1 - (form.discount_6_months || 0) / 100))} DH HT
                     </strong>
                   </p>
@@ -393,7 +396,7 @@ export default function Plans() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Prix 12 mois (DH HT) *</Label>
+                  <Label className="text-gray-700 font-medium">Prix 12 mois (DH HT) *</Label>
                   <Input
                     placeholder="0"
                     type="number"
@@ -401,11 +404,11 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, price_12_months: parseFloat(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Remise 12 mois (%)</Label>
+                  <Label className="text-gray-700 font-medium">Remise 12 mois (%)</Label>
                   <Input
                     placeholder="0"
                     type="number"
@@ -413,17 +416,17 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, discount_12_months: parseFloat(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
               </div>
 
               {/* Affichage du prix remisé pour 12 mois */}
               {form.discount_12_months && form.discount_12_months > 0 && (
-                <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
-                  <p className="text-sm text-primary">
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700">
                     💰 Prix remisé pour 12 mois :{" "}
-                    <strong className="text-primary">
+                    <strong className="text-green-800">
                       {Math.round((form.price_12_months || 0) * (1 - (form.discount_12_months || 0) / 100))} DH HT
                     </strong>
                   </p>
@@ -432,14 +435,14 @@ export default function Plans() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2 col-span-2">
-                  <Label className="text-gray-300">Description</Label>
+                  <Label className="text-gray-700 font-medium">Description</Label>
                   <Input
                     placeholder="Description du plan..."
                     value={form.description}
                     onChange={(e) =>
                       setForm({ ...form, description: e.target.value })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
               </div>
@@ -447,12 +450,12 @@ export default function Plans() {
 
             {/* Limites & Quotas */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-[#c01533] uppercase tracking-wide">
                 Limites & Quotas
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Nombre maximum de véhicules</Label>
+                  <Label className="text-gray-700 font-medium">Nombre maximum de véhicules</Label>
                   <Input
                     placeholder="0 = illimité"
                     type="number"
@@ -460,11 +463,11 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, max_vehicles: parseInt(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Nombre maximum d'utilisateurs</Label>
+                  <Label className="text-gray-700 font-medium">Nombre maximum d'utilisateurs</Label>
                   <Input
                     placeholder="0 = illimité"
                     type="number"
@@ -472,11 +475,11 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, max_users: parseInt(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Nombre maximum de clients</Label>
+                  <Label className="text-gray-700 font-medium">Nombre maximum de clients</Label>
                   <Input
                     placeholder="0 = illimité"
                     type="number"
@@ -484,11 +487,11 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, max_clients: parseInt(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Nombre maximum de contrats</Label>
+                  <Label className="text-gray-700 font-medium">Nombre maximum de contrats</Label>
                   <Input
                     placeholder="0 = illimité"
                     type="number"
@@ -496,7 +499,7 @@ export default function Plans() {
                     onChange={(e) =>
                       setForm({ ...form, max_contracts: parseInt(e.target.value) || 0 })
                     }
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-black"
                   />
                 </div>
               </div>
@@ -504,19 +507,19 @@ export default function Plans() {
 
             {/* Modules activés */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-[#c01533] uppercase tracking-wide">
                 Modules activés
               </h3>
-              <div className="bg-slate-800/50 p-4 rounded-lg space-y-3">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
                 {/* Message explicatif */}
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-600">
                   ✓ Modules de base inclus dans tous les plans : Sinistres, Infractions, Alertes, Rapports
                 </p>
                 
                 {/* Seul module premium */}
-                <div className="flex items-center justify-between p-3 rounded bg-slate-900/50 border border-slate-700">
+                <div className="flex items-center justify-between p-3 rounded bg-white border border-gray-200">
                   <div className="space-y-1">
-                    <Label className="text-gray-300 font-medium cursor-pointer">
+                    <Label className="text-gray-800 font-medium cursor-pointer">
                       🆘 Module Assistance/Assurance
                     </Label>
                     <p className="text-xs text-gray-500">
@@ -532,16 +535,16 @@ export default function Plans() {
             </div>
           </div>
 
-          <DialogFooter className="pt-4 border-t border-slate-800">
+          <DialogFooter className="pt-4 border-t border-gray-200">
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-slate-700 hover:bg-slate-800 text-gray-300"
+              className="border-gray-300 hover:bg-gray-100 text-gray-700"
             >
               Annuler
             </Button>
             <Button
-              className="bg-primary hover:bg-primary/90 text-white"
+              className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
               onClick={handleSave}
               disabled={loading}
             >
