@@ -312,7 +312,7 @@ export default function Plans() {
                       <Button
                         size="sm"
                         onClick={() => handleDelete(p.id!)}
-                        className="bg-red-500 hover:bg-red-600 text-white"
+                        className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
                       >
                         <Trash2 className="h-4 w-4 mr-1" /> Supprimer
                       </Button>
