@@ -8,13 +8,17 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Car, Users, FileText, UserCheck, Loader2, AlertTriangle } from "lucide-react";
+import { Car, Users, FileText, UserCheck, Loader2, AlertTriangle, Calendar } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface Plan {
   id: string;
   name: string;
-  price: number;
+  price_6_months: number;
+  price_12_months: number;
+  discount_6_months: number;
+  discount_12_months: number;
   currency: string;
   max_vehicles: number;
   max_users: number;
@@ -43,11 +47,13 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [forceAssign, setForceAssign] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState<"6" | "12">("12");
 
   useEffect(() => {
     if (open) {
       loadPlans();
       setForceAssign(false);
+      setSelectedDuration("12");
     }
   }, [open]);
 
@@ -77,19 +83,19 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
   const handleAssignPlan = async (selectedPlan: Plan) => {
     if (!tenant || !currentUsage) return;
 
-    // Vérifier les violations de quotas
+    // Vérifier les violations de quotas (sauf si illimité = 0)
     const violations: string[] = [];
 
-    if (currentUsage.vehicles > selectedPlan.max_vehicles) {
+    if (selectedPlan.max_vehicles > 0 && currentUsage.vehicles > selectedPlan.max_vehicles) {
       violations.push(`véhicules (${currentUsage.vehicles}/${selectedPlan.max_vehicles})`);
     }
-    if (currentUsage.users > selectedPlan.max_users) {
+    if (selectedPlan.max_users > 0 && currentUsage.users > selectedPlan.max_users) {
       violations.push(`utilisateurs (${currentUsage.users}/${selectedPlan.max_users})`);
     }
-    if (currentUsage.contracts > selectedPlan.max_contracts) {
+    if (selectedPlan.max_contracts > 0 && currentUsage.contracts > selectedPlan.max_contracts) {
       violations.push(`contrats (${currentUsage.contracts}/${selectedPlan.max_contracts})`);
     }
-    if (currentUsage.clients > selectedPlan.max_clients) {
+    if (selectedPlan.max_clients > 0 && currentUsage.clients > selectedPlan.max_clients) {
       violations.push(`clients (${currentUsage.clients}/${selectedPlan.max_clients})`);
     }
 
@@ -158,19 +164,38 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
           </Alert>
         )}
 
-        <div className="flex items-center space-x-2 mb-4">
-          <Checkbox 
-            id="force-assign" 
-            checked={forceAssign}
-            onCheckedChange={(checked) => setForceAssign(checked as boolean)}
-          />
-          <Label 
-            htmlFor="force-assign" 
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 text-orange-400"
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Forcer l'assignation (ignorer les quotas dépassés)
-          </Label>
+        <div className="flex flex-col gap-4 mb-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2 text-emerald-400">
+              <Calendar className="h-4 w-4" />
+              Durée de l'abonnement
+            </Label>
+            <RadioGroup value={selectedDuration} onValueChange={(value) => setSelectedDuration(value as "6" | "12")} className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="6" id="duration-6" />
+                <Label htmlFor="duration-6" className="cursor-pointer">6 mois</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="12" id="duration-12" />
+                <Label htmlFor="duration-12" className="cursor-pointer">12 mois</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="force-assign" 
+              checked={forceAssign}
+              onCheckedChange={(checked) => setForceAssign(checked as boolean)}
+            />
+            <Label 
+              htmlFor="force-assign" 
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 text-orange-400"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Forcer l'assignation (ignorer les quotas dépassés)
+            </Label>
+          </div>
         </div>
 
         {loading ? (
@@ -181,11 +206,18 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {plans.map((plan) => {
               const isCurrentPlan = plan.id === currentPlanId;
+              
+              // Prix et remise selon la durée sélectionnée
+              const basePrice = selectedDuration === "6" ? plan.price_6_months : plan.price_12_months;
+              const discount = selectedDuration === "6" ? plan.discount_6_months : plan.discount_12_months;
+              const finalPrice = Math.round(basePrice * (1 - discount / 100));
+              
+              // Vérifier les violations (sauf si illimité = 0)
               const hasViolations = currentUsage && (
-                currentUsage.vehicles > plan.max_vehicles ||
-                currentUsage.users > plan.max_users ||
-                currentUsage.contracts > plan.max_contracts ||
-                currentUsage.clients > plan.max_clients
+                (plan.max_vehicles > 0 && currentUsage.vehicles > plan.max_vehicles) ||
+                (plan.max_users > 0 && currentUsage.users > plan.max_users) ||
+                (plan.max_contracts > 0 && currentUsage.contracts > plan.max_contracts) ||
+                (plan.max_clients > 0 && currentUsage.clients > plan.max_clients)
               );
 
               return (
@@ -210,29 +242,45 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
 
                   <CardHeader>
                     <CardTitle className="text-xl text-white">{plan.name}</CardTitle>
-                    <p className="text-3xl font-bold text-emerald-400">
-                      {plan.price} {plan.currency}
-                      <span className="text-sm text-gray-400 font-normal">/mois</span>
-                    </p>
+                    <div className="space-y-1">
+                      {discount > 0 ? (
+                        <>
+                          <p className="text-sm text-gray-400 line-through">
+                            {basePrice} {plan.currency}
+                          </p>
+                          <p className="text-3xl font-bold text-emerald-400">
+                            {finalPrice} {plan.currency}
+                          </p>
+                          <p className="text-xs text-emerald-400">
+                            -{discount}% de remise ({selectedDuration} mois)
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-3xl font-bold text-emerald-400">
+                          {finalPrice} {plan.currency}
+                          <span className="text-sm text-gray-400 font-normal"> / {selectedDuration} mois</span>
+                        </p>
+                      )}
+                    </div>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
                     <div className="space-y-2 text-sm">
-                      <div className={`flex items-center gap-2 ${currentUsage && currentUsage.vehicles > plan.max_vehicles ? 'text-red-400' : 'text-gray-300'}`}>
+                      <div className={`flex items-center gap-2 ${currentUsage && plan.max_vehicles > 0 && currentUsage.vehicles > plan.max_vehicles ? 'text-red-400' : 'text-gray-300'}`}>
                         <Car className="h-4 w-4 text-gray-400" />
-                        <span>{plan.max_vehicles} véhicules</span>
+                        <span>{plan.max_vehicles > 0 ? `${plan.max_vehicles} véhicules` : 'Véhicules illimités'}</span>
                       </div>
-                      <div className={`flex items-center gap-2 ${currentUsage && currentUsage.users > plan.max_users ? 'text-red-400' : 'text-gray-300'}`}>
+                      <div className={`flex items-center gap-2 ${currentUsage && plan.max_users > 0 && currentUsage.users > plan.max_users ? 'text-red-400' : 'text-gray-300'}`}>
                         <Users className="h-4 w-4 text-gray-400" />
-                        <span>{plan.max_users} utilisateurs</span>
+                        <span>{plan.max_users > 0 ? `${plan.max_users} utilisateurs` : 'Utilisateurs illimités'}</span>
                       </div>
-                      <div className={`flex items-center gap-2 ${currentUsage && currentUsage.contracts > plan.max_contracts ? 'text-red-400' : 'text-gray-300'}`}>
+                      <div className={`flex items-center gap-2 ${currentUsage && plan.max_contracts > 0 && currentUsage.contracts > plan.max_contracts ? 'text-red-400' : 'text-gray-300'}`}>
                         <FileText className="h-4 w-4 text-gray-400" />
-                        <span>{plan.max_contracts} contrats</span>
+                        <span>{plan.max_contracts > 0 ? `${plan.max_contracts} contrats` : 'Contrats illimités'}</span>
                       </div>
-                      <div className={`flex items-center gap-2 ${currentUsage && currentUsage.clients > plan.max_clients ? 'text-red-400' : 'text-gray-300'}`}>
+                      <div className={`flex items-center gap-2 ${currentUsage && plan.max_clients > 0 && currentUsage.clients > plan.max_clients ? 'text-red-400' : 'text-gray-300'}`}>
                         <UserCheck className="h-4 w-4 text-gray-400" />
-                        <span>{plan.max_clients} clients</span>
+                        <span>{plan.max_clients > 0 ? `${plan.max_clients} clients` : 'Clients illimités'}</span>
                       </div>
                     </div>
 
