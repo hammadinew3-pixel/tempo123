@@ -125,25 +125,25 @@ export default function ChoisirPack() {
                   <div className="flex items-center gap-2 text-gray-700">
                     <Car className="h-4 w-4 text-[#c01533]" />
                     <span className="text-sm">
-                      {plan.max_vehicles === -1 ? 'Véhicules illimités' : `${plan.max_vehicles} véhicules`}
+                      {!plan.max_vehicles || plan.max_vehicles === -1 ? 'Véhicules illimités' : `${plan.max_vehicles} véhicules`}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-700">
                     <Users className="h-4 w-4 text-[#c01533]" />
                     <span className="text-sm">
-                      {plan.max_users === -1 ? 'Utilisateurs illimités' : `${plan.max_users} utilisateur${plan.max_users > 1 ? 's' : ''}`}
+                      {!plan.max_users || plan.max_users === -1 ? 'Utilisateurs illimités' : `${plan.max_users} utilisateur${plan.max_users > 1 ? 's' : ''}`}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-700">
                     <FileText className="h-4 w-4 text-[#c01533]" />
                     <span className="text-sm">
-                      {plan.max_contracts === -1 ? 'Contrats illimités' : `${plan.max_contracts} contrats`}
+                      {!plan.max_contracts || plan.max_contracts === -1 ? 'Contrats illimités' : `${plan.max_contracts} contrats`}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-700">
                     <UserCircle className="h-4 w-4 text-[#c01533]" />
                     <span className="text-sm">
-                      {plan.max_clients === -1 ? 'Clients illimités' : `${plan.max_clients} clients`}
+                      {!plan.max_clients || plan.max_clients === -1 ? 'Clients illimités' : `${plan.max_clients} clients`}
                     </span>
                   </div>
                 </div>
