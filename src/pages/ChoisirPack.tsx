@@ -12,6 +12,7 @@ export default function ChoisirPack() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [duration, setDuration] = useState<6 | 12>(6);
 
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ['active-plans'],
@@ -111,21 +112,44 @@ export default function ChoisirPack() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-black mb-4">Choisissez votre pack CRSApp</h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 mb-6">
             Sélectionnez l'offre qui correspond le mieux à vos besoins
           </p>
+          
+          <div className="inline-flex items-center gap-2 bg-white rounded-lg p-1 shadow-md">
+            <button
+              onClick={() => setDuration(6)}
+              className={`px-6 py-2 rounded-md font-medium transition-all ${
+                duration === 6
+                  ? 'bg-[#c01533] text-white'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              6 mois
+            </button>
+            <button
+              onClick={() => setDuration(12)}
+              className={`px-6 py-2 rounded-md font-medium transition-all ${
+                duration === 12
+                  ? 'bg-[#c01533] text-white'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              12 mois
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan) => (
-            <Card key={plan.id} className="bg-white border-gray-200 shadow-lg hover:shadow-xl transition-shadow relative">
+            <Card key={plan.id} className="bg-white border-gray-200 shadow-lg hover:shadow-xl transition-shadow relative flex flex-col">
               <CardHeader>
                 <CardTitle className="text-2xl text-[#c01533]">{plan.name}</CardTitle>
                 {plan.description && (
                   <CardDescription className="text-gray-600">{plan.description}</CardDescription>
                 )}
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 flex-1 flex flex-col">
                 {/* Quotas */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-gray-700">
@@ -162,40 +186,23 @@ export default function ChoisirPack() {
                   </Badge>
                 )}
 
-
-                {/* Prix et boutons */}
-                <div className="space-y-3 pt-4">
-                  <div>
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-sm text-gray-600">6 mois</span>
-                      <span className="text-2xl font-bold text-[#c01533]">
-                        {plan.price_6_months} DH
-                      </span>
+                {/* Prix et bouton */}
+                <div className="mt-auto pt-4">
+                  <div className="text-center mb-4">
+                    <div className="text-3xl font-bold text-[#c01533]">
+                      {duration === 6 ? plan.price_6_months : plan.price_12_months} DH
                     </div>
-                    <Button
-                      onClick={() => handleSubscribe(plan.id, 6)}
-                      disabled={subscribing === `${plan.id}-6`}
-                      className="w-full bg-[#c01533] hover:bg-[#9a0f26] text-white"
-                    >
-                      {subscribing === `${plan.id}-6` ? "En cours..." : "Souscrire 6 mois"}
-                    </Button>
-                  </div>
-
-                  <div>
-                    <div className="flex items-baseline justify-between mb-2">
-                      <span className="text-sm text-gray-600">12 mois</span>
-                      <span className="text-2xl font-bold text-[#c01533]">
-                        {plan.price_12_months} DH
-                      </span>
+                    <div className="text-sm text-gray-500 mt-1">
+                      pour {duration} mois
                     </div>
-                    <Button
-                      onClick={() => handleSubscribe(plan.id, 12)}
-                      disabled={subscribing === `${plan.id}-12`}
-                      className="w-full bg-[#c01533] hover:bg-[#9a0f26] text-white"
-                    >
-                      {subscribing === `${plan.id}-12` ? "En cours..." : "Souscrire 12 mois"}
-                    </Button>
                   </div>
+                  <Button
+                    onClick={() => handleSubscribe(plan.id, duration)}
+                    disabled={subscribing === `${plan.id}-${duration}`}
+                    className="w-full bg-[#c01533] hover:bg-[#9a0f26] text-white"
+                  >
+                    {subscribing === `${plan.id}-${duration}` ? "En cours..." : "Souscrire"}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
