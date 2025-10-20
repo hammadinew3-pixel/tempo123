@@ -26,7 +26,7 @@ export default function AttenteValidation() {
             <p className="text-sm text-blue-700">
               <strong>📧 Vous recevrez un email</strong> dès que notre équipe aura validé votre paiement.
               <br />
-              <span className="text-xs text-blue-600">Délai habituel : moins de 24 heures</span>
+              <span className="text-xs text-blue-600">Délai de traitement : 1 à 2 heures</span>
             </p>
           </div>
 
