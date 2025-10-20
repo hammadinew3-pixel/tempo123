@@ -21,6 +21,7 @@ import {
   UserCheck,
   AlertCircle
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function TenantDetails() {
   const { id } = useParams();
@@ -194,7 +195,7 @@ export default function TenantDetails() {
           <CardTitle className="text-emerald-400 text-2xl">
             {plan ? plan.name : "Aucun plan assigné"}
           </CardTitle>
-          {plan && subscription && (
+          {plan && subscription ? (
             <div className="space-y-2 mt-2">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
@@ -245,7 +246,16 @@ export default function TenantDetails() {
                 </div>
               </div>
             </div>
-          )}
+          ) : plan ? (
+            <div className="mt-2">
+              <Alert className="bg-orange-900/20 border-orange-500/50">
+                <AlertCircle className="h-4 w-4 text-orange-400" />
+                <AlertDescription className="text-orange-200">
+                  Ce tenant a un plan assigné mais aucune subscription active. Veuillez cliquer sur "Changer le plan" pour assigner une durée d'abonnement.
+                </AlertDescription>
+              </Alert>
+            </div>
+          ) : null}
         </CardHeader>
 
         {plan && usage && (
