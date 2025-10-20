@@ -1,4 +1,4 @@
-import { Home, Building, Users, Settings, Layers } from "lucide-react";
+import { Home, Building, Users, Settings, Layers, Bell } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ import {
     { title: "Agences", url: "/admin/tenants", icon: Building },
     { title: "Utilisateurs", url: "/admin/users", icon: Users },
     { title: "Plans", url: "/admin/plans", icon: Layers },
+    { title: "Demandes Abonnement", url: "/admin/demandes-abonnement", icon: Bell },
     { title: "Paramètres", url: "/admin/settings", icon: Settings },
   ];
 
