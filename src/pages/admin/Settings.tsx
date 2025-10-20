@@ -75,13 +75,10 @@ export default function AdminSettings() {
   if (isLoading || !settings) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <SettingsIcon className="h-8 w-8 text-emerald-500" />
-          <h1 className="text-3xl font-bold text-white">Paramètres Globaux</h1>
-        </div>
+        <h1 className="text-3xl font-semibold text-black">Paramètres Globaux</h1>
         <div className="grid grid-cols-1 gap-4">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-48 bg-slate-800" />
+            <Skeleton key={i} className="h-48 bg-gray-200" />
           ))}
         </div>
       </div>
@@ -89,53 +86,56 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <SettingsIcon className="h-8 w-8 text-emerald-500" />
-          <h1 className="text-3xl font-bold text-white">Paramètres Globaux</h1>
+        <div>
+          <h1 className="text-3xl font-semibold text-black flex items-center gap-3">
+            <SettingsIcon className="h-8 w-8 text-[#c01533]" />
+            Paramètres Globaux
+          </h1>
+          <p className="text-gray-500 mt-1">Configuration générale de la plateforme</p>
         </div>
         <Button
           onClick={handleSave}
           disabled={updateMutation.isPending}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white"
+          className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
         >
           <Save className="h-4 w-4 mr-2" />
           {updateMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
         </Button>
       </div>
 
-      {/* Paramètres Système */}
-      <Card className="bg-slate-900 border-slate-800 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Globe className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-xl font-semibold text-white">Paramètres Système</h2>
+      {/* System Settings */}
+      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Globe className="h-5 w-5 text-[#c01533]" />
+          <h2 className="text-xl font-semibold text-black">Paramètres Système</h2>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <Label htmlFor="platform_name" className="text-gray-300">Nom de la plateforme</Label>
+            <Label htmlFor="platform_name" className="text-gray-700 font-medium">Nom de la plateforme</Label>
             <Input
               id="platform_name"
               value={settings.platform_name}
               onChange={(e) => setSettings({ ...settings, platform_name: e.target.value })}
-              className="bg-slate-800 border-slate-700 text-white mt-1"
+              className="bg-white border-gray-300 text-black mt-2"
             />
           </div>
           <div>
-            <Label htmlFor="support_email" className="text-gray-300">Email de support</Label>
+            <Label htmlFor="support_email" className="text-gray-700 font-medium">Email de support</Label>
             <Input
               id="support_email"
               type="email"
               value={settings.support_email || ''}
               onChange={(e) => setSettings({ ...settings, support_email: e.target.value })}
-              className="bg-slate-800 border-slate-700 text-white mt-1"
+              className="bg-white border-gray-300 text-black mt-2"
               placeholder="support@crsapp.com"
             />
           </div>
-          <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div>
-              <Label htmlFor="maintenance_mode" className="text-white font-medium">Mode maintenance</Label>
-              <p className="text-sm text-gray-400">Activer pour mettre la plateforme en maintenance</p>
+              <Label htmlFor="maintenance_mode" className="text-black font-medium">Mode maintenance</Label>
+              <p className="text-sm text-gray-500 mt-1">Activer pour mettre la plateforme en maintenance</p>
             </div>
             <Switch
               id="maintenance_mode"
@@ -147,15 +147,15 @@ export default function AdminSettings() {
       </Card>
 
       {/* Notifications */}
-      <Card className="bg-slate-900 border-slate-800 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Bell className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-xl font-semibold text-white">Notifications</h2>
+      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Bell className="h-5 w-5 text-[#c01533]" />
+          <h2 className="text-xl font-semibold text-black">Notifications</h2>
         </div>
-        <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
           <div>
-            <Label htmlFor="email_alerts" className="text-white font-medium">Alertes par email</Label>
-            <p className="text-sm text-gray-400">Recevoir des notifications par email pour les événements importants</p>
+            <Label htmlFor="email_alerts" className="text-black font-medium">Alertes par email</Label>
+            <p className="text-sm text-gray-500 mt-1">Recevoir des notifications par email pour les événements importants</p>
           </div>
           <Switch
             id="email_alerts"
@@ -166,26 +166,26 @@ export default function AdminSettings() {
       </Card>
 
       {/* Logs & Audit */}
-      <Card className="bg-slate-900 border-slate-800 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="h-5 w-5 text-emerald-500" />
-          <h2 className="text-xl font-semibold text-white">Logs & Audit</h2>
+      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <FileText className="h-5 w-5 text-[#c01533]" />
+          <h2 className="text-xl font-semibold text-black">Logs & Audit</h2>
         </div>
         <div>
-          <Label htmlFor="log_retention" className="text-gray-300">Durée de rétention des logs (jours)</Label>
+          <Label htmlFor="log_retention" className="text-gray-700 font-medium">Durée de rétention des logs (jours)</Label>
           <Input
             id="log_retention"
             type="number"
             value={settings.log_retention_days}
             onChange={(e) => setSettings({ ...settings, log_retention_days: parseInt(e.target.value) })}
-            className="bg-slate-800 border-slate-700 text-white mt-1"
+            className="bg-white border-gray-300 text-black mt-2"
           />
-          <p className="text-sm text-gray-400 mt-2">Les logs plus anciens seront automatiquement supprimés</p>
+          <p className="text-sm text-gray-500 mt-2">Les logs plus anciens seront automatiquement supprimés</p>
         </div>
       </Card>
 
-      <Card className="bg-slate-900 border-slate-800 p-6">
-        <p className="text-gray-400 text-center">
+      <Card className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+        <p className="text-gray-600 text-center text-sm">
           Ces paramètres s'appliquent à l'ensemble de la plateforme et affectent toutes les agences.
         </p>
       </Card>

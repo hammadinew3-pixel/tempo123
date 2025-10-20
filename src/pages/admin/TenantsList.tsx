@@ -68,7 +68,6 @@ export default function TenantsList() {
 
   const deleteTenantMutation = useMutation({
     mutationFn: async (tenantId: string) => {
-      // Supprimer toutes les données liées au tenant
       const { error } = await supabase
         .from('tenants')
         .delete()
@@ -105,13 +104,10 @@ export default function TenantsList() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Building className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-white">Liste des Agences</h1>
-        </div>
+        <h1 className="text-3xl font-semibold text-black">Liste des Agences</h1>
         <div className="space-y-2">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-16 bg-slate-800" />
+            <Skeleton key={i} className="h-16 bg-gray-200" />
           ))}
         </div>
       </div>
@@ -119,67 +115,71 @@ export default function TenantsList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-          <Building className="h-8 w-8 text-primary" />
-          Liste des Agences
-        </h1>
-        <p className="text-gray-400 text-sm">
-          {tenants.length} agence(s) au total
-        </p>
+        <div>
+          <h1 className="text-3xl font-semibold text-black flex items-center gap-3">
+            <Building className="h-8 w-8 text-[#c01533]" />
+            Liste des Agences
+          </h1>
+          <p className="text-gray-500 mt-1">
+            {tenants.length} agence(s) au total
+          </p>
+        </div>
       </div>
 
-      <Card className="bg-card border-border overflow-hidden">
+      <Card className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-800">
-            <thead className="bg-slate-800/50">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Nom de l'agence
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Slug
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Date de création
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Statut
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Plan
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-gray-200 bg-white">
               {tenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-slate-800/50 transition">
+                <tr key={tenant.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <Building className="h-4 w-4 text-primary mr-2" />
-                      <span className="text-white font-medium">{tenant.name}</span>
+                      <Building className="h-4 w-4 text-[#c01533] mr-2" />
+                      <span className="text-black font-medium">{tenant.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-400 text-sm">
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-600 text-sm">
                     {tenant.slug}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-400 text-sm">
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-600 text-sm">
                     {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge
-                      variant={tenant.is_active ? "default" : "destructive"}
-                      className={tenant.is_active ? "bg-primary/10 text-primary" : ""}
+                      className={tenant.is_active 
+                        ? "bg-green-50 text-green-600 border border-green-200" 
+                        : "bg-red-50 text-red-600 border border-red-200"
+                      }
                     >
                       {tenant.is_active ? "Actif" : "Suspendu"}
                     </Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded bg-slate-700 text-gray-300">
+                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-700 border border-gray-200">
                       {tenant.plans?.name || tenant.subscription_plan || 'Aucun plan'}
                     </span>
                   </td>
@@ -189,7 +189,7 @@ export default function TenantsList() {
                         size="sm"
                         variant="ghost"
                         onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
-                        className="text-primary hover:text-primary/80 hover:bg-accent"
+                        className="text-[#c01533] hover:text-[#9a0f26] hover:bg-red-50"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Détails
@@ -201,20 +201,19 @@ export default function TenantsList() {
                           setSelectedTenant(tenant);
                           setShowPlanDialog(true);
                         }}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-slate-800"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                       >
                         <Layers className="h-4 w-4 mr-1" />
                         Plan
                       </Button>
                       <Button
                         size="sm"
-                        variant="ghost"
                         onClick={() => handleToggleStatus(tenant)}
                         disabled={toggleStatusMutation.isPending}
                         className={
                           tenant.is_active
-                            ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                            : "bg-primary/10 hover:bg-primary/20 text-primary"
+                            ? "bg-red-500 hover:bg-red-600 text-white"
+                            : "bg-green-500 hover:bg-green-600 text-white"
                         }
                       >
                         <Power className="h-4 w-4 mr-1" />
@@ -225,7 +224,7 @@ export default function TenantsList() {
                         variant="ghost"
                         onClick={() => handleDeleteClick(tenant)}
                         disabled={deleteTenantMutation.isPending}
-                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                        className="bg-red-50 hover:bg-red-100 text-red-600"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Supprimer
@@ -241,12 +240,12 @@ export default function TenantsList() {
 
       {tenants.length === 0 && (
         <div className="text-center py-12">
-          <Building className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400">Aucune agence enregistrée</p>
+          <Building className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Aucune agence enregistrée</p>
         </div>
       )}
 
-      {/* Dialog d'assignation de plan */}
+      {/* Plan Assignment Dialog */}
       {selectedTenant && (
         <AssignPlanDialog
           open={showPlanDialog}
@@ -255,22 +254,22 @@ export default function TenantsList() {
         />
       )}
 
-      {/* Dialog de confirmation de suppression */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white border-gray-200">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-black">Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
               Êtes-vous sûr de vouloir supprimer l'agence "{tenantToDelete?.name}" ?
               Cette action est irréversible et supprimera toutes les données associées
               (utilisateurs, véhicules, clients, contrats, etc.).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel className="border-gray-300">Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-red-500 hover:bg-red-600 text-white"
             >
               Supprimer définitivement
             </AlertDialogAction>
