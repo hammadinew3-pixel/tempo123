@@ -147,11 +147,11 @@ export default function Calendrier() {
     setShowAvailabilityDialog(true);
     
     try {
-      // Get all vehicles
+      // Get all active vehicles (not just 'disponible')
       const { data: allVehicles, error: vehiclesError } = await supabase
         .from('vehicles')
         .select('*')
-        .eq('statut', 'disponible');
+        .eq('en_service', true);
 
       if (vehiclesError) throw vehiclesError;
 
