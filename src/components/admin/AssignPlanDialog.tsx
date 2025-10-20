@@ -63,8 +63,7 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
       const { data, error } = await supabase
         .from('plans')
         .select('*')
-        .eq('is_active', true)
-        .order('price', { ascending: true });
+        .eq('is_active', true);
 
       if (error) throw error;
       setPlans(data || []);
