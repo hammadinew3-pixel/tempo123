@@ -118,6 +118,12 @@ export default function Register() {
 
         if (subError) throw subError;
 
+        // Mettre à jour le statut du tenant à "pending_payment"
+        await supabase
+          .from('tenants')
+          .update({ status: 'pending_payment' })
+          .eq('id', userTenant.tenant_id);
+
         toast({
           title: "✅ Inscription réussie",
           description: "Vous allez être redirigé vers la page de paiement",
@@ -125,7 +131,7 @@ export default function Register() {
 
         navigate(`/paiement?subscription_id=${subscription.id}`);
       } else {
-        // Rediriger vers le choix du pack
+        // Pas de plan sélectionné, laisser le statut "pending_selection"
         toast({
           title: "✅ Inscription réussie",
           description: "Veuillez choisir votre pack",

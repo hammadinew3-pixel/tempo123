@@ -71,6 +71,12 @@ export default function ChoisirPack() {
 
       if (subError) throw subError;
 
+      // Mettre à jour le statut du tenant à "pending_payment"
+      await supabase
+        .from('tenants')
+        .update({ status: 'pending_payment' })
+        .eq('id', userTenant.tenant_id);
+
       toast({
         title: "✅ Pack sélectionné",
         description: "Vous allez être redirigé vers la page de paiement",

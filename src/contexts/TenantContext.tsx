@@ -10,6 +10,7 @@ interface Tenant {
   name: string;
   slug: string;
   is_active: boolean;
+  status?: string;
 }
 
 interface TenantContextType {
@@ -115,7 +116,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
             id,
             name,
             slug,
-            is_active
+            is_active,
+            status
           )
         `)
         .eq('user_id', user.id)

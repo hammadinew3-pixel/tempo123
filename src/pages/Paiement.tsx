@@ -134,6 +134,12 @@ export default function Paiement() {
 
       if (updateError) throw updateError;
 
+      // Mettre à jour le statut du tenant à "awaiting_verification"
+      await supabase
+        .from('tenants')
+        .update({ status: 'awaiting_verification' })
+        .eq('id', subscriptionData.tenant_id);
+
       toast({
         title: "✅ Justificatif envoyé",
         description: "Nous validerons votre paiement sous 24 heures.",
@@ -181,14 +187,48 @@ export default function Paiement() {
     );
   }
 
+  // Affichage conditionnel selon le statut
+  const tenantStatus = subscriptionData?.tenant?.status;
+  const subscriptionStatus = subscriptionData?.status;
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* En-tête */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-black mb-2">Finaliser votre abonnement</h1>
-          <p className="text-gray-600">Dernière étape avant d'accéder à CRSApp</p>
+          <p className="text-gray-600">
+            {subscriptionStatus === 'awaiting_verification' || tenantStatus === 'awaiting_verification'
+              ? 'Votre paiement est en cours de vérification'
+              : 'Dernière étape avant d\'accéder à CRSApp'
+            }
+          </p>
         </div>
+
+        {/* Message selon le statut */}
+        {(subscriptionStatus === 'awaiting_verification' || tenantStatus === 'awaiting_verification') && (
+          <Alert className="bg-blue-50 border-blue-200">
+            <AlertDescription className="text-blue-700">
+              ✅ Votre justificatif est en cours de vérification. Vous recevrez un email dès validation (sous 24h).
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {(subscriptionStatus === 'awaiting_payment' || tenantStatus === 'pending_payment') && (
+          <Alert className="bg-orange-50 border-orange-200">
+            <AlertDescription className="text-orange-700">
+              💳 Veuillez finaliser votre paiement pour activer votre compte.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {tenantStatus === 'suspended' && (
+          <Alert className="bg-red-50 border-red-200">
+            <AlertDescription className="text-red-700">
+              ⚠️ Votre abonnement est suspendu. Renouvelez-le pour continuer.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Résumé de la souscription */}
         <Card className="bg-white border-gray-200 shadow-md">
