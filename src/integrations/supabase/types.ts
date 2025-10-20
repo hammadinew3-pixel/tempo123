@@ -1037,6 +1037,8 @@ export type Database = {
           created_at: string | null
           currency: string
           description: string | null
+          discount_12_months: number | null
+          discount_6_months: number | null
           discount_percent: number | null
           id: string
           is_active: boolean
@@ -1055,6 +1057,8 @@ export type Database = {
           created_at?: string | null
           currency?: string
           description?: string | null
+          discount_12_months?: number | null
+          discount_6_months?: number | null
           discount_percent?: number | null
           id?: string
           is_active?: boolean
@@ -1073,6 +1077,8 @@ export type Database = {
           created_at?: string | null
           currency?: string
           description?: string | null
+          discount_12_months?: number | null
+          discount_6_months?: number | null
           discount_percent?: number | null
           id?: string
           is_active?: boolean

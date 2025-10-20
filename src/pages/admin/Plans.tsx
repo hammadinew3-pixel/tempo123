@@ -30,7 +30,8 @@ type Plan = {
   price: number;
   price_6_months?: number;
   price_12_months?: number;
-  discount_percent?: number;
+  discount_6_months?: number;
+  discount_12_months?: number;
   currency: string;
   max_vehicles: number;
   max_users: number;
@@ -53,7 +54,8 @@ export default function Plans() {
     price: 0,
     price_6_months: 0,
     price_12_months: 0,
-    discount_percent: 0,
+    discount_6_months: 0,
+    discount_12_months: 0,
     currency: "MAD",
     max_vehicles: 0,
     max_users: 0,
@@ -129,7 +131,8 @@ export default function Plans() {
       price: 0,
       price_6_months: 0,
       price_12_months: 0,
-      discount_percent: 0,
+      discount_6_months: 0,
+      discount_12_months: 0,
       currency: "MAD",
       max_vehicles: 0,
       max_users: 0,
@@ -204,7 +207,8 @@ export default function Plans() {
               price: 0,
               price_6_months: 0,
               price_12_months: 0,
-              discount_percent: 0,
+              discount_6_months: 0,
+              discount_12_months: 0,
               currency: "MAD",
               max_vehicles: 0,
               max_users: 0,
@@ -230,7 +234,8 @@ export default function Plans() {
                 <th className="px-6 py-3 text-left">Nom</th>
                 <th className="px-6 py-3 text-left">Prix 6 mois</th>
                 <th className="px-6 py-3 text-left">Prix 12 mois</th>
-                <th className="px-6 py-3 text-left">Remise</th>
+                <th className="px-6 py-3 text-left">Remise 6M</th>
+                <th className="px-6 py-3 text-left">Remise 12M</th>
                 <th className="px-6 py-3 text-left">Quotas</th>
                 <th className="px-6 py-3 text-left">Assistance</th>
                 <th className="px-6 py-3 text-left">Statut</th>
@@ -248,13 +253,16 @@ export default function Plans() {
                     {p.price_12_months || 0} DH
                   </td>
                   <td className="px-6 py-4 text-gray-300">
-                    {p.discount_percent || 0}%
+                    {p.discount_6_months || 0}%
+                  </td>
+                  <td className="px-6 py-4 text-gray-300">
+                    {p.discount_12_months || 0}%
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-400">
-                    {p.max_vehicles} véhicules<br />
-                    {p.max_users} utilisateurs<br />
-                    {p.max_contracts} contrats<br />
-                    {p.max_clients} clients
+                    {p.max_vehicles === 0 ? 'Illimité' : p.max_vehicles} véhicules<br />
+                    {p.max_users === 0 ? 'Illimité' : p.max_users} utilisateurs<br />
+                    {p.max_contracts === 0 ? 'Illimité' : p.max_contracts} contrats<br />
+                    {p.max_clients === 0 ? 'Illimité' : p.max_clients} clients
                   </td>
                   <td className="px-6 py-4">
                     {p.module_assistance ? (
@@ -344,7 +352,7 @@ export default function Plans() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-gray-300">Prix 6 mois (DH HT) *</Label>
                   <Input
@@ -358,6 +366,33 @@ export default function Plans() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-gray-300">Remise 6 mois (%)</Label>
+                  <Input
+                    placeholder="0"
+                    type="number"
+                    value={form.discount_6_months}
+                    onChange={(e) =>
+                      setForm({ ...form, discount_6_months: parseFloat(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+
+              {/* Affichage du prix remisé pour 6 mois */}
+              {form.discount_6_months && form.discount_6_months > 0 && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  <p className="text-sm text-emerald-400">
+                    💰 Prix remisé pour 6 mois :{" "}
+                    <strong className="text-emerald-300">
+                      {Math.round((form.price_6_months || 0) * (1 - (form.discount_6_months || 0) / 100))} DH HT
+                    </strong>
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label className="text-gray-300">Prix 12 mois (DH HT) *</Label>
                   <Input
                     placeholder="0"
@@ -370,32 +405,26 @@ export default function Plans() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Remise (%)</Label>
+                  <Label className="text-gray-300">Remise 12 mois (%)</Label>
                   <Input
                     placeholder="0"
                     type="number"
-                    value={form.discount_percent}
+                    value={form.discount_12_months}
                     onChange={(e) =>
-                      setForm({ ...form, discount_percent: parseFloat(e.target.value) || 0 })
+                      setForm({ ...form, discount_12_months: parseFloat(e.target.value) || 0 })
                     }
                     className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
                   />
                 </div>
               </div>
 
-              {/* Affichage du prix remisé */}
-              {form.discount_percent && form.discount_percent > 0 && (
+              {/* Affichage du prix remisé pour 12 mois */}
+              {form.discount_12_months && form.discount_12_months > 0 && (
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
                   <p className="text-sm text-emerald-400">
-                    💰 Prix remisé pour 6 mois :{" "}
-                    <strong className="text-emerald-300">
-                      {Math.round((form.price_6_months || 0) * (1 - (form.discount_percent || 0) / 100))} DH HT
-                    </strong>
-                  </p>
-                  <p className="text-sm text-emerald-400 mt-1">
                     💰 Prix remisé pour 12 mois :{" "}
                     <strong className="text-emerald-300">
-                      {Math.round((form.price_12_months || 0) * (1 - (form.discount_percent || 0) / 100))} DH HT
+                      {Math.round((form.price_12_months || 0) * (1 - (form.discount_12_months || 0) / 100))} DH HT
                     </strong>
                   </p>
                 </div>
