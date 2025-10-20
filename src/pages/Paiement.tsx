@@ -52,7 +52,7 @@ export default function Paiement() {
       return data;
     }
   });
-  const motif = subscriptionData ? `abonnement${subscriptionData.tenant.name.replace(/\s/g, '')}${subscriptionData.duration}moisCRSApp` : '';
+  const motif = subscriptionData ? `${subscriptionData.tenant.name.replace(/\s/g, '')}${subscriptionData.duration}moiscrsapp` : '';
   const price = subscriptionData?.plan ? subscriptionData.duration === 6 ? subscriptionData.plan.price_6_months : subscriptionData.plan.price_12_months : 0;
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
