@@ -184,9 +184,44 @@ export default function TenantDetails() {
             {plan ? plan.name : "Aucun plan assigné"}
           </CardTitle>
           {plan && (
-            <p className="text-gray-400 text-sm">
-              {plan.price} {plan.currency} / mois
-            </p>
+            <div className="space-y-2 mt-2">
+              <div className="flex gap-4 text-sm">
+                <div>
+                  <span className="text-gray-400">6 mois : </span>
+                  <span className="text-white font-semibold">
+                    {plan.discount_6_months > 0 ? (
+                      <>
+                        <span className="line-through text-gray-500">{plan.price_6_months}</span>
+                        {' '}
+                        <span className="text-emerald-400">
+                          {Math.round(plan.price_6_months * (1 - plan.discount_6_months / 100))} {plan.currency}
+                        </span>
+                        <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_6_months}%)</span>
+                      </>
+                    ) : (
+                      <>{plan.price_6_months} {plan.currency}</>
+                    )}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-400">12 mois : </span>
+                  <span className="text-white font-semibold">
+                    {plan.discount_12_months > 0 ? (
+                      <>
+                        <span className="line-through text-gray-500">{plan.price_12_months}</span>
+                        {' '}
+                        <span className="text-emerald-400">
+                          {Math.round(plan.price_12_months * (1 - plan.discount_12_months / 100))} {plan.currency}
+                        </span>
+                        <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_12_months}%)</span>
+                      </>
+                    ) : (
+                      <>{plan.price_12_months} {plan.currency}</>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
         </CardHeader>
 
@@ -205,12 +240,12 @@ export default function TenantDetails() {
                       <Car className="h-4 w-4" />
                       Véhicules
                     </span>
-                    <span className={`font-medium ${usage.vehicles > plan.max_vehicles ? 'text-red-400' : 'text-white'}`}>
-                      {usage.vehicles} / {plan.max_vehicles}
+                    <span className={`font-medium ${plan.max_vehicles > 0 && usage.vehicles > plan.max_vehicles ? 'text-red-400' : 'text-white'}`}>
+                      {usage.vehicles} / {plan.max_vehicles > 0 ? plan.max_vehicles : '∞'}
                     </span>
                   </div>
-                  <Progress value={Math.min((usage.vehicles / plan.max_vehicles) * 100, 100)} className="h-2" />
-                  {usage.vehicles > plan.max_vehicles && (
+                  <Progress value={plan.max_vehicles > 0 ? Math.min((usage.vehicles / plan.max_vehicles) * 100, 100) : 0} className="h-2" />
+                  {plan.max_vehicles > 0 && usage.vehicles > plan.max_vehicles && (
                     <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.vehicles - plan.max_vehicles}
@@ -225,12 +260,12 @@ export default function TenantDetails() {
                       <Users className="h-4 w-4" />
                       Utilisateurs
                     </span>
-                    <span className={`font-medium ${usage.users > plan.max_users ? 'text-red-400' : 'text-white'}`}>
-                      {usage.users} / {plan.max_users}
+                    <span className={`font-medium ${plan.max_users > 0 && usage.users > plan.max_users ? 'text-red-400' : 'text-white'}`}>
+                      {usage.users} / {plan.max_users > 0 ? plan.max_users : '∞'}
                     </span>
                   </div>
-                  <Progress value={Math.min((usage.users / plan.max_users) * 100, 100)} className="h-2" />
-                  {usage.users > plan.max_users && (
+                  <Progress value={plan.max_users > 0 ? Math.min((usage.users / plan.max_users) * 100, 100) : 0} className="h-2" />
+                  {plan.max_users > 0 && usage.users > plan.max_users && (
                     <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.users - plan.max_users}
@@ -245,12 +280,12 @@ export default function TenantDetails() {
                       <FileText className="h-4 w-4" />
                       Contrats
                     </span>
-                    <span className={`font-medium ${usage.contracts > plan.max_contracts ? 'text-red-400' : 'text-white'}`}>
-                      {usage.contracts} / {plan.max_contracts}
+                    <span className={`font-medium ${plan.max_contracts > 0 && usage.contracts > plan.max_contracts ? 'text-red-400' : 'text-white'}`}>
+                      {usage.contracts} / {plan.max_contracts > 0 ? plan.max_contracts : '∞'}
                     </span>
                   </div>
-                  <Progress value={Math.min((usage.contracts / plan.max_contracts) * 100, 100)} className="h-2" />
-                  {usage.contracts > plan.max_contracts && (
+                  <Progress value={plan.max_contracts > 0 ? Math.min((usage.contracts / plan.max_contracts) * 100, 100) : 0} className="h-2" />
+                  {plan.max_contracts > 0 && usage.contracts > plan.max_contracts && (
                     <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.contracts - plan.max_contracts}
@@ -265,12 +300,12 @@ export default function TenantDetails() {
                       <UserCheck className="h-4 w-4" />
                       Clients
                     </span>
-                    <span className={`font-medium ${usage.clients > plan.max_clients ? 'text-red-400' : 'text-white'}`}>
-                      {usage.clients} / {plan.max_clients}
+                    <span className={`font-medium ${plan.max_clients > 0 && usage.clients > plan.max_clients ? 'text-red-400' : 'text-white'}`}>
+                      {usage.clients} / {plan.max_clients > 0 ? plan.max_clients : '∞'}
                     </span>
                   </div>
-                  <Progress value={Math.min((usage.clients / plan.max_clients) * 100, 100)} className="h-2" />
-                  {usage.clients > plan.max_clients && (
+                  <Progress value={plan.max_clients > 0 ? Math.min((usage.clients / plan.max_clients) * 100, 100) : 0} className="h-2" />
+                  {plan.max_clients > 0 && usage.clients > plan.max_clients && (
                     <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.clients - plan.max_clients}
