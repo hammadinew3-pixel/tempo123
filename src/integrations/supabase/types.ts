@@ -2441,6 +2441,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_subscription_for_current_tenant: {
+        Args: { _duration: number; _plan_id: string }
+        Returns: string
+      }
       generate_assistance_number: {
         Args: { p_tenant_id: string }
         Returns: string

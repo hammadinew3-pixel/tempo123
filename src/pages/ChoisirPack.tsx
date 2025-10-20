@@ -44,93 +44,23 @@ export default function ChoisirPack() {
         return;
       }
 
-      // Étape 1: Récupérer le tenant avec is_active = true
-      const { data: userTenant, error: tenantError } = await supabase
-        .from('user_tenants')
-        .select('tenant_id')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
+      // Utiliser la fonction RPC sécurisée pour créer la souscription
+      const { data: newSubscriptionId, error: rpcError } = await supabase.rpc(
+        'create_subscription_for_current_tenant',
+        {
+          _plan_id: planId,
+          _duration: duration,
+        }
+      );
 
-      if (tenantError) throw tenantError;
-
-      // Debug logs - Étape 1
-      console.log('=== DEBUG SUBSCRIPTION ===');
-      console.log('User ID:', user.id);
-      console.log('Tenant ID:', userTenant.tenant_id);
-
-      // Vérifier le rôle de l'utilisateur
-      const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('tenant_id', userTenant.tenant_id);
-      console.log('User roles:', userRole);
-
-      // Tester les fonctions RLS
-      const { data: hasAdminRole } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
-      console.log('Has admin role (from function):', hasAdminRole);
-
-      const { data: tenantIdFromFunc } = await supabase.rpc('get_user_tenant_id', {
-        _user_id: user.id
-      });
-      console.log('Tenant ID (from function):', tenantIdFromFunc);
-
-      // Étape 3: Vérifier explicitement le rôle admin
-      const { data: roleCheck, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('tenant_id', userTenant.tenant_id)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (!roleCheck) {
-        toast({
-          title: "Erreur",
-          description: "Vous devez être administrateur pour souscrire à un pack",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Admin role check passed:', roleCheck);
-
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + duration);
-
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .insert({
-          tenant_id: userTenant.tenant_id,
-          plan_id: planId,
-          duration: duration,
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0],
-          is_active: false,
-          status: 'awaiting_payment'
-        })
-        .select()
-        .single();
-
-      if (subError) throw subError;
-
-      // Mettre à jour le statut du tenant à "pending_payment"
-      await supabase
-        .from('tenants')
-        .update({ status: 'pending_payment' })
-        .eq('id', userTenant.tenant_id);
+      if (rpcError) throw rpcError;
 
       toast({
         title: "✅ Pack sélectionné",
         description: "Vous allez être redirigé vers la page de paiement",
       });
 
-      navigate(`/paiement?subscription_id=${subscription.id}`);
+      navigate(`/paiement?subscription_id=${newSubscriptionId}`);
     } catch (error: any) {
       console.error('Erreur souscription:', error);
       toast({
