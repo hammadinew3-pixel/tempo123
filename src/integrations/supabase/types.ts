@@ -1392,6 +1392,57 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          duration: number
+          end_date: string
+          id: string
+          is_active: boolean
+          plan_id: string
+          start_date: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration: number
+          end_date: string
+          id?: string
+          is_active?: boolean
+          plan_id: string
+          start_date?: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          plan_id?: string
+          start_date?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       super_admin_settings: {
         Row: {
           created_at: string | null

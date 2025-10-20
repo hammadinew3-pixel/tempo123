@@ -109,19 +109,47 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
       return;
     }
 
-    // Mettre à jour le plan
+    // Calculer la date de fin
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + parseInt(selectedDuration));
+
+    // Mettre à jour le plan et créer la subscription
     try {
       setUpdating(true);
-      const { error } = await supabase
+      
+      // 1. Désactiver les anciennes subscriptions
+      await supabase
+        .from('subscriptions')
+        .update({ is_active: false })
+        .eq('tenant_id', tenant.id)
+        .eq('is_active', true);
+
+      // 2. Créer la nouvelle subscription
+      const { error: subError } = await supabase
+        .from('subscriptions')
+        .insert({
+          tenant_id: tenant.id,
+          plan_id: selectedPlan.id,
+          duration: parseInt(selectedDuration),
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0],
+          is_active: true
+        });
+
+      if (subError) throw subError;
+
+      // 3. Mettre à jour le plan_id du tenant
+      const { error: tenantError } = await supabase
         .from('tenants')
         .update({ plan_id: selectedPlan.id })
         .eq('id', tenant.id);
 
-      if (error) throw error;
+      if (tenantError) throw tenantError;
 
       toast({
         title: "Plan assigné avec succès !",
-        description: `Le plan "${selectedPlan.name}" a été assigné à l'agence "${tenant.name}".${violations.length > 0 ? ' ⚠️ Quota dépassé' : ''}`,
+        description: `Le plan "${selectedPlan.name}" (${selectedDuration} mois) a été assigné à l'agence "${tenant.name}".${violations.length > 0 ? ' ⚠️ Quota dépassé' : ''}`,
         duration: 6000,
       });
 

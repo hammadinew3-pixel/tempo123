@@ -35,7 +35,7 @@ export default function TenantDetails() {
     queryClient.invalidateQueries({ queryKey: ['tenant-plan'] });
   };
 
-  // Récupérer les détails du tenant avec son plan
+  // Récupérer les détails du tenant avec son plan et sa subscription active
   const { data: tenant, isLoading } = useQuery({
     queryKey: ['tenant-details', id],
     queryFn: async () => {
@@ -43,10 +43,18 @@ export default function TenantDetails() {
         .from('tenants')
         .select(`
           *,
-          plans (*)
+          plans (*),
+          subscriptions!inner (
+            id,
+            duration,
+            start_date,
+            end_date,
+            is_active
+          )
         `)
         .eq('id', id)
-        .single();
+        .eq('subscriptions.is_active', true)
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -123,6 +131,9 @@ export default function TenantDetails() {
   }
 
   const plan = tenant.plans;
+  const subscription = tenant.subscriptions?.[0];
+  const duration = subscription?.duration || 12;
+  const endDate = subscription?.end_date;
 
   return (
     <div className="p-6 space-y-6">
@@ -183,42 +194,54 @@ export default function TenantDetails() {
           <CardTitle className="text-emerald-400 text-2xl">
             {plan ? plan.name : "Aucun plan assigné"}
           </CardTitle>
-          {plan && (
+          {plan && subscription && (
             <div className="space-y-2 mt-2">
-              <div className="flex gap-4 text-sm">
-                <div>
-                  <span className="text-gray-400">6 mois : </span>
-                  <span className="text-white font-semibold">
-                    {plan.discount_6_months > 0 ? (
-                      <>
-                        <span className="line-through text-gray-500">{plan.price_6_months}</span>
-                        {' '}
-                        <span className="text-emerald-400">
-                          {Math.round(plan.price_6_months * (1 - plan.discount_6_months / 100))} {plan.currency}
-                        </span>
-                        <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_6_months}%)</span>
-                      </>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-emerald-400" />
+                  <span className="text-white font-semibold text-lg">
+                    {duration === 6 ? (
+                      plan.discount_6_months > 0 ? (
+                        <>
+                          <span className="line-through text-gray-500 text-sm">{plan.price_6_months}</span>
+                          {' '}
+                          <span className="text-emerald-400">
+                            {Math.round(plan.price_6_months * (1 - plan.discount_6_months / 100))} {plan.currency}
+                          </span>
+                          <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_6_months}%)</span>
+                        </>
+                      ) : (
+                        <>{plan.price_6_months} {plan.currency}</>
+                      )
                     ) : (
-                      <>{plan.price_6_months} {plan.currency}</>
+                      plan.discount_12_months > 0 ? (
+                        <>
+                          <span className="line-through text-gray-500 text-sm">{plan.price_12_months}</span>
+                          {' '}
+                          <span className="text-emerald-400">
+                            {Math.round(plan.price_12_months * (1 - plan.discount_12_months / 100))} {plan.currency}
+                          </span>
+                          <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_12_months}%)</span>
+                        </>
+                      ) : (
+                        <>{plan.price_12_months} {plan.currency}</>
+                      )
                     )}
+                    <span className="text-sm text-gray-400 font-normal"> / {duration} mois</span>
                   </span>
                 </div>
-                <div>
-                  <span className="text-gray-400">12 mois : </span>
-                  <span className="text-white font-semibold">
-                    {plan.discount_12_months > 0 ? (
-                      <>
-                        <span className="line-through text-gray-500">{plan.price_12_months}</span>
-                        {' '}
-                        <span className="text-emerald-400">
-                          {Math.round(plan.price_12_months * (1 - plan.discount_12_months / 100))} {plan.currency}
-                        </span>
-                        <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_12_months}%)</span>
-                      </>
-                    ) : (
-                      <>{plan.price_12_months} {plan.currency}</>
-                    )}
+                <div className="text-sm text-gray-400">
+                  <span className="font-medium">Expire le :</span>{' '}
+                  <span className="text-white">
+                    {new Date(endDate).toLocaleDateString('fr-FR', { 
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })}
                   </span>
+                  {new Date(endDate) < new Date() && (
+                    <Badge variant="destructive" className="ml-2">Expiré</Badge>
+                  )}
                 </div>
               </div>
             </div>
