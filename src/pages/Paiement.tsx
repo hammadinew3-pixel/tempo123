@@ -258,7 +258,7 @@ export default function Paiement() {
                   <Building2 className="h-5 w-5 text-[#c01533]" />
                   <div>
                     <p className="font-medium text-black">Paiement par virement bancaire</p>
-                    <p className="text-xs text-gray-600">Validation sous 24h</p>
+                    <p className="text-xs text-gray-600">Validation sous 2 heures</p>
                   </div>
                 </Label>
               </div>
