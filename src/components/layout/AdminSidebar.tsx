@@ -25,8 +25,8 @@ export function AdminSidebar() {
   const { open } = useSidebar();
 
   return (
-    <Sidebar className="bg-slate-900 border-r border-slate-800">
-      <SidebarContent className="bg-slate-900">
+    <Sidebar className="bg-card border-r border-border">
+      <SidebarContent className="bg-card">
         <SidebarGroup>
           <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wide">
             Menu Principal
@@ -41,8 +41,8 @@ export function AdminSidebar() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2 rounded-md transition ${
                           isActive
-                            ? "bg-emerald-500/10 text-emerald-400 font-medium"
-                            : "text-gray-300 hover:bg-slate-800 hover:text-white"
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-gray-300 hover:bg-accent hover:text-white"
                         }`
                       }
                     >

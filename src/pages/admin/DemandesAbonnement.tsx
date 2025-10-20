@@ -110,7 +110,7 @@ export default function DemandesAbonnement() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <AlertCircle className="h-8 w-8 text-emerald-500" />
+          <AlertCircle className="h-8 w-8 text-primary" />
           Demandes de changement d'abonnement
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -126,12 +126,12 @@ export default function DemandesAbonnement() {
             En attente ({pendingRequests.length})
           </h2>
           {pendingRequests.map((request) => (
-            <Card key={request.id} className="bg-slate-900 border-slate-800">
+            <Card key={request.id} className="bg-card border-border">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Building className="h-5 w-5 text-emerald-400" />
+                      <Building className="h-5 w-5 text-primary" />
                       {request.tenants?.name || 'Tenant inconnu'}
                     </CardTitle>
                     <p className="text-sm text-gray-400">
@@ -151,10 +151,10 @@ export default function DemandesAbonnement() {
                       {request.current_plan?.name || 'Aucun plan'}
                     </p>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex-1">
+                  <ArrowRight className="h-5 w-5 text-primary flex-shrink-0" />
+                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex-1">
                     <p className="text-gray-400 mb-1">Plan demandé</p>
-                    <p className="font-semibold text-emerald-400">
+                    <p className="font-semibold text-primary">
                       {request.requested_plan?.name || 'Plan inconnu'}
                     </p>
                   </div>
@@ -170,7 +170,7 @@ export default function DemandesAbonnement() {
                       <p>👥 {request.requested_plan.max_users} utilisateurs</p>
                     </div>
                     {request.requested_plan.module_assistance && (
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 mt-2">
+                      <Badge className="bg-primary/20 text-primary border-primary/30 mt-2">
                         ✅ Module Assistance inclus
                       </Badge>
                     )}
@@ -196,7 +196,7 @@ export default function DemandesAbonnement() {
                       action: 'approved' 
                     })}
                     disabled={handleActionMutation.isPending}
-                    className="bg-emerald-600 hover:bg-emerald-700"
+                    className="bg-primary hover:bg-primary/90"
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Approuver
@@ -209,7 +209,7 @@ export default function DemandesAbonnement() {
       )}
 
       {pendingRequests.length === 0 && (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-card border-border">
           <CardContent className="p-8 text-center">
             <Clock className="h-12 w-12 text-gray-500 mx-auto mb-3" />
             <p className="text-gray-400">Aucune demande en attente</p>
@@ -224,7 +224,7 @@ export default function DemandesAbonnement() {
             Historique ({processedRequests.length})
           </h2>
           {processedRequests.map((request) => (
-            <Card key={request.id} className="bg-slate-900/50 border-slate-800">
+            <Card key={request.id} className="bg-card/50 border-border">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
@@ -243,7 +243,7 @@ export default function DemandesAbonnement() {
                     variant="outline"
                     className={
                       request.status === 'approved'
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        ? "bg-primary/10 text-primary border-primary/20"
                         : "bg-red-500/10 text-red-400 border-red-500/20"
                     }
                   >

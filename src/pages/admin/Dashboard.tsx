@@ -157,7 +157,7 @@ export default function AdminDashboard() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="h-8 w-8 text-emerald-500" />
+          <ShieldCheck className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-white">Tableau de bord Super Admin</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -172,25 +172,25 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <ShieldCheck className="h-8 w-8 text-emerald-500" />
+        <ShieldCheck className="h-8 w-8 text-primary" />
         <h1 className="text-3xl font-bold text-white">Tableau de bord Super Admin</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => (
-          <Card key={stat.title} className="bg-slate-900 border-slate-800 hover:bg-slate-800 transition-colors p-6">
+          <Card key={stat.title} className="bg-card border-border hover:bg-accent transition-colors p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">{stat.title}</p>
                 <p className="text-3xl font-bold text-white mt-2">{stat.value}</p>
               </div>
-              <stat.icon className="h-8 w-8 text-emerald-500" />
+              <stat.icon className="h-8 w-8 text-primary" />
             </div>
           </Card>
         ))}
       </div>
 
-      <Card className="bg-slate-900 border-slate-800 p-6">
+      <Card className="bg-card border-border p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Agences créées par mois</h2>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
@@ -205,12 +205,12 @@ export default function AdminDashboard() {
                 color: "#fff",
               }}
             />
-            <Bar dataKey="count" fill="#10B981" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </Card>
 
-      <Card className="bg-slate-900 border-slate-800 p-6">
+      <Card className="bg-card border-border p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Liste des Agences</h2>
         <div className="overflow-x-auto">
           <Table>
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                   <TableCell className="text-center">
                     <Badge 
                       variant={tenant.is_active ? "default" : "destructive"}
-                      className={tenant.is_active ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" : ""}
+                      className={tenant.is_active ? "bg-primary/10 text-primary hover:bg-primary/20" : ""}
                     >
                       {tenant.is_active ? "Actif" : "Suspendu"}
                     </Badge>
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
                       className={
                         tenant.is_active
                           ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                          : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+                          : "bg-primary/10 hover:bg-primary/20 text-primary"
                       }
                     >
                       <Power className="h-4 w-4 mr-1" />
@@ -274,10 +274,10 @@ export default function AdminDashboard() {
 
       {/* Dialog détails tenant */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-slate-900 border-slate-800 text-white">
+        <DialogContent className="sm:max-w-[500px] bg-card border-border text-white">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
-              <Building className="h-5 w-5 text-emerald-500" />
+              <Building className="h-5 w-5 text-primary" />
               {selectedTenant?.tenant_name}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -287,40 +287,40 @@ export default function AdminDashboard() {
           {selectedTenant && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-slate-800 border-slate-700">
+                <Card className="bg-accent border-border">
                   <div className="p-4">
                     <div className="text-sm font-medium flex items-center gap-2 text-gray-400 mb-2">
-                      <Car className="h-4 w-4 text-emerald-500" />
+                      <Car className="h-4 w-4 text-primary" />
                       Véhicules
                     </div>
                     <p className="text-2xl font-bold text-white">{selectedTenant.vehicles_count}</p>
                   </div>
                 </Card>
 
-                <Card className="bg-slate-800 border-slate-700">
+                <Card className="bg-accent border-border">
                   <div className="p-4">
                     <div className="text-sm font-medium flex items-center gap-2 text-gray-400 mb-2">
-                      <Users className="h-4 w-4 text-emerald-500" />
+                      <Users className="h-4 w-4 text-primary" />
                       Utilisateurs
                     </div>
                     <p className="text-2xl font-bold text-white">{selectedTenant.users_count}</p>
                   </div>
                 </Card>
 
-                <Card className="bg-slate-800 border-slate-700">
+                <Card className="bg-accent border-border">
                   <div className="p-4">
                     <div className="text-sm font-medium flex items-center gap-2 text-gray-400 mb-2">
-                      <UserCircle className="h-4 w-4 text-emerald-500" />
+                      <UserCircle className="h-4 w-4 text-primary" />
                       Clients
                     </div>
                     <p className="text-2xl font-bold text-white">{selectedTenant.clients_count}</p>
                   </div>
                 </Card>
 
-                <Card className="bg-slate-800 border-slate-700">
+                <Card className="bg-accent border-border">
                   <div className="p-4">
                     <div className="text-sm font-medium flex items-center gap-2 text-gray-400 mb-2">
-                      <FileText className="h-4 w-4 text-emerald-500" />
+                      <FileText className="h-4 w-4 text-primary" />
                       Contrats
                     </div>
                     <p className="text-2xl font-bold text-white">{selectedTenant.contracts_count}</p>
@@ -333,7 +333,7 @@ export default function AdminDashboard() {
                   <span className="text-gray-400">Statut:</span>
                   <Badge 
                     variant={selectedTenant.is_active ? "default" : "destructive"}
-                    className={selectedTenant.is_active ? "bg-emerald-500/10 text-emerald-400" : ""}
+                    className={selectedTenant.is_active ? "bg-primary/10 text-primary" : ""}
                   >
                     {selectedTenant.is_active ? "Actif" : "Suspendu"}
                   </Badge>

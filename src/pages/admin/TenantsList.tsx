@@ -106,7 +106,7 @@ export default function TenantsList() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Building className="h-8 w-8 text-emerald-500" />
+          <Building className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-white">Liste des Agences</h1>
         </div>
         <div className="space-y-2">
@@ -122,7 +122,7 @@ export default function TenantsList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-          <Building className="h-8 w-8 text-emerald-500" />
+          <Building className="h-8 w-8 text-primary" />
           Liste des Agences
         </h1>
         <p className="text-gray-400 text-sm">
@@ -130,7 +130,7 @@ export default function TenantsList() {
         </p>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800 overflow-hidden">
+      <Card className="bg-card border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-800">
             <thead className="bg-slate-800/50">
@@ -160,7 +160,7 @@ export default function TenantsList() {
                 <tr key={tenant.id} className="hover:bg-slate-800/50 transition">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <Building className="h-4 w-4 text-emerald-500 mr-2" />
+                      <Building className="h-4 w-4 text-primary mr-2" />
                       <span className="text-white font-medium">{tenant.name}</span>
                     </div>
                   </td>
@@ -173,7 +173,7 @@ export default function TenantsList() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge
                       variant={tenant.is_active ? "default" : "destructive"}
-                      className={tenant.is_active ? "bg-emerald-500/10 text-emerald-400" : ""}
+                      className={tenant.is_active ? "bg-primary/10 text-primary" : ""}
                     >
                       {tenant.is_active ? "Actif" : "Suspendu"}
                     </Badge>
@@ -189,7 +189,7 @@ export default function TenantsList() {
                         size="sm"
                         variant="ghost"
                         onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
-                        className="text-emerald-400 hover:text-emerald-300 hover:bg-slate-800"
+                        className="text-primary hover:text-primary/80 hover:bg-accent"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         Détails
@@ -214,7 +214,7 @@ export default function TenantsList() {
                         className={
                           tenant.is_active
                             ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                            : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+                            : "bg-primary/10 hover:bg-primary/20 text-primary"
                         }
                       >
                         <Power className="h-4 w-4 mr-1" />

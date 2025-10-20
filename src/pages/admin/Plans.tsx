@@ -190,7 +190,7 @@ export default function Plans() {
     <div className="space-y-6 text-white">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Layers className="h-7 w-7 text-emerald-500" />
+          <Layers className="h-7 w-7 text-primary" />
           Plans d'abonnement
         </h1>
         <p className="text-gray-400 text-sm">
@@ -219,14 +219,14 @@ export default function Plans() {
             });
             setOpen(true);
           }}
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-primary hover:bg-primary/90"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Nouveau Plan
         </Button>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card className="bg-card border-border">
         <CardContent className="p-0">
           <table className="min-w-full divide-y divide-slate-800">
             <thead className="text-gray-400 text-sm">
@@ -266,7 +266,7 @@ export default function Plans() {
                   </td>
                   <td className="px-6 py-4">
                     {p.module_assistance ? (
-                      <span className="px-2 py-1 rounded text-xs bg-emerald-500/10 text-emerald-400 font-medium">
+                      <span className="px-2 py-1 rounded text-xs bg-primary/10 text-primary font-medium">
                         Oui
                       </span>
                     ) : (
@@ -277,7 +277,7 @@ export default function Plans() {
                   </td>
                   <td className="px-6 py-4">
                     {p.is_active ? (
-                      <span className="px-2 py-1 rounded text-xs bg-emerald-500/10 text-emerald-400 inline-flex items-center gap-1">
+                      <span className="px-2 py-1 rounded text-xs bg-primary/10 text-primary inline-flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3" /> Actif
                       </span>
                     ) : (
@@ -337,7 +337,7 @@ export default function Plans() {
           <div className="space-y-6 py-4">
             {/* Informations générales */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">
                 Informations générales
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -381,10 +381,10 @@ export default function Plans() {
 
               {/* Affichage du prix remisé pour 6 mois */}
               {form.discount_6_months && form.discount_6_months > 0 && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                  <p className="text-sm text-emerald-400">
+                <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-primary">
                     💰 Prix remisé pour 6 mois :{" "}
-                    <strong className="text-emerald-300">
+                    <strong className="text-primary">
                       {Math.round((form.price_6_months || 0) * (1 - (form.discount_6_months || 0) / 100))} DH HT
                     </strong>
                   </p>
@@ -420,10 +420,10 @@ export default function Plans() {
 
               {/* Affichage du prix remisé pour 12 mois */}
               {form.discount_12_months && form.discount_12_months > 0 && (
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                  <p className="text-sm text-emerald-400">
+                <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-primary">
                     💰 Prix remisé pour 12 mois :{" "}
-                    <strong className="text-emerald-300">
+                    <strong className="text-primary">
                       {Math.round((form.price_12_months || 0) * (1 - (form.discount_12_months || 0) / 100))} DH HT
                     </strong>
                   </p>
@@ -447,7 +447,7 @@ export default function Plans() {
 
             {/* Limites & Quotas */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">
                 Limites & Quotas
               </h3>
               <div className="grid grid-cols-2 gap-4">
@@ -504,7 +504,7 @@ export default function Plans() {
 
             {/* Modules activés */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wide">
+              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">
                 Modules activés
               </h3>
               <div className="bg-slate-800/50 p-4 rounded-lg space-y-3">
@@ -541,7 +541,7 @@ export default function Plans() {
               Annuler
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
               onClick={handleSave}
               disabled={loading}
             >
