@@ -179,12 +179,9 @@ export default function ChoisirPack() {
                 </div>
 
                 {/* Module Assistance */}
-                {plan.module_assistance && (
-                  <Badge className="bg-green-50 text-green-600 border-green-200">
-                    <Headset className="h-3 w-3 mr-1" />
-                    Module Assistance / Assurances inclus
-                  </Badge>
-                )}
+                <Badge className={plan.module_assistance ? "bg-green-50 text-green-600 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200"}>
+                  Module Assistance / Assurances {plan.module_assistance ? 'inclus' : 'non inclus'}
+                </Badge>
 
                 {/* Prix et bouton */}
                 <div className="mt-auto pt-4">
