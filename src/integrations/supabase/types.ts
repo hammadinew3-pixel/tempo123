@@ -1249,6 +1249,36 @@ export type Database = {
           },
         ]
       }
+      settings_bancaires: {
+        Row: {
+          created_at: string | null
+          id: string
+          nom_banque: string
+          rib: string
+          swift: string | null
+          titulaire: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nom_banque: string
+          rib: string
+          swift?: string | null
+          titulaire: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nom_banque?: string
+          rib?: string
+          swift?: string | null
+          titulaire?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sinistre_files: {
         Row: {
           file_name: string
@@ -1457,8 +1487,12 @@ export type Database = {
           end_date: string
           id: string
           is_active: boolean
+          payment_method: string | null
+          payment_proof_url: string | null
+          payment_reference: string | null
           plan_id: string
           start_date: string
+          status: string | null
           tenant_id: string
           updated_at: string | null
         }
@@ -1468,8 +1502,12 @@ export type Database = {
           end_date: string
           id?: string
           is_active?: boolean
+          payment_method?: string | null
+          payment_proof_url?: string | null
+          payment_reference?: string | null
           plan_id: string
           start_date?: string
+          status?: string | null
           tenant_id: string
           updated_at?: string | null
         }
@@ -1479,8 +1517,12 @@ export type Database = {
           end_date?: string
           id?: string
           is_active?: boolean
+          payment_method?: string | null
+          payment_proof_url?: string | null
+          payment_reference?: string | null
           plan_id?: string
           start_date?: string
+          status?: string | null
           tenant_id?: string
           updated_at?: string | null
         }
@@ -1642,6 +1684,7 @@ export type Database = {
           name: string
           plan_id: string | null
           slug: string
+          status: string | null
           subscription_plan: string | null
           updated_at: string | null
         }
@@ -1654,6 +1697,7 @@ export type Database = {
           name: string
           plan_id?: string | null
           slug: string
+          status?: string | null
           subscription_plan?: string | null
           updated_at?: string | null
         }
@@ -1666,6 +1710,7 @@ export type Database = {
           name?: string
           plan_id?: string | null
           slug?: string
+          status?: string | null
           subscription_plan?: string | null
           updated_at?: string | null
         }

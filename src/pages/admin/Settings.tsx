@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Save, Globe, Bell, FileText } from "lucide-react";
+import { Settings as SettingsIcon, Save, Globe, Bell, FileText, Building2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +19,18 @@ interface SuperAdminSettings {
   log_retention_days: number;
 }
 
+interface BankSettings {
+  id: string;
+  nom_banque: string;
+  rib: string;
+  swift: string | null;
+  titulaire: string;
+}
+
 export default function AdminSettings() {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState<SuperAdminSettings | null>(null);
+  const [bankSettings, setBankSettings] = useState<BankSettings | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['super-admin-settings'],
@@ -36,11 +45,30 @@ export default function AdminSettings() {
     },
   });
 
+  const { data: bankData, isLoading: bankLoading } = useQuery({
+    queryKey: ['bank-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('settings_bancaires')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      return data as BankSettings;
+    },
+  });
+
   useEffect(() => {
     if (data) {
       setSettings(data);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (bankData) {
+      setBankSettings(bankData);
+    }
+  }, [bankData]);
 
   const updateMutation = useMutation({
     mutationFn: async (newSettings: SuperAdminSettings) => {
@@ -66,18 +94,47 @@ export default function AdminSettings() {
     },
   });
 
+  const updateBankMutation = useMutation({
+    mutationFn: async (newBankSettings: BankSettings) => {
+      const { error } = await supabase
+        .from('settings_bancaires')
+        .update({
+          nom_banque: newBankSettings.nom_banque,
+          rib: newBankSettings.rib,
+          swift: newBankSettings.swift,
+          titulaire: newBankSettings.titulaire,
+        })
+        .eq('id', newBankSettings.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bank-settings'] });
+      toast.success("Coordonnées bancaires sauvegardées");
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de la sauvegarde: " + error.message);
+    },
+  });
+
   const handleSave = () => {
     if (settings) {
       updateMutation.mutate(settings);
     }
   };
 
-  if (isLoading || !settings) {
+  const handleSaveBank = () => {
+    if (bankSettings) {
+      updateBankMutation.mutate(bankSettings);
+    }
+  };
+
+  if (isLoading || !settings || bankLoading || !bankSettings) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-semibold text-black">Paramètres Globaux</h1>
         <div className="grid grid-cols-1 gap-4">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-48 bg-gray-200" />
           ))}
         </div>
@@ -181,6 +238,70 @@ export default function AdminSettings() {
             className="bg-white border-gray-300 text-black mt-2"
           />
           <p className="text-sm text-gray-500 mt-2">Les logs plus anciens seront automatiquement supprimés</p>
+        </div>
+      </Card>
+
+      {/* Bank Settings */}
+      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-[#c01533]" />
+            <h2 className="text-xl font-semibold text-black">Coordonnées bancaires</h2>
+          </div>
+          <Button
+            onClick={handleSaveBank}
+            disabled={updateBankMutation.isPending}
+            variant="outline"
+            className="border-[#c01533] text-[#c01533] hover:bg-[#c01533] hover:text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {updateBankMutation.isPending ? "Sauvegarde..." : "Sauvegarder"}
+          </Button>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          Ces informations seront affichées aux nouveaux utilisateurs lors du paiement par virement bancaire
+        </p>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="nom_banque" className="text-gray-700 font-medium">Nom de la banque</Label>
+            <Input
+              id="nom_banque"
+              value={bankSettings.nom_banque}
+              onChange={(e) => setBankSettings({ ...bankSettings, nom_banque: e.target.value })}
+              className="bg-white border-gray-300 text-black mt-2"
+              placeholder="Banque Populaire"
+            />
+          </div>
+          <div>
+            <Label htmlFor="titulaire" className="text-gray-700 font-medium">Titulaire du compte</Label>
+            <Input
+              id="titulaire"
+              value={bankSettings.titulaire}
+              onChange={(e) => setBankSettings({ ...bankSettings, titulaire: e.target.value })}
+              className="bg-white border-gray-300 text-black mt-2"
+              placeholder="CRSApp SARL"
+            />
+          </div>
+          <div>
+            <Label htmlFor="rib" className="text-gray-700 font-medium">RIB</Label>
+            <Input
+              id="rib"
+              value={bankSettings.rib}
+              onChange={(e) => setBankSettings({ ...bankSettings, rib: e.target.value })}
+              className="bg-white border-gray-300 text-black mt-2 font-mono"
+              placeholder="000 000 000000000000 00"
+            />
+          </div>
+          <div>
+            <Label htmlFor="swift" className="text-gray-700 font-medium">SWIFT (optionnel)</Label>
+            <Input
+              id="swift"
+              value={bankSettings.swift || ''}
+              onChange={(e) => setBankSettings({ ...bankSettings, swift: e.target.value })}
+              className="bg-white border-gray-300 text-black mt-2 font-mono"
+              placeholder="BCMAMAMCXXX"
+            />
+          </div>
         </div>
       </Card>
 

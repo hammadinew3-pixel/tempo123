@@ -9,6 +9,7 @@ import { Layout } from "./components/layout/Layout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { SuperAdminRoute } from "./components/SuperAdminRoute";
 import { AssistanceRoute } from "./components/AssistanceRoute";
+import { SubscriptionGuard } from "./components/SubscriptionGuard";
 import { useSuperAdmin } from "./hooks/use-super-admin";
 import LoginSuperAdmin from "./pages/admin/LoginSuperAdmin";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -21,6 +22,10 @@ import DemandesAbonnement from "./pages/admin/DemandesAbonnement";
 import Dashboard from "./pages/Dashboard";
 import Tenants from "./pages/admin/Tenants";
 import Suspended from "./pages/Suspended";
+import Register from "./pages/Register";
+import ChoisirPack from "./pages/ChoisirPack";
+import Paiement from "./pages/Paiement";
+import AttenteValidation from "./pages/AttenteValidation";
 import Locations from "./pages/Locations";
 import NouveauLocation from "./pages/locations/Nouveau";
 import LocationDetails from "./pages/locations/Details";
@@ -111,8 +116,14 @@ const App = () => (
         <AuthProvider>
           <TenantProvider>
             <Routes>
+            {/* Routes publiques */}
             <Route path="/auth" element={<Auth />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/choisir-pack" element={<ChoisirPack />} />
+            <Route path="/paiement" element={<Paiement />} />
+            <Route path="/attente-validation" element={<AttenteValidation />} />
             <Route path="/admin/login" element={<LoginSuperAdmin />} />
+            
             <Route
               path="/"
               element={
@@ -125,7 +136,9 @@ const App = () => (
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Layout><Dashboard /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Dashboard /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -133,7 +146,9 @@ const App = () => (
               path="/calendrier"
               element={
                 <ProtectedRoute>
-                  <Layout><Calendrier /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Calendrier /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -141,7 +156,9 @@ const App = () => (
               path="/locations"
               element={
                 <ProtectedRoute>
-                  <Layout><Locations /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Locations /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -149,7 +166,9 @@ const App = () => (
               path="/locations/nouveau"
               element={
                 <ProtectedRoute>
-                  <Layout><NouveauLocation /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><NouveauLocation /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -157,7 +176,9 @@ const App = () => (
               path="/locations/:id"
               element={
                 <ProtectedRoute>
-                  <Layout><LocationDetails /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><LocationDetails /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -165,7 +186,9 @@ const App = () => (
               path="/vehicules"
               element={
                 <ProtectedRoute>
-                  <Layout><Vehicules /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Vehicules /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -173,7 +196,9 @@ const App = () => (
               path="/vehicules/nouveau"
               element={
                 <ProtectedRoute>
-                  <Layout><NouveauVehicule /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><NouveauVehicule /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -181,7 +206,9 @@ const App = () => (
               path="/vehicules/:id/workflow"
               element={
                 <ProtectedRoute>
-                  <Layout><WorkflowWrapper /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><WorkflowWrapper /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -189,7 +216,9 @@ const App = () => (
               path="/vehicules/:id/modifier"
               element={
                 <ProtectedRoute>
-                  <Layout><ModifierVehicule /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><ModifierVehicule /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -197,7 +226,9 @@ const App = () => (
               path="/vehicules/:id"
               element={
                 <ProtectedRoute>
-                  <Layout><VehiculeDetails /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><VehiculeDetails /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -205,7 +236,9 @@ const App = () => (
               path="/clients"
               element={
                 <ProtectedRoute>
-                  <Layout><Clients /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Clients /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -213,7 +246,9 @@ const App = () => (
               path="/clients/:id"
               element={
                 <ProtectedRoute>
-                  <Layout><ClientDetails /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><ClientDetails /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -221,11 +256,13 @@ const App = () => (
               path="/assistance"
               element={
                 <ProtectedRoute>
-                  <Layout>
-                    <AssistanceRoute>
-                      <Assistance />
-                    </AssistanceRoute>
-                  </Layout>
+                  <SubscriptionGuard>
+                    <Layout>
+                      <AssistanceRoute>
+                        <Assistance />
+                      </AssistanceRoute>
+                    </Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -281,7 +318,9 @@ const App = () => (
               path="/revenus"
               element={
                 <ProtectedRoute>
-                  <Layout><Revenus /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Revenus /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -289,7 +328,9 @@ const App = () => (
               path="/charges"
               element={
                 <ProtectedRoute>
-                  <Layout><Charges /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Charges /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -297,7 +338,9 @@ const App = () => (
               path="/cheques"
               element={
                 <ProtectedRoute>
-                  <Layout><Cheques /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Cheques /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -305,7 +348,9 @@ const App = () => (
               path="/maintenance"
               element={
                 <ProtectedRoute>
-                  <Layout><Maintenance /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Maintenance /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -313,7 +358,9 @@ const App = () => (
               path="/alertes"
               element={
                 <ProtectedRoute>
-                  <Layout><Alertes /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Alertes /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -321,7 +368,9 @@ const App = () => (
               path="/historique"
               element={
                 <ProtectedRoute>
-                  <Layout><Historique /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Historique /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -329,7 +378,9 @@ const App = () => (
               path="/rapports"
               element={
                 <ProtectedRoute>
-                  <Layout><Rapports /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Rapports /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -337,7 +388,9 @@ const App = () => (
               path="/sinistres"
               element={
                 <ProtectedRoute>
-                  <Layout><Sinistres /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Sinistres /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -401,7 +454,9 @@ const App = () => (
               path="/utilisateurs"
               element={
                 <ProtectedRoute>
-                  <Layout><Utilisateurs /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Utilisateurs /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -409,7 +464,9 @@ const App = () => (
               path="/parametres"
               element={
                 <ProtectedRoute>
-                  <Layout><Parametres /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><Parametres /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
@@ -417,7 +474,9 @@ const App = () => (
               path="/mon-abonnement"
               element={
                 <ProtectedRoute>
-                  <Layout><MonAbonnement /></Layout>
+                  <SubscriptionGuard>
+                    <Layout><MonAbonnement /></Layout>
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
