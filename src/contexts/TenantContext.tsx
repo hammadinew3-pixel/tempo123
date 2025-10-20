@@ -48,7 +48,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           const updatedTenant = payload.new as Tenant;
           
           // Si le tenant est suspendu, rediriger immédiatement
-          if (!updatedTenant.is_active) {
+          if (!updatedTenant.is_active && updatedTenant.status === 'suspended') {
             setCurrentTenant(updatedTenant);
             navigate('/suspended');
             toast.error("Votre agence a été suspendue");
@@ -135,8 +135,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       if (activeTenant) {
         const tenant = activeTenant as Tenant;
         
-        // Vérifier immédiatement si le tenant est suspendu
-        if (!tenant.is_active) {
+        // Vérifier si le tenant est explicitement suspendu
+        if (!tenant.is_active && tenant.status === 'suspended') {
           setCurrentTenant(null);
           setTenants([]);
           navigate('/suspended');
