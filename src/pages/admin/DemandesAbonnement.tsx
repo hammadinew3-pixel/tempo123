@@ -235,10 +235,10 @@ export default function DemandesAbonnement() {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm font-semibold text-blue-700 mb-2">Quotas du plan :</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-blue-600">
-                      <p>🚗 {subscription.plan.max_vehicles === -1 ? 'Illimité' : subscription.plan.max_vehicles} véhicules</p>
-                      <p>👥 {subscription.plan.max_users === -1 ? 'Illimité' : subscription.plan.max_users} utilisateurs</p>
-                      <p>📄 {subscription.plan.max_contracts === -1 ? 'Illimité' : subscription.plan.max_contracts} contrats</p>
-                      <p>👤 {subscription.plan.max_clients === -1 ? 'Illimité' : subscription.plan.max_clients} clients</p>
+                      <p>🚗 {subscription.plan.max_vehicles === -1 || subscription.plan.max_vehicles === 0 ? 'Illimité' : subscription.plan.max_vehicles} véhicules</p>
+                      <p>👥 {subscription.plan.max_users === -1 || subscription.plan.max_users === 0 ? 'Illimité' : subscription.plan.max_users} utilisateurs</p>
+                      <p>📄 {subscription.plan.max_contracts === -1 || subscription.plan.max_contracts === 0 ? 'Illimité' : subscription.plan.max_contracts} contrats</p>
+                      <p>👤 {subscription.plan.max_clients === -1 || subscription.plan.max_clients === 0 ? 'Illimité' : subscription.plan.max_clients} clients</p>
                     </div>
                     {subscription.plan.module_assistance && (
                       <Badge className="bg-green-50 text-green-600 border border-green-200 mt-2">
