@@ -19,6 +19,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminSettings from "./pages/admin/Settings";
 import AdminPlans from "./pages/admin/Plans";
 import DemandesAbonnement from "./pages/admin/DemandesAbonnement";
+import DemandesChangementPack from "./pages/admin/DemandesChangementPack";
 import Dashboard from "./pages/Dashboard";
 import Tenants from "./pages/admin/Tenants";
 import Suspended from "./pages/Suspended";
@@ -591,6 +592,14 @@ const App = () => (
             element={
               <AdminLayout>
                 <DemandesAbonnement />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="demandes-changement"
+            element={
+              <AdminLayout>
+                <DemandesChangementPack />
               </AdminLayout>
             }
           />
