@@ -1037,6 +1037,7 @@ export type Database = {
           created_at: string | null
           currency: string
           description: string | null
+          discount_percent: number | null
           id: string
           is_active: boolean
           max_clients: number
@@ -1046,12 +1047,15 @@ export type Database = {
           module_assistance: boolean
           name: string
           price: number
+          price_12_months: number | null
+          price_6_months: number | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           currency?: string
           description?: string | null
+          discount_percent?: number | null
           id?: string
           is_active?: boolean
           max_clients?: number
@@ -1061,12 +1065,15 @@ export type Database = {
           module_assistance?: boolean
           name: string
           price?: number
+          price_12_months?: number | null
+          price_6_months?: number | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           currency?: string
           description?: string | null
+          discount_percent?: number | null
           id?: string
           is_active?: boolean
           max_clients?: number
@@ -1076,6 +1083,8 @@ export type Database = {
           module_assistance?: boolean
           name?: string
           price?: number
+          price_12_months?: number | null
+          price_6_months?: number | null
           updated_at?: string | null
         }
         Relationships: []

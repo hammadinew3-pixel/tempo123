@@ -28,6 +28,9 @@ type Plan = {
   name: string;
   description?: string;
   price: number;
+  price_6_months?: number;
+  price_12_months?: number;
+  discount_percent?: number;
   currency: string;
   max_vehicles: number;
   max_users: number;
@@ -48,6 +51,9 @@ export default function Plans() {
     name: "",
     description: "",
     price: 0,
+    price_6_months: 0,
+    price_12_months: 0,
+    discount_percent: 0,
     currency: "MAD",
     max_vehicles: 0,
     max_users: 0,
@@ -121,6 +127,9 @@ export default function Plans() {
       name: "",
       description: "",
       price: 0,
+      price_6_months: 0,
+      price_12_months: 0,
+      discount_percent: 0,
       currency: "MAD",
       max_vehicles: 0,
       max_users: 0,
@@ -176,11 +185,16 @@ export default function Plans() {
 
   return (
     <div className="space-y-6 text-white">
-      <div className="flex items-center justify-between">
+      <div className="space-y-2">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Layers className="h-7 w-7 text-emerald-500" />
-          Gestion des Plans
+          Plans d'abonnement
         </h1>
+        <p className="text-gray-400 text-sm">
+          Tarifs et remises configurables pour chaque formule
+        </p>
+      </div>
+      <div className="flex items-center justify-between">
         <Button
           onClick={() => {
             setEditing(null);
@@ -188,6 +202,9 @@ export default function Plans() {
               name: "",
               description: "",
               price: 0,
+              price_6_months: 0,
+              price_12_months: 0,
+              discount_percent: 0,
               currency: "MAD",
               max_vehicles: 0,
               max_users: 0,
@@ -211,9 +228,11 @@ export default function Plans() {
             <thead className="text-gray-400 text-sm">
               <tr>
                 <th className="px-6 py-3 text-left">Nom</th>
-                <th className="px-6 py-3 text-left">Prix</th>
+                <th className="px-6 py-3 text-left">Prix 6 mois</th>
+                <th className="px-6 py-3 text-left">Prix 12 mois</th>
+                <th className="px-6 py-3 text-left">Remise</th>
                 <th className="px-6 py-3 text-left">Quotas</th>
-                <th className="px-6 py-3 text-left">Modules</th>
+                <th className="px-6 py-3 text-left">Assistance</th>
                 <th className="px-6 py-3 text-left">Statut</th>
                 <th className="px-6 py-3 text-right">Actions</th>
               </tr>
@@ -223,7 +242,13 @@ export default function Plans() {
                 <tr key={p.id} className="hover:bg-slate-800/60">
                   <td className="px-6 py-4 font-semibold">{p.name}</td>
                   <td className="px-6 py-4 text-gray-300">
-                    {p.price} {p.currency}
+                    {p.price_6_months || 0} DH
+                  </td>
+                  <td className="px-6 py-4 text-gray-300">
+                    {p.price_12_months || 0} DH
+                  </td>
+                  <td className="px-6 py-4 text-gray-300">
+                    {p.discount_percent || 0}%
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-400">
                     {p.max_vehicles} véhicules<br />
@@ -231,11 +256,16 @@ export default function Plans() {
                     {p.max_contracts} contrats<br />
                     {p.max_clients} clients
                   </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="text-gray-400 text-xs mb-1">✓ Modules de base</div>
-                    <div className={p.module_assistance ? "text-emerald-400 font-medium" : "text-gray-500"}>
-                      {p.module_assistance ? "✓" : "✗"} Assistance
-                    </div>
+                  <td className="px-6 py-4">
+                    {p.module_assistance ? (
+                      <span className="px-2 py-1 rounded text-xs bg-emerald-500/10 text-emerald-400 font-medium">
+                        Oui
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 rounded text-xs bg-gray-500/10 text-gray-400">
+                        Non
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     {p.is_active ? (
@@ -312,18 +342,66 @@ export default function Plans() {
                     className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Prix (MAD) *</Label>
+                  <Label className="text-gray-300">Prix 6 mois (DH HT) *</Label>
                   <Input
                     placeholder="0"
                     type="number"
-                    value={form.price}
+                    value={form.price_6_months}
                     onChange={(e) =>
-                      setForm({ ...form, price: parseFloat(e.target.value) || 0 })
+                      setForm({ ...form, price_6_months: parseFloat(e.target.value) || 0 })
                     }
                     className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Prix 12 mois (DH HT) *</Label>
+                  <Input
+                    placeholder="0"
+                    type="number"
+                    value={form.price_12_months}
+                    onChange={(e) =>
+                      setForm({ ...form, price_12_months: parseFloat(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Remise (%)</Label>
+                  <Input
+                    placeholder="0"
+                    type="number"
+                    value={form.discount_percent}
+                    onChange={(e) =>
+                      setForm({ ...form, discount_percent: parseFloat(e.target.value) || 0 })
+                    }
+                    className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+
+              {/* Affichage du prix remisé */}
+              {form.discount_percent && form.discount_percent > 0 && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  <p className="text-sm text-emerald-400">
+                    💰 Prix remisé pour 6 mois :{" "}
+                    <strong className="text-emerald-300">
+                      {Math.round((form.price_6_months || 0) * (1 - (form.discount_percent || 0) / 100))} DH HT
+                    </strong>
+                  </p>
+                  <p className="text-sm text-emerald-400 mt-1">
+                    💰 Prix remisé pour 12 mois :{" "}
+                    <strong className="text-emerald-300">
+                      {Math.round((form.price_12_months || 0) * (1 - (form.discount_percent || 0) / 100))} DH HT
+                    </strong>
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2 col-span-2">
                   <Label className="text-gray-300">Description</Label>
                   <Input
@@ -438,7 +516,7 @@ export default function Plans() {
               onClick={handleSave}
               disabled={loading}
             >
-              {loading ? "Enregistrement..." : "Enregistrer"}
+              {loading ? "💾 Enregistrement..." : "💾 Enregistrer les modifications"}
             </Button>
           </DialogFooter>
         </DialogContent>
