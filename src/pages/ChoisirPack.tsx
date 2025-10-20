@@ -44,13 +44,60 @@ export default function ChoisirPack() {
         return;
       }
 
+      // Étape 1: Récupérer le tenant avec is_active = true
       const { data: userTenant, error: tenantError } = await supabase
         .from('user_tenants')
         .select('tenant_id')
         .eq('user_id', user.id)
+        .eq('is_active', true)
         .single();
 
       if (tenantError) throw tenantError;
+
+      // Debug logs - Étape 1
+      console.log('=== DEBUG SUBSCRIPTION ===');
+      console.log('User ID:', user.id);
+      console.log('Tenant ID:', userTenant.tenant_id);
+
+      // Vérifier le rôle de l'utilisateur
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('tenant_id', userTenant.tenant_id);
+      console.log('User roles:', userRole);
+
+      // Tester les fonctions RLS
+      const { data: hasAdminRole } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+      console.log('Has admin role (from function):', hasAdminRole);
+
+      const { data: tenantIdFromFunc } = await supabase.rpc('get_user_tenant_id', {
+        _user_id: user.id
+      });
+      console.log('Tenant ID (from function):', tenantIdFromFunc);
+
+      // Étape 3: Vérifier explicitement le rôle admin
+      const { data: roleCheck, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('tenant_id', userTenant.tenant_id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (!roleCheck) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être administrateur pour souscrire à un pack",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Admin role check passed:', roleCheck);
 
       const startDate = new Date();
       const endDate = new Date();
