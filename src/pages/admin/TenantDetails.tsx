@@ -44,7 +44,7 @@ export default function TenantDetails() {
         .select(`
           *,
           plans (*),
-          subscriptions!inner (
+          subscriptions (
             id,
             duration,
             start_date,
