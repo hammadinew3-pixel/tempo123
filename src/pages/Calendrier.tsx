@@ -309,25 +309,35 @@ export default function Calendrier() {
       // Calculate column position (accounting for empty cells at start)
       const startCol = firstDayOfMonth + barStartDay - 1;
       
-      // Find available row for this contract
-      let row = 0;
-      const conflictingBars = bars.filter(bar => {
-        const barEndCol = bar.startCol + bar.width - 1;
-        const thisEndCol = startCol + duration - 1;
-        return !(barEndCol < startCol || bar.startCol > thisEndCol);
-      });
-      
-      if (conflictingBars.length > 0) {
-        const usedRows = new Set(conflictingBars.map(b => b.row));
-        while (usedRows.has(row)) row++;
-      }
+      // Split the bar into weekly segments so it spans across rows
+      let remaining = duration;
+      let currentStart = startCol;
+      while (remaining > 0) {
+        const colInWeek = currentStart % 7;
+        const segWidth = Math.min(remaining, 7 - colInWeek);
+        
+        // Find available row for this segment
+        let row = 0;
+        const segEndCol = currentStart + segWidth - 1;
+        const conflictingBars = bars.filter(bar => {
+          const barEndCol = bar.startCol + bar.width - 1;
+          return !(barEndCol < currentStart || bar.startCol > segEndCol);
+        });
+        if (conflictingBars.length > 0) {
+          const usedRows = new Set(conflictingBars.map(b => b.row));
+          while (usedRows.has(row)) row++;
+        }
 
-      bars.push({
-        contract,
-        startCol,
-        width: duration,
-        row
-      });
+        bars.push({
+          contract,
+          startCol: currentStart,
+          width: segWidth,
+          row
+        });
+
+        remaining -= segWidth;
+        currentStart += segWidth;
+      }
     });
 
     return bars;
@@ -631,8 +641,14 @@ export default function Calendrier() {
                         const colIndex = bar.startCol % 7;
                         const weekRow = Math.floor(bar.startCol / 7);
                         const vehicleColor = getVehicleColor(bar.contract.vehicle_id);
+                        // Compute effective end date with prolongations for display
+                        let effectiveEnd = bar.contract.date_fin;
+                        const p = (bar.contract as any).prolongations;
+                        if (p && Array.isArray(p) && p.length > 0 && p[p.length - 1]?.nouvelle_date_fin) {
+                          effectiveEnd = p[p.length - 1].nouvelle_date_fin;
+                        }
                         const duration = differenceInDays(
-                          new Date(bar.contract.date_fin),
+                          new Date(effectiveEnd),
                           new Date(bar.contract.date_debut)
                         ) + 1;
                         const isFiltered = (selectedVehicleFilter && bar.contract.vehicle_id !== selectedVehicleFilter) ||
@@ -706,7 +722,7 @@ export default function Calendrier() {
                                 <div className="flex items-center gap-2">
                                   <CalendarIcon className="w-4 h-4" />
                                   <span className="text-sm">
-                                    {format(new Date(bar.contract.date_debut), 'd MMM', { locale: fr })} - {format(new Date(bar.contract.date_fin), 'd MMM', { locale: fr })}
+                                    {format(new Date(bar.contract.date_debut), 'd MMM', { locale: fr })} - {format(new Date(effectiveEnd), 'd MMM', { locale: fr })}
                                   </span>
                                   <Badge variant="secondary" className="text-xs">
                                     {duration} jours
