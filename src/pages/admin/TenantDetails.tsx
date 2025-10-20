@@ -187,17 +187,17 @@ export default function TenantDetails() {
           <Button
             variant="ghost"
             onClick={() => navigate('/admin/tenants')}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-600 hover:text-black"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-              <Building className="h-8 w-8 text-emerald-500" />
+            <h1 className="text-3xl font-bold text-black flex items-center gap-2">
+              <Building className="h-8 w-8 text-[#c01533]" />
               {tenant.name}
             </h1>
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-gray-600 text-sm mt-1">
               Slug: {tenant.slug} • Créé le {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
             </p>
           </div>
@@ -206,7 +206,7 @@ export default function TenantDetails() {
         <div className="flex items-center gap-2">
           <Badge
             variant={tenant.is_active ? "default" : "destructive"}
-            className={tenant.is_active ? "bg-emerald-500/10 text-emerald-400" : ""}
+            className={tenant.is_active ? "bg-green-50 text-green-600 border border-green-200" : ""}
           >
             {tenant.is_active ? "Actif" : "Suspendu"}
           </Badge>
@@ -217,7 +217,7 @@ export default function TenantDetails() {
       <div className="flex gap-2">
         <Button
           onClick={() => setShowPlanDialog(true)}
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
         >
           <Layers className="h-4 w-4 mr-2" />
           Changer le plan
@@ -225,7 +225,7 @@ export default function TenantDetails() {
         <Button
           onClick={() => toggleStatusMutation.mutate()}
           disabled={toggleStatusMutation.isPending}
-          variant={tenant.is_active ? "destructive" : "default"}
+          className={tenant.is_active ? "bg-[#c01533] hover:bg-[#9a0f26] text-white" : "bg-green-500 hover:bg-green-600 text-white"}
         >
           <Power className="h-4 w-4 mr-2" />
           {tenant.is_active ? "Suspendre" : "Réactiver"}
@@ -233,42 +233,42 @@ export default function TenantDetails() {
       </div>
 
       {/* Plan actuel */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-emerald-400 text-2xl">
+          <CardTitle className="text-[#c01533] text-2xl">
             {plan ? plan.name : "Aucun plan assigné"}
           </CardTitle>
           {plan && subscription ? (
             <div className="space-y-3 mt-2">
               <div className="flex items-center gap-3">
-                <label className="text-sm text-gray-400 font-medium">Durée:</label>
+                <label className="text-sm text-gray-600 font-medium">Durée:</label>
                 <Select 
                   value={duration.toString()} 
                   onValueChange={(value) => changeDurationMutation.mutate(parseInt(value))}
                   disabled={changeDurationMutation.isPending}
                 >
-                  <SelectTrigger className="w-32 bg-slate-800 border-slate-700 text-white">
+                  <SelectTrigger className="w-32 bg-white border-gray-300 text-black">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="6" className="text-white hover:bg-slate-700">6 mois</SelectItem>
-                    <SelectItem value="12" className="text-white hover:bg-slate-700">12 mois</SelectItem>
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="6" className="text-black hover:bg-gray-100">6 mois</SelectItem>
+                    <SelectItem value="12" className="text-black hover:bg-gray-100">12 mois</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-emerald-400" />
-                  <span className="text-white font-semibold text-lg">
+                  <Calendar className="h-4 w-4 text-[#c01533]" />
+                  <span className="text-black font-semibold text-lg">
                     {duration === 6 ? (
                       plan.discount_6_months > 0 ? (
                         <>
                           <span className="line-through text-gray-500 text-sm">{plan.price_6_months}</span>
                           {' '}
-                          <span className="text-emerald-400">
+                          <span className="text-[#c01533]">
                             {Math.round(plan.price_6_months * (1 - plan.discount_6_months / 100))} {plan.currency}
                           </span>
-                          <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_6_months}%)</span>
+                          <span className="text-[#c01533] text-xs ml-1">(-{plan.discount_6_months}%)</span>
                         </>
                       ) : (
                         <>{plan.price_6_months} {plan.currency}</>
@@ -278,21 +278,21 @@ export default function TenantDetails() {
                         <>
                           <span className="line-through text-gray-500 text-sm">{plan.price_12_months}</span>
                           {' '}
-                          <span className="text-emerald-400">
+                          <span className="text-[#c01533]">
                             {Math.round(plan.price_12_months * (1 - plan.discount_12_months / 100))} {plan.currency}
                           </span>
-                          <span className="text-emerald-400 text-xs ml-1">(-{plan.discount_12_months}%)</span>
+                          <span className="text-[#c01533] text-xs ml-1">(-{plan.discount_12_months}%)</span>
                         </>
                       ) : (
                         <>{plan.price_12_months} {plan.currency}</>
                       )
                     )}
-                    <span className="text-sm text-gray-400 font-normal"> / {duration} mois</span>
+                    <span className="text-sm text-gray-600 font-normal"> / {duration} mois</span>
                   </span>
                 </div>
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-gray-600">
                   <span className="font-medium">Expire le :</span>{' '}
-                  <span className="text-white">
+                  <span className="text-black">
                     {new Date(endDate).toLocaleDateString('fr-FR', { 
                       day: 'numeric', 
                       month: 'long', 
@@ -307,9 +307,9 @@ export default function TenantDetails() {
             </div>
           ) : plan ? (
             <div className="mt-2">
-              <Alert className="bg-orange-900/20 border-orange-500/50">
-                <AlertCircle className="h-4 w-4 text-orange-400" />
-                <AlertDescription className="text-orange-200">
+              <Alert className="bg-orange-50 border-orange-200">
+                <AlertCircle className="h-4 w-4 text-orange-600" />
+                <AlertDescription className="text-orange-700">
                   Ce tenant a un plan assigné mais aucune subscription active. Veuillez cliquer sur "Changer le plan" pour assigner une durée d'abonnement.
                 </AlertDescription>
               </Alert>
@@ -321,24 +321,24 @@ export default function TenantDetails() {
           <CardContent className="space-y-6">
             {/* Quotas */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-black mb-3 flex items-center gap-2">
                 📊 Utilisation des quotas
               </h4>
               <div className="space-y-4">
                 {/* Véhicules */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-400 flex items-center gap-2">
+                    <span className="text-gray-600 flex items-center gap-2">
                       <Car className="h-4 w-4" />
                       Véhicules
                     </span>
-                    <span className={`font-medium ${plan.max_vehicles > 0 && usage.vehicles > plan.max_vehicles ? 'text-red-400' : 'text-white'}`}>
+                    <span className={`font-medium ${plan.max_vehicles > 0 && usage.vehicles > plan.max_vehicles ? 'text-red-600' : 'text-black'}`}>
                       {usage.vehicles} / {plan.max_vehicles > 0 ? plan.max_vehicles : '∞'}
                     </span>
                   </div>
                   <Progress value={plan.max_vehicles > 0 ? Math.min((usage.vehicles / plan.max_vehicles) * 100, 100) : 0} className="h-2" />
                   {plan.max_vehicles > 0 && usage.vehicles > plan.max_vehicles && (
-                    <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.vehicles - plan.max_vehicles}
                     </p>
@@ -348,17 +348,17 @@ export default function TenantDetails() {
                 {/* Utilisateurs */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-400 flex items-center gap-2">
+                    <span className="text-gray-600 flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       Utilisateurs
                     </span>
-                    <span className={`font-medium ${plan.max_users > 0 && usage.users > plan.max_users ? 'text-red-400' : 'text-white'}`}>
+                    <span className={`font-medium ${plan.max_users > 0 && usage.users > plan.max_users ? 'text-red-600' : 'text-black'}`}>
                       {usage.users} / {plan.max_users > 0 ? plan.max_users : '∞'}
                     </span>
                   </div>
                   <Progress value={plan.max_users > 0 ? Math.min((usage.users / plan.max_users) * 100, 100) : 0} className="h-2" />
                   {plan.max_users > 0 && usage.users > plan.max_users && (
-                    <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.users - plan.max_users}
                     </p>
@@ -368,17 +368,17 @@ export default function TenantDetails() {
                 {/* Contrats */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-400 flex items-center gap-2">
+                    <span className="text-gray-600 flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       Contrats
                     </span>
-                    <span className={`font-medium ${plan.max_contracts > 0 && usage.contracts > plan.max_contracts ? 'text-red-400' : 'text-white'}`}>
+                    <span className={`font-medium ${plan.max_contracts > 0 && usage.contracts > plan.max_contracts ? 'text-red-600' : 'text-black'}`}>
                       {usage.contracts} / {plan.max_contracts > 0 ? plan.max_contracts : '∞'}
                     </span>
                   </div>
                   <Progress value={plan.max_contracts > 0 ? Math.min((usage.contracts / plan.max_contracts) * 100, 100) : 0} className="h-2" />
                   {plan.max_contracts > 0 && usage.contracts > plan.max_contracts && (
-                    <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.contracts - plan.max_contracts}
                     </p>
@@ -388,17 +388,17 @@ export default function TenantDetails() {
                 {/* Clients */}
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-400 flex items-center gap-2">
+                    <span className="text-gray-600 flex items-center gap-2">
                       <UserCheck className="h-4 w-4" />
                       Clients
                     </span>
-                    <span className={`font-medium ${plan.max_clients > 0 && usage.clients > plan.max_clients ? 'text-red-400' : 'text-white'}`}>
+                    <span className={`font-medium ${plan.max_clients > 0 && usage.clients > plan.max_clients ? 'text-red-600' : 'text-black'}`}>
                       {usage.clients} / {plan.max_clients > 0 ? plan.max_clients : '∞'}
                     </span>
                   </div>
                   <Progress value={plan.max_clients > 0 ? Math.min((usage.clients / plan.max_clients) * 100, 100) : 0} className="h-2" />
                   {plan.max_clients > 0 && usage.clients > plan.max_clients && (
-                    <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       Quota dépassé de {usage.clients - plan.max_clients}
                     </p>
@@ -409,19 +409,19 @@ export default function TenantDetails() {
 
             {/* Modules */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-300 mb-3">🔌 Modules activés</h4>
+              <h4 className="text-sm font-semibold text-black mb-3">🔌 Modules activés</h4>
               <div className="flex flex-wrap gap-2">
                 {/* Modules de base toujours inclus */}
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
                   🚗 Sinistres ✓
                 </Badge>
-                <Badge variant="outline" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
+                <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
                   ⚠️ Infractions ✓
                 </Badge>
-                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">
                   🔔 Alertes ✓
                 </Badge>
-                <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+                <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200">
                   📊 Rapports ✓
                 </Badge>
                 
@@ -429,8 +429,8 @@ export default function TenantDetails() {
                 <Badge 
                   variant={plan.module_assistance ? "outline" : "secondary"} 
                   className={plan.module_assistance 
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                    : "bg-slate-700/50 text-slate-400 border-slate-600/20"
+                    ? "bg-green-50 text-green-600 border-green-200" 
+                    : "bg-gray-100 text-gray-500 border-gray-300"
                   }
                 >
                   🆘 Assistance/Assurance {plan.module_assistance ? '✓' : '✗'}
