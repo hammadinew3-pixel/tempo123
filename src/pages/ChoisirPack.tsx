@@ -179,7 +179,7 @@ export default function ChoisirPack() {
                 </div>
 
                 {/* Module Assistance */}
-                <Badge className={plan.module_assistance ? "bg-green-50 text-green-600 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200"}>
+                <Badge className={plan.module_assistance ? "bg-green-50 text-green-600 border-green-200 pointer-events-none" : "bg-gray-50 text-gray-600 border-gray-200 pointer-events-none"}>
                   Module Assistance / Assurances {plan.module_assistance ? 'inclus' : 'non inclus'}
                 </Badge>
 
