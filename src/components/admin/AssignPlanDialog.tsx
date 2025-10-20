@@ -204,7 +204,13 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            {plans.map((plan) => {
+            {plans
+              .sort((a, b) => {
+                const priceA = selectedDuration === "6" ? a.price_6_months : a.price_12_months;
+                const priceB = selectedDuration === "6" ? b.price_6_months : b.price_12_months;
+                return priceA - priceB;
+              })
+              .map((plan) => {
               const isCurrentPlan = plan.id === currentPlanId;
               
               // Prix et remise selon la durée sélectionnée
