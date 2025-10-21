@@ -281,7 +281,15 @@ export default function VehiculeDetails() {
     return contractRevenue + assistanceRevenue;
   };
   const calculateTotalExpenses = () => {
-    return expenses.reduce((sum, expense) => sum + (expense.montant || 0), 0);
+    // Dépenses directes
+    const directExpenses = expenses.reduce((sum, expense) => sum + (expense.montant || 0), 0);
+    
+    // Traites payées
+    const paidTraites = echeances
+      .filter((ech: any) => ech.statut === 'Payée')
+      .reduce((sum, ech) => sum + (ech.montant || 0), 0);
+    
+    return directExpenses + paidTraites;
   };
   const getTotalReservations = () => {
     return contracts.length + assistances.length;
