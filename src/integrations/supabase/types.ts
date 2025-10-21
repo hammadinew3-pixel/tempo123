@@ -491,16 +491,23 @@ export type Database = {
       clients: {
         Row: {
           adresse: string | null
+          centre_delivrance_permis: string | null
           cin: string | null
           cin_url: string | null
           client_fiable: string | null
           created_at: string | null
+          date_delivrance_permis: string | null
+          date_expiration_permis: string | null
+          date_naissance: string | null
           email: string | null
+          ice: string | null
           id: string
           nom: string
+          passeport: string | null
           permis_conduire: string | null
           permis_url: string | null
           prenom: string | null
+          raison_sociale: string | null
           sexe: string | null
           telephone: string
           tenant_id: string
@@ -509,16 +516,23 @@ export type Database = {
         }
         Insert: {
           adresse?: string | null
+          centre_delivrance_permis?: string | null
           cin?: string | null
           cin_url?: string | null
           client_fiable?: string | null
           created_at?: string | null
+          date_delivrance_permis?: string | null
+          date_expiration_permis?: string | null
+          date_naissance?: string | null
           email?: string | null
+          ice?: string | null
           id?: string
           nom: string
+          passeport?: string | null
           permis_conduire?: string | null
           permis_url?: string | null
           prenom?: string | null
+          raison_sociale?: string | null
           sexe?: string | null
           telephone: string
           tenant_id: string
@@ -527,16 +541,23 @@ export type Database = {
         }
         Update: {
           adresse?: string | null
+          centre_delivrance_permis?: string | null
           cin?: string | null
           cin_url?: string | null
           client_fiable?: string | null
           created_at?: string | null
+          date_delivrance_permis?: string | null
+          date_expiration_permis?: string | null
+          date_naissance?: string | null
           email?: string | null
+          ice?: string | null
           id?: string
           nom?: string
+          passeport?: string | null
           permis_conduire?: string | null
           permis_url?: string | null
           prenom?: string | null
+          raison_sociale?: string | null
           sexe?: string | null
           telephone?: string
           tenant_id?: string
@@ -1884,6 +1905,68 @@ export type Database = {
           },
         ]
       }
+      vehicle_autorisation_circulation: {
+        Row: {
+          banque: string | null
+          created_at: string | null
+          date_delivrance: string
+          date_expiration: string
+          date_paiement: string | null
+          id: string
+          mode_paiement: string | null
+          montant: number | null
+          numero_cheque: string | null
+          numero_ordre: string | null
+          photo_url: string | null
+          remarques: string | null
+          tenant_id: string
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          banque?: string | null
+          created_at?: string | null
+          date_delivrance: string
+          date_expiration: string
+          date_paiement?: string | null
+          id?: string
+          mode_paiement?: string | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
+          photo_url?: string | null
+          remarques?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          banque?: string | null
+          created_at?: string | null
+          date_delivrance?: string
+          date_expiration?: string
+          date_paiement?: string | null
+          id?: string
+          mode_paiement?: string | null
+          montant?: number | null
+          numero_cheque?: string | null
+          numero_ordre?: string | null
+          photo_url?: string | null
+          remarques?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_autorisation_circulation_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_changes: {
         Row: {
           change_date: string
@@ -2168,8 +2251,11 @@ export type Database = {
           assurance_expire_le: string | null
           categorie: string | null
           categories: string[] | null
+          concessionnaire: string | null
+          couleur: string | null
           created_at: string | null
           date_derniere_vidange: string | null
+          date_mise_en_circulation: string | null
           dernier_kilometrage_vidange: number | null
           en_service: boolean | null
           id: string
@@ -2177,8 +2263,11 @@ export type Database = {
           kilometrage: number | null
           marque: string
           modele: string
+          nombre_places: number | null
+          numero_chassis: string | null
           photo_url: string | null
           prochain_kilometrage_vidange: number | null
+          puissance_fiscale: number | null
           sous_location: boolean | null
           statut: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier: number | null
@@ -2194,8 +2283,11 @@ export type Database = {
           assurance_expire_le?: string | null
           categorie?: string | null
           categories?: string[] | null
+          concessionnaire?: string | null
+          couleur?: string | null
           created_at?: string | null
           date_derniere_vidange?: string | null
+          date_mise_en_circulation?: string | null
           dernier_kilometrage_vidange?: number | null
           en_service?: boolean | null
           id?: string
@@ -2203,8 +2295,11 @@ export type Database = {
           kilometrage?: number | null
           marque: string
           modele: string
+          nombre_places?: number | null
+          numero_chassis?: string | null
           photo_url?: string | null
           prochain_kilometrage_vidange?: number | null
+          puissance_fiscale?: number | null
           sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier?: number | null
@@ -2220,8 +2315,11 @@ export type Database = {
           assurance_expire_le?: string | null
           categorie?: string | null
           categories?: string[] | null
+          concessionnaire?: string | null
+          couleur?: string | null
           created_at?: string | null
           date_derniere_vidange?: string | null
+          date_mise_en_circulation?: string | null
           dernier_kilometrage_vidange?: number | null
           en_service?: boolean | null
           id?: string
@@ -2229,8 +2327,11 @@ export type Database = {
           kilometrage?: number | null
           marque?: string
           modele?: string
+          nombre_places?: number | null
+          numero_chassis?: string | null
           photo_url?: string | null
           prochain_kilometrage_vidange?: number | null
+          puissance_fiscale?: number | null
           sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier?: number | null
