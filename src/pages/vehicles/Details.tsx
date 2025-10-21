@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, TrendingUp, TrendingDown, Calendar as CalendarIcon, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
+import { Edit, Edit2, Trash2, Calendar, TrendingUp, TrendingDown, Calendar as CalendarIcon, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { fr } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1399,7 +1400,241 @@ export default function VehiculeDetails() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-...
+          {isAdmin && (
+            <div className="mb-4 flex justify-end">
+              <Button onClick={() => setShowTraiteDialog(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Ajouter traite bancaire
+              </Button>
+            </div>
+          )}
+
+          {traites.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Aucune traite bancaire enregistrée pour ce véhicule.
+                {isAdmin && " Cliquez sur 'Ajouter traite bancaire' pour en créer une."}
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-6">
+              {traites.map((traite) => {
+                const traiteEcheances = echeances.filter(e => e.traite_id === traite.id);
+                const totalPaye = traiteEcheances
+                  .filter(e => e.statut === 'Payée')
+                  .reduce((sum, e) => sum + parseFloat(e.montant || 0), 0);
+                const totalRestant = parseFloat(traite.montant_total || 0) - totalPaye;
+                const pourcentage = traite.montant_total > 0 ? (totalPaye / parseFloat(traite.montant_total)) * 100 : 0;
+
+                return (
+                  <Card key={traite.id} className="border-l-4 border-l-primary">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <Landmark className="w-5 h-5 text-primary" />
+                            {traite.concessionaire || 'Traite bancaire'}
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            {traite.organisme && `Organisme: ${traite.organisme}`}
+                          </CardDescription>
+                        </div>
+                        {isAdmin && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTraite(traite);
+                                setTraiteForm({
+                                  concessionaire: traite.concessionaire || '',
+                                  organisme: traite.organisme || '',
+                                  date_achat: traite.date_achat || '',
+                                  prix_achat: traite.prix_achat?.toString() || '',
+                                  avance: traite.avance?.toString() || '',
+                                  montant_mensuel: traite.montant_mensuel?.toString() || '',
+                                  date_debut: traite.date_debut || '',
+                                  duree_mois: traite.duree_mois?.toString() || '',
+                                  duree_deja_paye: traite.duree_deja_paye?.toString() || '0',
+                                  plus_infos: traite.plus_infos || ''
+                                });
+                                setShowEditTraiteDialog(true);
+                              }}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                if (confirm('Êtes-vous sûr de vouloir supprimer cette traite et toutes ses échéances ?')) {
+                                  try {
+                                    const { error } = await supabase
+                                      .from('vehicules_traite')
+                                      .delete()
+                                      .eq('id', traite.id);
+
+                                    if (error) throw error;
+
+                                    toast({
+                                      title: "Succès",
+                                      description: "Traite supprimée avec succès",
+                                    });
+
+                                    loadVehicle();
+                                  } catch (error: any) {
+                                    toast({
+                                      title: "Erreur",
+                                      description: error.message,
+                                      variant: "destructive"
+                                    });
+                                  }
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      {/* Informations d'achat */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Prix d'achat</p>
+                          <p className="text-lg font-semibold">{parseFloat(traite.prix_achat || 0).toLocaleString()} DH</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Avance</p>
+                          <p className="text-lg font-semibold">{parseFloat(traite.avance || 0).toLocaleString()} DH</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Reste à payer</p>
+                          <p className="text-lg font-semibold text-primary">{parseFloat(traite.montant_total || 0).toLocaleString()} DH</p>
+                        </div>
+                        {traite.date_achat && (
+                          <div>
+                            <p className="text-sm text-muted-foreground">Date d'achat</p>
+                            <p className="font-medium">{format(new Date(traite.date_achat), 'dd/MM/yyyy', { locale: fr })}</p>
+                          </div>
+                        )}
+                        {traite.date_debut && (
+                          <div>
+                            <p className="text-sm text-muted-foreground">Date début</p>
+                            <p className="font-medium">{format(new Date(traite.date_debut), 'dd/MM/yyyy', { locale: fr })}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm text-muted-foreground">Durée</p>
+                          <p className="font-medium">{traite.duree_mois} mois</p>
+                        </div>
+                      </div>
+
+                      {traite.plus_infos && (
+                        <div className="p-3 bg-muted/30 rounded-md">
+                          <p className="text-sm text-muted-foreground mb-1">Notes supplémentaires</p>
+                          <p className="text-sm">{traite.plus_infos}</p>
+                        </div>
+                      )}
+
+                      {/* Barre de progression */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Progression des paiements</span>
+                          <span className="font-semibold">{pourcentage.toFixed(1)}%</span>
+                        </div>
+                        <Progress value={pourcentage} className="h-2" />
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-600 font-medium">
+                            Payé: {totalPaye.toLocaleString()} DH
+                          </span>
+                          <span className="text-orange-600 font-medium">
+                            Restant: {totalRestant.toLocaleString()} DH
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tableau des échéances */}
+                      {traiteEcheances.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold mb-3 flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Échéances ({traiteEcheances.length})
+                          </h4>
+                          <div className="border rounded-lg overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-12">#</TableHead>
+                                  <TableHead>Date d'échéance</TableHead>
+                                  <TableHead className="text-right">Montant</TableHead>
+                                  <TableHead>Statut</TableHead>
+                                  <TableHead>Date de paiement</TableHead>
+                                  {isAdmin && <TableHead className="text-center">Actions</TableHead>}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {traiteEcheances
+                                  .sort((a, b) => parseInt(a.numero_echeance) - parseInt(b.numero_echeance))
+                                  .map((echeance) => (
+                                    <TableRow key={echeance.id} className={echeance.statut === 'Payée' ? 'bg-green-50/50' : ''}>
+                                      <TableCell className="font-medium">
+                                        {echeance.numero_echeance}
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex items-center gap-2">
+                                          {getEcheanceIcon(echeance.statut)}
+                                          {format(new Date(echeance.date_echeance), 'dd/MM/yyyy', { locale: fr })}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="text-right font-semibold">
+                                        {parseFloat(echeance.montant).toLocaleString()} DH
+                                      </TableCell>
+                                      <TableCell>
+                                        {getEcheanceStatusBadge(echeance.statut)}
+                                      </TableCell>
+                                      <TableCell>
+                                        {echeance.date_paiement ? (
+                                          <span className="text-green-600 font-medium">
+                                            {format(new Date(echeance.date_paiement), 'dd/MM/yyyy', { locale: fr })}
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted-foreground">-</span>
+                                        )}
+                                      </TableCell>
+                                      {isAdmin && (
+                                        <TableCell className="text-center">
+                                          {echeance.statut !== 'Payée' && (
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => {
+                                                setSelectedEcheance(echeance);
+                                                setShowPayEcheanceDialog(true);
+                                              }}
+                                            >
+                                              <CheckCircle2 className="w-4 h-4 mr-1" />
+                                              Marquer payée
+                                            </Button>
+                                          )}
+                                        </TableCell>
+                                      )}
+                                    </TableRow>
+                                  ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
