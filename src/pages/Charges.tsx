@@ -133,6 +133,11 @@ export default function Charges() {
           vehicules_traite!inner (
             vehicle_id,
             organisme
+          ),
+          vehicles!inner (
+            immatriculation,
+            marque,
+            modele
           )
         `)
         .eq('statut', 'Payée')
@@ -167,6 +172,7 @@ export default function Charges() {
         statut: 'paye',
         vehicle_id: t.vehicle_id,
         fournisseur: t.vehicules_traite?.organisme,
+        vehicles: t.vehicles,
       }));
 
       // Combiner et trier toutes les dépenses
@@ -578,6 +584,7 @@ export default function Charges() {
                   <TableHead>Date</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Véhicule</TableHead>
                   <TableHead>Fournisseur</TableHead>
                   <TableHead className="text-right">Montant</TableHead>
                   <TableHead>Mode Paiement</TableHead>
@@ -591,6 +598,15 @@ export default function Charges() {
                     <TableCell>{expense.date_depense}</TableCell>
                     <TableCell className="capitalize">{expense.type_depense}</TableCell>
                     <TableCell>{expense.description}</TableCell>
+                    <TableCell>
+                      {expense.vehicles ? (
+                        <span className="text-sm">
+                          {expense.vehicles.immatriculation || expense.vehicles.marque + ' ' + expense.vehicles.modele}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell>{expense.fournisseur || '-'}</TableCell>
                     <TableCell className="text-right font-medium">
                       {expense.montant.toFixed(2)} DH
