@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, Upload, X, FileText, Image as ImageIcon } from "lucide-react";
+import { Check, ChevronRight, Upload, X, FileText, Image as ImageIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -286,6 +286,14 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
       setCurrentStep('vignette');
     } else if (currentStep === 'vignette') {
       navigate(`/vehicules/${vehicleId}`);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep === 'visite_technique') {
+      setCurrentStep('assurance');
+    } else if (currentStep === 'vignette') {
+      setCurrentStep('visite_technique');
     }
   };
 
@@ -637,15 +645,22 @@ const renderFileUpload = (
                     rows={3}
                   />
                 </div>
+
+                {renderFileUpload(assuranceFiles, assuranceFileRef, 'assurance', 'Documents d\'assurance')}
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={handleSkip}>
-                  Passer cette étape
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Enregistrement...' : 'Enregistrer et continuer'}
-                </Button>
+              <div className="flex justify-between gap-2 pt-4">
+                <div>
+                  {/* Pas de bouton retour pour la première étape */}
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={handleSkip}>
+                    Passer cette étape
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Enregistrement...' : 'Enregistrer et continuer'}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
@@ -771,13 +786,19 @@ const renderFileUpload = (
                 {renderFileUpload(visiteFiles, visiteFileRef, 'visite', 'Documents de visite technique')}
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={handleSkip}>
-                  Passer cette étape
+              <div className="flex justify-between gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
                 </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Enregistrement...' : 'Enregistrer et continuer'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={handleSkip}>
+                    Passer cette étape
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Enregistrement...' : 'Enregistrer et continuer'}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
@@ -896,13 +917,19 @@ const renderFileUpload = (
                 {renderFileUpload(vignetteFiles, vignetteFileRef, 'vignette', 'Documents de vignette')}
               </div>
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={handleSkip}>
-                  Terminer plus tard
+              <div className="flex justify-between gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
                 </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Enregistrement...' : 'Enregistrer et terminer'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={handleSkip}>
+                    Terminer plus tard
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Enregistrement...' : 'Enregistrer et terminer'}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
