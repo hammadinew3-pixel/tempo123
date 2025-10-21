@@ -57,17 +57,26 @@ export default function Dashboard() {
   const [chequeAlertsCount, setChequeAlertsCount] = useState(0);
   const [reservationAlertsCount, setReservationAlertsCount] = useState(0);
   const [reservationType, setReservationType] = useState<'standard' | 'assistance'>('standard');
+  const [alertsLoaded, setAlertsLoaded] = useState(false);
   useEffect(() => {
     loadDashboardData();
+
+    // Debounce timer for real-time updates
+    let debounceTimer: NodeJS.Timeout;
+    
+    const handleRealtimeUpdate = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        loadDeparturesAndReturns();
+      }, 2000); // 2 second debounce
+    };
 
     // Subscribe to real-time updates for contracts
     const contractsChannel = supabase.channel('dashboard-contracts-changes').on('postgres_changes', {
       event: '*',
       schema: 'public',
       table: 'contracts'
-    }, () => {
-      loadDeparturesAndReturns();
-    }).subscribe();
+    }, handleRealtimeUpdate).subscribe();
     
     // Subscribe to assistance ONLY if module is accessible
     let assistanceChannel;
@@ -76,12 +85,11 @@ export default function Dashboard() {
         event: '*',
         schema: 'public',
         table: 'assistance'
-      }, () => {
-        loadDeparturesAndReturns();
-      }).subscribe();
+      }, handleRealtimeUpdate).subscribe();
     }
     
     return () => {
+      clearTimeout(debounceTimer);
       supabase.removeChannel(contractsChannel);
       if (assistanceChannel) {
         supabase.removeChannel(assistanceChannel);
@@ -259,26 +267,32 @@ export default function Dashboard() {
       setRecentReservations(reservations);
       setRecentAssistance(assistance);
 
-      // Load departures/returns and calculate alerts in parallel
-      await Promise.all([
-        loadDeparturesAndReturns(),
-        calculateVehicleAlerts(vehicles)
-      ]);
+      // Load only departures/returns on initial load
+      // Vehicle alerts will be calculated on demand when user clicks the alerts widget
+      await loadDeparturesAndReturns();
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
-  const calculateVehicleAlerts = async (vehicles: any[]) => {
+  const calculateVehicleAlerts = async (vehicles?: any[]) => {
     const alerts: VehicleAlert[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (vehicles.length === 0) {
+    // Fetch vehicles if not provided
+    let vehiclesList = vehicles;
+    if (!vehiclesList) {
+      const { data } = await supabase.from('vehicles').select('*');
+      vehiclesList = data || [];
+    }
+
+    if (vehiclesList.length === 0) {
       setVehicleAlerts([]);
       setChequeAlertsCount(0);
       setReservationAlertsCount(0);
+      setAlertsLoaded(true);
       return;
     }
 
@@ -495,6 +509,7 @@ export default function Dashboard() {
       data: returnsToday
     } = await supabase.from("contracts").select("id").eq("date_fin", todayStr).eq("statut", "livre");
     setReservationAlertsCount((departsToday?.length || 0) + (returnsToday?.length || 0));
+    setAlertsLoaded(true);
   };
   const chartData = [{
     month: 'Août\n2025',
@@ -644,10 +659,15 @@ export default function Dashboard() {
                           {reservationAlertsCount.toString().padStart(2, '0')} Alertes réservations
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setShowAlertsDialog(true)}>
+                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={async () => {
+                        if (!alertsLoaded) {
+                          await calculateVehicleAlerts();
+                        }
+                        setShowAlertsDialog(true);
+                      }}>
                         <span className={`w-3 h-3 rounded-full ${vehicleAlerts.length > 0 ? 'bg-warning' : 'bg-success'}`}></span>
                         <span className={`text-sm text-foreground ${vehicleAlerts.length > 0 ? 'underline' : ''}`}>
-                          {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
+                          {alertsLoaded ? vehicleAlerts.length.toString().padStart(2, '0') : '--'} Alertes véhicules
                         </span>
                       </div>
                     </div>

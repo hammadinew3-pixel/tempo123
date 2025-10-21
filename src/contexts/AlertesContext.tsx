@@ -131,12 +131,8 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    // Only refresh on initial mount, no automatic refresh
     refreshAlerts();
-    
-    // Refresh every 5 minutes
-    const interval = setInterval(refreshAlerts, 5 * 60 * 1000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   return (
