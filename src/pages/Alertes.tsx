@@ -54,7 +54,7 @@ const Alertes = () => {
     const alerts: VehicleAlert[] = [];
 
     for (const vehicle of vehicles) {
-      const vehicleName = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation})`;
+      const vehicleName = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || (vehicle as any).immatriculation_provisoire})`;
 
       // Insurance alerts
       const { data: insurances } = await supabase
