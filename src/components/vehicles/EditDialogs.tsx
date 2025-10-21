@@ -205,7 +205,7 @@ export function EditInspectionDialog({
             <div className="mt-2">
               <Input 
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 onChange={(e) => setInspectionPhoto(e.target.files?.[0] || null)}
               />
               {selectedInspection?.photo_url && !inspectionPhoto && (
@@ -415,7 +415,7 @@ export function EditVignetteDialog({
             <div className="mt-2">
               <Input 
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf"
                 onChange={(e) => setVignettePhoto(e.target.files?.[0] || null)}
               />
               {selectedVignette?.photo_url && !vignettePhoto && (

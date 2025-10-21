@@ -1797,9 +1797,9 @@ export default function VehiculeDetails() {
             </div>
             <div className="col-span-2">
               <Label htmlFor="ins-photo">Photo du document</Label>
-              <Input id="ins-photo" type="file" accept="image/*" onChange={e => setInsurancePhoto(e.target.files?.[0] || null)} />
+              <Input id="ins-photo" type="file" accept="image/*,application/pdf" onChange={e => setInsurancePhoto(e.target.files?.[0] || null)} />
               <p className="text-xs text-muted-foreground mt-1">
-                Formats acceptés: JPG, PNG, WEBP
+                Formats acceptés: JPG, PNG, WEBP, PDF
               </p>
             </div>
           </div>
@@ -1994,9 +1994,9 @@ export default function VehiculeDetails() {
             </div>
             <div className="col-span-2">
               <Label htmlFor="insp-photo">Photo du document</Label>
-              <Input id="insp-photo" type="file" accept="image/*" onChange={e => setInspectionPhoto(e.target.files?.[0] || null)} />
+              <Input id="insp-photo" type="file" accept="image/*,application/pdf" onChange={e => setInspectionPhoto(e.target.files?.[0] || null)} />
               <p className="text-xs text-muted-foreground mt-1">
-                Formats acceptés: JPG, PNG, WEBP
+                Formats acceptés: JPG, PNG, WEBP, PDF
               </p>
             </div>
           </div>
