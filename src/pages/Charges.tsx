@@ -626,9 +626,12 @@ export default function Charges() {
                   <SelectItem value="all">Tous</SelectItem>
                   <SelectItem value="maintenance">Maintenance</SelectItem>
                   <SelectItem value="document">Document</SelectItem>
+                  <SelectItem value="assurance">Assurance</SelectItem>
+                  <SelectItem value="vignette">Vignette</SelectItem>
+                  <SelectItem value="visite_technique">Visite technique</SelectItem>
+                  <SelectItem value="traite">Traite</SelectItem>
                   <SelectItem value="carburant">Carburant</SelectItem>
                   <SelectItem value="entretien">Entretien</SelectItem>
-                  <SelectItem value="assurance">Assurance</SelectItem>
                   <SelectItem value="amende">Amende</SelectItem>
                   <SelectItem value="reparation">Réparation</SelectItem>
                   <SelectItem value="autre">Autre</SelectItem>
@@ -699,9 +702,14 @@ export default function Charges() {
                     {visibleColumns.vehicule && (
                       <TableCell>
                         {expense.vehicles ? (
-                          <span className="text-sm">
-                            {expense.vehicles.immatriculation || expense.vehicles.ww || (expense.vehicles.marque + ' ' + expense.vehicles.modele)}
-                          </span>
+                          <div className="text-sm">
+                            <div className="font-medium">
+                              {expense.vehicles.immatriculation || expense.vehicles.ww || 'N/A'}
+                            </div>
+                            <div className="text-muted-foreground text-xs">
+                              {expense.vehicles.marque} {expense.vehicles.modele}
+                            </div>
+                          </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
