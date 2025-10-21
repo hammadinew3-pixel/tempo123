@@ -1474,7 +1474,7 @@ export default function VehiculeDetails() {
                       <CardContent className="space-y-3">
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Prix d'achat</span>
-                          <strong>{parseFloat(traite.montant_total || 0).toLocaleString()} Dh</strong>
+                          <strong>{(vehicle?.valeur_achat || parseFloat(traite.montant_total || 0)).toLocaleString()} Dh</strong>
                         </div>
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Avance</span>
