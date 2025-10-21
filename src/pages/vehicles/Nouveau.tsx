@@ -15,7 +15,14 @@ import { useTenantPlan } from '@/hooks/useTenantPlan';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
-type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'];
+type VehicleInsert = Database['public']['Tables']['vehicles']['Insert'] & {
+  numero_chassis?: string | null;
+  couleur?: string | null;
+  concessionnaire?: string | null;
+  puissance_fiscale?: number | null;
+  nombre_places?: number | null;
+  date_mise_en_circulation?: string | null;
+};
 
 export default function NouveauVehicule() {
   const navigate = useNavigate();
@@ -40,6 +47,12 @@ export default function NouveauVehicule() {
     valeur_achat: 0,
     en_service: true,
     sous_location: false,
+    numero_chassis: '',
+    couleur: '',
+    concessionnaire: '',
+    puissance_fiscale: undefined,
+    nombre_places: undefined,
+    date_mise_en_circulation: '',
   });
 
   const [carburant, setCarburant] = useState<string>('diesel');
@@ -377,6 +390,8 @@ export default function NouveauVehicule() {
               <Label htmlFor="chassis">N° Châssis</Label>
               <Input
                 id="chassis"
+                value={formData.numero_chassis || ''}
+                onChange={(e) => setFormData({ ...formData, numero_chassis: e.target.value })}
                 placeholder="Code unique de 17 caractères"
               />
               <p className="text-xs text-muted-foreground">
@@ -389,6 +404,8 @@ export default function NouveauVehicule() {
               <Input
                 id="places"
                 type="number"
+                value={formData.nombre_places || ''}
+                onChange={(e) => setFormData({ ...formData, nombre_places: parseInt(e.target.value) || undefined })}
                 placeholder="Ex: 5"
               />
             </div>
@@ -474,11 +491,8 @@ export default function NouveauVehicule() {
               <Input
                 id="date-circulation"
                 type="date"
-                value={formData.annee ? `${formData.annee}-01-01` : ''}
-                onChange={(e) => {
-                  const year = new Date(e.target.value).getFullYear();
-                  setFormData({ ...formData, annee: year });
-                }}
+                value={formData.date_mise_en_circulation || ''}
+                onChange={(e) => setFormData({ ...formData, date_mise_en_circulation: e.target.value })}
               />
             </div>
 
@@ -486,6 +500,8 @@ export default function NouveauVehicule() {
               <Label htmlFor="concessionaire">Concessionaire</Label>
               <Input
                 id="concessionaire"
+                value={formData.concessionnaire || ''}
+                onChange={(e) => setFormData({ ...formData, concessionnaire: e.target.value })}
                 placeholder="Nom du concessionaire"
               />
             </div>
@@ -496,6 +512,8 @@ export default function NouveauVehicule() {
                 <Input
                   id="puissance"
                   type="number"
+                  value={formData.puissance_fiscale || ''}
+                  onChange={(e) => setFormData({ ...formData, puissance_fiscale: parseInt(e.target.value) || undefined })}
                   placeholder="Ex: 6"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
@@ -506,7 +524,10 @@ export default function NouveauVehicule() {
 
             <div className="space-y-2">
               <Label htmlFor="couleur">Couleur</Label>
-              <Select defaultValue="">
+              <Select 
+                value={formData.couleur || ''} 
+                onValueChange={(value) => setFormData({ ...formData, couleur: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une couleur" />
                 </SelectTrigger>
