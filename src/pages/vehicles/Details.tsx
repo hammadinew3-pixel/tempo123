@@ -44,6 +44,7 @@ export default function VehiculeDetails() {
   const [insurances, setInsurances] = useState<any[]>([]);
   const [technicalInspections, setTechnicalInspections] = useState<any[]>([]);
   const [vignettes, setVignettes] = useState<any[]>([]);
+  const [autorisations, setAutorisations] = useState<any[]>([]);
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showContractsList, setShowContractsList] = useState(false);
@@ -172,7 +173,7 @@ export default function VehiculeDetails() {
   }, [vehicle]);
   const loadVehicle = async () => {
     try {
-      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, traitesRes, echeancesRes, categoriesRes] = await Promise.all([
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, autorisationsRes, traitesRes, echeancesRes, categoriesRes] = await Promise.all([
         supabase.from('vehicles').select('*').eq('id', id).single(), 
         supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }), 
         supabase.from('assistance').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }), 
@@ -180,6 +181,7 @@ export default function VehiculeDetails() {
         supabase.from('vehicle_insurance').select('*').eq('vehicle_id', id).order('date_debut', { ascending: false }), 
         supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', id).order('date_visite', { ascending: false }), 
         supabase.from('vehicle_vignette').select('*').eq('vehicle_id', id).order('annee', { ascending: false }), 
+        supabase.from('vehicle_autorisation_circulation').select('*').eq('vehicle_id', id).order('date_delivrance', { ascending: false }), 
         supabase.from('vehicules_traite').select('*').eq('vehicle_id', id).order('created_at', { ascending: false }), 
         supabase.from('vehicules_traites_echeances').select('*').eq('vehicle_id', id).order('date_echeance', { ascending: true }),
         supabase.from('vehicle_assistance_categories').select('*').eq('actif', true).order('ordre', { ascending: true })
@@ -193,6 +195,7 @@ export default function VehiculeDetails() {
       setInsurances(insurancesRes.data || []);
       setTechnicalInspections(inspectionsRes.data || []);
       setVignettes(vignettesRes.data || []);
+      setAutorisations(autorisationsRes.data || []);
       setTraites(traitesRes.data || []);
       setEcheances(echeancesRes.data || []);
       setAssistanceCategories(categoriesRes.data || []);
@@ -970,6 +973,9 @@ export default function VehiculeDetails() {
               <TabsTrigger value="vignette" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
                 VIGNETTE
               </TabsTrigger>
+              <TabsTrigger value="autorisation" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                AUTORISATION
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="assurance" className="mt-6">
@@ -1146,6 +1152,73 @@ export default function VehiculeDetails() {
                   </Table> : <div className="text-center py-8 text-muted-foreground">
                     Aucune vignette enregistrée
                   </div>}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="autorisation" className="mt-6">
+              <div className="space-y-4">
+                {autorisations.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>N° d'ordre</TableHead>
+                        <TableHead>Date de délivrance</TableHead>
+                        <TableHead>Date d'expiration</TableHead>
+                        <TableHead>Remarques</TableHead>
+                        <TableHead className="text-right">Date création</TableHead>
+                        <TableHead className="text-center">Photo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {autorisations.map(autorisation => {
+                        const today = new Date();
+                        const expirationDate = autorisation.date_expiration ? new Date(autorisation.date_expiration) : null;
+                        const daysUntilExpiration = expirationDate ? Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+                        return (
+                          <TableRow key={autorisation.id} className="cursor-pointer hover:bg-accent/50">
+                            <TableCell>{autorisation.numero_ordre || '-'}</TableCell>
+                            <TableCell>
+                              {autorisation.date_delivrance ? safeFormatDate(autorisation.date_delivrance, 'dd/MM/yyyy', { locale: fr }) : '-'}
+                            </TableCell>
+                            <TableCell>
+                              {autorisation.date_expiration ? (
+                                <>
+                                  <span className={daysUntilExpiration !== null && daysUntilExpiration <= 30 && daysUntilExpiration > 0 ? 'text-warning font-medium' : ''}>
+                                    {safeFormatDate(autorisation.date_expiration, 'dd/MM/yyyy', { locale: fr })}
+                                  </span>
+                                  {daysUntilExpiration !== null && daysUntilExpiration > 0 && daysUntilExpiration <= 30 && (
+                                    <Badge variant="outline" className="ml-2 bg-warning/10 text-warning border-warning">
+                                      {daysUntilExpiration}J
+                                    </Badge>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell>{autorisation.remarques || '-'}</TableCell>
+                            <TableCell className="text-right text-muted-foreground text-sm">
+                              {safeFormatDate(autorisation.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
+                            </TableCell>
+                            <TableCell className="text-center" onClick={e => e.stopPropagation()}>
+                              {autorisation.photo_url ? (
+                                <Button variant="ghost" size="sm" onClick={() => window.open(autorisation.photo_url, '_blank')}>
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">-</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Aucune autorisation de circulation enregistrée
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
