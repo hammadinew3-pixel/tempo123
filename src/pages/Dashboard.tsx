@@ -464,7 +464,7 @@ export default function Dashboard() {
     revenus: 6000,
     charges: 400
   }];
-  const totalAlerts = vehicleAlerts.length + chequeAlertsCount + reservationAlertsCount;
+  const totalAlerts = vehicleAlerts.length + chequeAlertsCount;
   const availablePercentage = stats.vehiclesCount > 0 ? (stats.availableVehicles / stats.vehiclesCount * 100).toFixed(2) : '0.00';
 
   // Group alerts by vehicle
@@ -603,9 +603,9 @@ export default function Dashboard() {
                         loadDetailedVehicleAlerts();
                         setShowAlertsDialog(true);
                       }}>
-                        <span className={`w-3 h-3 rounded-full ${vehicleAlerts.length > 0 || reservationAlertsCount > 0 ? 'bg-warning' : 'bg-success'}`}></span>
-                        <span className={`text-sm text-foreground ${vehicleAlerts.length > 0 || reservationAlertsCount > 0 ? 'underline' : ''}`}>
-                          {(vehicleAlerts.length || reservationAlertsCount).toString().padStart(2, '0')} Alertes véhicules
+                        <span className={`w-3 h-3 rounded-full ${vehicleAlerts.length > 0 ? 'bg-warning' : 'bg-success'}`}></span>
+                        <span className={`text-sm text-foreground ${vehicleAlerts.length > 0 ? 'underline' : ''}`}>
+                          {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
                         </span>
                       </div>
                     </div>
