@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, TrendingUp, TrendingDown, Calendar as CalendarIcon, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Edit, TrendingUp, TrendingDown, Calendar as CalendarIcon, AlertCircle, Shield, ClipboardCheck, FileCheck, CreditCard, Wrench, Plus, DollarSign, Car, Gauge, FileText, Eye, Settings, Upload, Landmark, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1067,8 +1067,10 @@ export default function VehiculeDetails() {
                               {safeFormatDate(insurance.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
-                              {insurance.photo_url ? <Button variant="ghost" size="sm" onClick={() => window.open(insurance.photo_url, '_blank')}>
-                                  <Eye className="w-4 h-4" />
+                              {insurance.photo_url ? <Button variant="ghost" size="sm" asChild>
+                                  <a href={insurance.photo_url} download>
+                                    <Download className="w-4 h-4" />
+                                  </a>
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
                             </TableCell>
                           </TableRow>;
@@ -1124,8 +1126,10 @@ export default function VehiculeDetails() {
                               {safeFormatDate(inspection.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
-                              {inspection.photo_url ? <Button variant="ghost" size="sm" onClick={() => window.open(inspection.photo_url, '_blank')}>
-                                  <Eye className="w-4 h-4" />
+                              {inspection.photo_url ? <Button variant="ghost" size="sm" asChild>
+                                  <a href={inspection.photo_url} download>
+                                    <Download className="w-4 h-4" />
+                                  </a>
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
                             </TableCell>
                           </TableRow>;
@@ -1187,8 +1191,10 @@ export default function VehiculeDetails() {
                         })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
-                              {vignette.photo_url ? <Button variant="ghost" size="sm" onClick={() => window.open(vignette.photo_url, '_blank')}>
-                                  <Eye className="w-4 h-4" />
+                              {vignette.photo_url ? <Button variant="ghost" size="sm" asChild>
+                                  <a href={vignette.photo_url} download>
+                                    <Download className="w-4 h-4" />
+                                  </a>
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
                             </TableCell>
                           </TableRow>;
@@ -1253,8 +1259,10 @@ export default function VehiculeDetails() {
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
                               {autorisation.photo_url ? (
-                                <Button variant="ghost" size="sm" onClick={() => window.open(autorisation.photo_url, '_blank')}>
-                                  <Eye className="w-4 h-4" />
+                                <Button variant="ghost" size="sm" asChild>
+                                  <a href={autorisation.photo_url} download>
+                                    <Download className="w-4 h-4" />
+                                  </a>
                                 </Button>
                               ) : (
                                 <span className="text-muted-foreground text-xs">-</span>
