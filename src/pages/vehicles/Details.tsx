@@ -701,7 +701,7 @@ export default function VehiculeDetails() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          Fiche véhicule Mat. N° {vehicle.immatriculation}
+          Fiche véhicule Mat. N° {vehicle.immatriculation || vehicle.ww || 'N/A'}
         </h1>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button onClick={() => navigate(`/vehicules/${id}/modifier`)} className="bg-info hover:bg-info/90 text-white gap-2">

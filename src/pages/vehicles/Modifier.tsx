@@ -205,7 +205,7 @@ export default function ModifierVehicule() {
       const updateData = {
         marque: formData.marque,
         modele: formData.modele,
-        ww: formData.ww,
+        ww: formData.immatriculation ? null : formData.ww,
         immatriculation: formData.immatriculation,
         annee: formData.annee,
         date_mise_en_circulation: formData.date_mise_en_circulation || null,
