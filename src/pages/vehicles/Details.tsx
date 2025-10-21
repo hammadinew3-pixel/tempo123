@@ -1404,12 +1404,12 @@ export default function VehiculeDetails() {
           {isAdmin && (
             <div className="mb-4 flex justify-end">
               <Button onClick={() => {
-                // Pré-remplir le concessionnaire depuis la fiche véhicule
+                // Pré-remplir le concessionnaire et prix d'achat depuis la fiche véhicule
                 setTraiteForm({
                   concessionaire: vehicle?.concessionnaire || '',
                   organisme: '',
                   date_achat: '',
-                  prix_achat: '',
+                  prix_achat: vehicle?.valeur_achat?.toString() || '',
                   avance: '',
                   montant_mensuel: '',
                   date_debut: '',
