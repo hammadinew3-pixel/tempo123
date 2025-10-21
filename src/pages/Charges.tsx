@@ -160,7 +160,7 @@ export default function Charges() {
       const formattedTraites: Expense[] = (traitesData || []).map((t: any) => ({
         id: t.id,
         date_depense: t.date_paiement || t.date_echeance,
-        type_depense: 'autre',
+        type_depense: 'traite',
         montant: t.montant,
         mode_paiement: 'virement',
         description: `Traite véhicule - ${t.vehicules_traite?.organisme || ''}`,
