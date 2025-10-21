@@ -93,6 +93,7 @@ export default function VehiculeDetails() {
   const [showInsuranceDialog, setShowInsuranceDialog] = useState(false);
   const [showInspectionDialog, setShowInspectionDialog] = useState(false);
   const [showVignetteDialog, setShowVignetteDialog] = useState(false);
+  const [showAutorisationDialog, setShowAutorisationDialog] = useState(false);
 
   // Form states for insurance
   const [insuranceForm, setInsuranceForm] = useState({
@@ -142,6 +143,17 @@ export default function VehiculeDetails() {
   });
   const [vignettePhoto, setVignettePhoto] = useState<File | null>(null);
   const [uploadingVignette, setUploadingVignette] = useState(false);
+  
+  // Form states for autorisation
+  const [autorisationForm, setAutorisationForm] = useState({
+    numero_ordre: '',
+    date_delivrance: '',
+    date_expiration: '',
+    remarques: ''
+  });
+  const [autorisationPhoto, setAutorisationPhoto] = useState<File | null>(null);
+  const [uploadingAutorisation, setUploadingAutorisation] = useState(false);
+  
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -546,8 +558,41 @@ export default function VehiculeDetails() {
             message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`,
             action: "RENOUVELER",
             onClick: () => setShowInspectionDialog(true),
-            severity: "warning"
-          });
+          severity: "warning"
+        });
+      }
+    }
+  }
+  
+  // Check autorisation de circulation
+  if (autorisations.length === 0) {
+    alerts.push({
+      message: "Véhicule sans autorisation de circulation.",
+      action: "CRÉER AUTORISATION",
+      onClick: () => setShowAutorisationDialog(true),
+      severity: "high"
+    });
+  } else {
+    // Vérifier la date d'expiration de la dernière autorisation
+    const latestAutorisation = autorisations[0]; // Déjà trié par date_delivrance desc
+    if (latestAutorisation?.date_expiration) {
+      const expirationDate = new Date(latestAutorisation.date_expiration);
+      expirationDate.setHours(0, 0, 0, 0);
+      const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (expirationDate < today) {
+        alerts.push({
+          message: "Autorisation de circulation expirée depuis " + Math.abs(daysUntilExpiration) + " jour(s).",
+          action: "RENOUVELER",
+          onClick: () => setShowAutorisationDialog(true),
+          severity: "critical"
+        });
+      } else if (daysUntilExpiration <= 30) {
+        alerts.push({
+          message: `Autorisation de circulation expire dans ${daysUntilExpiration} jour(s).`,
+          action: "RENOUVELER",
+          onClick: () => setShowAutorisationDialog(true),
+          severity: "warning"
+        });
         }
       }
     }
@@ -1157,6 +1202,12 @@ export default function VehiculeDetails() {
 
             <TabsContent value="autorisation" className="mt-6">
               <div className="space-y-4">
+                <div className="flex justify-end">
+                  <Button size="sm" className="gap-2" onClick={() => setShowAutorisationDialog(true)}>
+                    <Plus className="w-4 h-4" />
+                    AJOUTER AUTORISATION
+                  </Button>
+                </div>
                 {autorisations.length > 0 ? (
                   <Table>
                     <TableHeader>
@@ -2155,6 +2206,166 @@ export default function VehiculeDetails() {
             }
           }} disabled={uploadingVignette}>
               {uploadingVignette ? "Upload en cours..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for adding autorisation de circulation */}
+      <Dialog open={showAutorisationDialog} onOpenChange={setShowAutorisationDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ajouter une autorisation de circulation</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div>
+              <Label htmlFor="aut-numero-ordre">N° d'ordre *</Label>
+              <Input 
+                id="aut-numero-ordre" 
+                value={autorisationForm.numero_ordre} 
+                onChange={e => setAutorisationForm({
+                  ...autorisationForm,
+                  numero_ordre: e.target.value
+                })} 
+                placeholder="Ex: AUT001" 
+              />
+            </div>
+            <div>
+              <Label htmlFor="aut-date-delivrance">Date de délivrance *</Label>
+              <Input 
+                id="aut-date-delivrance" 
+                type="date" 
+                value={autorisationForm.date_delivrance} 
+                onChange={e => setAutorisationForm({
+                  ...autorisationForm,
+                  date_delivrance: e.target.value
+                })} 
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="aut-date-expiration">Date d'expiration *</Label>
+              <Input 
+                id="aut-date-expiration" 
+                type="date" 
+                value={autorisationForm.date_expiration} 
+                onChange={e => setAutorisationForm({
+                  ...autorisationForm,
+                  date_expiration: e.target.value
+                })} 
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="aut-remarques">Remarques</Label>
+              <Textarea 
+                id="aut-remarques" 
+                value={autorisationForm.remarques} 
+                onChange={e => setAutorisationForm({
+                  ...autorisationForm,
+                  remarques: e.target.value
+                })} 
+                placeholder="Notes additionnelles..." 
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="aut-photo">Photo du document</Label>
+              <Input 
+                id="aut-photo" 
+                type="file" 
+                accept="image/*,application/pdf" 
+                onChange={e => setAutorisationPhoto(e.target.files?.[0] || null)} 
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Formats acceptés: JPG, PNG, WEBP, PDF
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowAutorisationDialog(false);
+                setAutorisationForm({
+                  numero_ordre: '',
+                  date_delivrance: '',
+                  date_expiration: '',
+                  remarques: ''
+                });
+                setAutorisationPhoto(null);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={async () => {
+                try {
+                  if (!autorisationForm.numero_ordre || !autorisationForm.date_delivrance || !autorisationForm.date_expiration) {
+                    toast({
+                      title: "Erreur",
+                      description: "Veuillez remplir tous les champs obligatoires",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
+                  setUploadingAutorisation(true);
+                  let photoUrl = null;
+
+                  // Upload photo if provided
+                  if (autorisationPhoto) {
+                    const fileExt = autorisationPhoto.name.split('.').pop();
+                    const fileName = `${vehicle!.id}/autorisation/${Date.now()}.${fileExt}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from('documents_vehicules')
+                      .upload(fileName, autorisationPhoto);
+                    
+                    if (uploadError) throw uploadError;
+                    
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('documents_vehicules')
+                      .getPublicUrl(fileName);
+                    photoUrl = publicUrl;
+                  }
+
+                  const { error } = await supabase
+                    .from('vehicle_autorisation_circulation')
+                    .insert(withTenantId({
+                      vehicle_id: vehicle!.id,
+                      numero_ordre: autorisationForm.numero_ordre,
+                      date_delivrance: autorisationForm.date_delivrance,
+                      date_expiration: autorisationForm.date_expiration,
+                      remarques: autorisationForm.remarques || null,
+                      photo_url: photoUrl
+                    }));
+
+                  if (error) throw error;
+
+                  toast({
+                    title: "Succès",
+                    description: "Autorisation de circulation ajoutée avec succès"
+                  });
+
+                  setShowAutorisationDialog(false);
+                  setAutorisationForm({
+                    numero_ordre: '',
+                    date_delivrance: '',
+                    date_expiration: '',
+                    remarques: ''
+                  });
+                  setAutorisationPhoto(null);
+                  loadVehicle();
+                } catch (error: any) {
+                  toast({
+                    title: "Erreur",
+                    description: error.message,
+                    variant: "destructive"
+                  });
+                } finally {
+                  setUploadingAutorisation(false);
+                }
+              }} 
+              disabled={uploadingAutorisation}
+            >
+              {uploadingAutorisation ? "Upload en cours..." : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>
