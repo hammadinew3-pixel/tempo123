@@ -480,7 +480,10 @@ export default function NouveauVehicule() {
         {/* Collapsible Additional Fields */}
         <Collapsible open={showMoreFields} onOpenChange={setShowMoreFields}>
           <CollapsibleTrigger asChild>
-            
+            <Button type="button" variant="outline" className="w-full">
+              <ChevronUp className={`w-4 h-4 mr-2 transition-transform ${showMoreFields ? '' : 'rotate-180'}`} />
+              {showMoreFields ? 'Masquer les options' : 'Ajouter une photo'}
+            </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-4 space-y-4">
             <p className="text-sm text-muted-foreground text-center">
