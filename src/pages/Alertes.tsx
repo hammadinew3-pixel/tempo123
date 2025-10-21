@@ -46,7 +46,7 @@ const Alertes = () => {
   const loadVehicleAlerts = async () => {
     const { data: vehicles } = await supabase
       .from("vehicles")
-      .select("*")
+      .select("id, marque, modele, immatriculation, immatriculation_provisoire, kilometrage, prochain_kilometrage_vidange, dernier_kilometrage_vidange")
       .order("marque");
 
     if (!vehicles) return;
@@ -54,7 +54,7 @@ const Alertes = () => {
     const alerts: VehicleAlert[] = [];
 
     for (const vehicle of vehicles) {
-      const vehicleName = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || (vehicle as any).immatriculation_provisoire})`;
+      const vehicleName = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || vehicle.immatriculation_provisoire})`;
 
       // Insurance alerts
       const { data: insurances } = await supabase

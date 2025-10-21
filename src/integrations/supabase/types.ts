@@ -2264,6 +2264,7 @@ export type Database = {
           en_service: boolean | null
           id: string
           immatriculation: string
+          immatriculation_provisoire: string | null
           kilometrage: number | null
           marque: string
           modele: string
@@ -2297,6 +2298,7 @@ export type Database = {
           en_service?: boolean | null
           id?: string
           immatriculation: string
+          immatriculation_provisoire?: string | null
           kilometrage?: number | null
           marque: string
           modele: string
@@ -2330,6 +2332,7 @@ export type Database = {
           en_service?: boolean | null
           id?: string
           immatriculation?: string
+          immatriculation_provisoire?: string | null
           kilometrage?: number | null
           marque?: string
           modele?: string
