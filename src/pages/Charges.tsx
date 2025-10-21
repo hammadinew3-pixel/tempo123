@@ -112,7 +112,7 @@ export default function Charges() {
     try {
       const { data, error } = await supabase
         .from('vehicles')
-        .select('id, immatriculation, marque, modele')
+        .select('id, immatriculation, ww, marque, modele')
         .order('immatriculation');
 
       if (error) throw error;
@@ -584,7 +584,7 @@ export default function Charges() {
                   <SelectItem value="all">Tous les véhicules</SelectItem>
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.immatriculation} - {vehicle.marque} {vehicle.modele}
+                      {vehicle.immatriculation || vehicle.ww || 'N/A'} - {vehicle.marque} {vehicle.modele}
                     </SelectItem>
                   ))}
                 </SelectContent>
