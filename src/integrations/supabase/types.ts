@@ -2252,6 +2252,7 @@ export type Database = {
         Row: {
           annee: number | null
           assurance_expire_le: string | null
+          carburant: string | null
           categorie: string | null
           categories: string[] | null
           concessionnaire: string | null
@@ -2284,6 +2285,7 @@ export type Database = {
         Insert: {
           annee?: number | null
           assurance_expire_le?: string | null
+          carburant?: string | null
           categorie?: string | null
           categories?: string[] | null
           concessionnaire?: string | null
@@ -2316,6 +2318,7 @@ export type Database = {
         Update: {
           annee?: number | null
           assurance_expire_le?: string | null
+          carburant?: string | null
           categorie?: string | null
           categories?: string[] | null
           concessionnaire?: string | null

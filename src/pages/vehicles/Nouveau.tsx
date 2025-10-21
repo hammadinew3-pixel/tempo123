@@ -160,6 +160,7 @@ export default function NouveauVehicule() {
       // Dans une implémentation complète, vous devriez uploader vers Supabase Storage
       const dataToInsert = {
         ...formData,
+        carburant,
         categories: selectedCategories,
         photo_url: photoPreview || null,
       };

@@ -113,12 +113,12 @@ export default function ModifierVehicule() {
         valeur_achat: data.valeur_achat || 0,
         statut: data.statut || 'disponible',
         photo_url: data.photo_url || '',
-        carburant: 'diesel',
-        chassis: '',
-        places: 5,
-        concessionaire: '',
-        puissance: '',
-        couleur: ''
+        carburant: data.carburant || 'diesel',
+        chassis: data.numero_chassis || '',
+        places: data.nombre_places || 5,
+        concessionaire: data.concessionnaire || '',
+        puissance: data.puissance_fiscale ? String(data.puissance_fiscale) : '',
+        couleur: data.couleur || ''
       });
       setIsInService(data.en_service ?? true);
       setIsSousLocation(data.sous_location ?? false);
@@ -183,6 +183,7 @@ export default function ModifierVehicule() {
       const updateData = {
         marque: formData.marque,
         modele: formData.modele,
+        ww: formData.ww,
         immatriculation: formData.immatriculation,
         annee: formData.annee,
         categorie: formData.categorie,
@@ -192,7 +193,13 @@ export default function ModifierVehicule() {
         valeur_achat: formData.valeur_achat,
         statut: isInService ? formData.statut : 'en_panne' as VehicleStatus,
         en_service: isInService,
-        sous_location: isSousLocation
+        sous_location: isSousLocation,
+        carburant: formData.carburant,
+        numero_chassis: formData.chassis,
+        nombre_places: formData.places,
+        concessionnaire: formData.concessionaire,
+        puissance_fiscale: formData.puissance ? parseFloat(formData.puissance) : null,
+        couleur: formData.couleur
       };
       const {
         error
