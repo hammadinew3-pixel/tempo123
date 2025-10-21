@@ -677,7 +677,6 @@ export default function Charges() {
             </PopoverContent>
           </Popover>
         </CardHeader>
-        </CardHeader>
         <CardContent>
           <div className="rounded-md border">
             <Table>
