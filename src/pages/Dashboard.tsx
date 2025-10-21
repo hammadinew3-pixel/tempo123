@@ -272,9 +272,15 @@ export default function Dashboard() {
       // Don't calculate alerts on initial load - lazy load when user clicks
       // Just count the critical alerts for display
       const criticalCount = await calculateCriticalAlertsCount(vehicles);
-      setVehicleAlerts([]);
+      const placeholderAlerts = Array(criticalCount).fill(null).map((_, i) => ({
+        vehicleId: `placeholder-${i}`,
+        vehicleInfo: '',
+        message: 'Alerte véhicule',
+        severity: 'warning' as const
+      }));
+      setVehicleAlerts(placeholderAlerts);
       setChequeAlertsCount(0);
-      setReservationAlertsCount(criticalCount);
+      setReservationAlertsCount(0);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
