@@ -28,7 +28,7 @@ export function TraitesHeatmap({ traite, echeances, onPayEcheance }: TraitesHeat
   const totalPaid = paidEcheances.reduce((sum, e) => sum + parseFloat(e.montant || 0), 0);
   const monthsPaid = paidEcheances.length;
   const monthsRemaining = parseInt(traite.nombre_traites) - monthsPaid;
-  const montantRestant = parseFloat(traite.montant_total || 0) - totalPaid;
+  const montantRestant = parseFloat(traite.montant_total || 0) - parseFloat(traite.avance_paye || 0) - totalPaid;
   const montantMensuel = parseFloat(traite.montant_mensuel || 0);
   const lastPaymentDate = endDate;
 
