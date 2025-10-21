@@ -207,7 +207,7 @@ const Alertes = () => {
               : `vidange critique - ${kmUntilOilChange} km restants`,
             severity: "critical",
             type: "vidange",
-            actionText: "VOIR VÉHICULE",
+            actionText: "FAIRE VIDANGE",
           });
         } else if (kmUntilOilChange <= 1000) {
           alerts.push({
@@ -216,7 +216,7 @@ const Alertes = () => {
             message: `vidange à faire dans ${kmUntilOilChange} km`,
             severity: "warning",
             type: "vidange",
-            actionText: "VOIR VÉHICULE",
+            actionText: "PLANIFIER VIDANGE",
           });
         }
       } else if (!vehicle.dernier_kilometrage_vidange) {
@@ -226,7 +226,7 @@ const Alertes = () => {
           message: "aucune vidange enregistrée",
           severity: "missing",
           type: "vidange",
-          actionText: "VOIR VÉHICULE",
+          actionText: "AJOUTER VIDANGE",
         });
       }
 
@@ -510,8 +510,6 @@ const Alertes = () => {
                                 {alert.type === "assurance" && "Assurance"}
                                 {alert.type === "visite_technique" && "Visite technique"}
                                 {alert.type === "vignette" && "Vignette"}
-                                {alert.type === "vidange" && "Vidange"}
-                                {alert.type === "traite" && "Traite bancaire"}
                               </span>
                             </div>
                             <p className="text-sm">{alert.message}</p>
