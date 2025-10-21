@@ -47,7 +47,7 @@ interface Expense {
   vehicle_id?: string;
   contract_id?: string;
   fournisseur?: string;
-  vehicles?: { immatriculation: string; marque: string; modele: string };
+  vehicles?: { immatriculation: string; ww?: string | null; marque: string; modele: string };
   contracts?: { numero_contrat: string };
 }
 
@@ -136,6 +136,7 @@ export default function Charges() {
           ),
           vehicles!inner (
             immatriculation,
+            ww,
             marque,
             modele
           )
@@ -601,7 +602,7 @@ export default function Charges() {
                     <TableCell>
                       {expense.vehicles ? (
                         <span className="text-sm">
-                          {expense.vehicles.immatriculation || expense.vehicles.marque + ' ' + expense.vehicles.modele}
+                          {expense.vehicles.immatriculation || expense.vehicles.ww || (expense.vehicles.marque + ' ' + expense.vehicles.modele)}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
