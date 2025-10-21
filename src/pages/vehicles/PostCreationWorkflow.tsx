@@ -251,7 +251,6 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
           numero_cheque: vignetteData.numero_cheque,
           banque: vignetteData.banque,
           remarques: vignetteData.remarques,
-          photo_url: uploadedUrls.length > 0 ? uploadedUrls[0] : null,
         })]);
 
       if (error) throw error;
