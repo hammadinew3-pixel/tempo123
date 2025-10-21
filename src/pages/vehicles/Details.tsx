@@ -183,6 +183,57 @@ export default function VehiculeDetails() {
       }));
     }
   }, [vehicle]);
+  const handleDownloadDocument = async (url: string, filename: string) => {
+    try {
+      // Extract the file path from the URL
+      const urlParts = url.split('/storage/v1/object/public/');
+      if (urlParts.length < 2) {
+        toast({
+          title: "Erreur",
+          description: "URL invalide",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const pathParts = urlParts[1].split('/');
+      const bucketName = pathParts[0];
+      const filePath = pathParts.slice(1).join('/');
+      
+      // Download the file from Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .download(filePath);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Create a download link
+      const blob = new Blob([data]);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      toast({
+        title: "Succès",
+        description: "Document téléchargé"
+      });
+    } catch (error: any) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de télécharger le document",
+        variant: "destructive"
+      });
+    }
+  };
+
   const loadVehicle = async () => {
     try {
       const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, autorisationsRes, traitesRes, echeancesRes, categoriesRes] = await Promise.all([
@@ -1067,10 +1118,12 @@ export default function VehiculeDetails() {
                               {safeFormatDate(insurance.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
-                              {insurance.photo_url ? <Button variant="ghost" size="sm" asChild>
-                                  <a href={insurance.photo_url} download>
-                                    <Download className="w-4 h-4" />
-                                  </a>
+                              {insurance.photo_url ? <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleDownloadDocument(insurance.photo_url, `assurance_${insurance.numero_ordre}.pdf`)}
+                                >
+                                  <Download className="w-4 h-4" />
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
                             </TableCell>
                           </TableRow>;
@@ -1126,10 +1179,12 @@ export default function VehiculeDetails() {
                               {safeFormatDate(inspection.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
-                              {inspection.photo_url ? <Button variant="ghost" size="sm" asChild>
-                                  <a href={inspection.photo_url} download>
-                                    <Download className="w-4 h-4" />
-                                  </a>
+                              {inspection.photo_url ? <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleDownloadDocument(inspection.photo_url, `visite_technique_${inspection.numero_ordre}.pdf`)}
+                                >
+                                  <Download className="w-4 h-4" />
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
                             </TableCell>
                           </TableRow>;
@@ -1191,10 +1246,12 @@ export default function VehiculeDetails() {
                         })}
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
-                              {vignette.photo_url ? <Button variant="ghost" size="sm" asChild>
-                                  <a href={vignette.photo_url} download>
-                                    <Download className="w-4 h-4" />
-                                  </a>
+                              {vignette.photo_url ? <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleDownloadDocument(vignette.photo_url, `vignette_${vignette.annee}.pdf`)}
+                                >
+                                  <Download className="w-4 h-4" />
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
                             </TableCell>
                           </TableRow>;
@@ -1259,10 +1316,12 @@ export default function VehiculeDetails() {
                             </TableCell>
                             <TableCell className="text-center" onClick={e => e.stopPropagation()}>
                               {autorisation.photo_url ? (
-                                <Button variant="ghost" size="sm" asChild>
-                                  <a href={autorisation.photo_url} download>
-                                    <Download className="w-4 h-4" />
-                                  </a>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleDownloadDocument(autorisation.photo_url, `autorisation_${autorisation.numero_ordre}.pdf`)}
+                                >
+                                  <Download className="w-4 h-4" />
                                 </Button>
                               ) : (
                                 <span className="text-muted-foreground text-xs">-</span>
