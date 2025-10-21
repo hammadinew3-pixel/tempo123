@@ -451,14 +451,24 @@ export default function VehiculeDetails() {
             ? `Vidange en retard de ${Math.abs(kmUntilOilChange)} km`
             : `Vidange critique - ${kmUntilOilChange} km restants`,
           action: "FAIRE VIDANGE",
-          onClick: () => {/* Scroll to maintenance section */},
+          onClick: () => {
+            const maintenanceSection = document.getElementById('maintenance-section');
+            if (maintenanceSection) {
+              maintenanceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          },
           severity: "critical"
         });
       } else if (kmUntilOilChange <= 1000) {
         alerts.push({
           message: `Vidange à faire dans ${kmUntilOilChange} km`,
           action: "PLANIFIER VIDANGE",
-          onClick: () => {/* Scroll to maintenance section */},
+          onClick: () => {
+            const maintenanceSection = document.getElementById('maintenance-section');
+            if (maintenanceSection) {
+              maintenanceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          },
           severity: "warning"
         });
       }
@@ -466,7 +476,12 @@ export default function VehiculeDetails() {
       alerts.push({
         message: "Aucune vidange enregistrée",
         action: "AJOUTER VIDANGE",
-        onClick: () => {/* Scroll to maintenance section */},
+        onClick: () => {
+          const maintenanceSection = document.getElementById('maintenance-section');
+          if (maintenanceSection) {
+            maintenanceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        },
         severity: "high"
       });
     }
@@ -1138,13 +1153,15 @@ export default function VehiculeDetails() {
       </Card>
 
       {/* Maintenance & Interventions Section - NEW */}
-      <VehicleMaintenanceSummary
-        vehicleId={vehicle.id}
-        currentKm={vehicle.kilometrage}
-        dateLastVidange={vehicle.date_derniere_vidange}
-        kmLastVidange={vehicle.dernier_kilometrage_vidange}
-        nextKmVidange={vehicle.prochain_kilometrage_vidange}
-      />
+      <div id="maintenance-section">
+        <VehicleMaintenanceSummary
+          vehicleId={vehicle.id}
+          currentKm={vehicle.kilometrage}
+          dateLastVidange={vehicle.date_derniere_vidange}
+          kmLastVidange={vehicle.dernier_kilometrage_vidange}
+          nextKmVidange={vehicle.prochain_kilometrage_vidange}
+        />
+      </div>
 
       {/* Section Traite Bancaire séparée */}
       <Card>
