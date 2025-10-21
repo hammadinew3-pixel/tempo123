@@ -2313,7 +2313,7 @@ export default function VehiculeDetails() {
                   // Upload photo if provided
                   if (autorisationPhoto) {
                     const fileExt = autorisationPhoto.name.split('.').pop();
-                    const fileName = `${vehicle!.id}/autorisation/${Date.now()}.${fileExt}`;
+                    const fileName = `${vehicle!.id}/${Date.now()}_autorisation.${fileExt}`;
                     const { error: uploadError } = await supabase.storage
                       .from('documents_vehicules')
                       .upload(fileName, autorisationPhoto);
