@@ -749,8 +749,6 @@ const renderFileUpload = (
                   </Select>
                 </div>
 
-                {renderFileUpload(assuranceFiles, assuranceFileRef, 'assurance', 'Documents d\'assurance')}
-
                 {visiteData.mode_paiement === 'cheque' && (
                   <>
                     <div className="space-y-2">
