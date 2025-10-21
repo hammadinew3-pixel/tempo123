@@ -1,15 +1,12 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Car, Calendar, Users, TrendingUp, AlertCircle, FileText, AlertTriangle } from "lucide-react";
+import { Car, Calendar, Users, TrendingUp, FileText, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTenantPlan } from "@/hooks/useTenantPlan";
-import { groupBy, getLatestByGroup } from "@/lib/arrayUtils";
 interface DashboardStats {
   vehiclesCount: number;
   reservationsCount: number;
@@ -24,12 +21,7 @@ interface DashboardStats {
   sinistresEnCours: number;
   sinistresClos: number;
 }
-interface VehicleAlert {
-  vehicleId: string;
-  vehicleInfo: string;
-  message: string;
-  severity: 'critical' | 'warning' | 'high';
-}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const {
@@ -55,13 +47,7 @@ export default function Dashboard() {
   const [returns, setReturns] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'departures' | 'returns'>('departures');
   const [loading, setLoading] = useState(true);
-  const [vehicleAlerts, setVehicleAlerts] = useState<VehicleAlert[]>([]);
-  const [showAlertsDialog, setShowAlertsDialog] = useState(false);
-  const [chequeAlertsCount, setChequeAlertsCount] = useState(0);
-  const [reservationAlertsCount, setReservationAlertsCount] = useState(0);
   const [reservationType, setReservationType] = useState<'standard' | 'assistance'>('standard');
-  const [alertsLoaded, setAlertsLoaded] = useState(false);
-  const [loadingAlerts, setLoadingAlerts] = useState(false);
 
   // Debounce timer for realtime updates
   const debounceTimerRef = useRef<NodeJS.Timeout>();
@@ -267,19 +253,6 @@ export default function Dashboard() {
 
       // Load departures and returns
       await loadDeparturesAndReturns();
-
-      // Don't calculate alerts on initial load - lazy load when user clicks
-      // Just count the critical alerts for display
-      const criticalCount = await calculateCriticalAlertsCount(vehicles);
-      const placeholderAlerts = Array(criticalCount).fill(null).map((_, i) => ({
-        vehicleId: `placeholder-${i}`,
-        vehicleInfo: '',
-        message: 'Alerte véhicule',
-        severity: 'warning' as const
-      }));
-      setVehicleAlerts(placeholderAlerts);
-      setChequeAlertsCount(0);
-      setReservationAlertsCount(0);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -287,227 +260,6 @@ export default function Dashboard() {
     }
   };
 
-  // Quick count of critical alerts (shown on dashboard without full details)
-  const calculateCriticalAlertsCount = async (vehicles: any[]) => {
-    if (!vehicles || vehicles.length === 0) return 0;
-    let count = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Count vehicles without documents or with expired documents
-    for (const vehicle of vehicles) {
-      // Check if oil change is needed
-      if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
-        const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
-        if (kmUntilOilChange <= 1000) count++;
-      } else if (!vehicle.dernier_kilometrage_vidange) {
-        count++;
-      }
-    }
-    return count;
-  };
-  // Lazy load vehicle alerts when user clicks (optimized version)
-  const loadDetailedVehicleAlerts = async () => {
-    if (alertsLoaded || loadingAlerts) return;
-    setLoadingAlerts(true);
-    try {
-      const {
-        data: vehicles
-      } = await supabase.from('vehicles').select('*');
-      if (!vehicles || vehicles.length === 0) {
-        setVehicleAlerts([]);
-        setLoadingAlerts(false);
-        setAlertsLoaded(true);
-        return;
-      }
-      await calculateVehicleAlerts(vehicles);
-      setAlertsLoaded(true);
-    } catch (error) {
-      console.error('Error loading vehicle alerts:', error);
-    } finally {
-      setLoadingAlerts(false);
-    }
-  };
-  const calculateVehicleAlerts = async (vehicles: any[]) => {
-    const alerts: VehicleAlert[] = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const vehicleIds = vehicles.map(v => v.id);
-
-    // Load ALL documents in parallel (4 global queries instead of 4 per vehicle)
-    const [allInsurancesRes, allInspectionsRes, allVignettesRes, allEcheancesRes, paymentsRes] = await Promise.all([supabase.from('vehicle_insurance').select('*').in('vehicle_id', vehicleIds).then(r => r), supabase.from('vehicle_technical_inspection').select('*').in('vehicle_id', vehicleIds).then(r => r), supabase.from('vehicle_vignette').select('*').in('vehicle_id', vehicleIds).then(r => r), supabase.from('vehicules_traites_echeances').select('*').eq('statut', 'À payer').then(r => r), supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque").then(r => r)]);
-
-    // Group by vehicle_id and get latest
-    const latestInsurances = getLatestByGroup(allInsurancesRes.data || [], 'vehicle_id' as any, 'date_debut' as any);
-    const latestInspections = getLatestByGroup(allInspectionsRes.data || [], 'vehicle_id' as any, 'date_visite' as any);
-    const latestVignettes = getLatestByGroup(allVignettesRes.data || [], 'vehicle_id' as any, 'annee' as any);
-    const echeancesByVehicle = groupBy(allEcheancesRes.data || [], 'vehicle_id' as any);
-
-    // Calculate alerts in memory
-    for (const vehicle of vehicles) {
-      const vehicleInfo = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || vehicle.ww || vehicle.immatriculation_provisoire || 'N/A'})`;
-      const insurance = latestInsurances[vehicle.id];
-      const inspection = latestInspections[vehicle.id];
-      const vignette = latestVignettes[vehicle.id];
-      const echeances = echeancesByVehicle[vehicle.id] || [];
-
-      // Check insurance
-      if (!insurance) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Véhicule sans assurance ajoutée.",
-          severity: "high"
-        });
-      } else if (insurance.date_expiration) {
-        const expirationDate = new Date(insurance.date_expiration);
-        expirationDate.setHours(0, 0, 0, 0);
-        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        if (expirationDate < today) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Assurance expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
-            severity: "critical"
-          });
-        } else if (daysUntilExpiration <= 30) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Assurance expire dans ${daysUntilExpiration} jour(s).`,
-            severity: "warning"
-          });
-        }
-      }
-
-      // Check inspection
-      if (!inspection) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Véhicule sans visite technique ajoutée.",
-          severity: "high"
-        });
-      } else if (inspection.date_expiration) {
-        const expirationDate = new Date(inspection.date_expiration);
-        expirationDate.setHours(0, 0, 0, 0);
-        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        if (expirationDate < today) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Visite technique expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
-            severity: "critical"
-          });
-        } else if (daysUntilExpiration <= 30) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`,
-            severity: "warning"
-          });
-        }
-      }
-
-      // Check vignette
-      if (!vignette) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Véhicule sans vignette ajoutée.",
-          severity: "high"
-        });
-      } else if (vignette.date_expiration) {
-        const expirationDate = new Date(vignette.date_expiration);
-        expirationDate.setHours(0, 0, 0, 0);
-        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        if (expirationDate < today) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Vignette expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
-            severity: "critical"
-          });
-        } else if (daysUntilExpiration <= 30) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Vignette expire dans ${daysUntilExpiration} jour(s).`,
-            severity: "warning"
-          });
-        }
-      }
-
-      // Check oil change
-      if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
-        const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
-        if (kmUntilOilChange <= 300) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Vidange ${kmUntilOilChange <= 0 ? 'en retard de ' + Math.abs(kmUntilOilChange) : 'critique - ' + kmUntilOilChange} km`,
-            severity: "critical"
-          });
-        } else if (kmUntilOilChange <= 1000) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Vidange à faire dans ${kmUntilOilChange} km`,
-            severity: "warning"
-          });
-        }
-      } else if (!vehicle.dernier_kilometrage_vidange) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Aucune vidange enregistrée",
-          severity: "high"
-        });
-      }
-
-      // Check traite bancaire
-      for (const echeance of echeances) {
-        const echeanceDate = new Date(echeance.date_echeance);
-        echeanceDate.setHours(0, 0, 0, 0);
-        const daysUntilEcheance = Math.ceil((echeanceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        if (echeanceDate < today) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
-            severity: "critical"
-          });
-        } else if (daysUntilEcheance <= 7) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
-            severity: "warning"
-          });
-        }
-      }
-    }
-    setVehicleAlerts(alerts);
-
-    // Count old checks
-    if (paymentsRes.data) {
-      const oldChecks = paymentsRes.data.filter((payment: any) => {
-        const daysFromPayment = Math.ceil((today.getTime() - new Date(payment.date_paiement).getTime()) / (1000 * 60 * 60 * 24));
-        return daysFromPayment > 30;
-      });
-      setChequeAlertsCount(oldChecks.length);
-    }
-
-    // Count reservation alerts (departures and returns today)
-    const todayStr = new Date().toISOString().split("T")[0];
-    const {
-      data: departsToday
-    } = await supabase.from("contracts").select("id").eq("date_debut", todayStr).in("statut", ["contrat_valide", "brouillon"]);
-    const {
-      data: returnsToday
-    } = await supabase.from("contracts").select("id").eq("date_fin", todayStr).eq("statut", "livre");
-    setReservationAlertsCount((departsToday?.length || 0) + (returnsToday?.length || 0));
-  };
   const chartData = [{
     month: 'Août\n2025',
     revenus: 1500,
@@ -521,23 +273,7 @@ export default function Dashboard() {
     revenus: 6000,
     charges: 400
   }];
-  const totalAlerts = vehicleAlerts.length + chequeAlertsCount;
-  const availablePercentage = stats.vehiclesCount > 0 ? (stats.availableVehicles / stats.vehiclesCount * 100).toFixed(2) : '0.00';
 
-  // Group alerts by vehicle
-  const groupedAlerts = vehicleAlerts.reduce((acc, alert) => {
-    if (!acc[alert.vehicleId]) {
-      acc[alert.vehicleId] = {
-        vehicleInfo: alert.vehicleInfo,
-        alerts: []
-      };
-    }
-    acc[alert.vehicleId].alerts.push(alert);
-    return acc;
-  }, {} as Record<string, {
-    vehicleInfo: string;
-    alerts: VehicleAlert[];
-  }>);
   return <div className="w-full">
       <div className="p-6">
         {/* Stats Cards */}
@@ -931,46 +667,5 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Vehicle Alerts Dialog */}
-      <Dialog open={showAlertsDialog} onOpenChange={setShowAlertsDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-warning">
-              <AlertCircle className="w-5 h-5" />
-              {loadingAlerts ? 'Chargement des alertes...' : `${vehicleAlerts.length.toString().padStart(2, '0')} alertes véhicules`}
-            </DialogTitle>
-          </DialogHeader>
-          {loadingAlerts && <div className="flex items-center justify-center p-8">
-              <div className="text-muted-foreground">Chargement des alertes détaillées...</div>
-            </div>}
-          <div className="space-y-6 mt-4">
-            {Object.entries(groupedAlerts).map(([vehicleId, {
-            vehicleInfo,
-            alerts
-          }]) => <div key={vehicleId} className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors" onClick={() => {
-              setShowAlertsDialog(false);
-              navigate(`/vehicules/${vehicleId}`);
-            }}>
-                  <div className="flex items-center gap-3">
-                    <Car className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">{vehicleInfo}</h3>
-                  </div>
-                  <Badge variant="outline" className="bg-warning/10 text-warning border-warning">
-                    {alerts.length} alerte{alerts.length > 1 ? 's' : ''}
-                  </Badge>
-                </div>
-                <div className="pl-8 space-y-2">
-                  {alerts.map((alert, index) => <Alert key={index} className={`border-l-4 ${alert.severity === 'critical' ? 'border-l-destructive bg-destructive/5' : alert.severity === 'high' ? 'border-l-warning bg-warning/5' : 'border-l-warning bg-warning/5'}`}>
-                      <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
-                      <AlertDescription className="text-sm">
-                        {alert.message}
-                      </AlertDescription>
-                    </Alert>)}
-                </div>
-              </div>)}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>;
 }
