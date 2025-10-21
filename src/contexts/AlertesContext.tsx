@@ -99,8 +99,8 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      // Add contract alerts
-      count += (departsToday.data?.length || 0) + (returnsToday.data?.length || 0);
+      // Contract alerts are not included in the header notification count
+      // They are displayed separately in the Dashboard reservations widget
 
       // Check old payments
       if (checkPayments.data) {
