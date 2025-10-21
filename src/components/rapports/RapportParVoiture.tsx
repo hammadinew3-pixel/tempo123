@@ -18,6 +18,7 @@ import {
 interface VehicleReport {
   id: string;
   immatriculation: string;
+  ww?: string | null;
   marque: string;
   modele: string;
   nombre_contrats: number;
@@ -115,6 +116,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
           return {
             id: vehicle.id,
             immatriculation: vehicle.immatriculation,
+            ww: vehicle.ww,
             marque: vehicle.marque,
             modele: vehicle.modele,
             nombre_contrats: contracts?.length || 0,
@@ -238,7 +240,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
 
   const exportReport = () => {
     const exportData = vehicles.map(v => ({
-      'Immatriculation': v.immatriculation,
+      'Immatriculation': v.immatriculation || v.ww || 'N/A',
       'Marque': v.marque,
       'Modèle': v.modele,
       'Nb Contrats': v.nombre_contrats,
@@ -335,7 +337,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleVehicleClick(vehicle.id)}
                   >
-                    <TableCell className="font-medium">{vehicle.immatriculation}</TableCell>
+                    <TableCell className="font-medium">{vehicle.immatriculation || vehicle.ww || 'N/A'}</TableCell>
                     <TableCell>{vehicle.marque} {vehicle.modele}</TableCell>
                     <TableCell className="text-right">{vehicle.nombre_contrats}</TableCell>
                     <TableCell className="text-right text-green-600">
@@ -369,7 +371,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
         <Card>
           <CardHeader>
             <CardTitle>
-              Revenus vs Dépenses - {selectedVehicleData?.immatriculation}
+              Revenus vs Dépenses - {selectedVehicleData?.immatriculation || selectedVehicleData?.ww || 'N/A'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -393,7 +395,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Revenus - {selectedVehicleData?.immatriculation}</CardTitle>
+              <CardTitle>Revenus - {selectedVehicleData?.immatriculation || selectedVehicleData?.ww || 'N/A'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
@@ -442,7 +444,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Dépenses - {selectedVehicleData?.immatriculation}</CardTitle>
+              <CardTitle>Dépenses - {selectedVehicleData?.immatriculation || selectedVehicleData?.ww || 'N/A'}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border">
