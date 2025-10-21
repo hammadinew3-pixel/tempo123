@@ -45,14 +45,16 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
         allVignettes,
         departsToday,
         returnsToday,
-        checkPayments
+        checkPayments,
+        allTraites
       ] = await Promise.all([
         supabase.from("vehicle_insurance").select("*").in("vehicle_id", vehicleIds),
         supabase.from("vehicle_technical_inspection").select("*").in("vehicle_id", vehicleIds),
         supabase.from("vehicle_vignette").select("*").in("vehicle_id", vehicleIds),
         supabase.from("contracts").select("id").eq("date_debut", today).in("statut", ["contrat_valide", "brouillon"]),
         supabase.from("contracts").select("id").eq("date_fin", today).eq("statut", "livre"),
-        supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque")
+        supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque"),
+        supabase.from("vehicules_traites_echeances").select("vehicle_id, date_echeance").eq("statut", "À payer").in("vehicle_id", vehicleIds)
       ]);
 
       // Group by vehicle_id and get latest for each
@@ -109,6 +111,16 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
           return daysFromPayment > 30;
         });
         count += checkAlerts.length;
+      }
+
+      // Check traites bancaires
+      if (allTraites.data) {
+        const traiteAlerts = allTraites.data.filter((traite: any) => {
+          const daysUntilEcheance = differenceInDays(parseISO(traite.date_echeance), new Date());
+          // Count if overdue or due within 7 days
+          return daysUntilEcheance <= 7;
+        });
+        count += traiteAlerts.length;
       }
 
       setTotalAlerts(count);
