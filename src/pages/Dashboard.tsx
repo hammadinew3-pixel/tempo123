@@ -196,63 +196,78 @@ export default function Dashboard() {
   };
   const loadDashboardData = async () => {
     try {
-      // Run independent queries in parallel to avoid sequential latency
-      const countsPromise = Promise.all([
-        supabase.from('vehicles').select('*', { count: 'exact', head: true }),
-        supabase.from('contracts').select('*', { count: 'exact', head: true }),
-        supabase.from('clients').select('*', { count: 'exact', head: true }),
-      ]);
+      // Load vehicles count
+      const {
+        count: vehiclesCount
+      } = await supabase.from('vehicles').select('*', {
+        count: 'exact',
+        head: true
+      });
 
-      const vehiclesPromise = supabase.from('vehicles').select('*');
+      // Load all vehicles with related data for alerts
+      const {
+        data: vehicles
+      } = await supabase.from('vehicles').select('*');
+      const availableVehicles = vehicles?.filter(v => v.statut === 'disponible').length || 0;
+      const rentedVehicles = vehicles?.filter(v => v.statut === 'loue').length || 0;
+      const maintenanceVehicles = vehicles?.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length || 0;
+      const immobilizedVehicles = vehicles?.filter(v => v.statut === 'immobilise').length || 0;
+      const outOfServiceVehicles = vehicles?.filter(v => v.en_service === false).length || 0;
 
-      const recentAndSinistresPromise = Promise.all([
-        supabase
-          .from('contracts')
-          .select(`
+      // Load contracts count
+      const {
+        count: reservationsCount
+      } = await supabase.from('contracts').select('*', {
+        count: 'exact',
+        head: true
+      });
+
+      // Load clients count
+      const {
+        count: clientsCount
+      } = await supabase.from('clients').select('*', {
+        count: 'exact',
+        head: true
+      });
+
+      // Load recent reservations (contracts)
+      const {
+        data: reservations
+      } = await supabase.from('contracts').select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `).order('created_at', {
+        ascending: false
+      }).limit(4);
+
+      // Load recent assistance ONLY if module is accessible
+      let assistance = [];
+      if (hasModuleAccess('assistance')) {
+        const { data } = await supabase.from('assistance').select(`
             *,
             clients (nom, prenom),
             vehicles (marque, modele, immatriculation)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(4),
-        hasModuleAccess('assistance')
-          ? supabase
-              .from('assistance')
-              .select(`
-                *,
-                clients (nom, prenom),
-                vehicles (marque, modele, immatriculation)
-              `)
-              .order('created_at', { ascending: false })
-              .limit(4)
-          : Promise.resolve({ data: [] as any[] }),
-        supabase.from('sinistres').select('statut'),
-      ]);
+          `).order('created_at', {
+          ascending: false
+        }).limit(4);
+        assistance = data || [];
+      }
 
-      const [[vehiclesCountRes, reservationsCountRes, clientsCountRes], vehiclesRes, [reservationsRes, assistanceRes, sinistresRes]] =
-        await Promise.all([countsPromise, vehiclesPromise, recentAndSinistresPromise]);
-
-      const vehiclesCount = vehiclesCountRes.count || 0;
-      const reservationsCount = reservationsCountRes.count || 0;
-      const clientsCount = clientsCountRes.count || 0;
-
-      const vehicles = vehiclesRes.data || [];
-      const availableVehicles = vehicles.filter(v => v.statut === 'disponible').length || 0;
-      const rentedVehicles = vehicles.filter(v => v.statut === 'loue').length || 0;
-      const maintenanceVehicles = vehicles.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length || 0;
-      const immobilizedVehicles = vehicles.filter(v => v.statut === 'immobilise').length || 0;
-      const outOfServiceVehicles = vehicles.filter(v => v.en_service === false).length || 0;
-
-      const sinistres = sinistresRes.data || [];
-      const sinistresTotal = sinistres.length || 0;
-      const sinistresOuverts = sinistres.filter((s: any) => s.statut === 'ouvert').length || 0;
-      const sinistresEnCours = sinistres.filter((s: any) => s.statut === 'en_cours').length || 0;
-      const sinistresClos = sinistres.filter((s: any) => s.statut === 'clos').length || 0;
+      // Load sinistres statistics
+      const { data: sinistres } = await supabase
+        .from('sinistres')
+        .select('statut');
+      
+      const sinistresTotal = sinistres?.length || 0;
+      const sinistresOuverts = sinistres?.filter(s => s.statut === 'ouvert').length || 0;
+      const sinistresEnCours = sinistres?.filter(s => s.statut === 'en_cours').length || 0;
+      const sinistresClos = sinistres?.filter(s => s.statut === 'clos').length || 0;
 
       setStats({
-        vehiclesCount,
-        reservationsCount,
-        clientsCount,
+        vehiclesCount: vehiclesCount || 0,
+        reservationsCount: reservationsCount || 0,
+        clientsCount: clientsCount || 0,
         availableVehicles,
         rentedVehicles,
         maintenanceVehicles,
@@ -261,17 +276,18 @@ export default function Dashboard() {
         sinistresTotal,
         sinistresOuverts,
         sinistresEnCours,
-        sinistresClos,
+        sinistresClos
       });
+      setRecentReservations(reservations || []);
+      setRecentAssistance(assistance || []);
 
-      setRecentReservations(reservationsRes.data || []);
-      setRecentAssistance(assistanceRes.data || []);
+      // Load departures and returns (contracts + assistance)
+      await loadDeparturesAndReturns();
 
-      // Load departures/returns and compute vehicle alerts in parallel
-      await Promise.all([
-        loadDeparturesAndReturns(),
-        calculateVehicleAlerts(vehicles),
-      ]);
+      // Calculate alerts for all vehicles
+      if (vehicles) {
+        await calculateVehicleAlerts(vehicles);
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
