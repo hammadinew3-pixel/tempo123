@@ -365,13 +365,6 @@ export default function NouveauVehicule() {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="places">Nombre de places</Label>
-              <Input id="places" type="number" value={formData.nombre_places || ''} onChange={e => setFormData({
-              ...formData,
-              nombre_places: parseInt(e.target.value) || undefined
-            })} placeholder="Ex: 5" />
-            </div>
           </div>
 
           {/* Right Column */}
@@ -473,6 +466,14 @@ export default function NouveauVehicule() {
                   <SelectItem value="argent">Argent</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="places">Nombre de places</Label>
+              <Input id="places" type="number" value={formData.nombre_places || ''} onChange={e => setFormData({
+              ...formData,
+              nombre_places: parseInt(e.target.value) || undefined
+            })} placeholder="Ex: 5" />
             </div>
           </div>
         </div>
