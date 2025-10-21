@@ -2179,9 +2179,9 @@ export default function VehiculeDetails() {
             </div>
             <div className="col-span-2">
               <Label htmlFor="vig-photo">Photo du document</Label>
-              <Input id="vig-photo" type="file" accept="image/*" onChange={e => setVignettePhoto(e.target.files?.[0] || null)} />
+              <Input id="vig-photo" type="file" accept="image/*,application/pdf" onChange={e => setVignettePhoto(e.target.files?.[0] || null)} />
               <p className="text-xs text-muted-foreground mt-1">
-                Formats acceptés: JPG, PNG, WEBP
+                Formats acceptés: JPG, PNG, WEBP, PDF
               </p>
             </div>
           </div>
@@ -2234,9 +2234,17 @@ export default function VehiculeDetails() {
                 error
               } = await supabase.from('vehicle_vignette').insert(withTenantId({
                 vehicle_id: vehicle!.id,
+                numero_ordre: vignetteForm.numero_ordre,
+                annee: parseInt(vignetteForm.annee),
                 date_debut: vignetteForm.date_expiration,
                 date_expiration: vignetteForm.date_expiration,
                 montant: vignetteForm.montant ? parseFloat(vignetteForm.montant) : null,
+                date_paiement: vignetteForm.date_paiement || null,
+                mode_paiement: vignetteForm.mode_paiement || null,
+                numero_cheque: vignetteForm.mode_paiement === 'cheque' ? vignetteForm.numero_cheque : null,
+                banque: vignetteForm.mode_paiement === 'cheque' ? vignetteForm.banque : null,
+                remarques: vignetteForm.remarques || null,
+                photo_url: photoUrl
               }));
               if (error) throw error;
 
