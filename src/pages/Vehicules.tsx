@@ -402,7 +402,7 @@ export default function Vehicules() {
 
   const prepareVehiclesExport = () => {
     return filteredVehicles.map(v => ({
-      'Matricule': v.immatriculation,
+      'Matricule': v.immatriculation || v.ww || 'N/A',
       'Marque': v.marque,
       'Modèle': v.modele,
       'Année': v.annee,
@@ -835,7 +835,7 @@ export default function Vehicules() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="font-semibold text-foreground truncate">{vehicle.marque} {vehicle.modele}</div>
-                            <div className="text-xs text-muted-foreground">{vehicle.immatriculation}</div>
+                            <div className="text-xs text-muted-foreground">{vehicle.immatriculation || vehicle.ww || 'N/A'}</div>
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -949,7 +949,7 @@ export default function Vehicules() {
                           </td>
                         )}
                         {visibleColumns.matricule && (
-                          <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation}</td>
+                          <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation || vehicle.ww || 'N/A'}</td>
                         )}
                         {visibleColumns.etat && (
                           <td className="py-4">
