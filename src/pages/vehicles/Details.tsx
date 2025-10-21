@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EditInspectionDialog, EditVignetteDialog } from "@/components/vehicles/EditDialogs";
+import { TraitesHeatmap } from "@/components/vehicles/TraitesHeatmap";
 import { useUserRole } from "@/hooks/use-user-role";
 import { safeFormatDate } from "@/lib/dateUtils";
 import { VehicleMaintenanceSummary } from "@/components/maintenance/VehicleMaintenanceSummary";
@@ -1421,27 +1422,15 @@ export default function VehiculeDetails() {
             <div className="space-y-6">
               {traites.map((traite) => {
                 const traiteEcheances = echeances.filter(e => e.traite_id === traite.id);
-                const totalPaye = traiteEcheances
-                  .filter(e => e.statut === 'Payée')
-                  .reduce((sum, e) => sum + parseFloat(e.montant || 0), 0);
-                const totalRestant = parseFloat(traite.montant_total || 0) - totalPaye;
-                const pourcentage = traite.montant_total > 0 ? (totalPaye / parseFloat(traite.montant_total)) * 100 : 0;
 
                 return (
-                  <Card key={traite.id} className="border-l-4 border-l-primary">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <Landmark className="w-5 h-5 text-primary" />
-                            {traite.concessionaire || 'Traite bancaire'}
-                          </CardTitle>
-                          <CardDescription className="mt-1">
-                            {traite.organisme && `Organisme: ${traite.organisme}`}
-                          </CardDescription>
-                        </div>
-                        {isAdmin && (
-                          <div className="flex gap-2">
+                  <div key={traite.id} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Colonne gauche : Informations d'achat */}
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">Les infos d'achat</CardTitle>
+                          {isAdmin && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -1462,11 +1451,65 @@ export default function VehiculeDetails() {
                                 setShowEditTraiteDialog(true);
                               }}
                             >
-                              <Edit2 className="w-4 h-4" />
+                              Modifier
                             </Button>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Prix d'achat</span>
+                          <strong>{parseFloat(traite.prix_achat || 0).toLocaleString()} Dh</strong>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Avance</span>
+                          <strong>{parseFloat(traite.avance || 0).toLocaleString()} Dh</strong>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Durée</span>
+                          <strong>{traite.duree_mois} mois</strong>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Durée déjà payé</span>
+                          <strong>{traite.duree_deja_paye || 0} mois</strong>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Concessionaire</span>
+                          <strong>{traite.concessionaire || '—'}</strong>
+                        </div>
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Organisme de crédit</span>
+                          <strong>{traite.organisme || '—'}</strong>
+                        </div>
+                        {traite.date_debut && (
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Date du 1ère traite</span>
+                            <strong>{format(new Date(traite.date_debut), 'dd/MM/yyyy', { locale: fr })}</strong>
+                          </div>
+                        )}
+                        {traite.date_achat && (
+                          <div className="flex justify-between py-2 border-b">
+                            <span className="text-muted-foreground">Date d'achat</span>
+                            <strong>{format(new Date(traite.date_achat), 'dd/MM/yyyy', { locale: fr })}</strong>
+                          </div>
+                        )}
+                        <div className="flex justify-between py-2 border-b">
+                          <span className="text-muted-foreground">Plus d'infos</span>
+                          <strong className="text-right max-w-[200px] truncate">{traite.plus_infos || '—'}</strong>
+                        </div>
+                        {traite.updated_at && (
+                          <div className="flex justify-between py-2 text-sm text-muted-foreground">
+                            <span>Dernière mise à jour</span>
+                            <span>{format(new Date(traite.updated_at), 'dd/MM/yyyy HH:mm', { locale: fr })}</span>
+                          </div>
+                        )}
+                        
+                        {isAdmin && (
+                          <div className="pt-3 border-t">
                             <Button
-                              variant="outline"
+                              variant="destructive"
                               size="sm"
+                              className="w-full"
                               onClick={async () => {
                                 if (confirm('Êtes-vous sûr de vouloir supprimer cette traite et toutes ses échéances ?')) {
                                   try {
@@ -1493,144 +1536,24 @@ export default function VehiculeDetails() {
                                 }
                               }}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Supprimer la traite
                             </Button>
                           </div>
                         )}
-                      </div>
-                    </CardHeader>
+                      </CardContent>
+                    </Card>
 
-                    <CardContent className="space-y-4">
-                      {/* Informations d'achat */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Prix d'achat</p>
-                          <p className="text-lg font-semibold">{parseFloat(traite.prix_achat || 0).toLocaleString()} DH</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Avance</p>
-                          <p className="text-lg font-semibold">{parseFloat(traite.avance || 0).toLocaleString()} DH</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Reste à payer</p>
-                          <p className="text-lg font-semibold text-primary">{parseFloat(traite.montant_total || 0).toLocaleString()} DH</p>
-                        </div>
-                        {traite.date_achat && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">Date d'achat</p>
-                            <p className="font-medium">{format(new Date(traite.date_achat), 'dd/MM/yyyy', { locale: fr })}</p>
-                          </div>
-                        )}
-                        {traite.date_debut && (
-                          <div>
-                            <p className="text-sm text-muted-foreground">Date début</p>
-                            <p className="font-medium">{format(new Date(traite.date_debut), 'dd/MM/yyyy', { locale: fr })}</p>
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-sm text-muted-foreground">Durée</p>
-                          <p className="font-medium">{traite.duree_mois} mois</p>
-                        </div>
-                      </div>
-
-                      {traite.plus_infos && (
-                        <div className="p-3 bg-muted/30 rounded-md">
-                          <p className="text-sm text-muted-foreground mb-1">Notes supplémentaires</p>
-                          <p className="text-sm">{traite.plus_infos}</p>
-                        </div>
-                      )}
-
-                      {/* Barre de progression */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progression des paiements</span>
-                          <span className="font-semibold">{pourcentage.toFixed(1)}%</span>
-                        </div>
-                        <Progress value={pourcentage} className="h-2" />
-                        <div className="flex justify-between text-sm">
-                          <span className="text-green-600 font-medium">
-                            Payé: {totalPaye.toLocaleString()} DH
-                          </span>
-                          <span className="text-orange-600 font-medium">
-                            Restant: {totalRestant.toLocaleString()} DH
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Tableau des échéances */}
-                      {traiteEcheances.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold mb-3 flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            Échéances ({traiteEcheances.length})
-                          </h4>
-                          <div className="border rounded-lg overflow-hidden">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-12">#</TableHead>
-                                  <TableHead>Date d'échéance</TableHead>
-                                  <TableHead className="text-right">Montant</TableHead>
-                                  <TableHead>Statut</TableHead>
-                                  <TableHead>Date de paiement</TableHead>
-                                  {isAdmin && <TableHead className="text-center">Actions</TableHead>}
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {traiteEcheances
-                                  .sort((a, b) => parseInt(a.numero_echeance) - parseInt(b.numero_echeance))
-                                  .map((echeance) => (
-                                    <TableRow key={echeance.id} className={echeance.statut === 'Payée' ? 'bg-green-50/50' : ''}>
-                                      <TableCell className="font-medium">
-                                        {echeance.numero_echeance}
-                                      </TableCell>
-                                      <TableCell>
-                                        <div className="flex items-center gap-2">
-                                          {getEcheanceIcon(echeance.statut)}
-                                          {format(new Date(echeance.date_echeance), 'dd/MM/yyyy', { locale: fr })}
-                                        </div>
-                                      </TableCell>
-                                      <TableCell className="text-right font-semibold">
-                                        {parseFloat(echeance.montant).toLocaleString()} DH
-                                      </TableCell>
-                                      <TableCell>
-                                        {getEcheanceStatusBadge(echeance.statut)}
-                                      </TableCell>
-                                      <TableCell>
-                                        {echeance.date_paiement ? (
-                                          <span className="text-green-600 font-medium">
-                                            {format(new Date(echeance.date_paiement), 'dd/MM/yyyy', { locale: fr })}
-                                          </span>
-                                        ) : (
-                                          <span className="text-muted-foreground">-</span>
-                                        )}
-                                      </TableCell>
-                                      {isAdmin && (
-                                        <TableCell className="text-center">
-                                          {echeance.statut !== 'Payée' && (
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              onClick={() => {
-                                                setSelectedEcheance(echeance);
-                                                setShowPayEcheanceDialog(true);
-                                              }}
-                                            >
-                                              <CheckCircle2 className="w-4 h-4 mr-1" />
-                                              Marquer payée
-                                            </Button>
-                                          )}
-                                        </TableCell>
-                                      )}
-                                    </TableRow>
-                                  ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    {/* Colonne droite : État des traites bancaires (Heatmap) */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">L'état des traites bancaires</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <TraitesHeatmap traite={traite} echeances={traiteEcheances} />
+                      </CardContent>
+                    </Card>
+                  </div>
                 );
               })}
             </div>
