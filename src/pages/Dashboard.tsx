@@ -319,7 +319,7 @@ export default function Dashboard() {
       } = await supabase.from('vehicle_vignette').select('*').eq('vehicle_id', vehicle.id).order('annee', {
         ascending: false
       });
-      const vehicleInfo = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation})`;
+      const vehicleInfo = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || vehicle.immatriculation_provisoire})`;
 
       // Check insurance alerts
       if (!insurances || insurances.length === 0) {
