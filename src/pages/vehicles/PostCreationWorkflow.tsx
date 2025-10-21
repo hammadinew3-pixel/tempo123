@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Upload, X, FileText, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +34,14 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
   const [currentStep, setCurrentStep] = useState<Step>('assurance');
   const [loading, setLoading] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Step[]>([]);
+
+  // File upload states
+  const [assuranceFiles, setAssuranceFiles] = useState<File[]>([]);
+  const [visiteFiles, setVisiteFiles] = useState<File[]>([]);
+  const [vignetteFiles, setVignetteFiles] = useState<File[]>([]);
+  const assuranceFileRef = useRef<HTMLInputElement>(null);
+  const visiteFileRef = useRef<HTMLInputElement>(null);
+  const vignetteFileRef = useRef<HTMLInputElement>(null);
 
   // Assurance form data
   const [assuranceData, setAssuranceData] = useState({
@@ -83,6 +91,30 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     setLoading(true);
 
     try {
+      // Upload files first if any
+      let uploadedUrls: string[] = [];
+      if (assuranceFiles.length > 0) {
+        for (const file of assuranceFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${vehicleId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('documents_vehicules')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('documents_vehicules')
+            .getPublicUrl(fileName);
+          
+          uploadedUrls.push(publicUrl);
+        }
+      }
+
       const { error } = await supabase
         .from('vehicle_insurance')
         .insert([withTenantId({
@@ -92,6 +124,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
           date_expiration: assuranceData.date_expiration?.toISOString().split('T')[0],
           date_paiement: assuranceData.date_paiement?.toISOString().split('T')[0],
           montant: parseFloat(assuranceData.montant),
+          photo_url: uploadedUrls.length > 0 ? uploadedUrls[0] : null,
         })]);
 
       if (error) throw error;
@@ -119,6 +152,30 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     setLoading(true);
 
     try {
+      // Upload files first if any
+      let uploadedUrls: string[] = [];
+      if (visiteFiles.length > 0) {
+        for (const file of visiteFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${vehicleId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('documents_vehicules')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('documents_vehicules')
+            .getPublicUrl(fileName);
+          
+          uploadedUrls.push(publicUrl);
+        }
+      }
+
       const { error } = await supabase
         .from('vehicle_technical_inspection')
         .insert([withTenantId({
@@ -128,6 +185,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
           date_expiration: visiteData.date_expiration?.toISOString().split('T')[0],
           date_paiement: visiteData.date_paiement?.toISOString().split('T')[0],
           montant: visiteData.montant ? parseFloat(visiteData.montant) : null,
+          photo_url: uploadedUrls.length > 0 ? uploadedUrls[0] : null,
         })]);
 
       if (error) throw error;
@@ -155,14 +213,45 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     setLoading(true);
 
     try {
+      // Upload files first if any
+      let uploadedUrls: string[] = [];
+      if (vignetteFiles.length > 0) {
+        for (const file of vignetteFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${vehicleId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('documents_vehicules')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('documents_vehicules')
+            .getPublicUrl(fileName);
+          
+          uploadedUrls.push(publicUrl);
+        }
+      }
+
       const { error } = await supabase
         .from('vehicle_vignette')
         .insert([withTenantId({
           vehicle_id: vehicleId,
-          date_debut: vignetteData.date_expiration?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+          numero_ordre: vignetteData.numero_ordre,
+          annee: vignetteData.annee,
+          date_debut: vignetteData.date_paiement?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
           date_expiration: vignetteData.date_expiration?.toISOString().split('T')[0],
           date_paiement: vignetteData.date_paiement?.toISOString().split('T')[0],
           montant: vignetteData.montant ? parseFloat(vignetteData.montant) : null,
+          mode_paiement: vignetteData.mode_paiement,
+          numero_cheque: vignetteData.numero_cheque,
+          banque: vignetteData.banque,
+          remarques: vignetteData.remarques,
+          photo_url: uploadedUrls.length > 0 ? uploadedUrls[0] : null,
         })]);
 
       if (error) throw error;
@@ -275,9 +364,110 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
               className="pointer-events-auto"
             />
           </PopoverContent>
-        </Popover>
+      </Popover>
+    </div>
+  );
+};
+
+const handleFileSelect = (files: FileList | null, type: 'assurance' | 'visite' | 'vignette') => {
+  if (!files) return;
+  
+  const validFiles = Array.from(files).filter(file => {
+    const isValid = file.type === 'application/pdf' || 
+                    file.type === 'image/jpeg' || 
+                    file.type === 'image/jpg' || 
+                    file.type === 'image/png';
+    
+    if (!isValid) {
+      toast({
+        title: "Format non supporté",
+        description: `Le fichier ${file.name} n'est pas au format PDF, JPG ou PNG`,
+        variant: "destructive"
+      });
+    }
+    return isValid;
+  });
+
+  if (type === 'assurance') {
+    setAssuranceFiles(prev => [...prev, ...validFiles]);
+  } else if (type === 'visite') {
+    setVisiteFiles(prev => [...prev, ...validFiles]);
+  } else {
+    setVignetteFiles(prev => [...prev, ...validFiles]);
+  }
+};
+
+const removeFile = (index: number, type: 'assurance' | 'visite' | 'vignette') => {
+  if (type === 'assurance') {
+    setAssuranceFiles(prev => prev.filter((_, i) => i !== index));
+  } else if (type === 'visite') {
+    setVisiteFiles(prev => prev.filter((_, i) => i !== index));
+  } else {
+    setVignetteFiles(prev => prev.filter((_, i) => i !== index));
+  }
+};
+
+const renderFileUpload = (
+  files: File[],
+  fileRef: React.RefObject<HTMLInputElement>,
+  type: 'assurance' | 'visite' | 'vignette',
+  label: string
+) => {
+  return (
+    <div className="col-span-2 space-y-2">
+      <Label>{label}</Label>
+      <div className="space-y-2">
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          multiple
+          onChange={(e) => handleFileSelect(e.target.files, type)}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => fileRef.current?.click()}
+          className="w-full"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Ajouter des documents (PDF, JPG, PNG)
+        </Button>
+        
+        {files.length > 0 && (
+          <div className="space-y-2">
+            {files.map((file, index) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-md">
+                <div className="flex items-center gap-2">
+                  {file.type === 'application/pdf' ? (
+                    <FileText className="w-4 h-4 text-red-500" />
+                  ) : (
+                    <ImageIcon className="w-4 h-4 text-blue-500" />
+                  )}
+                  <span className="text-sm truncate max-w-xs">{file.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    ({(file.size / 1024).toFixed(1)} KB)
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeFile(index, type)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    );
+      <p className="text-xs text-muted-foreground">
+        Formats acceptés : PDF, JPG, PNG. Vous pouvez ajouter plusieurs documents.
+      </p>
+    </div>
+  );
   };
 
   if (currentStep === 'complete') {
@@ -544,6 +734,8 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
                   </Select>
                 </div>
 
+                {renderFileUpload(assuranceFiles, assuranceFileRef, 'assurance', 'Documents d\'assurance')}
+
                 {visiteData.mode_paiement === 'cheque' && (
                   <>
                     <div className="space-y-2">
@@ -575,6 +767,8 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
                     rows={3}
                   />
                 </div>
+
+                {renderFileUpload(visiteFiles, visiteFileRef, 'visite', 'Documents de visite technique')}
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
@@ -698,6 +892,8 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
                     rows={3}
                   />
                 </div>
+
+                {renderFileUpload(vignetteFiles, vignetteFileRef, 'vignette', 'Documents de vignette')}
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
