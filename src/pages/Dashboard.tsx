@@ -91,103 +91,89 @@ export default function Dashboard() {
   const loadDeparturesAndReturns = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-
-      // Load today's departures from contracts
-      const {
-        data: todayDepartures
-      } = await supabase.from('contracts').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_debut', today).order('start_time', {
-        ascending: true
-      });
-
-      // Load today's departures from assistance ONLY if module is accessible
-      let todayAssistanceDepartures = [];
-      if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
-            *,
-            clients (nom, prenom),
-            vehicles (marque, modele, immatriculation)
-          `).eq('date_debut', today);
-        todayAssistanceDepartures = data || [];
-      }
-
-      // Load today's returns from contracts
-      const {
-        data: todayReturns
-      } = await supabase.from('contracts').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).eq('date_fin', today).order('end_time', {
-        ascending: true
-      });
-
-      // Load today's returns from assistance ONLY if module is accessible
-      let todayAssistanceReturns = [];
-      if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
-            *,
-            clients (nom, prenom),
-            vehicles (marque, modele, immatriculation)
-          `).eq('date_fin', today);
-        todayAssistanceReturns = data || [];
-      }
-
-      // Load tomorrow's returns (J+1) from contracts
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
-      const {
-        data: tomorrowReturns
-      } = await supabase.from('contracts').select(`
+
+      // Execute all queries in parallel
+      const [
+        contractDeparturesResult,
+        contractReturnsResult,
+        contractTomorrowReturnsResult,
+        assistanceDeparturesResult,
+        assistanceReturnsResult,
+        assistanceTomorrowReturnsResult
+      ] = await Promise.all([
+        // Today's departures from contracts
+        supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `).eq('date_fin', tomorrowStr).order('end_time', {
-        ascending: true
-      });
+        `).eq('date_debut', today).order('start_time', { ascending: true }),
+        
+        // Today's returns from contracts
+        supabase.from('contracts').select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `).eq('date_fin', today).order('end_time', { ascending: true }),
+        
+        // Tomorrow's returns from contracts
+        supabase.from('contracts').select(`
+          *,
+          clients (nom, prenom),
+          vehicles (marque, modele, immatriculation)
+        `).eq('date_fin', tomorrowStr).order('end_time', { ascending: true }),
+        
+        // Today's departures from assistance (or empty promise)
+        hasModuleAccess('assistance') 
+          ? supabase.from('assistance').select(`
+              *,
+              clients (nom, prenom),
+              vehicles (marque, modele, immatriculation)
+            `).eq('date_debut', today)
+          : Promise.resolve({ data: null }),
+          
+        // Today's returns from assistance (or empty promise)
+        hasModuleAccess('assistance')
+          ? supabase.from('assistance').select(`
+              *,
+              clients (nom, prenom),
+              vehicles (marque, modele, immatriculation)
+            `).eq('date_fin', today)
+          : Promise.resolve({ data: null }),
+          
+        // Tomorrow's returns from assistance (or empty promise)
+        hasModuleAccess('assistance')
+          ? supabase.from('assistance').select(`
+              *,
+              clients (nom, prenom),
+              vehicles (marque, modele, immatriculation)
+            `).eq('date_fin', tomorrowStr)
+          : Promise.resolve({ data: null })
+      ]);
 
-      // Load tomorrow's returns (J+1) from assistance ONLY if module is accessible
-      let tomorrowAssistanceReturns = [];
-      if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
-            *,
-            clients (nom, prenom),
-            vehicles (marque, modele, immatriculation)
-          `).eq('date_fin', tomorrowStr);
-        tomorrowAssistanceReturns = data || [];
-      }
+      const todayDepartures = contractDeparturesResult.data || [];
+      const todayReturns = contractReturnsResult.data || [];
+      const tomorrowReturns = contractTomorrowReturnsResult.data || [];
+      const todayAssistanceDepartures = assistanceDeparturesResult.data || [];
+      const todayAssistanceReturns = assistanceReturnsResult.data || [];
+      const tomorrowAssistanceReturns = assistanceTomorrowReturnsResult.data || [];
 
       // Combine departures (contracts + assistance)
-      const allDepartures = [...(todayDepartures || []).map(d => ({
-        ...d,
-        type: 'contract'
-      })), ...(todayAssistanceDepartures || []).map(d => ({
-        ...d,
-        type: 'assistance'
-      }))];
+      const allDepartures = [
+        ...todayDepartures.map(d => ({ ...d, type: 'contract' })),
+        ...todayAssistanceDepartures.map(d => ({ ...d, type: 'assistance' }))
+      ];
 
       // Combine returns (today's + tomorrow's, contracts + assistance)
-      const allReturns = [...(todayReturns || []).map(r => ({
-        ...r,
-        isJ1: false,
-        type: 'contract'
-      })), ...(todayAssistanceReturns || []).map(r => ({
-        ...r,
-        isJ1: false,
-        type: 'assistance'
-      })), ...(tomorrowReturns || []).map(r => ({
-        ...r,
-        isJ1: true,
-        type: 'contract'
-      })), ...(tomorrowAssistanceReturns || []).map(r => ({
-        ...r,
-        isJ1: true,
-        type: 'assistance'
-      }))];
+      const allReturns = [
+        ...todayReturns.map(r => ({ ...r, isJ1: false, type: 'contract' })),
+        ...todayAssistanceReturns.map(r => ({ ...r, isJ1: false, type: 'assistance' })),
+        ...tomorrowReturns.map(r => ({ ...r, isJ1: true, type: 'contract' })),
+        ...tomorrowAssistanceReturns.map(r => ({ ...r, isJ1: true, type: 'assistance' }))
+      ];
+
       setDepartures(allDepartures);
       setReturns(allReturns);
     } catch (error) {
@@ -196,78 +182,69 @@ export default function Dashboard() {
   };
   const loadDashboardData = async () => {
     try {
-      // Load vehicles count
-      const {
-        count: vehiclesCount
-      } = await supabase.from('vehicles').select('*', {
-        count: 'exact',
-        head: true
-      });
-
-      // Load all vehicles with related data for alerts
-      const {
-        data: vehicles
-      } = await supabase.from('vehicles').select('*');
-      const availableVehicles = vehicles?.filter(v => v.statut === 'disponible').length || 0;
-      const rentedVehicles = vehicles?.filter(v => v.statut === 'loue').length || 0;
-      const maintenanceVehicles = vehicles?.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length || 0;
-      const immobilizedVehicles = vehicles?.filter(v => v.statut === 'immobilise').length || 0;
-      const outOfServiceVehicles = vehicles?.filter(v => v.en_service === false).length || 0;
-
-      // Load contracts count
-      const {
-        count: reservationsCount
-      } = await supabase.from('contracts').select('*', {
-        count: 'exact',
-        head: true
-      });
-
-      // Load clients count
-      const {
-        count: clientsCount
-      } = await supabase.from('clients').select('*', {
-        count: 'exact',
-        head: true
-      });
-
-      // Load recent reservations (contracts)
-      const {
-        data: reservations
-      } = await supabase.from('contracts').select(`
+      // Execute all main queries in parallel
+      const [
+        vehiclesCountResult,
+        contractsCountResult,
+        clientsCountResult,
+        vehiclesResult,
+        reservationsResult,
+        sinistresResult,
+        assistanceResult
+      ] = await Promise.all([
+        // Counts
+        supabase.from('vehicles').select('*', { count: 'exact', head: true }),
+        supabase.from('contracts').select('*', { count: 'exact', head: true }),
+        supabase.from('clients').select('*', { count: 'exact', head: true }),
+        
+        // Full vehicles data for stats and alerts
+        supabase.from('vehicles').select('*'),
+        
+        // Recent reservations
+        supabase.from('contracts').select(`
           *,
           clients (nom, prenom),
           vehicles (marque, modele, immatriculation)
-        `).order('created_at', {
-        ascending: false
-      }).limit(4);
-
-      // Load recent assistance ONLY if module is accessible
-      let assistance = [];
-      if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
-            *,
-            clients (nom, prenom),
-            vehicles (marque, modele, immatriculation)
-          `).order('created_at', {
-          ascending: false
-        }).limit(4);
-        assistance = data || [];
-      }
-
-      // Load sinistres statistics
-      const { data: sinistres } = await supabase
-        .from('sinistres')
-        .select('statut');
+        `).order('created_at', { ascending: false }).limit(4),
+        
+        // Sinistres
+        supabase.from('sinistres').select('statut'),
+        
+        // Assistance (or empty promise)
+        hasModuleAccess('assistance')
+          ? supabase.from('assistance').select(`
+              *,
+              clients (nom, prenom),
+              vehicles (marque, modele, immatriculation)
+            `).order('created_at', { ascending: false }).limit(4)
+          : Promise.resolve({ data: null })
+      ]);
       
-      const sinistresTotal = sinistres?.length || 0;
-      const sinistresOuverts = sinistres?.filter(s => s.statut === 'ouvert').length || 0;
-      const sinistresEnCours = sinistres?.filter(s => s.statut === 'en_cours').length || 0;
-      const sinistresClos = sinistres?.filter(s => s.statut === 'clos').length || 0;
+      const vehiclesCount = vehiclesCountResult.count || 0;
+      const reservationsCount = contractsCountResult.count || 0;
+      const clientsCount = clientsCountResult.count || 0;
+      const vehicles = vehiclesResult.data || [];
+      const reservations = reservationsResult.data || [];
+      const sinistres = sinistresResult.data || [];
+      const assistance = assistanceResult.data || [];
+
+      // Calculate vehicle status counts
+      const availableVehicles = vehicles.filter(v => v.statut === 'disponible').length;
+      const rentedVehicles = vehicles.filter(v => v.statut === 'loue').length;
+      const maintenanceVehicles = vehicles.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length;
+      const immobilizedVehicles = vehicles.filter(v => v.statut === 'immobilise').length;
+      const outOfServiceVehicles = vehicles.filter(v => v.en_service === false).length;
+
+      // Calculate sinistres stats
+      const sinistresTotal = sinistres.length;
+      const sinistresOuverts = sinistres.filter(s => s.statut === 'ouvert').length;
+      const sinistresEnCours = sinistres.filter(s => s.statut === 'en_cours').length;
+      const sinistresClos = sinistres.filter(s => s.statut === 'clos').length;
 
       setStats({
-        vehiclesCount: vehiclesCount || 0,
-        reservationsCount: reservationsCount || 0,
-        clientsCount: clientsCount || 0,
+        vehiclesCount,
+        reservationsCount,
+        clientsCount,
         availableVehicles,
         rentedVehicles,
         maintenanceVehicles,
@@ -278,16 +255,15 @@ export default function Dashboard() {
         sinistresEnCours,
         sinistresClos
       });
-      setRecentReservations(reservations || []);
-      setRecentAssistance(assistance || []);
+      
+      setRecentReservations(reservations);
+      setRecentAssistance(assistance);
 
-      // Load departures and returns (contracts + assistance)
-      await loadDeparturesAndReturns();
-
-      // Calculate alerts for all vehicles
-      if (vehicles) {
-        await calculateVehicleAlerts(vehicles);
-      }
+      // Load departures/returns and calculate alerts in parallel
+      await Promise.all([
+        loadDeparturesAndReturns(),
+        calculateVehicleAlerts(vehicles)
+      ]);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -298,31 +274,60 @@ export default function Dashboard() {
     const alerts: VehicleAlert[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    if (vehicles.length === 0) {
+      setVehicleAlerts([]);
+      setChequeAlertsCount(0);
+      setReservationAlertsCount(0);
+      return;
+    }
+
+    // Fetch all data for all vehicles in parallel
+    const [insurancesResult, inspectionsResult, vignettesResult, echeancesResult, paymentsResult] = await Promise.all([
+      supabase.from('vehicle_insurance').select('*').order('date_debut', { ascending: false }),
+      supabase.from('vehicle_technical_inspection').select('*').order('date_visite', { ascending: false }),
+      supabase.from('vehicle_vignette').select('*').order('annee', { ascending: false }),
+      supabase.from('vehicules_traites_echeances').select('*'),
+      supabase.from('contract_payments').select('id, date_paiement').eq('methode', 'cheque')
+    ]);
+
+    // Group data by vehicle_id for fast lookup
+    const insurancesByVehicle = new Map();
+    const inspectionsByVehicle = new Map();
+    const vignettesByVehicle = new Map();
+
+    insurancesResult.data?.forEach(item => {
+      if (!insurancesByVehicle.has(item.vehicle_id)) {
+        insurancesByVehicle.set(item.vehicle_id, []);
+      }
+      insurancesByVehicle.get(item.vehicle_id).push(item);
+    });
+
+    inspectionsResult.data?.forEach(item => {
+      if (!inspectionsByVehicle.has(item.vehicle_id)) {
+        inspectionsByVehicle.set(item.vehicle_id, []);
+      }
+      inspectionsByVehicle.get(item.vehicle_id).push(item);
+    });
+
+    vignettesResult.data?.forEach(item => {
+      if (!vignettesByVehicle.has(item.vehicle_id)) {
+        vignettesByVehicle.set(item.vehicle_id, []);
+      }
+      vignettesByVehicle.get(item.vehicle_id).push(item);
+    });
+
+    const echeances = echeancesResult.data || [];
+
+    // Process each vehicle
     for (const vehicle of vehicles) {
-      // Load insurance data
-      const {
-        data: insurances
-      } = await supabase.from('vehicle_insurance').select('*').eq('vehicle_id', vehicle.id).order('date_debut', {
-        ascending: false
-      });
-
-      // Load technical inspection data
-      const {
-        data: technicalInspections
-      } = await supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', vehicle.id).order('date_visite', {
-        ascending: false
-      });
-
-      // Load vignette data
-      const {
-        data: vignettes
-      } = await supabase.from('vehicle_vignette').select('*').eq('vehicle_id', vehicle.id).order('annee', {
-        ascending: false
-      });
       const vehicleInfo = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || vehicle.ww || vehicle.immatriculation_provisoire || 'N/A'})`;
+      const insurances = insurancesByVehicle.get(vehicle.id) || [];
+      const technicalInspections = inspectionsByVehicle.get(vehicle.id) || [];
+      const vignettes = vignettesByVehicle.get(vehicle.id) || [];
 
       // Check insurance alerts
-      if (!insurances || insurances.length === 0) {
+      if (insurances.length === 0) {
         alerts.push({
           vehicleId: vehicle.id,
           vehicleInfo,
@@ -354,7 +359,7 @@ export default function Dashboard() {
       }
 
       // Check technical inspection alerts
-      if (!technicalInspections || technicalInspections.length === 0) {
+      if (technicalInspections.length === 0) {
         alerts.push({
           vehicleId: vehicle.id,
           vehicleInfo,
@@ -386,7 +391,7 @@ export default function Dashboard() {
       }
 
       // Check vignette alerts
-      if (!vignettes || vignettes.length === 0) {
+      if (vignettes.length === 0) {
         alerts.push({
           vehicleId: vehicle.id,
           vehicleInfo,
@@ -446,42 +451,33 @@ export default function Dashboard() {
       }
 
       // Check traite bancaire alerts
-      const { data: echeances } = await supabase
-        .from('vehicules_traites_echeances')
-        .select('*') as any;
-
-      if (echeances && echeances.length > 0) {
-        for (const echeance of echeances) {
-          const echeanceDate = new Date(echeance.date_echeance);
-          echeanceDate.setHours(0, 0, 0, 0);
-          const daysUntilEcheance = Math.ceil((echeanceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (echeanceDate < today) {
-            // Échéance en retard
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
-              severity: "critical"
-            });
-          } else if (daysUntilEcheance <= 7) {
-            // Échéance dans moins de 7 jours
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
-              severity: "warning"
-            });
-          }
+      for (const echeance of echeances) {
+        const echeanceDate = new Date(echeance.date_echeance);
+        echeanceDate.setHours(0, 0, 0, 0);
+        const daysUntilEcheance = Math.ceil((echeanceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (echeanceDate < today) {
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+            severity: "critical"
+          });
+        } else if (daysUntilEcheance <= 7) {
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+            severity: "warning"
+          });
         }
       }
     }
+
     setVehicleAlerts(alerts);
 
-    // Count check alerts (chèques older than 30 days)
-    const {
-      data: payments
-    } = await supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque");
+    // Count check alerts (already fetched in parallel)
+    const payments = paymentsResult.data || [];
     if (payments) {
       const oldChecks = payments.filter(payment => {
         const daysFromPayment = Math.ceil((today.getTime() - new Date(payment.date_paiement).getTime()) / (1000 * 60 * 60 * 24));
