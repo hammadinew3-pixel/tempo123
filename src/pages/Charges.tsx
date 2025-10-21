@@ -130,7 +130,7 @@ export default function Charges() {
         .from('expenses')
         .select(`
           *,
-          vehicles (immatriculation, marque, modele),
+          vehicles (immatriculation, ww, marque, modele),
           contracts (numero_contrat)
         `)
         .order('date_depense', { ascending: false });
