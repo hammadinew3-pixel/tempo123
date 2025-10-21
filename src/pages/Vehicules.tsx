@@ -111,18 +111,12 @@ export default function Vehicules() {
   };
   const loadVehicles = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('vehicles').select(`
-          *,
-          vehicle_insurance (
-            id,
-            assureur
-          )
-        `).order('created_at', {
-        ascending: false
-      });
+      // Load vehicles without the expensive join
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
       if (error) throw error;
       setVehicles(data || []);
     } catch (error: any) {

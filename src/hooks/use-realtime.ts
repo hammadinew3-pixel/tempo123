@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -11,6 +11,7 @@ interface UseRealtimeOptions<T> {
   onUpdate?: (payload: T) => void;
   onDelete?: (payload: { old: T }) => void;
   filter?: string;
+  debounceMs?: number; // Debounce delay in milliseconds (default: 0 = no debounce)
 }
 
 export function useRealtime<T>({
@@ -20,7 +21,32 @@ export function useRealtime<T>({
   onUpdate,
   onDelete,
   filter,
+  debounceMs = 0,
 }: UseRealtimeOptions<T>) {
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const debouncedCallback = useCallback((callback: () => void) => {
+    if (debounceMs === 0) {
+      callback();
+      return;
+    }
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(callback, debounceMs);
+  }, [debounceMs]);
+
   useEffect(() => {
     let channel: RealtimeChannel;
 
@@ -39,7 +65,9 @@ export function useRealtime<T>({
           },
           (payload) => {
             console.log(`[Realtime] INSERT on ${table}:`, payload);
-            if (onInsert) onInsert(payload.new as T);
+            if (onInsert) {
+              debouncedCallback(() => onInsert(payload.new as T));
+            }
           }
         );
       }
@@ -55,7 +83,9 @@ export function useRealtime<T>({
           },
           (payload) => {
             console.log(`[Realtime] UPDATE on ${table}:`, payload);
-            if (onUpdate) onUpdate(payload.new as T);
+            if (onUpdate) {
+              debouncedCallback(() => onUpdate(payload.new as T));
+            }
           }
         );
       }
@@ -71,7 +101,9 @@ export function useRealtime<T>({
           },
           (payload) => {
             console.log(`[Realtime] DELETE on ${table}:`, payload);
-            if (onDelete) onDelete({ old: payload.old as T });
+            if (onDelete) {
+              debouncedCallback(() => onDelete({ old: payload.old as T }));
+            }
           }
         );
       }
@@ -89,5 +121,5 @@ export function useRealtime<T>({
         supabase.removeChannel(channel);
       }
     };
-  }, [table, event, filter, onInsert, onUpdate, onDelete]);
+  }, [table, event, filter, onInsert, onUpdate, onDelete, debouncedCallback]);
 }

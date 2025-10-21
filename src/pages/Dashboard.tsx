@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Car, Calendar, Users, TrendingUp, AlertCircle, FileText, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useTenantPlan } from "@/hooks/useTenantPlan";
+import { groupBy, getLatestByGroup } from "@/lib/arrayUtils";
 interface DashboardStats {
   vehiclesCount: number;
   reservationsCount: number;
@@ -57,19 +58,34 @@ export default function Dashboard() {
   const [chequeAlertsCount, setChequeAlertsCount] = useState(0);
   const [reservationAlertsCount, setReservationAlertsCount] = useState(0);
   const [reservationType, setReservationType] = useState<'standard' | 'assistance'>('standard');
+  const [alertsLoaded, setAlertsLoaded] = useState(false);
+  const [loadingAlerts, setLoadingAlerts] = useState(false);
+  
+  // Debounce timer for realtime updates
+  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  
+  const debouncedLoadDeparturesAndReturns = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      loadDeparturesAndReturns();
+    }, 2000);
+  }, []);
+  
   useEffect(() => {
     loadDashboardData();
 
-    // Subscribe to real-time updates for contracts
+    // Subscribe to real-time updates for contracts with debounce
     const contractsChannel = supabase.channel('dashboard-contracts-changes').on('postgres_changes', {
       event: '*',
       schema: 'public',
       table: 'contracts'
     }, () => {
-      loadDeparturesAndReturns();
+      debouncedLoadDeparturesAndReturns();
     }).subscribe();
     
-    // Subscribe to assistance ONLY if module is accessible
+    // Subscribe to assistance ONLY if module is accessible with debounce
     let assistanceChannel;
     if (hasModuleAccess('assistance')) {
       assistanceChannel = supabase.channel('dashboard-assistance-changes').on('postgres_changes', {
@@ -77,17 +93,20 @@ export default function Dashboard() {
         schema: 'public',
         table: 'assistance'
       }, () => {
-        loadDeparturesAndReturns();
+        debouncedLoadDeparturesAndReturns();
       }).subscribe();
     }
     
     return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
       supabase.removeChannel(contractsChannel);
       if (assistanceChannel) {
         supabase.removeChannel(assistanceChannel);
       }
     };
-  }, [hasModuleAccess]);
+  }, [hasModuleAccess, debouncedLoadDeparturesAndReturns]);
   const loadDeparturesAndReturns = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -196,78 +215,44 @@ export default function Dashboard() {
   };
   const loadDashboardData = async () => {
     try {
-      // Load vehicles count
-      const {
-        count: vehiclesCount
-      } = await supabase.from('vehicles').select('*', {
-        count: 'exact',
-        head: true
-      });
+      // Execute ALL main queries in parallel
+      const [
+        vehiclesCountRes,
+        vehiclesRes,
+        contractsCountRes,
+        clientsCountRes,
+        reservationsRes,
+        sinistresRes,
+        assistanceRes
+      ] = await Promise.all([
+        supabase.from('vehicles').select('*', { count: 'exact', head: true }).then(r => r),
+        supabase.from('vehicles').select('*').then(r => r),
+        supabase.from('contracts').select('*', { count: 'exact', head: true }).then(r => r),
+        supabase.from('clients').select('*', { count: 'exact', head: true }).then(r => r),
+        supabase.from('contracts').select(`*, clients (nom, prenom), vehicles (marque, modele, immatriculation)`).order('created_at', { ascending: false }).limit(4).then(r => r),
+        supabase.from('sinistres').select('statut').then(r => r),
+        hasModuleAccess('assistance') 
+          ? supabase.from('assistance').select(`*, clients (nom, prenom), vehicles (marque, modele, immatriculation)`).order('created_at', { ascending: false }).limit(4).then(r => r)
+          : Promise.resolve({ data: [] })
+      ]);
 
-      // Load all vehicles with related data for alerts
-      const {
-        data: vehicles
-      } = await supabase.from('vehicles').select('*');
-      const availableVehicles = vehicles?.filter(v => v.statut === 'disponible').length || 0;
-      const rentedVehicles = vehicles?.filter(v => v.statut === 'loue').length || 0;
-      const maintenanceVehicles = vehicles?.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length || 0;
-      const immobilizedVehicles = vehicles?.filter(v => v.statut === 'immobilise').length || 0;
-      const outOfServiceVehicles = vehicles?.filter(v => v.en_service === false).length || 0;
+      const vehicles = vehiclesRes.data || [];
+      const availableVehicles = vehicles.filter(v => v.statut === 'disponible').length;
+      const rentedVehicles = vehicles.filter(v => v.statut === 'loue').length;
+      const maintenanceVehicles = vehicles.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length;
+      const immobilizedVehicles = vehicles.filter(v => v.statut === 'immobilise').length;
+      const outOfServiceVehicles = vehicles.filter(v => v.en_service === false).length;
 
-      // Load contracts count
-      const {
-        count: reservationsCount
-      } = await supabase.from('contracts').select('*', {
-        count: 'exact',
-        head: true
-      });
-
-      // Load clients count
-      const {
-        count: clientsCount
-      } = await supabase.from('clients').select('*', {
-        count: 'exact',
-        head: true
-      });
-
-      // Load recent reservations (contracts)
-      const {
-        data: reservations
-      } = await supabase.from('contracts').select(`
-          *,
-          clients (nom, prenom),
-          vehicles (marque, modele, immatriculation)
-        `).order('created_at', {
-        ascending: false
-      }).limit(4);
-
-      // Load recent assistance ONLY if module is accessible
-      let assistance = [];
-      if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
-            *,
-            clients (nom, prenom),
-            vehicles (marque, modele, immatriculation)
-          `).order('created_at', {
-          ascending: false
-        }).limit(4);
-        assistance = data || [];
-      }
-
-      // Load sinistres statistics
-      const { data: sinistres } = await supabase
-        .from('sinistres')
-        .select('statut');
-      
-      const sinistresTotal = sinistres?.length || 0;
-      const sinistresOuverts = sinistres?.filter(s => s.statut === 'ouvert').length || 0;
-      const sinistresEnCours = sinistres?.filter(s => s.statut === 'en_cours').length || 0;
-      const sinistresClos = sinistres?.filter(s => s.statut === 'clos').length || 0;
+      const sinistres = sinistresRes.data || [];
+      const sinistresTotal = sinistres.length;
+      const sinistresOuverts = sinistres.filter(s => s.statut === 'ouvert').length;
+      const sinistresEnCours = sinistres.filter(s => s.statut === 'en_cours').length;
+      const sinistresClos = sinistres.filter(s => s.statut === 'clos').length;
 
       setStats({
-        vehiclesCount: vehiclesCount || 0,
-        reservationsCount: reservationsCount || 0,
-        clientsCount: clientsCount || 0,
+        vehiclesCount: vehiclesCountRes.count || 0,
+        reservationsCount: contractsCountRes.count || 0,
+        clientsCount: clientsCountRes.count || 0,
         availableVehicles,
         rentedVehicles,
         maintenanceVehicles,
@@ -278,212 +263,178 @@ export default function Dashboard() {
         sinistresEnCours,
         sinistresClos
       });
-      setRecentReservations(reservations || []);
-      setRecentAssistance(assistance || []);
+      setRecentReservations(reservationsRes.data || []);
+      setRecentAssistance(assistanceRes.data || []);
 
-      // Load departures and returns (contracts + assistance)
+      // Load departures and returns
       await loadDeparturesAndReturns();
 
-      // Calculate alerts for all vehicles
-      if (vehicles) {
-        await calculateVehicleAlerts(vehicles);
-      }
+      // Don't calculate alerts on initial load - lazy load when user clicks
+      // Just count the critical alerts for display
+      const criticalCount = await calculateCriticalAlertsCount(vehicles);
+      setVehicleAlerts([]);
+      setChequeAlertsCount(0);
+      setReservationAlertsCount(criticalCount);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Quick count of critical alerts (shown on dashboard without full details)
+  const calculateCriticalAlertsCount = async (vehicles: any[]) => {
+    if (!vehicles || vehicles.length === 0) return 0;
+    
+    let count = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Count vehicles without documents or with expired documents
+    for (const vehicle of vehicles) {
+      // Check if oil change is needed
+      if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
+        const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+        if (kmUntilOilChange <= 1000) count++;
+      } else if (!vehicle.dernier_kilometrage_vidange) {
+        count++;
+      }
+    }
+
+    return count;
+  };
+  // Lazy load vehicle alerts when user clicks (optimized version)
+  const loadDetailedVehicleAlerts = async () => {
+    if (alertsLoaded || loadingAlerts) return;
+    
+    setLoadingAlerts(true);
+    try {
+      const { data: vehicles } = await supabase.from('vehicles').select('*');
+      if (!vehicles || vehicles.length === 0) {
+        setVehicleAlerts([]);
+        setLoadingAlerts(false);
+        setAlertsLoaded(true);
+        return;
+      }
+
+      await calculateVehicleAlerts(vehicles);
+      setAlertsLoaded(true);
+    } catch (error) {
+      console.error('Error loading vehicle alerts:', error);
+    } finally {
+      setLoadingAlerts(false);
+    }
+  };
+
   const calculateVehicleAlerts = async (vehicles: any[]) => {
     const alerts: VehicleAlert[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
+    const vehicleIds = vehicles.map(v => v.id);
+
+    // Load ALL documents in parallel (4 global queries instead of 4 per vehicle)
+    const [
+      allInsurancesRes,
+      allInspectionsRes,
+      allVignettesRes,
+      allEcheancesRes,
+      paymentsRes
+    ] = await Promise.all([
+      supabase.from('vehicle_insurance').select('*').in('vehicle_id', vehicleIds).then(r => r),
+      supabase.from('vehicle_technical_inspection').select('*').in('vehicle_id', vehicleIds).then(r => r),
+      supabase.from('vehicle_vignette').select('*').in('vehicle_id', vehicleIds).then(r => r),
+      supabase.from('vehicules_traites_echeances').select('*').eq('statut', 'À payer').then(r => r),
+      supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque").then(r => r)
+    ]);
+
+    // Group by vehicle_id and get latest
+    const latestInsurances = getLatestByGroup(allInsurancesRes.data || [], 'vehicle_id' as any, 'date_debut' as any);
+    const latestInspections = getLatestByGroup(allInspectionsRes.data || [], 'vehicle_id' as any, 'date_visite' as any);
+    const latestVignettes = getLatestByGroup(allVignettesRes.data || [], 'vehicle_id' as any, 'annee' as any);
+    const echeancesByVehicle = groupBy(allEcheancesRes.data || [], 'vehicle_id' as any);
+
+    // Calculate alerts in memory
     for (const vehicle of vehicles) {
-      // Load insurance data
-      const {
-        data: insurances
-      } = await supabase.from('vehicle_insurance').select('*').eq('vehicle_id', vehicle.id).order('date_debut', {
-        ascending: false
-      });
-
-      // Load technical inspection data
-      const {
-        data: technicalInspections
-      } = await supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', vehicle.id).order('date_visite', {
-        ascending: false
-      });
-
-      // Load vignette data
-      const {
-        data: vignettes
-      } = await supabase.from('vehicle_vignette').select('*').eq('vehicle_id', vehicle.id).order('annee', {
-        ascending: false
-      });
       const vehicleInfo = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || vehicle.ww || vehicle.immatriculation_provisoire || 'N/A'})`;
+      const insurance = latestInsurances[vehicle.id];
+      const inspection = latestInspections[vehicle.id];
+      const vignette = latestVignettes[vehicle.id];
+      const echeances = echeancesByVehicle[vehicle.id] || [];
 
-      // Check insurance alerts
-      if (!insurances || insurances.length === 0) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Véhicule sans assurance ajoutée.",
-          severity: "high"
-        });
-      } else {
-        const latestInsurance = insurances[0];
-        if (latestInsurance?.date_expiration) {
-          const expirationDate = new Date(latestInsurance.date_expiration);
-          expirationDate.setHours(0, 0, 0, 0);
-          const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          if (expirationDate < today) {
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Assurance expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
-              severity: "critical"
-            });
-          } else if (daysUntilExpiration <= 30) {
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Assurance expire dans ${daysUntilExpiration} jour(s).`,
-              severity: "warning"
-            });
-          }
+      // Check insurance
+      if (!insurance) {
+        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Véhicule sans assurance ajoutée.", severity: "high" });
+      } else if (insurance.date_expiration) {
+        const expirationDate = new Date(insurance.date_expiration);
+        expirationDate.setHours(0, 0, 0, 0);
+        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (expirationDate < today) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Assurance expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`, severity: "critical" });
+        } else if (daysUntilExpiration <= 30) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Assurance expire dans ${daysUntilExpiration} jour(s).`, severity: "warning" });
         }
       }
 
-      // Check technical inspection alerts
-      if (!technicalInspections || technicalInspections.length === 0) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Véhicule sans visite technique ajoutée.",
-          severity: "high"
-        });
-      } else {
-        const latestInspection = technicalInspections[0];
-        if (latestInspection?.date_expiration) {
-          const expirationDate = new Date(latestInspection.date_expiration);
-          expirationDate.setHours(0, 0, 0, 0);
-          const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          if (expirationDate < today) {
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Visite technique expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
-              severity: "critical"
-            });
-          } else if (daysUntilExpiration <= 30) {
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`,
-              severity: "warning"
-            });
-          }
+      // Check inspection
+      if (!inspection) {
+        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Véhicule sans visite technique ajoutée.", severity: "high" });
+      } else if (inspection.date_expiration) {
+        const expirationDate = new Date(inspection.date_expiration);
+        expirationDate.setHours(0, 0, 0, 0);
+        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (expirationDate < today) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Visite technique expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`, severity: "critical" });
+        } else if (daysUntilExpiration <= 30) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`, severity: "warning" });
         }
       }
 
-      // Check vignette alerts
-      if (!vignettes || vignettes.length === 0) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Véhicule sans vignette ajoutée.",
-          severity: "high"
-        });
-      } else {
-        const latestVignette = vignettes[0];
-        if (latestVignette?.date_expiration) {
-          const expirationDate = new Date(latestVignette.date_expiration);
-          expirationDate.setHours(0, 0, 0, 0);
-          const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          if (expirationDate < today) {
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Vignette expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
-              severity: "critical"
-            });
-          } else if (daysUntilExpiration <= 30) {
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Vignette expire dans ${daysUntilExpiration} jour(s).`,
-              severity: "warning"
-            });
-          }
+      // Check vignette
+      if (!vignette) {
+        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Véhicule sans vignette ajoutée.", severity: "high" });
+      } else if (vignette.date_expiration) {
+        const expirationDate = new Date(vignette.date_expiration);
+        expirationDate.setHours(0, 0, 0, 0);
+        const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (expirationDate < today) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vignette expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`, severity: "critical" });
+        } else if (daysUntilExpiration <= 30) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vignette expire dans ${daysUntilExpiration} jour(s).`, severity: "warning" });
         }
       }
 
-      // Check oil change alerts
+      // Check oil change
       if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
         const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
-        
         if (kmUntilOilChange <= 300) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Vidange ${kmUntilOilChange <= 0 ? 'en retard de ' + Math.abs(kmUntilOilChange) : 'critique - ' + kmUntilOilChange} km`,
-            severity: "critical"
-          });
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vidange ${kmUntilOilChange <= 0 ? 'en retard de ' + Math.abs(kmUntilOilChange) : 'critique - ' + kmUntilOilChange} km`, severity: "critical" });
         } else if (kmUntilOilChange <= 1000) {
-          alerts.push({
-            vehicleId: vehicle.id,
-            vehicleInfo,
-            message: `Vidange à faire dans ${kmUntilOilChange} km`,
-            severity: "warning"
-          });
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vidange à faire dans ${kmUntilOilChange} km`, severity: "warning" });
         }
       } else if (!vehicle.dernier_kilometrage_vidange) {
-        alerts.push({
-          vehicleId: vehicle.id,
-          vehicleInfo,
-          message: "Aucune vidange enregistrée",
-          severity: "high"
-        });
+        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Aucune vidange enregistrée", severity: "high" });
       }
 
-      // Check traite bancaire alerts
-      const { data: echeances } = await supabase
-        .from('vehicules_traites_echeances')
-        .select('*') as any;
-
-      if (echeances && echeances.length > 0) {
-        for (const echeance of echeances) {
-          const echeanceDate = new Date(echeance.date_echeance);
-          echeanceDate.setHours(0, 0, 0, 0);
-          const daysUntilEcheance = Math.ceil((echeanceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (echeanceDate < today) {
-            // Échéance en retard
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
-              severity: "critical"
-            });
-          } else if (daysUntilEcheance <= 7) {
-            // Échéance dans moins de 7 jours
-            alerts.push({
-              vehicleId: vehicle.id,
-              vehicleInfo,
-              message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
-              severity: "warning"
-            });
-          }
+      // Check traite bancaire
+      for (const echeance of echeances) {
+        const echeanceDate = new Date(echeance.date_echeance);
+        echeanceDate.setHours(0, 0, 0, 0);
+        const daysUntilEcheance = Math.ceil((echeanceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (echeanceDate < today) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`, severity: "critical" });
+        } else if (daysUntilEcheance <= 7) {
+          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`, severity: "warning" });
         }
       }
     }
+
     setVehicleAlerts(alerts);
 
-    // Count check alerts (chèques older than 30 days)
-    const {
-      data: payments
-    } = await supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque");
-    if (payments) {
-      const oldChecks = payments.filter(payment => {
+    // Count old checks
+    if (paymentsRes.data) {
+      const oldChecks = paymentsRes.data.filter((payment: any) => {
         const daysFromPayment = Math.ceil((today.getTime() - new Date(payment.date_paiement).getTime()) / (1000 * 60 * 60 * 24));
         return daysFromPayment > 30;
       });
@@ -648,10 +599,13 @@ export default function Dashboard() {
                           {reservationAlertsCount.toString().padStart(2, '0')} Alertes réservations
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setShowAlertsDialog(true)}>
-                        <span className={`w-3 h-3 rounded-full ${vehicleAlerts.length > 0 ? 'bg-warning' : 'bg-success'}`}></span>
-                        <span className={`text-sm text-foreground ${vehicleAlerts.length > 0 ? 'underline' : ''}`}>
-                          {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
+                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
+                        loadDetailedVehicleAlerts();
+                        setShowAlertsDialog(true);
+                      }}>
+                        <span className={`w-3 h-3 rounded-full ${vehicleAlerts.length > 0 || reservationAlertsCount > 0 ? 'bg-warning' : 'bg-success'}`}></span>
+                        <span className={`text-sm text-foreground ${vehicleAlerts.length > 0 || reservationAlertsCount > 0 ? 'underline' : ''}`}>
+                          {(vehicleAlerts.length || reservationAlertsCount).toString().padStart(2, '0')} Alertes véhicules
                         </span>
                       </div>
                     </div>
@@ -962,9 +916,14 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-warning">
               <AlertCircle className="w-5 h-5" />
-              {vehicleAlerts.length.toString().padStart(2, '0')} alertes véhicules
+              {loadingAlerts ? 'Chargement des alertes...' : `${vehicleAlerts.length.toString().padStart(2, '0')} alertes véhicules`}
             </DialogTitle>
           </DialogHeader>
+          {loadingAlerts && (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-muted-foreground">Chargement des alertes détaillées...</div>
+            </div>
+          )}
           <div className="space-y-6 mt-4">
             {Object.entries(groupedAlerts).map(([vehicleId, {
             vehicleInfo,

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, parseISO } from "date-fns";
+import { groupBy, getLatestByGroup } from "@/lib/arrayUtils";
 
 interface AlertesContextType {
   totalAlerts: number;
@@ -21,131 +22,105 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
   const [totalAlerts, setTotalAlerts] = useState(0);
 
   const refreshAlerts = async () => {
-    let count = 0;
+    try {
+      let count = 0;
 
-    // Count vehicle alerts
-    const { data: vehicles } = await supabase
-      .from("vehicles")
-      .select("*");
+      // Get all vehicles first
+      const { data: vehicles } = await supabase
+        .from("vehicles")
+        .select("*");
 
-    if (vehicles) {
+      if (!vehicles || vehicles.length === 0) {
+        setTotalAlerts(0);
+        return;
+      }
+
+      const vehicleIds = vehicles.map(v => v.id);
+      const today = new Date().toISOString().split("T")[0];
+
+      // Execute ALL queries in parallel (7 queries instead of 4 per vehicle)
+      const [
+        allInsurances,
+        allInspections,
+        allVignettes,
+        departsToday,
+        returnsToday,
+        checkPayments
+      ] = await Promise.all([
+        supabase.from("vehicle_insurance").select("*").in("vehicle_id", vehicleIds),
+        supabase.from("vehicle_technical_inspection").select("*").in("vehicle_id", vehicleIds),
+        supabase.from("vehicle_vignette").select("*").in("vehicle_id", vehicleIds),
+        supabase.from("contracts").select("id").eq("date_debut", today).in("statut", ["contrat_valide", "brouillon"]),
+        supabase.from("contracts").select("id").eq("date_fin", today).eq("statut", "livre"),
+        supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque")
+      ]);
+
+      // Group by vehicle_id and get latest for each
+      const latestInsurances = getLatestByGroup(allInsurances.data || [], 'vehicle_id' as any, 'date_expiration' as any);
+      const latestInspections = getLatestByGroup(allInspections.data || [], 'vehicle_id' as any, 'date_expiration' as any);
+      const latestVignettes = getLatestByGroup(allVignettes.data || [], 'vehicle_id' as any, 'date_expiration' as any);
+
+      // Calculate alerts in memory
       for (const vehicle of vehicles) {
-        // Check insurance
-        const { data: insurances } = await supabase
-          .from("vehicle_insurance")
-          .select("*")
-          .eq("vehicle_id", vehicle.id)
-          .order("date_expiration", { ascending: false })
-          .limit(1);
+        const insurance = latestInsurances[vehicle.id];
+        const inspection = latestInspections[vehicle.id];
+        const vignette = latestVignettes[vehicle.id];
 
-        if (!insurances || insurances.length === 0) {
+        // Check insurance
+        if (!insurance) {
           count++;
-        } else {
-          const daysUntilExpiry = differenceInDays(
-            parseISO(insurances[0].date_expiration),
-            new Date()
-          );
-          if (daysUntilExpiry <= 30) {
-            count++;
-          }
+        } else if (insurance.date_expiration) {
+          const daysUntilExpiry = differenceInDays(parseISO(insurance.date_expiration), new Date());
+          if (daysUntilExpiry <= 30) count++;
         }
 
         // Check technical inspection
-        const { data: inspections } = await supabase
-          .from("vehicle_technical_inspection")
-          .select("*")
-          .eq("vehicle_id", vehicle.id)
-          .order("date_expiration", { ascending: false })
-          .limit(1);
-
-        if (!inspections || inspections.length === 0) {
+        if (!inspection) {
           count++;
-        } else {
-          const daysUntilExpiry = differenceInDays(
-            parseISO(inspections[0].date_expiration),
-            new Date()
-          );
-          if (daysUntilExpiry <= 30) {
-            count++;
-          }
+        } else if (inspection.date_expiration) {
+          const daysUntilExpiry = differenceInDays(parseISO(inspection.date_expiration), new Date());
+          if (daysUntilExpiry <= 30) count++;
         }
 
         // Check vignette
-        const { data: vignettes } = await supabase
-          .from("vehicle_vignette")
-          .select("*")
-          .eq("vehicle_id", vehicle.id)
-          .order("date_expiration", { ascending: false })
-          .limit(1);
-
-        if (!vignettes || vignettes.length === 0) {
+        if (!vignette) {
           count++;
-        } else {
-          const daysUntilExpiry = differenceInDays(
-            parseISO(vignettes[0].date_expiration),
-            new Date()
-          );
-          if (daysUntilExpiry <= 30) {
-            count++;
-          }
+        } else if (vignette.date_expiration) {
+          const daysUntilExpiry = differenceInDays(parseISO(vignette.date_expiration), new Date());
+          if (daysUntilExpiry <= 30) count++;
         }
 
-        // Check oil change alerts
+        // Check oil change
         if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
           const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
-          
-          // Alert if within 1000 km or overdue
-          if (kmUntilOilChange <= 1000) {
-            count++;
-          }
+          if (kmUntilOilChange <= 1000) count++;
         } else if (!vehicle.dernier_kilometrage_vidange) {
-          // No oil change recorded
           count++;
         }
       }
+
+      // Add contract alerts
+      count += (departsToday.data?.length || 0) + (returnsToday.data?.length || 0);
+
+      // Check old payments
+      if (checkPayments.data) {
+        const checkAlerts = checkPayments.data.filter((payment: any) => {
+          const daysFromPayment = differenceInDays(new Date(), parseISO(payment.date_paiement));
+          return daysFromPayment > 30;
+        });
+        count += checkAlerts.length;
+      }
+
+      setTotalAlerts(count);
+    } catch (error) {
+      console.error('Error refreshing alerts:', error);
+      setTotalAlerts(0);
     }
-
-    // Count contract alerts (departures and returns today)
-    const today = new Date().toISOString().split("T")[0];
-    
-    const { data: departsToday } = await supabase
-      .from("contracts")
-      .select("id")
-      .eq("date_debut", today)
-      .in("statut", ["contrat_valide", "brouillon"]);
-
-    const { data: returnsToday } = await supabase
-      .from("contracts")
-      .select("id")
-      .eq("date_fin", today)
-      .eq("statut", "livre");
-
-    count += (departsToday?.length || 0) + (returnsToday?.length || 0);
-
-    // Count check alerts
-    const { data: payments } = await supabase
-      .from("contract_payments")
-      .select("id, date_paiement")
-      .eq("methode", "cheque");
-
-    if (payments) {
-      const checkAlerts = payments.filter((payment) => {
-        const daysFromPayment = differenceInDays(new Date(), parseISO(payment.date_paiement));
-        return daysFromPayment > 30;
-      });
-      count += checkAlerts.length;
-    }
-
-    setTotalAlerts(count);
   };
 
   useEffect(() => {
+    // Initial load only - no auto-refresh
     refreshAlerts();
-    
-    // Refresh every 5 minutes
-    const interval = setInterval(refreshAlerts, 5 * 60 * 1000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   return (
