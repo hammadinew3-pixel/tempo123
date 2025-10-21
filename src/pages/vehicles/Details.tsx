@@ -1409,7 +1409,22 @@ export default function VehiculeDetails() {
         <CardContent>
           {isAdmin && (
             <div className="mb-4 flex justify-end">
-              <Button onClick={() => setShowTraiteDialog(true)}>
+              <Button onClick={() => {
+                // Pré-remplir le concessionnaire depuis la fiche véhicule
+                setTraiteForm({
+                  concessionaire: vehicle?.concessionnaire || '',
+                  organisme: '',
+                  date_achat: '',
+                  prix_achat: '',
+                  avance: '',
+                  montant_mensuel: '',
+                  date_debut: '',
+                  duree_mois: '',
+                  duree_deja_paye: '0',
+                  plus_infos: ''
+                });
+                setShowTraiteDialog(true);
+              }}>
                 <Plus className="w-4 h-4 mr-2" />
                 Ajouter traite bancaire
               </Button>
