@@ -25,7 +25,7 @@ interface PostCreationWorkflowProps {
   };
 }
 
-type Step = 'assurance' | 'visite_technique' | 'vignette' | 'complete';
+type Step = 'assurance' | 'visite_technique' | 'vignette' | 'autorisation_circulation' | 'complete';
 
 export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCreationWorkflowProps) {
   const { withTenantId } = useTenantInsert();
@@ -39,9 +39,11 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
   const [assuranceFiles, setAssuranceFiles] = useState<File[]>([]);
   const [visiteFiles, setVisiteFiles] = useState<File[]>([]);
   const [vignetteFiles, setVignetteFiles] = useState<File[]>([]);
+  const [autorisationFiles, setAutorisationFiles] = useState<File[]>([]);
   const assuranceFileRef = useRef<HTMLInputElement>(null);
   const visiteFileRef = useRef<HTMLInputElement>(null);
   const vignetteFileRef = useRef<HTMLInputElement>(null);
+  const autorisationFileRef = useRef<HTMLInputElement>(null);
 
   // Assurance form data
   const [assuranceData, setAssuranceData] = useState({
@@ -77,6 +79,19 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
   const [vignetteData, setVignetteData] = useState({
     numero_ordre: '',
     annee: new Date().getFullYear(),
+    date_expiration: undefined as Date | undefined,
+    montant: '',
+    date_paiement: undefined as Date | undefined,
+    mode_paiement: 'especes' as 'especes' | 'cheque' | 'virement' | 'carte',
+    numero_cheque: '',
+    banque: '',
+    remarques: '',
+  });
+
+  // Autorisation de circulation form data
+  const [autorisationData, setAutorisationData] = useState({
+    numero_ordre: '',
+    date_delivrance: undefined as Date | undefined,
     date_expiration: undefined as Date | undefined,
     montant: '',
     date_paiement: undefined as Date | undefined,
@@ -261,6 +276,71 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
       });
 
       setCompletedSteps([...completedSteps, 'vignette']);
+      setCurrentStep('autorisation_circulation');
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitAutorisation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Upload files first if any
+      let uploadedUrls: string[] = [];
+      if (autorisationFiles.length > 0) {
+        for (const file of autorisationFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${vehicleId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('documents_vehicules')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('documents_vehicules')
+            .getPublicUrl(fileName);
+          
+          uploadedUrls.push(publicUrl);
+        }
+      }
+
+      const { error } = await supabase
+        .from('vehicle_autorisation_circulation')
+        .insert([withTenantId({
+          vehicle_id: vehicleId,
+          numero_ordre: autorisationData.numero_ordre,
+          date_delivrance: autorisationData.date_delivrance?.toISOString().split('T')[0],
+          date_expiration: autorisationData.date_expiration?.toISOString().split('T')[0],
+          date_paiement: autorisationData.date_paiement?.toISOString().split('T')[0],
+          montant: autorisationData.montant ? parseFloat(autorisationData.montant) : null,
+          mode_paiement: autorisationData.mode_paiement,
+          numero_cheque: autorisationData.numero_cheque,
+          banque: autorisationData.banque,
+          remarques: autorisationData.remarques,
+          photo_url: uploadedUrls.length > 0 ? uploadedUrls[0] : null,
+        })]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Autorisation de circulation ajoutée avec succès"
+      });
+
+      setCompletedSteps([...completedSteps, 'autorisation_circulation']);
       setCurrentStep('complete');
       
       // Redirect to vehicle details after a short delay
@@ -284,6 +364,8 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     } else if (currentStep === 'visite_technique') {
       setCurrentStep('vignette');
     } else if (currentStep === 'vignette') {
+      setCurrentStep('autorisation_circulation');
+    } else if (currentStep === 'autorisation_circulation') {
       navigate(`/vehicules/${vehicleId}`);
     }
   };
@@ -293,6 +375,8 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
       setCurrentStep('assurance');
     } else if (currentStep === 'vignette') {
       setCurrentStep('visite_technique');
+    } else if (currentStep === 'autorisation_circulation') {
+      setCurrentStep('vignette');
     }
   };
 
@@ -305,6 +389,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
       { key: 'assurance' as Step, label: 'Assurance' },
       { key: 'visite_technique' as Step, label: 'Visite Technique' },
       { key: 'vignette' as Step, label: 'Vignette' },
+      { key: 'autorisation_circulation' as Step, label: 'Autorisation' },
     ];
 
     return (
@@ -376,7 +461,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
   );
 };
 
-const handleFileSelect = (files: FileList | null, type: 'assurance' | 'visite' | 'vignette') => {
+const handleFileSelect = (files: FileList | null, type: 'assurance' | 'visite' | 'vignette' | 'autorisation') => {
   if (!files) return;
   
   const validFiles = Array.from(files).filter(file => {
@@ -399,25 +484,29 @@ const handleFileSelect = (files: FileList | null, type: 'assurance' | 'visite' |
     setAssuranceFiles(prev => [...prev, ...validFiles]);
   } else if (type === 'visite') {
     setVisiteFiles(prev => [...prev, ...validFiles]);
-  } else {
+  } else if (type === 'vignette') {
     setVignetteFiles(prev => [...prev, ...validFiles]);
+  } else {
+    setAutorisationFiles(prev => [...prev, ...validFiles]);
   }
 };
 
-const removeFile = (index: number, type: 'assurance' | 'visite' | 'vignette') => {
+const removeFile = (index: number, type: 'assurance' | 'visite' | 'vignette' | 'autorisation') => {
   if (type === 'assurance') {
     setAssuranceFiles(prev => prev.filter((_, i) => i !== index));
   } else if (type === 'visite') {
     setVisiteFiles(prev => prev.filter((_, i) => i !== index));
-  } else {
+  } else if (type === 'vignette') {
     setVignetteFiles(prev => prev.filter((_, i) => i !== index));
+  } else {
+    setAutorisationFiles(prev => prev.filter((_, i) => i !== index));
   }
 };
 
 const renderFileUpload = (
   files: File[],
   fileRef: React.RefObject<HTMLInputElement>,
-  type: 'assurance' | 'visite' | 'vignette',
+  type: 'assurance' | 'visite' | 'vignette' | 'autorisation',
   label: string
 ) => {
   return (
@@ -912,6 +1001,133 @@ const renderFileUpload = (
                 </div>
 
                 {renderFileUpload(vignetteFiles, vignetteFileRef, 'vignette', 'Documents de vignette')}
+              </div>
+
+              <div className="flex justify-between gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
+                </Button>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={handleSkip}>
+                    Terminer plus tard
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Enregistrement...' : 'Suivant'}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Autorisation de Circulation Form */}
+      {currentStep === 'autorisation_circulation' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Ajouter une autorisation de circulation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmitAutorisation} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="autorisation_numero_ordre">N° d'ordre *</Label>
+                  <Input
+                    id="autorisation_numero_ordre"
+                    value={autorisationData.numero_ordre}
+                    onChange={(e) => setAutorisationData({ ...autorisationData, numero_ordre: e.target.value })}
+                    required
+                  />
+                </div>
+
+                {renderDatePicker(
+                  autorisationData.date_delivrance,
+                  (date) => setAutorisationData({ ...autorisationData, date_delivrance: date }),
+                  "Date de délivrance",
+                  true
+                )}
+
+                {renderDatePicker(
+                  autorisationData.date_expiration,
+                  (date) => setAutorisationData({ ...autorisationData, date_expiration: date }),
+                  "Date d'expiration",
+                  true
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="autorisation_montant">Montant</Label>
+                  <div className="relative">
+                    <Input
+                      id="autorisation_montant"
+                      type="number"
+                      step="0.01"
+                      value={autorisationData.montant}
+                      onChange={(e) => setAutorisationData({ ...autorisationData, montant: e.target.value })}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                      DH
+                    </span>
+                  </div>
+                </div>
+
+                {renderDatePicker(
+                  autorisationData.date_paiement,
+                  (date) => setAutorisationData({ ...autorisationData, date_paiement: date }),
+                  "Date de paiement"
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="autorisation_mode_paiement">Mode de paiement</Label>
+                  <Select
+                    value={autorisationData.mode_paiement}
+                    onValueChange={(value: any) => setAutorisationData({ ...autorisationData, mode_paiement: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="especes">Espèce</SelectItem>
+                      <SelectItem value="cheque">Chèque</SelectItem>
+                      <SelectItem value="virement">Virement</SelectItem>
+                      <SelectItem value="carte">Carte bancaire</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {autorisationData.mode_paiement === 'cheque' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="autorisation_numero_cheque">N° Chèque</Label>
+                      <Input
+                        id="autorisation_numero_cheque"
+                        value={autorisationData.numero_cheque}
+                        onChange={(e) => setAutorisationData({ ...autorisationData, numero_cheque: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="autorisation_banque">Banque</Label>
+                      <Input
+                        id="autorisation_banque"
+                        value={autorisationData.banque}
+                        onChange={(e) => setAutorisationData({ ...autorisationData, banque: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="autorisation_remarques">Remarques</Label>
+                  <Textarea
+                    id="autorisation_remarques"
+                    value={autorisationData.remarques}
+                    onChange={(e) => setAutorisationData({ ...autorisationData, remarques: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                {renderFileUpload(autorisationFiles, autorisationFileRef, 'autorisation', 'Documents d\'autorisation')}
               </div>
 
               <div className="flex justify-between gap-2 pt-4">
