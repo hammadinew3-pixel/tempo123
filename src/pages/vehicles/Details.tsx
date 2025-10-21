@@ -1397,9 +1397,59 @@ export default function VehiculeDetails() {
             <Landmark className="w-5 h-5 text-primary" />
             Les traites & Infos d'achat
           </CardTitle>
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={() => setShowTraiteDialog(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Ajouter traite bancaire
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
-...
+          {traites.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucune traite bancaire enregistrée</p>
+          ) : (
+            <div className="space-y-4">
+              {traites.map((traite) => {
+                const traitEcheances = echeances.filter(e => e.traite_id === traite.id);
+                const paidEcheances = traitEcheances.filter(e => e.statut === 'Payée').length;
+                const totalEcheances = traitEcheances.length;
+                const progress = totalEcheances > 0 ? (paidEcheances / totalEcheances) * 100 : 0;
+
+                return (
+                  <div key={traite.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{traite.organisme}</p>
+                        {traite.concessionaire && (
+                          <p className="text-sm text-muted-foreground">{traite.concessionaire}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">{traite.montant?.toFixed(2)} DH</p>
+                        <p className="text-sm text-muted-foreground">
+                          {paidEcheances}/{totalEcheances} payées
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Avance: {traite.avance_paye?.toFixed(2) || 0} DH
+                      </span>
+                      <span className="text-muted-foreground">
+                        {traite.montant_mensuel?.toFixed(2)} DH/mois
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
