@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 import { format, addMonths, isBefore, isAfter } from "date-fns";
@@ -7,17 +6,18 @@ import { fr } from "date-fns/locale";
 interface TraitesHeatmapProps {
   traite: any;
   echeances: any[];
+  onPayEcheance?: (echeance: any) => void;
 }
 
-const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+const MONTHS = ['Janv.', 'Fev.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Aout', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
 
-export function TraitesHeatmap({ traite, echeances }: TraitesHeatmapProps) {
-  if (!traite?.date_debut || !traite?.duree_mois) {
+export function TraitesHeatmap({ traite, echeances, onPayEcheance }: TraitesHeatmapProps) {
+  if (!traite?.date_debut || !traite?.nombre_traites) {
     return null;
   }
 
   const startDate = new Date(traite.date_debut);
-  const endDate = addMonths(startDate, parseInt(traite.duree_mois));
+  const endDate = addMonths(startDate, parseInt(traite.nombre_traites));
   
   const startYear = startDate.getFullYear();
   const endYear = endDate.getFullYear();
@@ -27,7 +27,7 @@ export function TraitesHeatmap({ traite, echeances }: TraitesHeatmapProps) {
   const paidEcheances = echeances.filter(e => e.statut === 'Payée');
   const totalPaid = paidEcheances.reduce((sum, e) => sum + parseFloat(e.montant || 0), 0);
   const monthsPaid = paidEcheances.length;
-  const monthsRemaining = parseInt(traite.duree_mois) - monthsPaid;
+  const monthsRemaining = parseInt(traite.nombre_traites) - monthsPaid;
   const montantRestant = parseFloat(traite.montant_total || 0) - totalPaid;
   const montantMensuel = parseFloat(traite.montant_mensuel || 0);
   const lastPaymentDate = endDate;
@@ -38,12 +38,12 @@ export function TraitesHeatmap({ traite, echeances }: TraitesHeatmapProps) {
     
     // Before start date
     if (isBefore(monthDate, new Date(startDate.getFullYear(), startDate.getMonth(), 1))) {
-      return { status: 'inactive', color: 'bg-muted/30', label: 'Avant le début' };
+      return { status: 'inactive', color: 'bg-transparent', label: 'Avant le début', echeance: null };
     }
     
     // After end date
     if (isAfter(monthDate, new Date(endDate.getFullYear(), endDate.getMonth(), 1))) {
-      return { status: 'inactive', color: 'bg-muted/30', label: 'Après la fin' };
+      return { status: 'inactive', color: 'bg-transparent', label: 'Après la fin', echeance: null };
     }
     
     // Find corresponding echeance
@@ -55,9 +55,9 @@ export function TraitesHeatmap({ traite, echeances }: TraitesHeatmapProps) {
     if (!echeance) {
       // Month in range but no echeance yet
       if (isBefore(monthDate, new Date(today.getFullYear(), today.getMonth(), 1))) {
-        return { status: 'overdue', color: 'bg-destructive', label: 'Mois non payé' };
+        return { status: 'overdue', color: 'bg-red-500', label: 'Mois non payé', echeance: null };
       }
-      return { status: 'pending', color: 'bg-warning', label: 'Mois restant' };
+      return { status: 'pending', color: 'bg-yellow-400', label: 'Mois restant', echeance: null };
     }
     
     if (echeance.statut === 'Payée') {
@@ -65,18 +65,18 @@ export function TraitesHeatmap({ traite, echeances }: TraitesHeatmapProps) {
       const echeanceDate = new Date(echeance.date_echeance);
       const paymentDate = echeance.date_paiement ? new Date(echeance.date_paiement) : null;
       if (paymentDate && isBefore(paymentDate, echeanceDate)) {
-        return { status: 'prepaid', color: 'bg-secondary', label: 'Mois prépayé' };
+        return { status: 'prepaid', color: 'bg-gray-200', label: 'Mois prépayé', echeance };
       }
-      return { status: 'paid', color: 'bg-primary', label: 'Mois payé' };
+      return { status: 'paid', color: 'bg-green-500', label: 'Mois payé', echeance };
     }
     
     // Not paid
     const echeanceDate = new Date(echeance.date_echeance);
     if (isBefore(echeanceDate, today)) {
-      return { status: 'overdue', color: 'bg-destructive', label: 'Mois non payé' };
+      return { status: 'overdue', color: 'bg-red-500', label: 'Mois non payé', echeance };
     }
     
-    return { status: 'pending', color: 'bg-warning', label: 'Mois restant' };
+    return { status: 'pending', color: 'bg-yellow-400', label: 'Mois restant', echeance };
   };
 
   return (
@@ -88,90 +88,113 @@ export function TraitesHeatmap({ traite, echeances }: TraitesHeatmapProps) {
         </AlertDescription>
       </Alert>
 
-      {/* Grille visuelle des mois */}
-      <div className="space-y-3">
-        {years.map((year) => (
-          <div key={year} className="space-y-1">
-            <div className="text-sm font-semibold text-muted-foreground">{year}</div>
-            <div className="grid grid-cols-13 gap-1 items-center">
-              {MONTHS.map((month, index) => {
-                const { color, label } = getMonthStatus(year, index);
+      {/* Calendrier annuel des échéances */}
+      <div className="overflow-x-auto">
+        <div className="min-w-max">
+          {/* En-tête des mois */}
+          <div className="grid grid-cols-[60px_repeat(12,50px)] gap-1 mb-1">
+            <div></div>
+            {MONTHS.map((month, idx) => (
+              <div key={idx} className="text-center text-xs text-muted-foreground font-medium">
+                {month}
+              </div>
+            ))}
+          </div>
+
+          {/* Lignes par année */}
+          {years.map((year) => (
+            <div key={year} className="grid grid-cols-[60px_repeat(12,50px)] gap-1 mb-1">
+              <div className="text-sm font-medium flex items-center">{year}</div>
+              {Array.from({ length: 12 }, (_, monthIdx) => {
+                const { color, label, echeance } = getMonthStatus(year, monthIdx);
                 return (
                   <div
-                    key={index}
-                    className={`h-8 rounded ${color} transition-all hover:opacity-80 cursor-help flex items-center justify-center`}
-                    title={`${month} ${year}: ${label}`}
-                  >
-                    <span className="text-[10px] font-medium text-white opacity-80">{month}</span>
-                  </div>
+                    key={monthIdx}
+                    className={`h-10 rounded cursor-pointer transition-opacity hover:opacity-80 ${color}`}
+                    title={`${MONTHS[monthIdx]} ${year}: ${label}`}
+                    onClick={() => {
+                      if (echeance && echeance.statut !== 'Payée' && onPayEcheance) {
+                        onPayEcheance(echeance);
+                      }
+                    }}
+                  />
                 );
               })}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Légende */}
-      <div className="flex flex-wrap gap-3 pb-3 border-b">
+      <div className="flex items-center justify-center gap-4 text-xs pt-2">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-primary"></div>
-          <span className="text-xs">Mois payé</span>
+          <div className="w-4 h-4 rounded bg-green-500" />
+          <span>Mois payé</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-secondary"></div>
-          <span className="text-xs">Mois prépayé</span>
+          <div className="w-4 h-4 rounded bg-gray-200" />
+          <span>Mois prépayé</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-warning"></div>
-          <span className="text-xs">Mois restant</span>
+          <div className="w-4 h-4 rounded bg-yellow-400" />
+          <span>Mois restant</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-destructive"></div>
-          <span className="text-xs">Mois non payé</span>
+          <div className="w-4 h-4 rounded bg-red-500" />
+          <span>Mois non payé</span>
         </div>
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Date du premier traite:</span>
-          <strong>{format(startDate, 'dd MMM yyyy', { locale: fr })}</strong>
+      <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Date du premier traite</span>
+            <span className="font-medium">
+              {format(new Date(traite.date_debut), 'dd MMM yyyy', { locale: fr })}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Prix d'achat</span>
+            <span className="font-medium">{parseFloat(traite.montant_total || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Durée/Mois</span>
+            <span className="font-medium">{traite.nombre_traites}</span>
+          </div>
+          <div className="flex justify-between text-sm p-2 bg-green-50 rounded">
+            <span className="font-semibold">Avance payé</span>
+            <span className="font-bold">{parseFloat(traite.avance_paye || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm p-2 bg-green-50 rounded">
+            <span className="font-semibold">Mois payés</span>
+            <span className="font-bold">{monthsPaid}</span>
+          </div>
+          <div className="flex justify-between text-sm p-2 bg-green-50 rounded">
+            <span className="font-semibold">Montant payé</span>
+            <span className="font-bold">{totalPaid.toFixed(2)}</span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Date de la dernière traite:</span>
-          <strong>{format(lastPaymentDate, 'dd MMM yyyy', { locale: fr })}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Prix d'achat:</span>
-          <strong>{parseFloat(traite.prix_achat || 0).toLocaleString()}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Avance payé:</span>
-          <strong>{parseFloat(traite.avance || 0).toLocaleString()}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Durée/Mois:</span>
-          <strong>{traite.duree_mois}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Prix/Mois:</span>
-          <strong>{montantMensuel.toLocaleString()}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Mois payés:</span>
-          <strong className="text-primary">{monthsPaid}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Montant payé:</span>
-          <strong className="text-primary">{totalPaid.toLocaleString()}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Mois restants:</span>
-          <strong className="text-warning">{monthsRemaining}</strong>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Montant restant:</span>
-          <strong className="text-warning">{montantRestant.toLocaleString()}</strong>
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Date de la dernière traite</span>
+            <span className="font-medium">
+              {format(lastPaymentDate, 'dd MMM yyyy', { locale: fr })}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Prix/Mois</span>
+            <span className="font-medium">{parseFloat(traite.montant_mensuel || 0).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Mois restants</span>
+            <span className="font-medium">{monthsRemaining}</span>
+          </div>
+          <div className="flex justify-between text-sm p-2 bg-red-50 rounded">
+            <span className="font-semibold">Montant restant</span>
+            <span className="font-bold">{montantRestant.toFixed(2)}</span>
+          </div>
         </div>
       </div>
     </div>

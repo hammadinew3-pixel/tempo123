@@ -88,6 +88,8 @@ export default function VehiculeDetails() {
   const isValidAmount = nombreMois > 0 && Math.abs(montantTotalMensualites - resteAPayer) < 0.01;
   const [echeancePaymentForm, setEcheancePaymentForm] = useState({
     date_paiement: new Date().toISOString().split('T')[0],
+    mode_paiement: '',
+    ref_paiement: '',
     notes: ''
   });
 
@@ -443,6 +445,8 @@ export default function VehiculeDetails() {
         .update({
           statut: 'Payée',
           date_paiement: echeancePaymentForm.date_paiement,
+          mode_paiement: echeancePaymentForm.mode_paiement || null,
+          ref_paiement: echeancePaymentForm.ref_paiement || null,
           notes: echeancePaymentForm.notes || null
         })
         .eq('id', selectedEcheance.id);
@@ -458,6 +462,8 @@ export default function VehiculeDetails() {
       setSelectedEcheance(null);
       setEcheancePaymentForm({
         date_paiement: new Date().toISOString().split('T')[0],
+        mode_paiement: '',
+        ref_paiement: '',
         notes: ''
       });
       loadVehicle();
@@ -1440,13 +1446,13 @@ export default function VehiculeDetails() {
                                   concessionaire: traite.concessionaire || '',
                                   organisme: traite.organisme || '',
                                   date_achat: traite.date_achat || '',
-                                  prix_achat: traite.prix_achat?.toString() || '',
-                                  avance: traite.avance?.toString() || '',
+                                  prix_achat: traite.montant_total?.toString() || '',
+                                  avance: traite.avance_paye?.toString() || '',
                                   montant_mensuel: traite.montant_mensuel?.toString() || '',
                                   date_debut: traite.date_debut || '',
-                                  duree_mois: traite.duree_mois?.toString() || '',
+                                  duree_mois: traite.nombre_traites?.toString() || '',
                                   duree_deja_paye: traite.duree_deja_paye?.toString() || '0',
-                                  plus_infos: traite.plus_infos || ''
+                                  plus_infos: traite.notes || ''
                                 });
                                 setShowEditTraiteDialog(true);
                               }}
@@ -1459,15 +1465,15 @@ export default function VehiculeDetails() {
                       <CardContent className="space-y-3">
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Prix d'achat</span>
-                          <strong>{parseFloat(traite.prix_achat || 0).toLocaleString()} Dh</strong>
+                          <strong>{parseFloat(traite.montant_total || 0).toLocaleString()} Dh</strong>
                         </div>
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Avance</span>
-                          <strong>{parseFloat(traite.avance || 0).toLocaleString()} Dh</strong>
+                          <strong>{parseFloat(traite.avance_paye || 0).toLocaleString()} Dh</strong>
                         </div>
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Durée</span>
-                          <strong>{traite.duree_mois} mois</strong>
+                          <strong>{traite.nombre_traites} mois</strong>
                         </div>
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Durée déjà payé</span>
@@ -1495,7 +1501,7 @@ export default function VehiculeDetails() {
                         )}
                         <div className="flex justify-between py-2 border-b">
                           <span className="text-muted-foreground">Plus d'infos</span>
-                          <strong className="text-right max-w-[200px] truncate">{traite.plus_infos || '—'}</strong>
+                          <strong className="text-right max-w-[200px] truncate">{traite.notes || '—'}</strong>
                         </div>
                         {traite.updated_at && (
                           <div className="flex justify-between py-2 text-sm text-muted-foreground">
@@ -1550,7 +1556,14 @@ export default function VehiculeDetails() {
                         <CardTitle className="text-lg">L'état des traites bancaires</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <TraitesHeatmap traite={traite} echeances={traiteEcheances} />
+                        <TraitesHeatmap 
+                          traite={traite} 
+                          echeances={traiteEcheances}
+                          onPayEcheance={(echeance) => {
+                            setSelectedEcheance(echeance);
+                            setShowPayEcheanceDialog(true);
+                          }}
+                        />
                       </CardContent>
                     </Card>
                   </div>
@@ -1856,6 +1869,35 @@ export default function VehiculeDetails() {
                   onChange={(e) => setEcheancePaymentForm({...echeancePaymentForm, date_paiement: e.target.value})}
                 />
               </div>
+              
+              <div>
+                <Label htmlFor="mode_paiement">Mode de paiement</Label>
+                <Select
+                  value={echeancePaymentForm.mode_paiement}
+                  onValueChange={(value) => setEcheancePaymentForm({...echeancePaymentForm, mode_paiement: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="especes">Espèces</SelectItem>
+                    <SelectItem value="cheque">Chèque</SelectItem>
+                    <SelectItem value="virement">Virement</SelectItem>
+                    <SelectItem value="carte">Carte bancaire</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="ref_paiement">Référence</Label>
+                <Input 
+                  id="ref_paiement"
+                  value={echeancePaymentForm.ref_paiement}
+                  onChange={(e) => setEcheancePaymentForm({...echeancePaymentForm, ref_paiement: e.target.value})}
+                  placeholder="Ex: CHQ-12345"
+                />
+              </div>
+              
               <div>
                 <Label htmlFor="notes_paiement">Notes</Label>
                 <Textarea 
@@ -1863,7 +1905,7 @@ export default function VehiculeDetails() {
                   value={echeancePaymentForm.notes}
                   onChange={(e) => setEcheancePaymentForm({...echeancePaymentForm, notes: e.target.value})}
                   placeholder="Informations complémentaires..."
-                  rows={2}
+                  rows={3}
                 />
               </div>
             </div>
@@ -1874,6 +1916,8 @@ export default function VehiculeDetails() {
               setSelectedEcheance(null);
               setEcheancePaymentForm({
                 date_paiement: new Date().toISOString().split('T')[0],
+                mode_paiement: '',
+                ref_paiement: '',
                 notes: ''
               });
             }}>
