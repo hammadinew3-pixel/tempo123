@@ -83,6 +83,33 @@ export default function ClientDetails() {
     }
   };
 
+  const handleDownloadDocument = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      toast({
+        title: 'Succès',
+        description: 'Document téléchargé',
+      });
+    } catch (error: any) {
+      console.error('Error downloading document:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de télécharger le document',
+        variant: 'destructive',
+      });
+    }
+  };
+
 
   const getContractStats = () => {
     const stats = {
@@ -312,38 +339,26 @@ export default function ClientDetails() {
                     <p className="text-sm text-muted-foreground mb-3">Pièces jointes</p>
                     <div className="flex gap-3">
                       {client.cin_url && (
-                        <a 
-                          href={client.cin_url}
-                          download
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDownloadDocument(client.cin_url, `CIN_${client.nom}_${client.prenom}.${client.cin_url.split('.').pop()}`)}
+                          className="gap-2"
                         >
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="gap-2"
-                          >
-                            <Download className="w-4 h-4" />
-                            Télécharger CIN
-                          </Button>
-                        </a>
+                          <Download className="w-4 h-4" />
+                          Télécharger CIN
+                        </Button>
                       )}
                       {client.permis_url && (
-                        <a 
-                          href={client.permis_url}
-                          download
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}.${client.permis_url.split('.').pop()}`)}
+                          className="gap-2"
                         >
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="gap-2"
-                          >
-                            <Download className="w-4 h-4" />
-                            Télécharger Permis
-                          </Button>
-                        </a>
+                          <Download className="w-4 h-4" />
+                          Télécharger Permis
+                        </Button>
                       )}
                       {!client.cin_url && !client.permis_url && (
                         <p className="text-sm text-muted-foreground">Aucun document</p>
@@ -390,17 +405,13 @@ export default function ClientDetails() {
                   </div>
                   {client.permis_url && (
                     <div className="col-span-2">
-                      <a 
-                        href={client.permis_url}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}.${client.permis_url.split('.').pop()}`)}
                       >
-                        <Button variant="outline">
-                          <Download className="w-4 h-4 mr-2" />
-                          Télécharger le document du permis
-                        </Button>
-                      </a>
+                        <Download className="w-4 h-4 mr-2" />
+                        Télécharger le document du permis
+                      </Button>
                     </div>
                   )}
                 </div>
