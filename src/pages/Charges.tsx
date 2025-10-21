@@ -343,84 +343,6 @@ export default function Charges() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Columns className="w-4 h-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64">
-              <div className="space-y-4">
-                <h4 className="font-semibold text-sm">Colonnes visibles</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-date"
-                      checked={visibleColumns.date}
-                      onCheckedChange={() => toggleColumn('date')}
-                    />
-                    <label htmlFor="col-date" className="text-sm cursor-pointer">Date</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-type"
-                      checked={visibleColumns.type}
-                      onCheckedChange={() => toggleColumn('type')}
-                    />
-                    <label htmlFor="col-type" className="text-sm cursor-pointer">Type</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-description"
-                      checked={visibleColumns.description}
-                      onCheckedChange={() => toggleColumn('description')}
-                    />
-                    <label htmlFor="col-description" className="text-sm cursor-pointer">Description</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-vehicule"
-                      checked={visibleColumns.vehicule}
-                      onCheckedChange={() => toggleColumn('vehicule')}
-                    />
-                    <label htmlFor="col-vehicule" className="text-sm cursor-pointer">Véhicule</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-fournisseur"
-                      checked={visibleColumns.fournisseur}
-                      onCheckedChange={() => toggleColumn('fournisseur')}
-                    />
-                    <label htmlFor="col-fournisseur" className="text-sm cursor-pointer">Fournisseur</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-montant"
-                      checked={visibleColumns.montant}
-                      onCheckedChange={() => toggleColumn('montant')}
-                    />
-                    <label htmlFor="col-montant" className="text-sm cursor-pointer">Montant</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-modePaiement"
-                      checked={visibleColumns.modePaiement}
-                      onCheckedChange={() => toggleColumn('modePaiement')}
-                    />
-                    <label htmlFor="col-modePaiement" className="text-sm cursor-pointer">Mode Paiement</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="col-statut"
-                      checked={visibleColumns.statut}
-                      onCheckedChange={() => toggleColumn('statut')}
-                    />
-                    <label htmlFor="col-statut" className="text-sm cursor-pointer">Statut</label>
-                  </div>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
           <Button variant="outline" onClick={exportData}>
             <Download className="w-4 h-4 mr-2" />
             Exporter
@@ -674,8 +596,87 @@ export default function Charges() {
 
       {/* Tableau */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Liste des Dépenses</CardTitle>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Columns className="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+              <div className="space-y-4">
+                <h4 className="font-semibold text-sm">Colonnes visibles</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-date"
+                      checked={visibleColumns.date}
+                      onCheckedChange={() => toggleColumn('date')}
+                    />
+                    <label htmlFor="col-date" className="text-sm cursor-pointer">Date</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-type"
+                      checked={visibleColumns.type}
+                      onCheckedChange={() => toggleColumn('type')}
+                    />
+                    <label htmlFor="col-type" className="text-sm cursor-pointer">Type</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-description"
+                      checked={visibleColumns.description}
+                      onCheckedChange={() => toggleColumn('description')}
+                    />
+                    <label htmlFor="col-description" className="text-sm cursor-pointer">Description</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-vehicule"
+                      checked={visibleColumns.vehicule}
+                      onCheckedChange={() => toggleColumn('vehicule')}
+                    />
+                    <label htmlFor="col-vehicule" className="text-sm cursor-pointer">Véhicule</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-fournisseur"
+                      checked={visibleColumns.fournisseur}
+                      onCheckedChange={() => toggleColumn('fournisseur')}
+                    />
+                    <label htmlFor="col-fournisseur" className="text-sm cursor-pointer">Fournisseur</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-montant"
+                      checked={visibleColumns.montant}
+                      onCheckedChange={() => toggleColumn('montant')}
+                    />
+                    <label htmlFor="col-montant" className="text-sm cursor-pointer">Montant</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-modePaiement"
+                      checked={visibleColumns.modePaiement}
+                      onCheckedChange={() => toggleColumn('modePaiement')}
+                    />
+                    <label htmlFor="col-modePaiement" className="text-sm cursor-pointer">Mode Paiement</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-statut"
+                      checked={visibleColumns.statut}
+                      onCheckedChange={() => toggleColumn('statut')}
+                    />
+                    <label htmlFor="col-statut" className="text-sm cursor-pointer">Statut</label>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </CardHeader>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
