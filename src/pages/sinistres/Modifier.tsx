@@ -202,13 +202,13 @@ export default function ModifierSinistre() {
           const fileName = `${id}/${Date.now()}.${fileExt}`;
           
           const { error: uploadError } = await supabase.storage
-            .from('vehicle-documents')
+            .from('documents_vehicules')
             .upload(fileName, file);
 
           if (uploadError) throw uploadError;
 
           const { data: { publicUrl } } = supabase.storage
-            .from('vehicle-documents')
+            .from('documents_vehicules')
             .getPublicUrl(fileName);
 
           await supabase.from('sinistre_files').insert([withTenantId({

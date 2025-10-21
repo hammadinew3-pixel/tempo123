@@ -1843,13 +1843,13 @@ export default function VehiculeDetails() {
                 const {
                   error: uploadError,
                   data
-                } = await supabase.storage.from('vehicle-documents').upload(fileName, insurancePhoto);
+                } = await supabase.storage.from('documents_vehicules').upload(fileName, insurancePhoto);
                 if (uploadError) throw uploadError;
                 const {
                   data: {
                     publicUrl
                   }
-                } = supabase.storage.from('vehicle-documents').getPublicUrl(fileName);
+                } = supabase.storage.from('documents_vehicules').getPublicUrl(fileName);
                 photoUrl = publicUrl;
               }
               const {
@@ -2037,13 +2037,13 @@ export default function VehiculeDetails() {
                 const fileName = `${vehicle!.id}/inspection/${Date.now()}.${fileExt}`;
                 const {
                   error: uploadError
-                } = await supabase.storage.from('vehicle-documents').upload(fileName, inspectionPhoto);
+                } = await supabase.storage.from('documents_vehicules').upload(fileName, inspectionPhoto);
                 if (uploadError) throw uploadError;
                 const {
                   data: {
                     publicUrl
                   }
-                } = supabase.storage.from('vehicle-documents').getPublicUrl(fileName);
+                } = supabase.storage.from('documents_vehicules').getPublicUrl(fileName);
                 photoUrl = publicUrl;
               }
               const {
@@ -2221,13 +2221,13 @@ export default function VehiculeDetails() {
                 const fileName = `${vehicle!.id}/vignette/${Date.now()}.${fileExt}`;
                 const {
                   error: uploadError
-                } = await supabase.storage.from('vehicle-documents').upload(fileName, vignettePhoto);
+                } = await supabase.storage.from('documents_vehicules').upload(fileName, vignettePhoto);
                 if (uploadError) throw uploadError;
                 const {
                   data: {
                     publicUrl
                   }
-                } = supabase.storage.from('vehicle-documents').getPublicUrl(fileName);
+                } = supabase.storage.from('documents_vehicules').getPublicUrl(fileName);
                 photoUrl = publicUrl;
               }
               const {
@@ -2677,13 +2677,13 @@ export default function VehiculeDetails() {
                 const fileName = `${vehicle!.id}/insurance/${Date.now()}.${fileExt}`;
                 const {
                   error: uploadError
-                } = await supabase.storage.from('vehicle-documents').upload(fileName, editInsurancePhoto);
+                } = await supabase.storage.from('documents_vehicules').upload(fileName, editInsurancePhoto);
                 if (uploadError) throw uploadError;
                 const {
                   data: {
                     publicUrl
                   }
-                } = supabase.storage.from('vehicle-documents').getPublicUrl(fileName);
+                } = supabase.storage.from('documents_vehicules').getPublicUrl(fileName);
                 photoUrl = publicUrl;
               }
               const {

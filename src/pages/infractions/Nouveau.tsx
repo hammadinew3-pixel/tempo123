@@ -178,13 +178,13 @@ export default function NouvelleInfraction() {
           const filePath = `infractions/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
-            .from("vehicle-documents")
+            .from("documents_vehicules")
             .upload(filePath, file);
 
           if (uploadError) throw uploadError;
 
           const { data: urlData } = supabase.storage
-            .from("vehicle-documents")
+            .from("documents_vehicules")
             .getPublicUrl(filePath);
 
           await supabase.from("infraction_files").insert([

@@ -52,13 +52,13 @@ export function EditInspectionDialog({
         const fileName = `${vehicleId}/inspection/${Date.now()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('vehicle-documents')
+          .from('documents_vehicules')
           .upload(fileName, inspectionPhoto);
 
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('vehicle-documents')
+          .from('documents_vehicules')
           .getPublicUrl(fileName);
         
         photoUrl = publicUrl;
@@ -270,13 +270,13 @@ export function EditVignetteDialog({
         const fileName = `${vehicleId}/vignette/${Date.now()}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
-          .from('vehicle-documents')
+          .from('documents_vehicules')
           .upload(fileName, vignettePhoto);
 
         if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
-          .from('vehicle-documents')
+          .from('documents_vehicules')
           .getPublicUrl(fileName);
         
         photoUrl = publicUrl;
