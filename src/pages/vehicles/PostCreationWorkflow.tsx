@@ -1000,7 +1000,7 @@ const renderFileUpload = (
                 </Button>
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" onClick={handleSkip}>
-                    Terminer plus tard
+                    Passer cette étape
                   </Button>
                   <Button type="submit" disabled={loading}>
                     {loading ? 'Enregistrement...' : 'Suivant'}
