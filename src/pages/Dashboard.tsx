@@ -32,7 +32,9 @@ interface VehicleAlert {
 }
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { hasModuleAccess } = useTenantPlan();
+  const {
+    hasModuleAccess
+  } = useTenantPlan();
   const [stats, setStats] = useState<DashboardStats>({
     vehiclesCount: 0,
     reservationsCount: 0,
@@ -60,10 +62,9 @@ export default function Dashboard() {
   const [reservationType, setReservationType] = useState<'standard' | 'assistance'>('standard');
   const [alertsLoaded, setAlertsLoaded] = useState(false);
   const [loadingAlerts, setLoadingAlerts] = useState(false);
-  
+
   // Debounce timer for realtime updates
   const debounceTimerRef = useRef<NodeJS.Timeout>();
-  
   const debouncedLoadDeparturesAndReturns = useCallback(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -72,7 +73,6 @@ export default function Dashboard() {
       loadDeparturesAndReturns();
     }, 2000);
   }, []);
-  
   useEffect(() => {
     loadDashboardData();
 
@@ -84,7 +84,7 @@ export default function Dashboard() {
     }, () => {
       debouncedLoadDeparturesAndReturns();
     }).subscribe();
-    
+
     // Subscribe to assistance ONLY if module is accessible with debounce
     let assistanceChannel;
     if (hasModuleAccess('assistance')) {
@@ -96,7 +96,6 @@ export default function Dashboard() {
         debouncedLoadDeparturesAndReturns();
       }).subscribe();
     }
-    
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -125,7 +124,9 @@ export default function Dashboard() {
       // Load today's departures from assistance ONLY if module is accessible
       let todayAssistanceDepartures = [];
       if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
+        const {
+          data
+        } = await supabase.from('assistance').select(`
             *,
             clients (nom, prenom),
             vehicles (marque, modele, immatriculation)
@@ -147,7 +148,9 @@ export default function Dashboard() {
       // Load today's returns from assistance ONLY if module is accessible
       let todayAssistanceReturns = [];
       if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
+        const {
+          data
+        } = await supabase.from('assistance').select(`
             *,
             clients (nom, prenom),
             vehicles (marque, modele, immatriculation)
@@ -172,7 +175,9 @@ export default function Dashboard() {
       // Load tomorrow's returns (J+1) from assistance ONLY if module is accessible
       let tomorrowAssistanceReturns = [];
       if (hasModuleAccess('assistance')) {
-        const { data } = await supabase.from('assistance').select(`
+        const {
+          data
+        } = await supabase.from('assistance').select(`
             *,
             clients (nom, prenom),
             vehicles (marque, modele, immatriculation)
@@ -216,39 +221,33 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       // Execute ALL main queries in parallel
-      const [
-        vehiclesCountRes,
-        vehiclesRes,
-        contractsCountRes,
-        clientsCountRes,
-        reservationsRes,
-        sinistresRes,
-        assistanceRes
-      ] = await Promise.all([
-        supabase.from('vehicles').select('*', { count: 'exact', head: true }).then(r => r),
-        supabase.from('vehicles').select('*').then(r => r),
-        supabase.from('contracts').select('*', { count: 'exact', head: true }).then(r => r),
-        supabase.from('clients').select('*', { count: 'exact', head: true }).then(r => r),
-        supabase.from('contracts').select(`*, clients (nom, prenom), vehicles (marque, modele, immatriculation)`).order('created_at', { ascending: false }).limit(4).then(r => r),
-        supabase.from('sinistres').select('statut').then(r => r),
-        hasModuleAccess('assistance') 
-          ? supabase.from('assistance').select(`*, clients (nom, prenom), vehicles (marque, modele, immatriculation)`).order('created_at', { ascending: false }).limit(4).then(r => r)
-          : Promise.resolve({ data: [] })
-      ]);
-
+      const [vehiclesCountRes, vehiclesRes, contractsCountRes, clientsCountRes, reservationsRes, sinistresRes, assistanceRes] = await Promise.all([supabase.from('vehicles').select('*', {
+        count: 'exact',
+        head: true
+      }).then(r => r), supabase.from('vehicles').select('*').then(r => r), supabase.from('contracts').select('*', {
+        count: 'exact',
+        head: true
+      }).then(r => r), supabase.from('clients').select('*', {
+        count: 'exact',
+        head: true
+      }).then(r => r), supabase.from('contracts').select(`*, clients (nom, prenom), vehicles (marque, modele, immatriculation)`).order('created_at', {
+        ascending: false
+      }).limit(4).then(r => r), supabase.from('sinistres').select('statut').then(r => r), hasModuleAccess('assistance') ? supabase.from('assistance').select(`*, clients (nom, prenom), vehicles (marque, modele, immatriculation)`).order('created_at', {
+        ascending: false
+      }).limit(4).then(r => r) : Promise.resolve({
+        data: []
+      })]);
       const vehicles = vehiclesRes.data || [];
       const availableVehicles = vehicles.filter(v => v.statut === 'disponible').length;
       const rentedVehicles = vehicles.filter(v => v.statut === 'loue').length;
       const maintenanceVehicles = vehicles.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length;
       const immobilizedVehicles = vehicles.filter(v => v.statut === 'immobilise').length;
       const outOfServiceVehicles = vehicles.filter(v => v.en_service === false).length;
-
       const sinistres = sinistresRes.data || [];
       const sinistresTotal = sinistres.length;
       const sinistresOuverts = sinistres.filter(s => s.statut === 'ouvert').length;
       const sinistresEnCours = sinistres.filter(s => s.statut === 'en_cours').length;
       const sinistresClos = sinistres.filter(s => s.statut === 'clos').length;
-
       setStats({
         vehiclesCount: vehiclesCountRes.count || 0,
         reservationsCount: contractsCountRes.count || 0,
@@ -291,7 +290,6 @@ export default function Dashboard() {
   // Quick count of critical alerts (shown on dashboard without full details)
   const calculateCriticalAlertsCount = async (vehicles: any[]) => {
     if (!vehicles || vehicles.length === 0) return 0;
-    
     let count = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -306,23 +304,22 @@ export default function Dashboard() {
         count++;
       }
     }
-
     return count;
   };
   // Lazy load vehicle alerts when user clicks (optimized version)
   const loadDetailedVehicleAlerts = async () => {
     if (alertsLoaded || loadingAlerts) return;
-    
     setLoadingAlerts(true);
     try {
-      const { data: vehicles } = await supabase.from('vehicles').select('*');
+      const {
+        data: vehicles
+      } = await supabase.from('vehicles').select('*');
       if (!vehicles || vehicles.length === 0) {
         setVehicleAlerts([]);
         setLoadingAlerts(false);
         setAlertsLoaded(true);
         return;
       }
-
       await calculateVehicleAlerts(vehicles);
       setAlertsLoaded(true);
     } catch (error) {
@@ -331,28 +328,14 @@ export default function Dashboard() {
       setLoadingAlerts(false);
     }
   };
-
   const calculateVehicleAlerts = async (vehicles: any[]) => {
     const alerts: VehicleAlert[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const vehicleIds = vehicles.map(v => v.id);
 
     // Load ALL documents in parallel (4 global queries instead of 4 per vehicle)
-    const [
-      allInsurancesRes,
-      allInspectionsRes,
-      allVignettesRes,
-      allEcheancesRes,
-      paymentsRes
-    ] = await Promise.all([
-      supabase.from('vehicle_insurance').select('*').in('vehicle_id', vehicleIds).then(r => r),
-      supabase.from('vehicle_technical_inspection').select('*').in('vehicle_id', vehicleIds).then(r => r),
-      supabase.from('vehicle_vignette').select('*').in('vehicle_id', vehicleIds).then(r => r),
-      supabase.from('vehicules_traites_echeances').select('*').eq('statut', 'À payer').then(r => r),
-      supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque").then(r => r)
-    ]);
+    const [allInsurancesRes, allInspectionsRes, allVignettesRes, allEcheancesRes, paymentsRes] = await Promise.all([supabase.from('vehicle_insurance').select('*').in('vehicle_id', vehicleIds).then(r => r), supabase.from('vehicle_technical_inspection').select('*').in('vehicle_id', vehicleIds).then(r => r), supabase.from('vehicle_vignette').select('*').in('vehicle_id', vehicleIds).then(r => r), supabase.from('vehicules_traites_echeances').select('*').eq('statut', 'À payer').then(r => r), supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque").then(r => r)]);
 
     // Group by vehicle_id and get latest
     const latestInsurances = getLatestByGroup(allInsurancesRes.data || [], 'vehicle_id' as any, 'date_debut' as any);
@@ -370,43 +353,88 @@ export default function Dashboard() {
 
       // Check insurance
       if (!insurance) {
-        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Véhicule sans assurance ajoutée.", severity: "high" });
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Véhicule sans assurance ajoutée.",
+          severity: "high"
+        });
       } else if (insurance.date_expiration) {
         const expirationDate = new Date(insurance.date_expiration);
         expirationDate.setHours(0, 0, 0, 0);
         const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         if (expirationDate < today) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Assurance expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`, severity: "critical" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Assurance expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
+            severity: "critical"
+          });
         } else if (daysUntilExpiration <= 30) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Assurance expire dans ${daysUntilExpiration} jour(s).`, severity: "warning" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Assurance expire dans ${daysUntilExpiration} jour(s).`,
+            severity: "warning"
+          });
         }
       }
 
       // Check inspection
       if (!inspection) {
-        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Véhicule sans visite technique ajoutée.", severity: "high" });
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Véhicule sans visite technique ajoutée.",
+          severity: "high"
+        });
       } else if (inspection.date_expiration) {
         const expirationDate = new Date(inspection.date_expiration);
         expirationDate.setHours(0, 0, 0, 0);
         const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         if (expirationDate < today) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Visite technique expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`, severity: "critical" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Visite technique expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
+            severity: "critical"
+          });
         } else if (daysUntilExpiration <= 30) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`, severity: "warning" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Visite technique expire dans ${daysUntilExpiration} jour(s).`,
+            severity: "warning"
+          });
         }
       }
 
       // Check vignette
       if (!vignette) {
-        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Véhicule sans vignette ajoutée.", severity: "high" });
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Véhicule sans vignette ajoutée.",
+          severity: "high"
+        });
       } else if (vignette.date_expiration) {
         const expirationDate = new Date(vignette.date_expiration);
         expirationDate.setHours(0, 0, 0, 0);
         const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         if (expirationDate < today) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vignette expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`, severity: "critical" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Vignette expirée depuis ${Math.abs(daysUntilExpiration)} jour(s).`,
+            severity: "critical"
+          });
         } else if (daysUntilExpiration <= 30) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vignette expire dans ${daysUntilExpiration} jour(s).`, severity: "warning" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Vignette expire dans ${daysUntilExpiration} jour(s).`,
+            severity: "warning"
+          });
         }
       }
 
@@ -414,12 +442,27 @@ export default function Dashboard() {
       if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
         const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
         if (kmUntilOilChange <= 300) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vidange ${kmUntilOilChange <= 0 ? 'en retard de ' + Math.abs(kmUntilOilChange) : 'critique - ' + kmUntilOilChange} km`, severity: "critical" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Vidange ${kmUntilOilChange <= 0 ? 'en retard de ' + Math.abs(kmUntilOilChange) : 'critique - ' + kmUntilOilChange} km`,
+            severity: "critical"
+          });
         } else if (kmUntilOilChange <= 1000) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Vidange à faire dans ${kmUntilOilChange} km`, severity: "warning" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Vidange à faire dans ${kmUntilOilChange} km`,
+            severity: "warning"
+          });
         }
       } else if (!vehicle.dernier_kilometrage_vidange) {
-        alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: "Aucune vidange enregistrée", severity: "high" });
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleInfo,
+          message: "Aucune vidange enregistrée",
+          severity: "high"
+        });
       }
 
       // Check traite bancaire
@@ -427,15 +470,23 @@ export default function Dashboard() {
         const echeanceDate = new Date(echeance.date_echeance);
         echeanceDate.setHours(0, 0, 0, 0);
         const daysUntilEcheance = Math.ceil((echeanceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
         if (echeanceDate < today) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`, severity: "critical" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Traite en retard de ${Math.abs(daysUntilEcheance)} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+            severity: "critical"
+          });
         } else if (daysUntilEcheance <= 7) {
-          alerts.push({ vehicleId: vehicle.id, vehicleInfo, message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`, severity: "warning" });
+          alerts.push({
+            vehicleId: vehicle.id,
+            vehicleInfo,
+            message: `Traite à payer dans ${daysUntilEcheance} jour(s) - Montant: ${echeance.montant ? parseFloat(echeance.montant.toString()).toFixed(2) : '0.00'} DH`,
+            severity: "warning"
+          });
         }
       }
     }
-
     setVehicleAlerts(alerts);
 
     // Count old checks
@@ -579,45 +630,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-6">
             {/* Alerts Section */}
             <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center">
-                    <AlertCircle className="w-8 h-8 text-warning" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle className="w-5 h-5 text-warning" />
-                      <h3 className="text-xl font-semibold text-foreground">Alertes</h3>
-                      <span className="ml-2 text-2xl font-bold text-warning">
-                        {totalAlerts.toString().padStart(2, '0')}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-4 mt-3">
-                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate("/alertes")}>
-                        <span className={`w-3 h-3 rounded-full ${chequeAlertsCount > 0 ? 'bg-warning' : 'bg-success'}`}></span>
-                        <span className={`text-sm text-foreground ${chequeAlertsCount > 0 ? 'underline' : ''}`}>
-                          {chequeAlertsCount.toString().padStart(2, '0')} Alertes chèques
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate("/alertes")}>
-                        <span className={`w-3 h-3 rounded-full ${reservationAlertsCount > 0 ? 'bg-info' : 'bg-success'}`}></span>
-                        <span className={`text-sm text-foreground ${reservationAlertsCount > 0 ? 'underline' : ''}`}>
-                          {reservationAlertsCount.toString().padStart(2, '0')} Alertes réservations
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => {
-                        loadDetailedVehicleAlerts();
-                        setShowAlertsDialog(true);
-                      }}>
-                        <span className={`w-3 h-3 rounded-full ${vehicleAlerts.length > 0 ? 'bg-warning' : 'bg-success'}`}></span>
-                        <span className={`text-sm text-foreground ${vehicleAlerts.length > 0 ? 'underline' : ''}`}>
-                          {vehicleAlerts.length.toString().padStart(2, '0')} Alertes véhicules
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
+              
             </Card>
 
             {/* Departures - Returns Section */}
@@ -750,7 +763,9 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(30 100% 50%)' }}></span>
+                    <span className="w-3 h-3 rounded-full" style={{
+                    backgroundColor: 'hsl(30 100% 50%)'
+                  }}></span>
                     <span className="text-sm text-foreground">Immobilisés</span>
                   </div>
                   <span className="text-sm font-medium text-foreground">
@@ -925,11 +940,9 @@ export default function Dashboard() {
               {loadingAlerts ? 'Chargement des alertes...' : `${vehicleAlerts.length.toString().padStart(2, '0')} alertes véhicules`}
             </DialogTitle>
           </DialogHeader>
-          {loadingAlerts && (
-            <div className="flex items-center justify-center p-8">
+          {loadingAlerts && <div className="flex items-center justify-center p-8">
               <div className="text-muted-foreground">Chargement des alertes détaillées...</div>
-            </div>
-          )}
+            </div>}
           <div className="space-y-6 mt-4">
             {Object.entries(groupedAlerts).map(([vehicleId, {
             vehicleInfo,
