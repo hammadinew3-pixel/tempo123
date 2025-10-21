@@ -40,6 +40,12 @@ export default function NouveauVehicule() {
     valeur_achat: 0,
     en_service: true,
     sous_location: false,
+    numero_chassis: '',
+    couleur: '',
+    concessionnaire: '',
+    puissance_fiscale: undefined,
+    nombre_places: undefined,
+    date_mise_en_circulation: undefined,
   });
 
   const [carburant, setCarburant] = useState<string>('diesel');
@@ -377,6 +383,8 @@ export default function NouveauVehicule() {
               <Label htmlFor="chassis">N° Châssis</Label>
               <Input
                 id="chassis"
+                value={formData.numero_chassis || ''}
+                onChange={(e) => setFormData({ ...formData, numero_chassis: e.target.value })}
                 placeholder="Code unique de 17 caractères"
               />
               <p className="text-xs text-muted-foreground">
@@ -385,11 +393,57 @@ export default function NouveauVehicule() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="couleur">Couleur</Label>
+              <Input
+                id="couleur"
+                value={formData.couleur || ''}
+                onChange={(e) => setFormData({ ...formData, couleur: e.target.value })}
+                placeholder="Ex: Blanc, Noir, Gris..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="concessionnaire">Concessionnaire</Label>
+              <Input
+                id="concessionnaire"
+                value={formData.concessionnaire || ''}
+                onChange={(e) => setFormData({ ...formData, concessionnaire: e.target.value })}
+                placeholder="Nom du concessionnaire"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="puissance">Puissance fiscale</Label>
+              <Input
+                id="puissance"
+                type="number"
+                value={formData.puissance_fiscale || ''}
+                onChange={(e) => setFormData({ ...formData, puissance_fiscale: parseInt(e.target.value) || undefined })}
+                placeholder="Ex: 5, 6, 7..."
+              />
+              <p className="text-xs text-muted-foreground">
+                En chevaux fiscaux (CV)
+              </p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="places">Nombre de places</Label>
               <Input
                 id="places"
                 type="number"
+                value={formData.nombre_places || ''}
+                onChange={(e) => setFormData({ ...formData, nombre_places: parseInt(e.target.value) || undefined })}
                 placeholder="Ex: 5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="date_circulation">Date de mise en circulation</Label>
+              <Input
+                id="date_circulation"
+                type="date"
+                value={formData.date_mise_en_circulation || ''}
+                onChange={(e) => setFormData({ ...formData, date_mise_en_circulation: e.target.value })}
               />
             </div>
           </div>
