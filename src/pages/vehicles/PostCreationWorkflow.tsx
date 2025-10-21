@@ -806,7 +806,7 @@ const renderFileUpload = (
       {currentStep === 'vignette' && (
         <Card>
           <CardHeader>
-            <CardTitle>Ajouter une vignette/autorisation</CardTitle>
+            <CardTitle>Ajouter une vignette</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitVignette} className="space-y-4">
