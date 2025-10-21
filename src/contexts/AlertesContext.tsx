@@ -20,8 +20,15 @@ export const useAlertes = () => {
 
 export const AlertesProvider = ({ children }: { children: ReactNode }) => {
   const [totalAlerts, setTotalAlerts] = useState(0);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
 
   const refreshAlerts = async () => {
+    // Cache check - ne recharge pas si déjà chargé récemment
+    if (lastRefresh && (Date.now() - lastRefresh.getTime() < CACHE_DURATION)) {
+      console.log('[Alerts] Using cached data');
+      return;
+    }
     try {
       let count = 0;
 
@@ -124,16 +131,16 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setTotalAlerts(count);
+      setLastRefresh(new Date());
+      console.log('[Alerts] Data refreshed and cached');
     } catch (error) {
       console.error('Error refreshing alerts:', error);
       setTotalAlerts(0);
     }
   };
 
-  useEffect(() => {
-    // Initial load only - no auto-refresh
-    refreshAlerts();
-  }, []);
+  // NE PAS charger automatiquement au démarrage - seulement quand l'utilisateur clique
+  // Suppression du useEffect initial pour optimisation des performances
 
   return (
     <AlertesContext.Provider value={{ totalAlerts, refreshAlerts }}>

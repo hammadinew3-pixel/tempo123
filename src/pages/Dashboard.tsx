@@ -27,6 +27,9 @@ export default function Dashboard() {
   const {
     hasModuleAccess
   } = useTenantPlan();
+  const [lastDashboardLoad, setLastDashboardLoad] = useState<Date | null>(null);
+  const DASHBOARD_CACHE = 30 * 1000; // 30 secondes de cache
+  
   const [stats, setStats] = useState<DashboardStats>({
     vehiclesCount: 0,
     reservationsCount: 0,
@@ -57,7 +60,7 @@ export default function Dashboard() {
     }
     debounceTimerRef.current = setTimeout(() => {
       loadDeparturesAndReturns();
-    }, 2000);
+    }, 5000); // Augmentation du debounce à 5 secondes
   }, []);
   useEffect(() => {
     loadDashboardData();
@@ -205,6 +208,12 @@ export default function Dashboard() {
     }
   };
   const loadDashboardData = async () => {
+    // Cache check - ne recharge pas si chargé récemment
+    if (lastDashboardLoad && (Date.now() - lastDashboardLoad.getTime() < DASHBOARD_CACHE)) {
+      console.log('[Dashboard] Using cached data');
+      return;
+    }
+
     try {
       // Execute ALL main queries in parallel
       const [vehiclesCountRes, vehiclesRes, contractsCountRes, clientsCountRes, reservationsRes, sinistresRes, assistanceRes] = await Promise.all([supabase.from('vehicles').select('*', {
@@ -253,6 +262,9 @@ export default function Dashboard() {
 
       // Load departures and returns
       await loadDeparturesAndReturns();
+      
+      setLastDashboardLoad(new Date());
+      console.log('[Dashboard] Data refreshed and cached');
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {

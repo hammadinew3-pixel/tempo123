@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
+import { useRealtime } from '@/hooks/use-realtime';
 import {
   Table,
   TableBody,
@@ -74,6 +75,16 @@ export default function Charges() {
     description: '',
     statut: 'paye',
     fournisseur: '',
+  });
+
+  // Realtime pour auto-refresh quand une échéance est payée
+  useRealtime({
+    table: 'vehicules_traites_echeances',
+    debounceMs: 3000,
+    onUpdate: () => {
+      console.log('[Charges] Échéance mise à jour, rechargement...');
+      loadExpenses();
+    },
   });
 
   useEffect(() => {

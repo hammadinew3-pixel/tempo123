@@ -66,9 +66,10 @@ export default function Clients() {
     loadClients();
   }, []);
 
-  // Synchronisation en temps réel
+  // Synchronisation en temps réel avec debounce
   useRealtime<Client>({
     table: 'clients',
+    debounceMs: 3000, // 3 secondes de debounce
     onInsert: (payload) => {
       setClients((prev) => [payload, ...prev]);
       toast({

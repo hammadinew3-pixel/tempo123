@@ -24,6 +24,9 @@ export default function Vehicules() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20; // Pagination pour réduire la charge initiale
   const [assurances, setAssurances] = useState<Array<{
     id: string;
     nom: string;
@@ -72,11 +75,12 @@ export default function Vehicules() {
   useEffect(() => {
     loadVehicles();
     loadAssurances();
-  }, []);
+  }, [currentPage]); // Recharger quand la page change
 
-  // Synchronisation en temps réel
+  // Synchronisation en temps réel avec debounce optimisé
   useRealtime<Vehicle>({
     table: 'vehicles',
+    debounceMs: 5000, // 5 secondes de debounce pour éviter trop de re-renders
     onInsert: (payload) => {
       setVehicles((prev) => [payload, ...prev]);
       toast({
@@ -111,14 +115,19 @@ export default function Vehicules() {
   };
   const loadVehicles = async () => {
     try {
-      // Load vehicles without the expensive join
-      const { data, error } = await supabase
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      const end = start + ITEMS_PER_PAGE - 1;
+
+      // Load vehicles with pagination
+      const { data, error, count } = await supabase
         .from('vehicles')
-        .select('*')
+        .select('*', { count: 'exact' })
+        .range(start, end)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       setVehicles(data || []);
+      setTotalCount(count || 0);
     } catch (error: any) {
       toast({
         title: 'Erreur',
