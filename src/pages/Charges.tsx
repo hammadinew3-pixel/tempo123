@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Download, TrendingDown, Filter, Search, Trash2 } from 'lucide-react';
+import { Plus, Download, TrendingDown, Filter, Search, Trash2, Columns } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { exportToExcel } from '@/lib/exportUtils';
@@ -34,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUserRole } from "@/hooks/use-user-role";
 
 interface Expense {
@@ -64,6 +66,16 @@ export default function Charges() {
   const [filterStatut, setFilterStatut] = useState('all');
   const [filterVehicle, setFilterVehicle] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState({
+    date: true,
+    type: true,
+    description: true,
+    vehicule: true,
+    fournisseur: true,
+    montant: true,
+    modePaiement: true,
+    statut: true,
+  });
   const { toast } = useToast();
   const { isAdmin } = useUserRole();
 
@@ -307,6 +319,13 @@ export default function Charges() {
     exportToExcel(exportData, 'charges');
   };
 
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [column]: !prev[column]
+    }));
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-muted-foreground">Chargement...</div>;
   }
@@ -324,6 +343,84 @@ export default function Charges() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Columns className="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+              <div className="space-y-4">
+                <h4 className="font-semibold text-sm">Colonnes visibles</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-date"
+                      checked={visibleColumns.date}
+                      onCheckedChange={() => toggleColumn('date')}
+                    />
+                    <label htmlFor="col-date" className="text-sm cursor-pointer">Date</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-type"
+                      checked={visibleColumns.type}
+                      onCheckedChange={() => toggleColumn('type')}
+                    />
+                    <label htmlFor="col-type" className="text-sm cursor-pointer">Type</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-description"
+                      checked={visibleColumns.description}
+                      onCheckedChange={() => toggleColumn('description')}
+                    />
+                    <label htmlFor="col-description" className="text-sm cursor-pointer">Description</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-vehicule"
+                      checked={visibleColumns.vehicule}
+                      onCheckedChange={() => toggleColumn('vehicule')}
+                    />
+                    <label htmlFor="col-vehicule" className="text-sm cursor-pointer">Véhicule</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-fournisseur"
+                      checked={visibleColumns.fournisseur}
+                      onCheckedChange={() => toggleColumn('fournisseur')}
+                    />
+                    <label htmlFor="col-fournisseur" className="text-sm cursor-pointer">Fournisseur</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-montant"
+                      checked={visibleColumns.montant}
+                      onCheckedChange={() => toggleColumn('montant')}
+                    />
+                    <label htmlFor="col-montant" className="text-sm cursor-pointer">Montant</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-modePaiement"
+                      checked={visibleColumns.modePaiement}
+                      onCheckedChange={() => toggleColumn('modePaiement')}
+                    />
+                    <label htmlFor="col-modePaiement" className="text-sm cursor-pointer">Mode Paiement</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-statut"
+                      checked={visibleColumns.statut}
+                      onCheckedChange={() => toggleColumn('statut')}
+                    />
+                    <label htmlFor="col-statut" className="text-sm cursor-pointer">Statut</label>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" onClick={exportData}>
             <Download className="w-4 h-4 mr-2" />
             Exporter
@@ -582,43 +679,49 @@ export default function Charges() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Véhicule</TableHead>
-                  <TableHead>Fournisseur</TableHead>
-                  <TableHead className="text-right">Montant</TableHead>
-                  <TableHead>Mode Paiement</TableHead>
-                  <TableHead>Statut</TableHead>
+                  {visibleColumns.date && <TableHead>Date</TableHead>}
+                  {visibleColumns.type && <TableHead>Type</TableHead>}
+                  {visibleColumns.description && <TableHead>Description</TableHead>}
+                  {visibleColumns.vehicule && <TableHead>Véhicule</TableHead>}
+                  {visibleColumns.fournisseur && <TableHead>Fournisseur</TableHead>}
+                  {visibleColumns.montant && <TableHead className="text-right">Montant</TableHead>}
+                  {visibleColumns.modePaiement && <TableHead>Mode Paiement</TableHead>}
+                  {visibleColumns.statut && <TableHead>Statut</TableHead>}
                   {isAdmin && <TableHead>Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredExpenses.map((expense) => (
                   <TableRow key={expense.id}>
-                    <TableCell>{expense.date_depense}</TableCell>
-                    <TableCell className="capitalize">{expense.type_depense}</TableCell>
-                    <TableCell>{expense.description}</TableCell>
-                    <TableCell>
-                      {expense.vehicles ? (
-                        <span className="text-sm">
-                          {expense.vehicles.immatriculation || expense.vehicles.ww || (expense.vehicles.marque + ' ' + expense.vehicles.modele)}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{expense.fournisseur || '-'}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      {expense.montant.toFixed(2)} DH
-                    </TableCell>
-                    <TableCell className="capitalize">{expense.mode_paiement}</TableCell>
-                    <TableCell>
-                      <Badge variant={expense.statut === 'paye' ? 'default' : expense.statut === 'en_attente' ? 'secondary' : 'outline'}>
-                        {expense.statut === 'paye' ? 'Payé' : 
-                         expense.statut === 'en_attente' ? 'En attente' : 'Récurrente'}
-                      </Badge>
-                    </TableCell>
+                    {visibleColumns.date && <TableCell>{expense.date_depense}</TableCell>}
+                    {visibleColumns.type && <TableCell className="capitalize">{expense.type_depense}</TableCell>}
+                    {visibleColumns.description && <TableCell>{expense.description}</TableCell>}
+                    {visibleColumns.vehicule && (
+                      <TableCell>
+                        {expense.vehicles ? (
+                          <span className="text-sm">
+                            {expense.vehicles.immatriculation || expense.vehicles.ww || (expense.vehicles.marque + ' ' + expense.vehicles.modele)}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                    )}
+                    {visibleColumns.fournisseur && <TableCell>{expense.fournisseur || '-'}</TableCell>}
+                    {visibleColumns.montant && (
+                      <TableCell className="text-right font-medium">
+                        {expense.montant.toFixed(2)} DH
+                      </TableCell>
+                    )}
+                    {visibleColumns.modePaiement && <TableCell className="capitalize">{expense.mode_paiement}</TableCell>}
+                    {visibleColumns.statut && (
+                      <TableCell>
+                        <Badge variant={expense.statut === 'paye' ? 'default' : expense.statut === 'en_attente' ? 'secondary' : 'outline'}>
+                          {expense.statut === 'paye' ? 'Payé' : 
+                           expense.statut === 'en_attente' ? 'En attente' : 'Récurrente'}
+                        </Badge>
+                      </TableCell>
+                    )}
                     {isAdmin && (
                       <TableCell>
                         <Button
