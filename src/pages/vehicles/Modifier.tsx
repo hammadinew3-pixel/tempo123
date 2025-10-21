@@ -52,6 +52,7 @@ export default function ModifierVehicule() {
     ww: '',
     immatriculation: '',
     annee: new Date().getFullYear(),
+    date_mise_en_circulation: '',
     categorie: 'A' as any,
     categories: [] as any[],
     kilometrage: 0,
@@ -106,6 +107,7 @@ export default function ModifierVehicule() {
         ww: data.ww || '',
         immatriculation: data.immatriculation || '',
         annee: data.annee || new Date().getFullYear(),
+        date_mise_en_circulation: data.date_mise_en_circulation || '',
         categorie: data.categorie || 'A',
         categories: data.categories || [],
         kilometrage: data.kilometrage || 0,
@@ -180,12 +182,33 @@ export default function ModifierVehicule() {
     e.preventDefault();
     setSaving(true);
     try {
+      let photoUrl = formData.photo_url;
+
+      // Upload photo if a new file was selected
+      if (uploadedFile) {
+        const fileExt = uploadedFile.name.split('.').pop();
+        const fileName = `${id}/photo-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('vehicle-photos')
+          .upload(fileName, uploadedFile);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('vehicle-photos')
+          .getPublicUrl(fileName);
+        
+        photoUrl = publicUrl;
+      }
+
       const updateData = {
         marque: formData.marque,
         modele: formData.modele,
         ww: formData.ww,
         immatriculation: formData.immatriculation,
         annee: formData.annee,
+        date_mise_en_circulation: formData.date_mise_en_circulation || null,
         categorie: formData.categorie,
         categories: formData.categories,
         kilometrage: formData.kilometrage,
@@ -199,7 +222,8 @@ export default function ModifierVehicule() {
         nombre_places: formData.places,
         concessionnaire: formData.concessionaire,
         puissance_fiscale: formData.puissance ? parseFloat(formData.puissance) : null,
-        couleur: formData.couleur
+        couleur: formData.couleur,
+        photo_url: photoUrl
       };
       const {
         error
@@ -418,16 +442,19 @@ export default function ModifierVehicule() {
               </Select>
             </div>
 
-            {/* Année de mise en circulation */}
+            {/* Date de mise en circulation */}
             <div>
-              <Label htmlFor="annee">Année de mise en circulation</Label>
-              <Input id="annee" type="number" min="1900" max={new Date().getFullYear() + 1} value={formData.annee} onChange={e => setFormData({
-              ...formData,
-              annee: parseInt(e.target.value) || new Date().getFullYear()
-            })} placeholder="YYYY" disabled={isAgent} />
-              <p className="text-xs text-muted-foreground mt-1">
-                Année de la première immatriculation du véhicule
-              </p>
+              <Label htmlFor="date-circulation">Date de mise en circulation</Label>
+              <Input 
+                id="date-circulation" 
+                type="date" 
+                value={formData.date_mise_en_circulation || ''} 
+                onChange={e => setFormData({
+                  ...formData,
+                  date_mise_en_circulation: e.target.value
+                })} 
+                disabled={isAgent} 
+              />
             </div>
 
             {/* Valeur d'achat */}
@@ -520,14 +547,25 @@ export default function ModifierVehicule() {
                     <Button type="button" variant="ghost" size="sm" onClick={removeFile}>
                       <X className="w-4 h-4" />
                     </Button>
-                  </div> : <div className="space-y-2">
+                  </div> : formData.photo_url ? (
+                    <div className="space-y-2">
+                      <img src={formData.photo_url} alt="Photo véhicule" className="max-h-32 mx-auto rounded" />
+                      <div className="text-xs text-muted-foreground">Photo actuelle</div>
+                      <label className="inline-block">
+                        <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                        <Button type="button" variant="outline" size="sm" onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}>
+                          Changer la photo
+                        </Button>
+                      </label>
+                    </div>
+                  ) : <div className="space-y-2">
                     <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
                     <div className="text-sm text-muted-foreground">
-                      Glissez-déposez une image ou un PDF ici
+                      Glissez-déposez une image ici
                     </div>
                     <div className="text-xs text-muted-foreground">ou</div>
                     <label className="inline-block">
-                      <input type="file" accept="image/*,application/pdf" onChange={handleFileChange} className="hidden" />
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                       <Button type="button" variant="outline" size="sm" onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}>
                         Sélectionner un fichier
                       </Button>
