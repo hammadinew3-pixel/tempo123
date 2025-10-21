@@ -21,7 +21,6 @@ export default function ClientDetails() {
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [infoOpen, setInfoOpen] = useState(true);
-  const [statsOpen, setStatsOpen] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
@@ -111,43 +110,6 @@ export default function ClientDetails() {
   };
 
 
-  const getContractStats = () => {
-    const stats = {
-      shortTerm: {
-        pending: 0,
-        delivered: 0,
-        returned: 0,
-        cancelled: 0,
-        total: 0
-      },
-      longTerm: {
-        pending: 0,
-        delivered: 0,
-        returned: 0,
-        cancelled: 0,
-        total: 0
-      }
-    };
-
-    contracts.forEach((contract) => {
-      const duration = contract.duration || 0;
-      const isShortTerm = duration <= 7;
-      const category = isShortTerm ? 'shortTerm' : 'longTerm';
-
-      if (contract.statut === 'brouillon') {
-        stats[category].pending++;
-      } else if (contract.statut === 'livre' || contract.statut === 'contrat_valide') {
-        stats[category].delivered++;
-      } else if (contract.statut === 'retour_effectue' || contract.statut === 'termine') {
-        stats[category].returned++;
-      } else if (contract.statut === 'annule') {
-        stats[category].cancelled++;
-      }
-      stats[category].total++;
-    });
-
-    return stats;
-  };
 
   const handleDeleteClient = async () => {
     if (contracts.length > 0) {
@@ -192,9 +154,6 @@ export default function ClientDetails() {
   }
 
   if (!client) return null;
-
-  const stats = getContractStats();
-  const isNewClient = contracts.length <= 2;
 
   return (
     <div className="space-y-6 p-6 bg-muted/30 min-h-screen">
@@ -310,7 +269,10 @@ export default function ClientDetails() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Fiabilité</p>
                     <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/20">
-                      {isNewClient ? 'Nouveau client' : 'Client fidèle'}
+                      {client.client_fiable === 'nouveau' ? 'Nouveau client' : 
+                       client.client_fiable === 'oui' ? 'Client fiable' : 
+                       client.client_fiable === 'non' ? 'Non fiable' : 
+                       contracts.length <= 2 ? 'Nouveau client' : 'Client fidèle'}
                     </Badge>
                   </div>
                   <div>
@@ -520,98 +482,6 @@ export default function ClientDetails() {
           )}
         </div>
       </Card>
-
-      {/* Statistiques des réservations */}
-      <Collapsible open={statsOpen} onOpenChange={setStatsOpen}>
-        <Card>
-          <CollapsibleTrigger className="w-full">
-            <div className="p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <h2 className="text-lg font-semibold">Statistiques des réservations</h2>
-              </div>
-              {statsOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type location</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">En attente</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Livrée</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Récupérée</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Annulée</th>
-                      <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b">
-                      <td className="py-3 px-4 text-sm">Courte durée</td>
-                      <td className="text-center py-3 px-4">{stats.shortTerm.pending.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.shortTerm.delivered.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.shortTerm.returned.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.shortTerm.cancelled.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.shortTerm.total.toString().padStart(2, '0')}</td>
-                    </tr>
-                    <tr className="border-b">
-                      <td className="py-3 px-4 text-sm">Longue durée</td>
-                      <td className="text-center py-3 px-4">{stats.longTerm.pending.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.longTerm.delivered.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.longTerm.returned.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.longTerm.cancelled.toString().padStart(2, '0')}</td>
-                      <td className="text-center py-3 px-4">{stats.longTerm.total.toString().padStart(2, '0')}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-3 px-4 text-sm font-semibold">Total</td>
-                      <td className="text-center py-3 px-4">
-                        <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900/20">
-                          {(stats.shortTerm.pending + stats.longTerm.pending).toString().padStart(2, '0')}
-                        </Badge>
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/20">
-                          {(stats.shortTerm.delivered + stats.longTerm.delivered).toString().padStart(2, '0')}
-                        </Badge>
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20">
-                          {(stats.shortTerm.returned + stats.longTerm.returned).toString().padStart(2, '0')}
-                        </Badge>
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/20">
-                          {(stats.shortTerm.cancelled + stats.longTerm.cancelled).toString().padStart(2, '0')}
-                        </Badge>
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-700">
-                          {(stats.shortTerm.total + stats.longTerm.total).toString().padStart(2, '0')}
-                        </Badge>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/10 rounded-md flex items-start gap-2">
-                <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                  <p className="text-blue-600 font-medium cursor-pointer hover:underline">
-                    Cliquez ici pour consulter toutes les locations courtes durées de ce client.
-                  </p>
-                  <p className="text-blue-600 font-medium cursor-pointer hover:underline">
-                    Cliquez ici pour consulter toutes les locations longues durées de ce client.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
 
       {/* Delete Button */}
       <div className="flex justify-start">
