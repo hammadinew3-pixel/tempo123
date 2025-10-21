@@ -903,7 +903,7 @@ export default function VehiculeDetails() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mb-1">Carburant</p>
-                    <p className="font-bold">Diesel</p>
+                    <p className="font-bold">{vehicle.carburant || 'Diesel'}</p>
                   </div>
                 </div>
 
@@ -982,8 +982,24 @@ export default function VehiculeDetails() {
                   <p className="font-medium mt-1">{vehicle.immatriculation}</p>
                 </div>
                 <div>
+                  <Label className="text-muted-foreground">WW (Matricule provisoire)</Label>
+                  <p className="font-medium mt-1">{vehicle.ww || '-'}</p>
+                </div>
+                <div>
                   <Label className="text-muted-foreground">Année</Label>
                   <p className="font-medium mt-1">{vehicle.annee}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date de mise en circulation</Label>
+                  <p className="font-medium mt-1">
+                    {vehicle.date_mise_en_circulation 
+                      ? safeFormatDate(vehicle.date_mise_en_circulation, 'dd/MM/yyyy', { locale: fr })
+                      : '-'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Carburant</Label>
+                  <p className="font-medium mt-1">{vehicle.carburant || 'Diesel'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Catégories Assistance</Label>
@@ -1018,6 +1034,26 @@ export default function VehiculeDetails() {
                 <div>
                   <Label className="text-muted-foreground">Kilométrage actuel</Label>
                   <p className="font-medium mt-1">{vehicle.kilometrage.toLocaleString()} km</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">N° Châssis</Label>
+                  <p className="font-medium mt-1">{vehicle.numero_chassis || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Concessionnaire</Label>
+                  <p className="font-medium mt-1">{vehicle.concessionnaire || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Puissance fiscale</Label>
+                  <p className="font-medium mt-1">{vehicle.puissance_fiscale ? `${vehicle.puissance_fiscale} CV` : '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Couleur</Label>
+                  <p className="font-medium mt-1">{vehicle.couleur || '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Nombre de places</Label>
+                  <p className="font-medium mt-1">{vehicle.nombre_places || '-'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Dernière vidange</Label>
