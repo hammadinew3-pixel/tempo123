@@ -2192,6 +2192,7 @@ export type Database = {
           montant: number | null
           numero_cheque: string | null
           numero_ordre: string | null
+          photo_url: string | null
           remarques: string | null
           tenant_id: string
           vehicle_id: string
@@ -2208,6 +2209,7 @@ export type Database = {
           montant?: number | null
           numero_cheque?: string | null
           numero_ordre?: string | null
+          photo_url?: string | null
           remarques?: string | null
           tenant_id: string
           vehicle_id: string
@@ -2224,6 +2226,7 @@ export type Database = {
           montant?: number | null
           numero_cheque?: string | null
           numero_ordre?: string | null
+          photo_url?: string | null
           remarques?: string | null
           tenant_id?: string
           vehicle_id?: string
