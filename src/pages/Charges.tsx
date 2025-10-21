@@ -162,7 +162,7 @@ export default function Charges() {
         date_depense: t.date_paiement || t.date_echeance,
         type_depense: 'traite',
         montant: t.montant,
-        mode_paiement: 'virement',
+        mode_paiement: 'prelevement',
         description: `Traite véhicule - ${t.vehicules_traite?.organisme || ''}`,
         statut: 'paye',
         vehicle_id: t.vehicle_id,
