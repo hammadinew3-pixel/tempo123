@@ -57,6 +57,13 @@ export default function Clients() {
     email: '',
     telephone: '',
     adresse: '',
+    sexe: '',
+    client_fiable: '',
+    passeport: '',
+    date_naissance: '',
+    date_delivrance_permis: '',
+    date_expiration_permis: '',
+    centre_delivrance_permis: '',
   });
 
   const [cinFile, setCinFile] = useState<File | null>(null);
@@ -127,7 +134,11 @@ export default function Clients() {
     setLoading(true);
 
     try {
-      let clientData = { ...formData };
+      let clientData = { 
+        ...formData,
+        sexe,
+        client_fiable: clientFiable,
+      };
 
       if (editingClient) {
         // Upload des nouveaux fichiers si fournis
@@ -528,8 +539,8 @@ export default function Clients() {
                     <div className="space-y-3">
                       <Label className="text-sm text-muted-foreground">Sexe</Label>
                       <RadioGroup
-                        value={sexe}
-                        onValueChange={(value: any) => setSexe(value)}
+                        value={formData.sexe || 'homme'}
+                        onValueChange={(value) => setFormData({ ...formData, sexe: value })}
                         className="flex gap-4"
                       >
                         <div className="flex items-center space-x-2">
@@ -696,8 +707,8 @@ export default function Clients() {
                   <div className="space-y-3">
                     <Label className="text-sm text-muted-foreground">Client fiable</Label>
                     <RadioGroup
-                      value={clientFiable}
-                      onValueChange={(value: any) => setClientFiable(value)}
+                      value={formData.client_fiable || 'nouveau'}
+                      onValueChange={(value) => setFormData({ ...formData, client_fiable: value })}
                       className="flex gap-4"
                     >
                       <div className="flex items-center space-x-2">
@@ -725,6 +736,8 @@ export default function Clients() {
                         <Input
                           id="date-delivrance"
                           type="date"
+                          value={formData.date_delivrance_permis || ''}
+                          onChange={(e) => setFormData({ ...formData, date_delivrance_permis: e.target.value })}
                           className="border-input focus:border-primary transition-colors"
                         />
                         <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -736,10 +749,22 @@ export default function Clients() {
                         <Input
                           id="date-expiration"
                           type="date"
+                          value={formData.date_expiration_permis || ''}
+                          onChange={(e) => setFormData({ ...formData, date_expiration_permis: e.target.value })}
                           className="border-input focus:border-primary transition-colors"
                         />
                         <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="centre-delivrance">Centre de délivrance permis</Label>
+                      <Input
+                        id="centre-delivrance"
+                        value={formData.centre_delivrance_permis || ''}
+                        onChange={(e) => setFormData({ ...formData, centre_delivrance_permis: e.target.value })}
+                        placeholder="Centre de délivrance"
+                        className="border-input focus:border-primary transition-colors"
+                      />
                     </div>
                   </div>
                 )}
@@ -763,6 +788,8 @@ export default function Clients() {
                         <Label htmlFor="passport">N° Passport</Label>
                         <Input
                           id="passport"
+                          value={formData.passeport || ''}
+                          onChange={(e) => setFormData({ ...formData, passeport: e.target.value })}
                           placeholder="N° Passport"
                           className="border-input focus:border-primary transition-colors"
                         />
@@ -773,6 +800,8 @@ export default function Clients() {
                           <Input
                             id="date-naissance"
                             type="date"
+                            value={formData.date_naissance || ''}
+                            onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
                             className="border-input focus:border-primary transition-colors"
                           />
                           <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

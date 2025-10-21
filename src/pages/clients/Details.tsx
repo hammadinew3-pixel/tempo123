@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle, Eye } from 'lucide-react';
+import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -312,26 +312,38 @@ export default function ClientDetails() {
                     <p className="text-sm text-muted-foreground mb-3">Pièces jointes</p>
                     <div className="flex gap-3">
                       {client.cin_url && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(client.cin_url, '_blank')}
-                          className="gap-2"
+                        <a 
+                          href={client.cin_url}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
-                          <Eye className="w-4 h-4" />
-                          Voir CIN
-                        </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Télécharger CIN
+                          </Button>
+                        </a>
                       )}
                       {client.permis_url && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(client.permis_url, '_blank')}
-                          className="gap-2"
+                        <a 
+                          href={client.permis_url}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
-                          <Eye className="w-4 h-4" />
-                          Voir Permis
-                        </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Télécharger Permis
+                          </Button>
+                        </a>
                       )}
                       {!client.cin_url && !client.permis_url && (
                         <p className="text-sm text-muted-foreground">Aucun document</p>
@@ -378,12 +390,17 @@ export default function ClientDetails() {
                   </div>
                   {client.permis_url && (
                     <div className="col-span-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => window.open(client.permis_url, '_blank')}
+                      <a 
+                        href={client.permis_url}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        Voir le document du permis
-                      </Button>
+                        <Button variant="outline">
+                          <Download className="w-4 h-4 mr-2" />
+                          Télécharger le document du permis
+                        </Button>
+                      </a>
                     </div>
                   )}
                 </div>
