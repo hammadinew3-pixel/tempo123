@@ -144,9 +144,26 @@ export default function ClientDetails() {
 
   const handleDownloadDocument = async (url: string, filename: string) => {
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+      // Extraire le chemin du fichier depuis l'URL
+      const urlObj = new URL(url);
+      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/client-documents\/(.+)$/);
+      
+      if (!pathMatch) {
+        throw new Error('URL invalide');
+      }
+      
+      const filePath = pathMatch[1];
+      
+      // Télécharger le fichier depuis Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('client-documents')
+        .download(filePath);
+      
+      if (error) throw error;
+      if (!data) throw new Error('Fichier introuvable');
+      
+      // Créer un lien de téléchargement
+      const downloadUrl = window.URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = filename;
@@ -163,7 +180,7 @@ export default function ClientDetails() {
       console.error('Error downloading document:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de télécharger le document',
+        description: error.message || 'Impossible de télécharger le document',
         variant: 'destructive',
       });
     }
