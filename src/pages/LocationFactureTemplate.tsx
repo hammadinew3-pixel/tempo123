@@ -94,7 +94,11 @@ export default function LocationFactureTemplate() {
 
           const tenantSettings = tenantRes.data || {};
           const agenceSettings = agenceRes.data || {};
-          const mergedSettings = { ...agenceSettings, ...tenantSettings };
+          // Ne pas écraser les valeurs agence par des null/undefined venant du tenant
+          const filteredTenant = Object.fromEntries(
+            Object.entries(tenantSettings).filter(([_, v]) => v !== null && v !== undefined && v !== '')
+          );
+          const mergedSettings = { ...agenceSettings, ...filteredTenant };
           setSettings(mergedSettings as TenantSettings);
 
           // Mapper les champs de la base de données vers l'interface Contract avec fallbacks
