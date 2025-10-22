@@ -1,4 +1,4 @@
-import { Home, Building, Users, Settings, Layers, Bell, ArrowRightLeft } from "lucide-react";
+import { Home, Building, Users, Settings, Layers, Bell, ArrowRightLeft, DollarSign } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ const menuItems = [
   { title: "Agences", url: "/admin/tenants", icon: Building },
   { title: "Utilisateurs", url: "/admin/users", icon: Users },
   { title: "Plans", url: "/admin/plans", icon: Layers },
+  { title: "Revenus", url: "/admin/revenus", icon: DollarSign },
   { title: "Demandes Abonnement", url: "/admin/demandes-abonnement", icon: Bell },
   { title: "Changements de Pack", url: "/admin/demandes-changement", icon: ArrowRightLeft },
   { title: "Paramètres", url: "/admin/settings", icon: Settings },

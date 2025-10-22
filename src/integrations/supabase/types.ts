@@ -1503,6 +1503,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          amount: number | null
           created_at: string | null
           duration: number
           end_date: string
@@ -1518,6 +1519,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          amount?: number | null
           created_at?: string | null
           duration: number
           end_date: string
@@ -1533,6 +1535,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          amount?: number | null
           created_at?: string | null
           duration?: number
           end_date?: string
