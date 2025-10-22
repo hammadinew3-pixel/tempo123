@@ -419,15 +419,30 @@ export default function Dashboard() {
                         </div>
                       </td>
                     </tr> : (activeTab === 'departures' ? departures : returns).map(item => <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="py-4 font-medium text-foreground">
-                          
+                        <td className="py-4">
+                          <Link 
+                            to={item.type === 'assistance' ? `/assistance/${item.id}` : `/locations/${item.id}`}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            {item.type === 'assistance' ? item.num_dossier : item.numero_contrat}
+                          </Link>
                         </td>
-                        <td className="py-4 text-foreground">
-                          {item.vehicles?.marque} {item.vehicles?.modele}
-                          <div className="text-xs text-muted-foreground">{item.vehicles?.immatriculation}</div>
+                        <td className="py-4">
+                          <Link 
+                            to={`/vehicules/${item.vehicle_id}`}
+                            className="text-foreground hover:text-primary hover:underline"
+                          >
+                            {item.vehicles?.marque} {item.vehicles?.modele}
+                            <div className="text-xs text-muted-foreground">{item.vehicles?.immatriculation}</div>
+                          </Link>
                         </td>
-                        <td className="py-4 text-foreground">
-                          {item.clients?.nom} {item.clients?.prenom}
+                        <td className="py-4">
+                          <Link 
+                            to={`/clients/${item.client_id}`}
+                            className="text-foreground hover:text-primary hover:underline"
+                          >
+                            {item.clients?.nom} {item.clients?.prenom}
+                          </Link>
                         </td>
                       </tr>)}
                 </tbody>
