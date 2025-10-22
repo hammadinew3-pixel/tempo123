@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle, Download, Edit, AlertTriangle, Car } from 'lucide-react';
+import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle, Download, Edit, AlertTriangle, Car, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -26,6 +31,12 @@ export default function ClientDetails() {
   const [infractionsOpen, setInfractionsOpen] = useState(true);
   const [sinistresOpen, setSinistresOpen] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [formData, setFormData] = useState<any>({});
+  const [sexe, setSexe] = useState<'homme' | 'femme'>('homme');
+  const [clientFiable, setClientFiable] = useState<'nouveau' | 'oui' | 'non'>('nouveau');
+  const [cinFile, setCinFile] = useState<File | null>(null);
+  const [permisFile, setPermisFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -160,6 +171,96 @@ export default function ClientDetails() {
 
 
 
+  const openEditDialog = () => {
+    setFormData({
+      ...client,
+      sexe: client.sexe || 'homme',
+      client_fiable: client.client_fiable || 'nouveau',
+    });
+    setSexe(client.sexe || 'homme');
+    setClientFiable(client.client_fiable || 'nouveau');
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.nom || !formData.telephone) {
+      toast({
+        title: 'Champs requis',
+        description: 'Le nom et le téléphone sont obligatoires',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      let clientData = { 
+        ...formData,
+        sexe,
+        client_fiable: clientFiable,
+      };
+
+      // Upload des nouveaux fichiers si fournis
+      if (cinFile) {
+        const cinPath = `clients/${id}/cin_${Date.now()}.${cinFile.name.split('.').pop()}`;
+        const { error: uploadError } = await supabase.storage
+          .from('client-documents')
+          .upload(cinPath, cinFile);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('client-documents')
+          .getPublicUrl(cinPath);
+        
+        clientData.cin_url = publicUrl;
+      }
+
+      if (permisFile) {
+        const permisPath = `clients/${id}/permis_${Date.now()}.${permisFile.name.split('.').pop()}`;
+        const { error: uploadError } = await supabase.storage
+          .from('client-documents')
+          .upload(permisPath, permisFile);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('client-documents')
+          .getPublicUrl(permisPath);
+        
+        clientData.permis_url = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('clients')
+        .update(clientData)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Succès',
+        description: 'Client modifié avec succès',
+      });
+
+      setIsEditDialogOpen(false);
+      setCinFile(null);
+      setPermisFile(null);
+      loadClientData();
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteClient = async () => {
     if (contracts.length > 0) {
       toast({
@@ -205,6 +306,7 @@ export default function ClientDetails() {
   if (!client) return null;
 
   return (
+    <>
     <div className="space-y-6 p-6 bg-muted/30 min-h-screen">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -272,7 +374,10 @@ export default function ClientDetails() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/clients?edit=${id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditDialog();
+                    }}
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Modifier
@@ -709,5 +814,260 @@ export default function ClientDetails() {
         )}
       </div>
     </div>
+
+    {/* Dialog de modification */}
+    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Modifier le client</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleUpdateClient} className="space-y-6">
+          {/* Type de client */}
+          <div className="space-y-2">
+            <Label>Type de client</Label>
+            <RadioGroup
+              value={formData.type || 'particulier'}
+              onValueChange={(value) => setFormData({ ...formData, type: value })}
+            >
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="particulier" id="edit-particulier" />
+                  <Label htmlFor="edit-particulier" className="cursor-pointer">Particulier</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="entreprise" id="edit-entreprise" />
+                  <Label htmlFor="edit-entreprise" className="cursor-pointer">Entreprise</Label>
+                </div>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* Informations générales */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-nom">Nom *</Label>
+              <Input
+                id="edit-nom"
+                value={formData.nom || ''}
+                onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                required
+              />
+            </div>
+            {formData.type === 'particulier' && (
+              <div className="space-y-2">
+                <Label htmlFor="edit-prenom">Prénom</Label>
+                <Input
+                  id="edit-prenom"
+                  value={formData.prenom || ''}
+                  onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-telephone">Téléphone *</Label>
+              <Input
+                id="edit-telephone"
+                value={formData.telephone || ''}
+                onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={formData.email || ''}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Informations personnelles */}
+          {formData.type === 'particulier' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-cin">N° CIN</Label>
+                <Input
+                  id="edit-cin"
+                  value={formData.cin || ''}
+                  onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-date-naissance">Date de naissance</Label>
+                <Input
+                  id="edit-date-naissance"
+                  type="date"
+                  value={formData.date_naissance || ''}
+                  onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Sexe</Label>
+                <RadioGroup value={sexe} onValueChange={(value: 'homme' | 'femme') => setSexe(value)}>
+                  <div className="flex gap-4">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="homme" id="edit-homme" />
+                      <Label htmlFor="edit-homme" className="cursor-pointer">Homme</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="femme" id="edit-femme" />
+                      <Label htmlFor="edit-femme" className="cursor-pointer">Femme</Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="space-y-2">
+                <Label>Client fiable</Label>
+                <RadioGroup value={clientFiable} onValueChange={(value: 'nouveau' | 'oui' | 'non') => setClientFiable(value)}>
+                  <div className="flex gap-4">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="nouveau" id="edit-nouveau" />
+                      <Label htmlFor="edit-nouveau" className="cursor-pointer">Nouveau</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="oui" id="edit-oui" />
+                      <Label htmlFor="edit-oui" className="cursor-pointer">Oui</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="non" id="edit-non" />
+                      <Label htmlFor="edit-non" className="cursor-pointer">Non</Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+          )}
+
+          {/* Permis de conduire */}
+          {formData.type === 'particulier' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-permis">N° Permis de conduire</Label>
+                <Input
+                  id="edit-permis"
+                  value={formData.permis_conduire || ''}
+                  onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-date-delivrance">Date de délivrance</Label>
+                <Input
+                  id="edit-date-delivrance"
+                  type="date"
+                  value={formData.date_delivrance_permis || ''}
+                  onChange={(e) => setFormData({ ...formData, date_delivrance_permis: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-date-expiration">Date d'expiration</Label>
+                <Input
+                  id="edit-date-expiration"
+                  type="date"
+                  value={formData.date_expiration_permis || ''}
+                  onChange={(e) => setFormData({ ...formData, date_expiration_permis: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-centre-delivrance">Centre de délivrance</Label>
+                <Input
+                  id="edit-centre-delivrance"
+                  value={formData.centre_delivrance_permis || ''}
+                  onChange={(e) => setFormData({ ...formData, centre_delivrance_permis: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Adresse */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-adresse">Adresse</Label>
+            <Textarea
+              id="edit-adresse"
+              value={formData.adresse || ''}
+              onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+              rows={3}
+            />
+          </div>
+
+          {/* Documents */}
+          {formData.type === 'particulier' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-cin-file">Photo CIN (optionnel)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="edit-cin-file"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setCinFile(e.target.files?.[0] || null)}
+                  />
+                  {client?.cin_url && !cinFile && (
+                    <Badge variant="outline">Déjà uploadé</Badge>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-permis-file">Photo Permis (optionnel)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="edit-permis-file"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
+                  />
+                  {client?.permis_url && !permisFile && (
+                    <Badge variant="outline">Déjà uploadé</Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Informations entreprise */}
+          {formData.type === 'entreprise' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-ice">ICE</Label>
+                <Input
+                  id="edit-ice"
+                  value={formData.ice || ''}
+                  onChange={(e) => setFormData({ ...formData, ice: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-rc">RC</Label>
+                <Input
+                  id="edit-rc"
+                  value={formData.rc || ''}
+                  onChange={(e) => setFormData({ ...formData, rc: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Boutons */}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setCinFile(null);
+                setPermisFile(null);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Enregistrement...' : 'Enregistrer'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
