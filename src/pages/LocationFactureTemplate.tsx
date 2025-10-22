@@ -79,16 +79,23 @@ export default function LocationFactureTemplate() {
         if (error) throw error;
 
         if (fullContractData) {
-          // Charger les paramètres du tenant avec le tenant_id
-          const { data: tenantSettings } = await supabase
-            .from('tenant_settings')
-            .select('*')
-            .eq('tenant_id', fullContractData.tenant_id)
-            .single();
+          // Charger les paramètres du tenant avec le tenant_id et fusionner avec agence_settings en fallback
+          const [tenantRes, agenceRes] = await Promise.all([
+            supabase
+              .from('tenant_settings')
+              .select('*')
+              .eq('tenant_id', fullContractData.tenant_id)
+              .single(),
+            supabase
+              .from('agence_settings')
+              .select('*')
+              .single()
+          ]);
 
-          if (tenantSettings) {
-            setSettings(tenantSettings);
-          }
+          const tenantSettings = tenantRes.data || {};
+          const agenceSettings = agenceRes.data || {};
+          const mergedSettings = { ...agenceSettings, ...tenantSettings };
+          setSettings(mergedSettings as TenantSettings);
 
           // Mapper les champs de la base de données vers l'interface Contract avec fallbacks
           const mappedContract: Contract = {
