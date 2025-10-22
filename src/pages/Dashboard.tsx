@@ -382,7 +382,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Departures - Returns Section */}
-            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow h-full">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-5 h-5 text-primary" />
@@ -453,7 +453,7 @@ export default function Dashboard() {
           </div>
 
           {/* Fleet Status */}
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow h-full">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Car className="w-5 h-5 text-primary" />
