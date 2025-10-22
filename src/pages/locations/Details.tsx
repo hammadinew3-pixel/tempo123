@@ -17,6 +17,7 @@ import { fr } from "date-fns/locale";
 import { ContractWorkflow } from "@/components/workflow/ContractWorkflow";
 import { computeChangeAmounts, safeRemaining, resolveRates } from "@/lib/contractPricing";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
+import { useRealtime } from '@/hooks/use-realtime';
 
 export default function LocationDetails() {
   const { withTenantId } = useTenantInsert();
@@ -147,6 +148,25 @@ export default function LocationDetails() {
     }
   }, [contract]);
 
+  // Écouter les changements sur contract_payments
+  useRealtime({
+    table: 'contract_payments',
+    event: '*',
+    filter: `contract_id=eq.${id}`,
+    onInsert: () => loadContractData(),
+    onUpdate: () => loadContractData(),
+    onDelete: () => loadContractData(),
+  });
+
+  // Écouter les changements sur revenus
+  useRealtime({
+    table: 'revenus',
+    event: '*',
+    onInsert: () => loadContractData(),
+    onUpdate: () => loadContractData(),
+    onDelete: () => loadContractData(),
+  });
+
   const loadContractData = async () => {
     try {
       // Load contract
@@ -172,15 +192,43 @@ export default function LocationDetails() {
       if (driversError) throw driversError;
       setSecondaryDrivers(driversData || []);
 
-      // Load payments
-      const { data: paymentsData, error: paymentsError } = await supabase
+      // Load payments from contract_payments
+      const { data: contractPaymentsData, error: contractPaymentsError } = await supabase
         .from("contract_payments")
         .select("*")
         .eq("contract_id", id)
         .order("date_paiement", { ascending: false });
 
-      if (paymentsError) throw paymentsError;
-      setPayments(paymentsData || []);
+      if (contractPaymentsError) throw contractPaymentsError;
+
+      // Load payments from revenus table for this client
+      const { data: revenusData, error: revenusError } = await supabase
+        .from("revenus")
+        .select("*")
+        .eq("client_id", contractData.client_id)
+        .eq("source_revenu", "contrat")
+        .order("date_encaissement", { ascending: false });
+
+      if (revenusError) throw revenusError;
+
+      // Merge both sources
+      const allPayments = [
+        ...(contractPaymentsData || []).map(p => ({
+          ...p,
+          source: 'contract_payments',
+          date_paiement: p.date_paiement,
+          methode: p.methode,
+        })),
+        ...(revenusData || []).map(r => ({
+          ...r,
+          source: 'revenus',
+          date_paiement: r.date_encaissement,
+          methode: r.mode_paiement,
+          remarques: r.note,
+        }))
+      ].sort((a, b) => new Date(b.date_paiement).getTime() - new Date(a.date_paiement).getTime());
+
+      setPayments(allPayments);
 
       // Load vehicle changes history
       const { data: changesData, error: changesError } = await supabase
@@ -1439,17 +1487,23 @@ export default function LocationDetails() {
                         <th className="pb-2">Date</th>
                         <th className="pb-2">Montant</th>
                         <th className="pb-2">Méthode</th>
+                        <th className="pb-2">Source</th>
                         <th className="pb-2">Remarques</th>
                       </tr>
                     </thead>
                     <tbody>
                       {payments.map((payment) => (
-                        <tr key={payment.id} className="border-b last:border-0">
+                        <tr key={`${payment.source}-${payment.id}`} className="border-b last:border-0">
                           <td className="py-3">
                             {format(new Date(payment.date_paiement), "dd/MM/yyyy", { locale: fr })}
                           </td>
                           <td className="py-3 font-medium">{parseFloat(payment.montant).toFixed(2)} DH</td>
                           <td className="py-3 capitalize">{payment.methode}</td>
+                          <td className="py-3">
+                            <Badge variant={payment.source === 'contract_payments' ? 'default' : 'secondary'} className="text-xs">
+                              {payment.source === 'contract_payments' ? 'Paiement' : 'Revenu'}
+                            </Badge>
+                          </td>
                           <td className="py-3 text-muted-foreground">{payment.remarques || '—'}</td>
                         </tr>
                       ))}
