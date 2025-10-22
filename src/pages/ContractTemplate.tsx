@@ -262,12 +262,9 @@ export default function ContractTemplate() {
                 <strong className="text-[11pt]">LOCATION</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
-                <div><strong>Départ:</strong> {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : ''}</div>
-                <div><strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
-                <div><strong>Durée:</strong> {duration} jour(s)</div>
-                <div><strong>Prix/Jr:</strong> {dailyRate.toFixed(2)} DH</div>
-                <div><strong>Prix total:</strong> {totalAmount.toFixed(2)} DH</div>
-                <div><strong>Caution:</strong> {contract.caution_montant?.toFixed(2)} DH</div>
+                <div><strong>Départ:</strong> {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : ''} - <strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
+                <div><strong>Durée:</strong> {duration} jour(s) - <strong>Prix/Jr:</strong> {dailyRate.toFixed(2)} DH</div>
+                <div><strong>Prix total:</strong> {totalAmount.toFixed(2)} DH - <strong>Caution:</strong> {contract.caution_montant?.toFixed(2)} DH</div>
               </div>
             </div>
           </div>
