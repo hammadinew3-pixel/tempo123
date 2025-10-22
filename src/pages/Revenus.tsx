@@ -45,6 +45,7 @@ interface Revenue {
   montant: number;
   mode_paiement: string;
   statut: string;
+  source_table: 'revenus' | 'contract_payments' | 'assistance';
   client_id?: string;
   contract_id?: string;
   note?: string;
@@ -156,6 +157,7 @@ export default function Revenus() {
       // Formater les revenus manuels
       const formattedRevenus: Revenue[] = (revenusData || []).map(r => ({
         id: r.id,
+        source_table: 'revenus',
         date_encaissement: r.date_encaissement,
         source_revenu: r.source_revenu,
         montant: r.montant,
@@ -173,6 +175,7 @@ export default function Revenus() {
       // Formater les paiements de contrats comme des revenus
       const formattedPayments: Revenue[] = (paymentsData || []).map((p: any) => ({
         id: p.id,
+        source_table: 'contract_payments',
         date_encaissement: p.date_paiement,
         source_revenu: 'contrat',
         montant: p.montant,
@@ -189,6 +192,7 @@ export default function Revenus() {
       // Formater les paiements d'assistance comme des revenus
       const formattedAssistance: Revenue[] = (assistanceData || []).map((a: any) => ({
         id: a.id,
+        source_table: 'assistance',
         date_encaissement: a.date_debut,
         source_revenu: 'assistance',
         montant: a.montant_paye,
@@ -297,27 +301,58 @@ export default function Revenus() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce revenu ?')) return;
+  const handleDelete = async (revenue: Revenue) => {
+    // Messages de confirmation personnalisés selon la source
+    let confirmMessage = 'Êtes-vous sûr de vouloir supprimer cet encaissement ?';
+    
+    if (revenue.source_table === 'contract_payments') {
+      confirmMessage = `⚠️ Attention : Vous êtes sur le point de supprimer un paiement de contrat (${revenue.contracts?.numero_contrat}).\n\nCette action supprimera le paiement enregistré et affectera le calcul du reste à payer du contrat.\n\nÊtes-vous sûr de vouloir continuer ?`;
+    } else if (revenue.source_table === 'assistance') {
+      confirmMessage = `⚠️ Attention : Vous êtes sur le point de supprimer un paiement d'assistance (${revenue.num_dossier}).\n\nCette action affectera le montant payé du dossier d'assistance.\n\nÊtes-vous sûr de vouloir continuer ?`;
+    }
+
+    if (!confirm(confirmMessage)) return;
 
     try {
-      const { error } = await supabase
-        .from('revenus')
-        .delete()
-        .eq('id', id);
+      let error = null;
+
+      // Supprimer depuis la bonne table selon la source
+      if (revenue.source_table === 'revenus') {
+        const result = await supabase
+          .from('revenus')
+          .delete()
+          .eq('id', revenue.id);
+        error = result.error;
+      } else if (revenue.source_table === 'contract_payments') {
+        const result = await supabase
+          .from('contract_payments')
+          .delete()
+          .eq('id', revenue.id);
+        error = result.error;
+      } else if (revenue.source_table === 'assistance') {
+        // Pour l'assistance, on ne supprime pas le dossier, on remet le montant_paye à 0
+        const result = await supabase
+          .from('assistance')
+          .update({ 
+            montant_paye: 0,
+            etat_paiement: 'en_attente'
+          })
+          .eq('id', revenue.id);
+        error = result.error;
+      }
 
       if (error) throw error;
 
       toast({
         title: "Succès",
-        description: "Revenu supprimé",
+        description: "Encaissement supprimé avec succès",
       });
       loadRevenues();
     } catch (error) {
       console.error('Error deleting revenue:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer le revenu",
+        description: "Impossible de supprimer l'encaissement",
         variant: "destructive",
       });
     }
@@ -662,7 +697,7 @@ export default function Revenus() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(revenue.id)}
+                          onClick={() => handleDelete(revenue)}
                         >
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
