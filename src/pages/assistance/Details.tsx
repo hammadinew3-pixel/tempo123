@@ -1426,7 +1426,7 @@ export default function AssistanceDetails() {
                     <span className="font-medium">{Number(assistance.tarif_journalier).toFixed(2)} DH</span>
                   </div>
                 )}
-                {assistance.franchise_montant && assistance.franchise_montant > 0 && (
+                {assistance.franchise_montant && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Franchise</span>
                     <span className="font-medium">{Number(assistance.franchise_montant).toFixed(2)} DH</span>
