@@ -20,7 +20,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
       // Récupérer le statut complet du tenant
       const { data: tenant } = await supabase
         .from('tenants')
-        .select('status, is_active')
+        .select('status, is_active, onboarding_completed')
         .eq('id', currentTenant.id)
         .single();
       
@@ -57,6 +57,12 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
           navigate('/contact');
           break;
         case 'active':
+          // Vérifier si l'onboarding est complété
+          if (tenant.is_active && !tenant.onboarding_completed) {
+            navigate('/onboarding');
+            return;
+          }
+          
           // Vérifier que le tenant est bien actif
           if (!tenant.is_active) {
             navigate('/suspended');
