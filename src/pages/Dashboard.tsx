@@ -375,14 +375,14 @@ export default function Dashboard() {
         {/* Alerts and Fleet Status in one row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Left column: Alerts and Departures-Returns */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 flex flex-col gap-6">
             {/* Alerts Section */}
             <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
               
             </Card>
 
             {/* Departures - Returns Section */}
-            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow h-full">
+            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow flex-1">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-5 h-5 text-primary" />
