@@ -982,18 +982,13 @@ export default function VehiculeDetails() {
                           
                           if (error) throw error;
                           
-                          setVehicle({
-                            ...vehicle,
-                            type_vehicule: newType
-                          });
-                          
                           toast({
                             title: "Succès",
-                            description: `Véhicule ${checked ? 'en' : 'retiré de'} sous-location`
+                            description: `Véhicule ${checked ? 'en sous-location' : 'propriétaire'}`
                           });
                           
                           // Reload to update visibility of tabs
-                          loadVehicle();
+                          await loadVehicle();
                         } catch (error: any) {
                           toast({
                             title: "Erreur",
