@@ -1040,7 +1040,7 @@ export default function Clients() {
                       </td>
                       {visibleColumns.type && (
                         <td className="py-4">
-                          <Badge variant="outline" className={client.type === 'particulier' ? 'bg-primary/10 text-primary border-0' : 'bg-secondary/10 text-secondary border-0'}>
+                          <Badge variant="outline" className={client.type === 'particulier' ? 'bg-primary/10 text-primary border-0' : 'bg-yellow-400 text-black border-0'}>
                             {client.type === 'particulier' ? 'Particulier' : 'Entreprise'}
                           </Badge>
                         </td>
