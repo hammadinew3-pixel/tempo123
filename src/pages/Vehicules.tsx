@@ -283,7 +283,7 @@ export default function Vehicules() {
   const getTypeVehiculeBadge = (vehicle: Vehicle) => {
     if (vehicle.type_vehicule === 'sous_location') {
       return <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 font-medium">
-        🤝 Sous-location
+        Sous-location
       </Badge>;
     }
     return <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 font-medium">
@@ -731,7 +731,7 @@ export default function Vehicules() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="proprietaire">✅ Véhicule propriétaire</SelectItem>
-                        <SelectItem value="sous_location">🤝 Véhicule en sous-location</SelectItem>
+                        <SelectItem value="sous_location">Véhicule en sous-location</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

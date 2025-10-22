@@ -288,7 +288,7 @@ export default function ModifierVehicule() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="proprietaire">✅ Véhicule propriétaire</SelectItem>
-                  <SelectItem value="sous_location">🤝 Véhicule en sous-location</SelectItem>
+                  <SelectItem value="sous_location">Véhicule en sous-location</SelectItem>
                 </SelectContent>
               </Select>
             </div>

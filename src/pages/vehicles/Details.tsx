@@ -758,7 +758,7 @@ export default function VehiculeDetails() {
           <AlertCircle className="h-4 w-4 text-blue-400" />
           <AlertDescription className="text-blue-200">
             <div>
-              <strong>🤝 Véhicule en sous-location</strong>
+              <strong>Véhicule en sous-location</strong>
             </div>
             <div className="mt-2 space-y-1">
               <div>
@@ -1083,7 +1083,7 @@ export default function VehiculeDetails() {
                   <div className="mt-1">
                     {vehicle.type_vehicule === 'sous_location' ? (
                       <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 font-medium">
-                        🤝 Sous-location
+                        Sous-location
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 font-medium">

@@ -384,7 +384,7 @@ export default function Charges() {
                           <SelectItem value="assurance">Assurance</SelectItem>
                           <SelectItem value="amende">Amende</SelectItem>
                           <SelectItem value="reparation">Réparation</SelectItem>
-                          <SelectItem value="sous_location">🤝 Sous-location</SelectItem>
+                          <SelectItem value="sous_location">Sous-location</SelectItem>
                           <SelectItem value="autre">Autre</SelectItem>
                         </SelectContent>
                       </Select>
@@ -557,7 +557,7 @@ export default function Charges() {
                   <SelectItem value="entretien">Entretien</SelectItem>
                   <SelectItem value="amende">Amende</SelectItem>
                   <SelectItem value="reparation">Réparation</SelectItem>
-                  <SelectItem value="sous_location">🤝 Sous-location</SelectItem>
+                  <SelectItem value="sous_location">Sous-location</SelectItem>
                   <SelectItem value="autre">Autre</SelectItem>
                 </SelectContent>
               </Select>
@@ -701,7 +701,6 @@ export default function Charges() {
                     {visibleColumns.date && <TableCell>{expense.date_depense}</TableCell>}
                     {visibleColumns.type && (
                       <TableCell className="capitalize">
-                        {expense.type_depense === 'sous_location' ? '🤝 ' : ''}
                         {expense.type_depense}
                       </TableCell>
                     )}
