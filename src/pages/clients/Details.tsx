@@ -33,6 +33,31 @@ export default function ClientDetails() {
     }
   }, [id]);
 
+  // Écouter les changements en temps réel sur ce client
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel('client-details-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'clients',
+          filter: `id=eq.${id}`
+        },
+        () => {
+          loadClientData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
   const loadClientData = async () => {
     try {
       const [clientRes, contractsRes, revenusRes, infractionsRes, sinistresRes] = await Promise.all([
