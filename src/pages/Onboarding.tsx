@@ -157,12 +157,12 @@ export default function Onboarding() {
 
       // Upload logo if new file selected
       if (logo) {
-        finalLogoUrl = await uploadFile(logo, "agency-files", "logo");
+        finalLogoUrl = await uploadFile(logo, "agency-logos", "logo");
       }
 
       // Upload cachet if new file selected
       if (cachet) {
-        finalCachetUrl = await uploadFile(cachet, "agency-files", "cachet");
+        finalCachetUrl = await uploadFile(cachet, "agency-logos", "cachet");
       }
 
       // Update or insert agency settings
