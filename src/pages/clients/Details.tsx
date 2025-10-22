@@ -382,30 +382,30 @@ export default function ClientDetails() {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <Tabs defaultValue="resume" className="w-full">
-              <div className="px-6 border-b">
-                <TabsList className="bg-transparent h-auto p-0">
+              <div className="px-3 md:px-6 border-b overflow-x-auto">
+                <TabsList className="bg-transparent h-auto p-0 w-full justify-start">
                   <TabsTrigger 
                     value="resume" 
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-2 md:px-4 py-3 text-xs md:text-sm whitespace-nowrap"
                   >
                     RÉSUMÉ
                   </TabsTrigger>
                   <TabsTrigger 
                     value="personal" 
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-2 md:px-4 py-3 text-xs md:text-sm whitespace-nowrap"
                   >
-                    INFO PERSONNELLES
+                    INFO
                   </TabsTrigger>
                   <TabsTrigger 
                     value="license" 
-                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-2 md:px-4 py-3 text-xs md:text-sm whitespace-nowrap"
                   >
-                    PERMIS DE CONDUIRE
+                    PERMIS
                   </TabsTrigger>
                   {client.type === 'entreprise' && (
                     <TabsTrigger 
                       value="company" 
-                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
+                      className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-2 md:px-4 py-3 text-xs md:text-sm whitespace-nowrap"
                     >
                       ENTREPRISE
                     </TabsTrigger>
@@ -464,16 +464,16 @@ export default function ClientDetails() {
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm text-muted-foreground mb-3">Pièces jointes</p>
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                       {client.cin_url && (
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleDownloadDocument(client.cin_url, `CIN_${client.nom}_${client.prenom}`)}
-                          className="gap-2"
+                          className="h-8 md:h-9 text-xs md:text-sm w-full sm:w-auto"
                         >
-                          <Download className="w-4 h-4" />
-                          Télécharger CIN
+                          <Download className="w-3 h-3 md:w-4 md:h-4" />
+                          <span className="ml-2">CIN</span>
                         </Button>
                       )}
                       {client.permis_url && (
@@ -481,10 +481,10 @@ export default function ClientDetails() {
                           variant="outline" 
                           size="sm"
                         onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}`)}
-                          className="gap-2"
+                          className="h-8 md:h-9 text-xs md:text-sm w-full sm:w-auto"
                         >
-                          <Download className="w-4 h-4" />
-                          Télécharger Permis
+                          <Download className="w-3 h-3 md:w-4 md:h-4" />
+                          <span className="ml-2">Permis</span>
                         </Button>
                       )}
                       {!client.cin_url && !client.permis_url && (

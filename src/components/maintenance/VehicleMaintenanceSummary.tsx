@@ -188,11 +188,11 @@ export function VehicleMaintenanceSummary({
 
           {/* Historique des interventions */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h3 className="font-semibold">Historique des interventions</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-full sm:w-[150px] h-8 md:h-9 text-xs md:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -203,9 +203,9 @@ export function VehicleMaintenanceSummary({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button onClick={handleAddIntervention} size="sm" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Nouvelle intervention
+                <Button onClick={handleAddIntervention} size="sm" className="h-8 md:h-9 text-xs md:text-sm w-full sm:w-auto">
+                  <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="ml-2">Nouveau</span>
                 </Button>
               </div>
             </div>

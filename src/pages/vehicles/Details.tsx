@@ -823,12 +823,12 @@ export default function VehiculeDetails() {
           <CardContent className="space-y-3">
             {alerts.map((alert, index) => <Alert key={index} className={`border-l-4 ${alert.severity === 'critical' ? 'border-l-destructive bg-destructive/5' : alert.severity === 'high' ? 'border-l-warning bg-warning/5' : 'border-l-warning bg-warning/5'}`}>
                 <AlertCircle className={`h-4 w-4 ${alert.severity === 'critical' ? 'text-destructive' : 'text-warning'}`} />
-                <AlertDescription className="flex items-center justify-between">
-                  <span className="text-sm">{alert.message}</span>
+                <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <span className="text-xs md:text-sm flex-1">{alert.message}</span>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className={`ml-4 ${alert.severity === 'critical' ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' : 'border-warning text-warning hover:bg-warning hover:text-white'}`}
+                    className={`h-7 md:h-8 text-xs md:text-sm w-full sm:w-auto ${alert.severity === 'critical' ? 'border-destructive text-destructive hover:bg-destructive hover:text-white' : 'border-warning text-warning hover:bg-warning hover:text-white'}`}
                     onClick={alert.onClick}
                   >
                     {alert.action}
@@ -870,17 +870,19 @@ export default function VehiculeDetails() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="resume" className="w-full">
-            <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
-              <TabsTrigger value="resume" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                RÉSUMÉ
-              </TabsTrigger>
-              <TabsTrigger value="base" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                INFO DE BASE
-              </TabsTrigger>
-              <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
-                PLUS DE DÉTAILS
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto inline-flex min-w-max">
+                <TabsTrigger value="resume" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm whitespace-nowrap">
+                  RÉSUMÉ
+                </TabsTrigger>
+                <TabsTrigger value="base" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm whitespace-nowrap">
+                  INFO BASE
+                </TabsTrigger>
+                <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm whitespace-nowrap">
+                  DÉTAILS
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="resume" className="mt-6">
               <div className="flex flex-col items-center space-y-6">
