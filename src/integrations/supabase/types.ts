@@ -1703,6 +1703,7 @@ export type Database = {
           max_users: number | null
           max_vehicles: number | null
           name: string
+          onboarding_completed: boolean | null
           plan_id: string | null
           slug: string
           status: string | null
@@ -1716,6 +1717,7 @@ export type Database = {
           max_users?: number | null
           max_vehicles?: number | null
           name: string
+          onboarding_completed?: boolean | null
           plan_id?: string | null
           slug: string
           status?: string | null
@@ -1729,6 +1731,7 @@ export type Database = {
           max_users?: number | null
           max_vehicles?: number | null
           name?: string
+          onboarding_completed?: boolean | null
           plan_id?: string | null
           slug?: string
           status?: string | null
@@ -2563,16 +2566,14 @@ export type Database = {
         Args: { p_tenant_id: string }
         Returns: string
       }
-      generate_infraction_reference: {
-        Args: Record<PropertyKey, never> | { p_tenant_id: string }
-        Returns: string
-      }
-      generate_sinistre_reference: {
-        Args: Record<PropertyKey, never> | { p_tenant_id: string }
-        Returns: string
-      }
+      generate_infraction_reference:
+        | { Args: never; Returns: string }
+        | { Args: { p_tenant_id: string }; Returns: string }
+      generate_sinistre_reference:
+        | { Args: never; Returns: string }
+        | { Args: { p_tenant_id: string }; Returns: string }
       get_tenant_signups_by_month: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           count: number
           mois: string
@@ -2591,10 +2592,7 @@ export type Database = {
           vehicles_count: number
         }[]
       }
-      get_user_tenant_id: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2602,10 +2600,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_super_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       submit_payment_proof: {
         Args: {
           _proof_url: string
@@ -2618,10 +2613,7 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: boolean
       }
-      tenant_is_active: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      tenant_is_active: { Args: { _user_id: string }; Returns: boolean }
       user_belongs_to_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean

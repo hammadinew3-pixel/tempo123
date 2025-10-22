@@ -10,7 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
-import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2 } from "lucide-react";
+import { useTenant } from '@/contexts/TenantContext';
+import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { useTenantPlan } from "@/hooks/useTenantPlan";
 
 interface AgenceSettings {
@@ -41,6 +42,7 @@ interface AgenceSettings {
 
 export default function Parametres() {
   const { withTenantId } = useTenantInsert();
+  const { currentTenant } = useTenant();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { data: planData, isLoading: planLoading, hasModuleAccess } = useTenantPlan();
   const navigate = useNavigate();
@@ -52,6 +54,7 @@ export default function Parametres() {
   const [uploadingSignature, setUploadingSignature] = useState(false);
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [newCategoryCode, setNewCategoryCode] = useState("");
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -67,11 +70,29 @@ export default function Parametres() {
   useEffect(() => {
     if (isAdmin) {
       loadSettings();
+      loadTenantOnboardingStatus();
       if (planData?.modules?.assistance) {
         loadAssistanceCategories();
       }
     }
   }, [isAdmin, planData]);
+
+  const loadTenantOnboardingStatus = async () => {
+    try {
+      if (!currentTenant?.id) return;
+      
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('onboarding_completed')
+        .eq('id', currentTenant.id)
+        .single();
+      
+      if (error) throw error;
+      setOnboardingCompleted(data?.onboarding_completed ?? true);
+    } catch (error: any) {
+      console.error('Error loading onboarding status:', error);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -181,6 +202,23 @@ export default function Parametres() {
       if (error) throw error;
 
       setSettings(prev => prev ? { ...prev, ...updates } : null);
+
+      // Marquer l'onboarding comme terminé si ce n'était pas encore fait
+      if (!onboardingCompleted && currentTenant?.id) {
+        const { error: tenantError } = await supabase
+          .from('tenants')
+          .update({ onboarding_completed: true })
+          .eq('id', currentTenant.id);
+        
+        if (!tenantError) {
+          setOnboardingCompleted(true);
+          toast({
+            title: "🎉 Pré-configuration terminée !",
+            description: "Votre agence est maintenant configurée.",
+          });
+          return;
+        }
+      }
       
       toast({
         title: "Paramètres enregistrés",
@@ -417,6 +455,27 @@ export default function Parametres() {
           Configurez les informations et préférences de votre agence
         </p>
       </div>
+
+      {/* Bannière d'onboarding */}
+      {!onboardingCompleted && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3 mb-3">
+              <CheckCircle2 className="text-red-600 w-6 h-6 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-xl font-semibold text-red-700 mb-2">
+                  Bienvenue sur CRSApp 🚗
+                </h2>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  Avant de démarrer, veuillez compléter les informations de votre agence :
+                  logo, coordonnées, alertes et paramètres TVA.  
+                  Une fois terminé, cliquez sur le bouton <strong>"Enregistrer"</strong> dans chaque section ci-dessous pour finaliser votre configuration.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Informations d'agence */}
