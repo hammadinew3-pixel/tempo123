@@ -68,23 +68,6 @@ export default function TenantsList() {
 
   const deleteTenantMutation = useMutation({
     mutationFn: async (tenantId: string) => {
-      // Vérifier si le tenant a des données avant de supprimer
-      const checks = await Promise.all([
-        supabase.from('clients').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('vehicles').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('contracts').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('user_tenants').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-      ]);
-
-      const totalRecords = checks.reduce((sum, check) => sum + (check.count || 0), 0);
-      
-      if (totalRecords > 0) {
-        throw new Error(
-          `Impossible de supprimer cette agence. Elle contient encore ${totalRecords} enregistrement(s). ` +
-          `Veuillez d'abord supprimer tous les clients, véhicules, contrats et utilisateurs associés.`
-        );
-      }
-
       const { error } = await supabase
         .from('tenants')
         .delete()
@@ -94,12 +77,12 @@ export default function TenantsList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-tenants'] });
-      toast.success("Agence supprimée avec succès");
+      toast.success("Agence et toutes ses données supprimées avec succès");
       setShowDeleteDialog(false);
       setTenantToDelete(null);
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      toast.error("Erreur lors de la suppression: " + error.message);
     },
   });
 
