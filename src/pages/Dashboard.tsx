@@ -287,85 +287,85 @@ export default function Dashboard() {
   }];
 
   return <div className="w-full">
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
           <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/vehicules')}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                    <Car className="w-4 h-4 text-primary" />
-                    <span>VÉHICULES</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+                    <Car className="w-3 h-3 md:w-4 md:h-4 text-primary flex-shrink-0" />
+                    <span className="uppercase truncate">VÉHICULES</span>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">
                     {stats.vehiclesCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Car className="w-7 h-7 text-primary" />
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                  <Car className="w-5 h-5 md:w-7 md:h-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/locations')}>
-            <CardContent className="pt-6">
+          <Card className="border-l-4 border-l-success shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/locations')}>
+            <CardContent className="pt-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    <span>RÉSERVATIONS</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+                    <Calendar className="w-3 h-3 md:w-4 md:h-4 text-success flex-shrink-0" />
+                    <span className="uppercase truncate">RÉSERVATIONS</span>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">
                     {stats.reservationsCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Calendar className="w-7 h-7 text-primary" />
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-success/10 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                  <Calendar className="w-5 h-5 md:w-7 md:h-7 text-success" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/clients')}>
-            <CardContent className="pt-6">
+          <Card className="border-l-4 border-l-info shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/clients')}>
+            <CardContent className="pt-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                    <Users className="w-4 h-4 text-primary" />
-                    <span>CLIENTS</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+                    <Users className="w-3 h-3 md:w-4 md:h-4 text-info flex-shrink-0" />
+                    <span className="uppercase truncate">CLIENTS</span>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">
                     {stats.clientsCount.toString().padStart(2, '0')}
                   </p>
                 </div>
-                <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Users className="w-7 h-7 text-primary" />
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-info/10 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                  <Users className="w-5 h-5 md:w-7 md:h-7 text-info" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/sinistres')}>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                    <AlertTriangle className="w-4 h-4 text-warning" />
-                    <span>SINISTRES</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-1">
+                    <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 text-warning flex-shrink-0" />
+                    <span className="uppercase truncate">SINISTRES</span>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">
+                  <p className="text-2xl md:text-3xl font-bold text-foreground">
                     {stats.sinistresTotal.toString().padStart(2, '0')}
                   </p>
-                  <div className="flex gap-2 mt-2 text-xs">
-                    <span className="text-destructive">{stats.sinistresOuverts} ouverts</span>
-                    <span className="text-warning">{stats.sinistresEnCours} en cours</span>
-                    <span className="text-success">{stats.sinistresClos} clos</span>
+                  <div className="flex flex-wrap gap-1 md:gap-2 mt-1 md:mt-2 text-xs">
+                    <span className="text-destructive whitespace-nowrap">{stats.sinistresOuverts} ouverts</span>
+                    <span className="text-warning whitespace-nowrap">{stats.sinistresEnCours} en cours</span>
+                    <span className="text-success whitespace-nowrap">{stats.sinistresClos} clos</span>
                   </div>
                 </div>
-                <div className="w-14 h-14 bg-warning/10 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-7 h-7 text-warning" />
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-warning/10 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                  <AlertTriangle className="w-5 h-5 md:w-7 md:h-7 text-warning" />
                 </div>
               </div>
             </CardContent>
@@ -383,63 +383,63 @@ export default function Dashboard() {
 
             {/* Departures - Returns Section */}
             <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow flex-1">
-          <CardHeader>
+          <CardHeader className="pb-3 md:pb-4">
             <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              <CardTitle>Départs - Récupérations</CardTitle>
+              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+              <CardTitle className="text-base md:text-lg">Départs - Récupérations</CardTitle>
             </div>
-            <CardDescription>Vos départs et retours prévus pour aujourd'hui</CardDescription>
-            <div className="flex space-x-8 mt-4">
-              <button onClick={() => setActiveTab('departures')} className={`pb-2 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-                <span className="text-sm font-medium">{departures.length.toString().padStart(2, '0')} Départs</span>
+            <CardDescription className="text-xs md:text-sm">Vos départs et retours prévus pour aujourd'hui</CardDescription>
+            <div className="flex space-x-4 md:space-x-8 mt-3 md:mt-4 overflow-x-auto">
+              <button onClick={() => setActiveTab('departures')} className={`pb-2 flex-shrink-0 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <span className="text-xs md:text-sm font-medium whitespace-nowrap">{departures.length.toString().padStart(2, '0')} Départs</span>
               </button>
-              <button onClick={() => setActiveTab('returns')} className={`pb-2 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-                <span className="text-sm font-medium">{returns.length.toString().padStart(2, '0')} Récupérations</span>
+              <button onClick={() => setActiveTab('returns')} className={`pb-2 flex-shrink-0 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <span className="text-xs md:text-sm font-medium whitespace-nowrap">{returns.length.toString().padStart(2, '0')} Récupérations</span>
               </button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[400px]">
                 <thead>
-                  <tr className="text-left text-sm text-muted-foreground border-b">
-                    <th className="pb-3 font-medium">Rés. N°</th>
-                    <th className="pb-3 font-medium">Véhicule</th>
-                    <th className="pb-3 font-medium">Locataire</th>
+                  <tr className="text-left text-xs md:text-sm text-muted-foreground border-b">
+                    <th className="pb-2 md:pb-3 font-medium">Rés. N°</th>
+                    <th className="pb-2 md:pb-3 font-medium">Véhicule</th>
+                    <th className="pb-2 md:pb-3 font-medium">Locataire</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(activeTab === 'departures' ? departures : returns).length === 0 ? <tr>
-                      <td colSpan={3} className="text-center py-12">
+                      <td colSpan={3} className="text-center py-8 md:py-12">
                         <div className="flex flex-col items-center">
-                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mb-4">
-                            <Calendar className="w-8 h-8 text-muted-foreground" />
+                          <div className="w-12 h-12 md:w-16 md:h-16 bg-muted rounded-lg flex items-center justify-center mb-3 md:mb-4">
+                            <Calendar className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground" />
                           </div>
-                          <p className="text-muted-foreground">Aucun résultat</p>
+                          <p className="text-sm text-muted-foreground">Aucun résultat</p>
                         </div>
                       </td>
                     </tr> : (activeTab === 'departures' ? departures : returns).map(item => <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="py-4">
+                        <td className="py-3 md:py-4">
                           <Link 
                             to={item.type === 'assistance' ? `/assistance/${item.id}` : `/locations/${item.id}`}
-                            className="font-medium text-primary hover:underline"
+                            className="text-xs md:text-sm font-medium text-primary hover:underline"
                           >
                             {item.type === 'assistance' ? item.num_dossier : item.numero_contrat}
                           </Link>
                         </td>
-                        <td className="py-4">
+                        <td className="py-3 md:py-4">
                           <Link 
                             to={`/vehicules/${item.vehicle_id}`}
-                            className="text-foreground hover:text-primary hover:underline"
+                            className="text-xs md:text-sm text-foreground hover:text-primary hover:underline"
                           >
                             {item.vehicles?.marque} {item.vehicles?.modele}
                             <div className="text-xs text-muted-foreground">{item.vehicles?.immatriculation}</div>
                           </Link>
                         </td>
-                        <td className="py-4">
+                        <td className="py-3 md:py-4">
                           <Link 
                             to={`/clients/${item.client_id}`}
-                            className="text-foreground hover:text-primary hover:underline"
+                            className="text-xs md:text-sm text-foreground hover:text-primary hover:underline"
                           >
                             {item.clients?.nom} {item.clients?.prenom}
                           </Link>

@@ -501,13 +501,13 @@ export default function Clients() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Liste des clients</h1>
-          <p className="text-sm text-muted-foreground">Gérez votre base de clients</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Liste des clients</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Gérez votre base de clients</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm">
