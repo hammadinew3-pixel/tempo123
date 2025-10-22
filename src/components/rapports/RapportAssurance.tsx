@@ -77,8 +77,9 @@ export default function RapportAssurance({ dateRange }: Props) {
             .gte('date_debut', dateRange.startDate)
             .lte('date_debut', dateRange.endDate);
 
-          const nb_dossiers_ouverts = assistances?.filter(a => a.etat === 'en_cours').length || 0;
-          const nb_dossiers_clos = assistances?.filter(a => a.etat === 'termine').length || 0;
+          // Dossier ouvert = en attente de paiement, Dossier clos = payé
+          const nb_dossiers_ouverts = assistances?.filter(a => a.etat_paiement !== 'paye').length || 0;
+          const nb_dossiers_clos = assistances?.filter(a => a.etat_paiement === 'paye').length || 0;
 
           // Calcul des montants - utiliser montant_total (ou montant_facture si rempli)
           const total_facture = assistances?.reduce((sum, a) => {
