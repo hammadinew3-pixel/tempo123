@@ -472,7 +472,7 @@ export default function Onboarding() {
                 </div>
 
                 <div>
-                  <Label>Alerte Encaissement Cheque (jours)</Label>
+                  <Label>Alerte Encaissement Chèque (jours)</Label>
                   <Input
                     type="number"
                     value={delaiReglement}
