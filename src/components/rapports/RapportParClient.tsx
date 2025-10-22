@@ -83,13 +83,23 @@ export default function RapportParClient({ dateRange }: Props) {
         .lte('date_debut', dateRange.endDate)
         .neq('statut', 'annule');
 
-      // Charger tous les paiements de contrats
+      // Charger tous les paiements de contrats depuis contract_payments
       const contractIds = contracts?.map(c => c.id) || [];
       const { data: payments } = contractIds.length > 0
         ? await supabase
             .from('contract_payments')
             .select('contract_id, montant')
             .in('contract_id', contractIds)
+        : { data: [] };
+
+      // Charger également les paiements depuis la table revenus
+      const clientIds = allClients?.map((c: any) => c.id) || [];
+      const { data: revenusPayments } = clientIds.length > 0
+        ? await supabase
+            .from('revenus')
+            .select('client_id, contract_id, montant')
+            .eq('source_revenu', 'contrat')
+            .in('client_id', clientIds)
         : { data: [] };
 
       // Charger les véhicules pour les tarifs
@@ -139,9 +149,15 @@ export default function RapportParClient({ dateRange }: Props) {
           }
           montant_total_contrats += montant;
 
-          // Calcul montant payé
+          // Calcul montant payé depuis contract_payments
           const contractPayments = payments?.filter(p => p.contract_id === contract.id) || [];
-          montant_paye_contrats += contractPayments.reduce((sum, p) => sum + (p.montant || 0), 0);
+          const paymentSum = contractPayments.reduce((sum, p) => sum + (p.montant || 0), 0);
+          
+          // Calcul montant payé depuis revenus (pour ce contrat spécifique)
+          const revenusContractPayments = revenusPayments?.filter(r => r.contract_id === contract.id) || [];
+          const revenusSum = revenusContractPayments.reduce((sum, r) => sum + (r.montant || 0), 0);
+          
+          montant_paye_contrats += paymentSum + revenusSum;
         });
 
         // Assistances du client
