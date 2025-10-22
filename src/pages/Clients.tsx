@@ -35,6 +35,7 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'particulier' | 'entreprise'>('all');
   const [visibleColumns, setVisibleColumns] = useState({
     type: true,
     cinPermis: true,
@@ -387,20 +388,21 @@ export default function Clients() {
     setIsClientDialogOpen(true);
   };
 
-  const filteredClients = clients.filter(client => {
-    if (!searchQuery) return true;
-    
-    const query = searchQuery.toLowerCase();
-    return (
-      client.nom?.toLowerCase().includes(query) ||
-      client.prenom?.toLowerCase().includes(query) ||
-      client.telephone?.toLowerCase().includes(query) ||
-      client.email?.toLowerCase().includes(query) ||
-      client.cin?.toLowerCase().includes(query) ||
-      client.permis_conduire?.toLowerCase().includes(query) ||
-      client.adresse?.toLowerCase().includes(query)
-    );
-  });
+  const filteredClients = clients
+    .filter((c) => (typeFilter === 'all' ? true : c.type === typeFilter))
+    .filter((client) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        client.nom?.toLowerCase().includes(query) ||
+        client.prenom?.toLowerCase().includes(query) ||
+        client.telephone?.toLowerCase().includes(query) ||
+        client.email?.toLowerCase().includes(query) ||
+        client.cin?.toLowerCase().includes(query) ||
+        client.permis_conduire?.toLowerCase().includes(query) ||
+        client.adresse?.toLowerCase().includes(query)
+      );
+    });
 
   const toggleColumn = (column: keyof typeof visibleColumns) => {
     setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
@@ -941,13 +943,22 @@ export default function Clients() {
         <CardHeader className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-sm font-medium">
-              <button className="text-primary border-b-2 border-primary pb-2">
+              <button
+                className={`${typeFilter === 'all' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'} pb-2`}
+                onClick={() => setTypeFilter('all')}
+              >
                 TOUS ({clients.length})
               </button>
-              <button className="text-muted-foreground hover:text-foreground pb-2">
+              <button
+                className={`${typeFilter === 'particulier' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'} pb-2`}
+                onClick={() => setTypeFilter('particulier')}
+              >
                 PARTICULIERS ({clients.filter(c => c.type === 'particulier').length})
               </button>
-              <button className="text-muted-foreground hover:text-foreground pb-2">
+              <button
+                className={`${typeFilter === 'entreprise' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'} pb-2`}
+                onClick={() => setTypeFilter('entreprise')}
+              >
                 ENTREPRISES ({clients.filter(c => c.type === 'entreprise').length})
               </button>
             </div>
