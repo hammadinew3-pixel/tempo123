@@ -222,10 +222,12 @@ export default function ContractTemplate() {
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
                 <div><strong>Nom & Prénom:</strong> {client?.nom} {client?.prenom}</div>
-                <div><strong>CIN:</strong> {client?.cin}</div>
-                <div><strong>Permis:</strong> {client?.permis_conduire}</div>
-                <div><strong>Adresse:</strong> {client?.adresse}</div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><strong>CIN:</strong> {client?.cin}</div>
+                  <div><strong>Permis:</strong> {client?.permis_conduire}</div>
+                </div>
                 <div><strong>Téléphone:</strong> {client?.telephone}</div>
+                <div><strong>Adresse:</strong> {client?.adresse}</div>
               </div>
             </div>
 
