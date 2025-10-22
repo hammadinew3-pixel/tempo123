@@ -124,10 +124,23 @@ export default function LocationFactureTemplate() {
             margin: 10,
             filename: `facture-${contract.numero_contrat}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+            html2canvas: { 
+              scale: 2, 
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            },
+            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+            pagebreak: { mode: ['css', 'legacy'] }
           };
-          html2pdf().set(opt).from(element).save();
+          html2pdf().set(opt).from(element).save().then(() => {
+            setTimeout(() => {
+              if (window.parent !== window) {
+                window.parent.document.querySelector('iframe')?.remove();
+              }
+            }, 1000);
+          });
         }
       } else if (shouldPrint) {
         setTimeout(() => {
@@ -154,17 +167,35 @@ export default function LocationFactureTemplate() {
   }
 
   return (
-    <div id="invoice-content">
+    <div id="invoice-content" className="w-full max-w-[190mm] mx-auto bg-white">
       <InvoicePrintable contract={contract} settings={settings} />
       <style>{`
-        @media print {
-          body {
-            margin: 0;
-            padding: 0;
-          }
-          @page {
-            margin: 10mm;
-          }
+        * { box-sizing: border-box; }
+        @page { 
+          size: A4 portrait; 
+          margin: 10mm; 
+        }
+        #invoice-content {
+          width: 100%;
+          max-width: 190mm;
+          margin: auto;
+          overflow: hidden;
+          background: #ffffff;
+        }
+        .invoice-page {
+          width: 190mm;
+          height: 277mm;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          padding: 0 0 5mm 0;
+          background: white;
+        }
+        @media print { 
+          body { 
+            margin: 0; 
+            padding: 0; 
+          } 
         }
       `}</style>
     </div>
