@@ -1003,7 +1003,7 @@ const renderFileUpload = (
                     Passer cette étape
                   </Button>
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Enregistrement...' : 'Suivant'}
+                    {loading ? 'Enregistrement...' : 'Enregistrer et continuer'}
                   </Button>
                 </div>
               </div>
