@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Filter, Download, Eye, Edit, Trash2, Columns, FileText } from "lucide-react";
+import { Plus, Filter, Download, Eye, Edit, Trash2, Columns, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,9 @@ export default function Assistance() {
   const { isAdmin } = useUserRole();
   const [assistances, setAssistances] = useState<Assistance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 20;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState({
     type: '',
@@ -45,7 +48,7 @@ export default function Assistance() {
 
   useEffect(() => {
     loadAssistances();
-  }, []);
+  }, [currentPage]);
 
   // Synchronisation en temps réel
   useRealtime<Assistance>({
@@ -71,10 +74,22 @@ export default function Assistance() {
 
   const loadAssistances = async () => {
     try {
+      // Get total count
+      const { count } = await supabase
+        .from('assistance')
+        .select('*', { count: 'exact', head: true });
+      
+      setTotalCount(count || 0);
+
+      // Get paginated data
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
       const { data, error } = await supabase
         .from('assistance')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setAssistances(data || []);
@@ -551,6 +566,35 @@ export default function Assistance() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredAssistances.length > 0 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {currentPage} sur {Math.ceil(totalCount / ITEMS_PER_PAGE)} ({totalCount} dossiers au total)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalCount / ITEMS_PER_PAGE), p + 1))}
+                  disabled={currentPage >= Math.ceil(totalCount / ITEMS_PER_PAGE)}
+                >
+                  Suivant
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

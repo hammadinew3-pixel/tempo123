@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, Download, Plus, Edit, Trash2, FileText, Eye, Car, User, Columns } from "lucide-react";
+import { Search, Filter, Download, Plus, Edit, Trash2, FileText, Eye, Car, User, Columns, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserRole } from "@/hooks/use-user-role";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -31,6 +31,9 @@ export default function Locations() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const ITEMS_PER_PAGE = 20;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<any>(null);
   const [filterType, setFilterType] = useState<'all' | 'location' | 'assistance'>('all');
@@ -72,7 +75,7 @@ export default function Locations() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage]);
 
   // Synchronisation en temps réel pour les contrats
   useRealtime<any>({
@@ -128,6 +131,17 @@ export default function Locations() {
     try {
       console.log('🔄 Chargement des données...');
       
+      // Get total count for contracts
+      const { count: contractsCount } = await supabase
+        .from('contracts')
+        .select('*', { count: 'exact', head: true });
+      
+      setTotalCount(contractsCount || 0);
+
+      // Get paginated data for contracts
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      
       // Charger les assistances seulement si le module est actif
       const promises = [
         supabase
@@ -137,7 +151,8 @@ export default function Locations() {
             clients (nom, prenom, telephone),
             vehicles (immatriculation, marque, modele, tarif_journalier)
           `)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .range(from, to),
         hasModuleAccess('assistance') 
           ? supabase
               .from('assistance')
@@ -147,6 +162,7 @@ export default function Locations() {
                 vehicles (immatriculation, marque, modele, tarif_journalier)
               `)
               .order('created_at', { ascending: false })
+              .range(from, to)
           : Promise.resolve({ data: null, error: null }),
         supabase
           .from('vehicles')
@@ -905,6 +921,35 @@ export default function Locations() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredContracts.length > 0 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Page {currentPage} sur {Math.ceil(totalCount / ITEMS_PER_PAGE)} ({totalCount} contrats au total)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalCount / ITEMS_PER_PAGE), p + 1))}
+                  disabled={currentPage >= Math.ceil(totalCount / ITEMS_PER_PAGE)}
+                >
+                  Suivant
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
