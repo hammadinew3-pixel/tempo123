@@ -46,6 +46,8 @@ export default function Utilisateurs() {
   const [resettingPassword, setResettingPassword] = useState(false);
   const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [customPassword, setCustomPassword] = useState("");
+  const [useCustomPassword, setUseCustomPassword] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -291,25 +293,41 @@ export default function Utilisateurs() {
     setIsResetPasswordDialogOpen(true);
     setTemporaryPassword(null);
     setPasswordCopied(false);
+    setCustomPassword("");
+    setUseCustomPassword(false);
   };
 
   const resetUserPassword = async () => {
     if (!userToResetPassword) return;
 
+    if (useCustomPassword && (!customPassword || customPassword.length < 6)) {
+      toast({
+        title: "Erreur",
+        description: "Le mot de passe doit contenir au moins 6 caractères",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setResettingPassword(true);
       
       const { data, error } = await supabase.functions.invoke('reset-user-password', {
-        body: { targetUserId: userToResetPassword }
+        body: { 
+          targetUserId: userToResetPassword,
+          newPassword: useCustomPassword ? customPassword : undefined
+        }
       });
 
       if (error) throw error;
 
       setTemporaryPassword(data.temporaryPassword);
+      setCustomPassword("");
+      setUseCustomPassword(false);
       
       toast({
         title: "Mot de passe réinitialisé",
-        description: "Le nouveau mot de passe temporaire a été généré.",
+        description: "Le nouveau mot de passe a été généré.",
       });
     } catch (error: any) {
       console.error('Error resetting password:', error);
@@ -340,6 +358,8 @@ export default function Utilisateurs() {
     setUserToResetPassword(null);
     setTemporaryPassword(null);
     setPasswordCopied(false);
+    setCustomPassword("");
+    setUseCustomPassword(false);
   };
 
   if (roleLoading || !isAdmin) {
@@ -551,10 +571,41 @@ export default function Utilisateurs() {
           
           {!temporaryPassword ? (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Un mot de passe temporaire sera généré automatiquement. 
-                Vous devrez le communiquer à l'utilisateur de manière sécurisée.
-              </p>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="useCustomPassword"
+                  checked={useCustomPassword}
+                  onChange={(e) => setUseCustomPassword(e.target.checked)}
+                  className="rounded border-input"
+                />
+                <label htmlFor="useCustomPassword" className="text-sm">
+                  Définir un mot de passe personnalisé
+                </label>
+              </div>
+              
+              {useCustomPassword && (
+                <div className="space-y-2">
+                  <Label htmlFor="customPassword">
+                    Nouveau mot de passe (minimum 6 caractères)
+                  </Label>
+                  <Input
+                    id="customPassword"
+                    type="password"
+                    value={customPassword}
+                    onChange={(e) => setCustomPassword(e.target.value)}
+                    placeholder="Entrez le nouveau mot de passe"
+                  />
+                </div>
+              )}
+              
+              {!useCustomPassword && (
+                <p className="text-sm text-gray-600">
+                  Un mot de passe temporaire sera généré automatiquement. 
+                  Vous devrez le communiquer à l'utilisateur de manière sécurisée.
+                </p>
+              )}
+              
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={closeResetPasswordDialog}>
                   Annuler
@@ -567,10 +618,10 @@ export default function Utilisateurs() {
                   {resettingPassword ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Génération...
+                      {useCustomPassword ? 'Mise à jour...' : 'Génération...'}
                     </>
                   ) : (
-                    'Générer le mot de passe'
+                    useCustomPassword ? 'Définir le mot de passe' : 'Générer le mot de passe'
                   )}
                 </Button>
               </div>
@@ -579,7 +630,7 @@ export default function Utilisateurs() {
             <div className="space-y-4">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-green-900 mb-2">
-                  Mot de passe temporaire généré :
+                  {useCustomPassword ? 'Mot de passe défini :' : 'Mot de passe temporaire généré :'}
                 </p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-white px-3 py-2 rounded border border-green-300 font-mono text-lg">
