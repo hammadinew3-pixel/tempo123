@@ -656,36 +656,16 @@ export default function LocationDetails() {
     }
   };
 
-  const handleGenerateInvoice = async () => {
-    try {
-      toast({
-        title: "Génération en cours",
-        description: "La facture est en cours de génération...",
-      });
-
-      const { data, error } = await supabase.functions.invoke('generate-location-facture-pdf', {
-        body: { contractId: id },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        toast({
-          title: "Facture générée",
-          description: "La facture a été ouverte dans un nouvel onglet",
-        });
-      } else {
-        throw new Error("URL de la facture non reçue");
-      }
-    } catch (error: any) {
-      console.error('Error generating invoice:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: error.message || "Impossible de générer la facture",
-      });
-    }
+  const handleGenerateInvoice = () => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `/location-facture-template?id=${id}&download=true`;
+    document.body.appendChild(iframe);
+    
+    toast({
+      title: "Facture générée",
+      description: "Le téléchargement du PDF va démarrer automatiquement.",
+    });
   };
 
   const toggleSection = (section: keyof typeof openSections) => {
