@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle, Download } from 'lucide-react';
+import { ChevronRight, DollarSign, Calendar, ChevronDown, ChevronUp, Info, AlertCircle, Download, Edit, AlertTriangle, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,8 +19,12 @@ export default function ClientDetails() {
   const { isAdmin } = useUserRole();
   const [client, setClient] = useState<any>(null);
   const [contracts, setContracts] = useState<any[]>([]);
+  const [infractions, setInfractions] = useState<any[]>([]);
+  const [sinistres, setSinistres] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [infoOpen, setInfoOpen] = useState(true);
+  const [infractionsOpen, setInfractionsOpen] = useState(true);
+  const [sinistresOpen, setSinistresOpen] = useState(true);
   const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function ClientDetails() {
 
   const loadClientData = async () => {
     try {
-      const [clientRes, contractsRes, revenusRes] = await Promise.all([
+      const [clientRes, contractsRes, revenusRes, infractionsRes, sinistresRes] = await Promise.all([
         supabase
           .from('clients')
           .select('*')
@@ -48,7 +52,23 @@ export default function ClientDetails() {
         supabase
           .from('revenus')
           .select('montant')
+          .eq('client_id', id),
+        supabase
+          .from('infractions')
+          .select(`
+            *,
+            vehicles (marque, modele, immatriculation)
+          `)
           .eq('client_id', id)
+          .order('date_infraction', { ascending: false }),
+        supabase
+          .from('sinistres')
+          .select(`
+            *,
+            vehicles (marque, modele, immatriculation)
+          `)
+          .eq('client_id', id)
+          .order('date_sinistre', { ascending: false }),
       ]);
 
       if (clientRes.error) throw clientRes.error;
@@ -63,9 +83,13 @@ export default function ClientDetails() {
       }
       if (contractsRes.error) throw contractsRes.error;
       if (revenusRes.error) throw revenusRes.error;
+      if (infractionsRes.error) throw infractionsRes.error;
+      if (sinistresRes.error) throw sinistresRes.error;
 
       setClient(clientRes.data);
       setContracts(contractsRes.data || []);
+      setInfractions(infractionsRes.data || []);
+      setSinistres(sinistresRes.data || []);
       
       // Calculer le revenu total depuis la table revenus
       const total = (revenusRes.data || []).reduce((sum, revenu) => sum + (revenu.montant || 0), 0);
@@ -218,7 +242,19 @@ export default function ClientDetails() {
                 <Info className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-semibold">Informations</h2>
               </div>
-              {infoOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/clients`)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Modifier
+                  </Button>
+                )}
+                {infoOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </div>
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -281,7 +317,13 @@ export default function ClientDetails() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Sexe</p>
-                    <p className="font-medium text-blue-600">👤 {client.prenom ? 'Homme' : '—'}</p>
+                    <p className="font-medium capitalize">{client.sexe || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Date de naissance</p>
+                    <p className="font-medium">
+                      {client.date_naissance ? format(new Date(client.date_naissance), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">N° permis</p>
@@ -362,8 +404,20 @@ export default function ClientDetails() {
                     <p className="font-medium">{client.permis_conduire || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">CIN</p>
-                    <p className="font-medium">{client.cin || '—'}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Date délivrance</p>
+                    <p className="font-medium">
+                      {client.date_delivrance_permis ? format(new Date(client.date_delivrance_permis), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Date expiration</p>
+                    <p className="font-medium">
+                      {client.date_expiration_permis ? format(new Date(client.date_expiration_permis), 'dd/MM/yyyy', { locale: fr }) : '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Centre de délivrance</p>
+                    <p className="font-medium">{client.centre_delivrance_permis || '—'}</p>
                   </div>
                   {client.permis_url && (
                     <div className="col-span-2">
@@ -398,6 +452,133 @@ export default function ClientDetails() {
                 </TabsContent>
               )}
             </Tabs>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Historique Infractions */}
+      <Collapsible open={infractionsOpen} onOpenChange={setInfractionsOpen}>
+        <Card>
+          <CollapsibleTrigger className="w-full">
+            <div className="p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-orange-600" />
+                <h2 className="text-lg font-semibold">Historique Infractions</h2>
+                <Badge variant="secondary">{infractions.length}</Badge>
+              </div>
+              {infractionsOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-6">
+              {infractions.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <AlertTriangle className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                  <p>Aucune infraction pour ce client</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {infractions.map((infraction) => (
+                    <Link 
+                      key={infraction.id}
+                      to={`/infractions/${infraction.id}`}
+                      className="block p-4 rounded-lg border border-border hover:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/20 transition-all"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="font-medium">Infraction {infraction.reference || '—'}</p>
+                            <Badge variant={infraction.statut === 'payee' ? 'default' : 'destructive'}>
+                              {infraction.statut === 'payee' ? 'Payée' : 'Non payée'}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>📅 {infraction.date_infraction ? format(new Date(infraction.date_infraction), 'dd/MM/yyyy', { locale: fr }) : '—'}</p>
+                            {infraction.vehicles && (
+                              <p>🚗 {infraction.vehicles.marque} {infraction.vehicles.modele} - {infraction.vehicles.immatriculation}</p>
+                            )}
+                            {infraction.type_infraction && <p>Type: {infraction.type_infraction}</p>}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-orange-600">
+                            {infraction.montant ? `${infraction.montant.toFixed(2)} DH` : '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Historique Sinistres */}
+      <Collapsible open={sinistresOpen} onOpenChange={setSinistresOpen}>
+        <Card>
+          <CollapsibleTrigger className="w-full">
+            <div className="p-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <Car className="w-5 h-5 text-red-600" />
+                <h2 className="text-lg font-semibold">Historique Sinistres</h2>
+                <Badge variant="secondary">{sinistres.length}</Badge>
+              </div>
+              {sinistresOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-6">
+              {sinistres.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Car className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                  <p>Aucun sinistre pour ce client</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sinistres.map((sinistre) => (
+                    <Link 
+                      key={sinistre.id}
+                      to={`/sinistres/${sinistre.id}`}
+                      className="block p-4 rounded-lg border border-border hover:border-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="font-medium">Sinistre {sinistre.reference || '—'}</p>
+                            <Badge 
+                              variant={
+                                sinistre.statut === 'cloture' ? 'default' : 
+                                sinistre.statut === 'en_cours' ? 'secondary' : 
+                                'destructive'
+                              }
+                            >
+                              {sinistre.statut === 'cloture' ? 'Clôturé' : 
+                               sinistre.statut === 'en_cours' ? 'En cours' : 
+                               'En attente'}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <p>📅 {sinistre.date_sinistre ? format(new Date(sinistre.date_sinistre), 'dd/MM/yyyy', { locale: fr }) : '—'}</p>
+                            {sinistre.vehicles && (
+                              <p>🚗 {sinistre.vehicles.marque} {sinistre.vehicles.modele} - {sinistre.vehicles.immatriculation}</p>
+                            )}
+                            {sinistre.type_sinistre && <p>Type: {sinistre.type_sinistre}</p>}
+                            {sinistre.description && <p className="text-xs">{sinistre.description}</p>}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-red-600">
+                            {sinistre.montant ? `${sinistre.montant.toFixed(2)} DH` : '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </CollapsibleContent>
         </Card>
       </Collapsible>
