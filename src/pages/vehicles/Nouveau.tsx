@@ -57,7 +57,7 @@ export default function NouveauVehicule() {
     concessionnaire: '',
     puissance_fiscale: undefined,
     nombre_places: undefined,
-    date_mise_en_circulation: '',
+    date_mise_en_circulation: null,
     type_vehicule: 'proprietaire'
   });
   const [carburant, setCarburant] = useState<string>('diesel');
@@ -155,7 +155,9 @@ export default function NouveauVehicule() {
         ...formData,
         carburant,
         categories: selectedCategories,
-        photo_url: photoPreview || null
+        photo_url: photoPreview || null,
+        // Convert empty strings to null for date fields
+        date_mise_en_circulation: formData.date_mise_en_circulation || null
       };
       const {
         data,
