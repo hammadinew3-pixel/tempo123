@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Users, Loader2, Plus, Trash2 } from "lucide-react";
+import { Shield, Users, Loader2, Plus, Trash2, KeyRound, Copy, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,11 @@ export default function Utilisateurs() {
     nom: "",
     role: "agent" as 'admin' | 'agent'
   });
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [userToResetPassword, setUserToResetPassword] = useState<string | null>(null);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
+  const [passwordCopied, setPasswordCopied] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -281,6 +286,62 @@ export default function Utilisateurs() {
     }
   };
 
+  const handleResetPassword = (userId: string) => {
+    setUserToResetPassword(userId);
+    setIsResetPasswordDialogOpen(true);
+    setTemporaryPassword(null);
+    setPasswordCopied(false);
+  };
+
+  const resetUserPassword = async () => {
+    if (!userToResetPassword) return;
+
+    try {
+      setResettingPassword(true);
+      
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { targetUserId: userToResetPassword }
+      });
+
+      if (error) throw error;
+
+      setTemporaryPassword(data.temporaryPassword);
+      
+      toast({
+        title: "Mot de passe réinitialisé",
+        description: "Le nouveau mot de passe temporaire a été généré.",
+      });
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de réinitialiser le mot de passe.",
+        variant: "destructive",
+      });
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
+  const copyPasswordToClipboard = () => {
+    if (temporaryPassword) {
+      navigator.clipboard.writeText(temporaryPassword);
+      setPasswordCopied(true);
+      setTimeout(() => setPasswordCopied(false), 2000);
+      toast({
+        title: "Copié",
+        description: "Le mot de passe a été copié dans le presse-papiers.",
+      });
+    }
+  };
+
+  const closeResetPasswordDialog = () => {
+    setIsResetPasswordDialogOpen(false);
+    setUserToResetPassword(null);
+    setTemporaryPassword(null);
+    setPasswordCopied(false);
+  };
+
   if (roleLoading || !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -447,6 +508,15 @@ export default function Utilisateurs() {
                     </Select>
 
                     <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleResetPassword(user.id)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <KeyRound className="w-4 h-4" />
+                    </Button>
+
+                    <Button
                       variant={user.actif ? "outline" : "default"}
                       size="sm"
                       onClick={() => toggleUserStatus(user.id, user.actif)}
@@ -471,6 +541,79 @@ export default function Utilisateurs() {
           )}
         </CardContent>
       </Card>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Réinitialiser le mot de passe</DialogTitle>
+          </DialogHeader>
+          
+          {!temporaryPassword ? (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Un mot de passe temporaire sera généré automatiquement. 
+                Vous devrez le communiquer à l'utilisateur de manière sécurisée.
+              </p>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={closeResetPasswordDialog}>
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={resetUserPassword} 
+                  disabled={resettingPassword}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {resettingPassword ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Génération...
+                    </>
+                  ) : (
+                    'Générer le mot de passe'
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-green-900 mb-2">
+                  Mot de passe temporaire généré :
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-white px-3 py-2 rounded border border-green-300 font-mono text-lg">
+                    {temporaryPassword}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyPasswordToClipboard}
+                    className="border-green-300 hover:bg-green-50"
+                  >
+                    {passwordCopied ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-xs text-yellow-800">
+                  ⚠️ Communiquez ce mot de passe à l'utilisateur de manière sécurisée. 
+                  Recommandez-lui de le changer dès sa première connexion.
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button onClick={closeResetPasswordDialog}>
+                  Fermer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

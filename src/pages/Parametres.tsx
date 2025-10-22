@@ -11,8 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import { useTenant } from '@/contexts/TenantContext';
-import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
+import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2, CheckCircle2, KeyRound } from "lucide-react";
 import { useTenantPlan } from "@/hooks/useTenantPlan";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface AgenceSettings {
   id: string;
@@ -43,6 +45,7 @@ interface AgenceSettings {
 export default function Parametres() {
   const { withTenantId } = useTenantInsert();
   const { currentTenant } = useTenant();
+  const { user } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { data: planData, isLoading: planLoading, hasModuleAccess } = useTenantPlan();
   const navigate = useNavigate();
@@ -55,6 +58,11 @@ export default function Parametres() {
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [newCategoryCode, setNewCategoryCode] = useState("");
   const [onboardingCompleted, setOnboardingCompleted] = useState(true);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -436,6 +444,80 @@ export default function Parametres() {
     }
   };
 
+  const handleChangePassword = async () => {
+    // Validation
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Erreur",
+        description: "Tous les champs sont obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Erreur",
+        description: "Le nouveau mot de passe doit contenir au moins 6 caractères.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Erreur",
+        description: "Les nouveaux mots de passe ne correspondent pas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+
+      // Vérifier l'ancien mot de passe en tentant une connexion
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: oldPassword,
+      });
+
+      if (signInError) {
+        throw new Error("L'ancien mot de passe est incorrect.");
+      }
+
+      // Réinitialiser le mot de passe via l'edge function
+      const { error } = await supabase.functions.invoke('reset-user-password', {
+        body: { 
+          targetUserId: user?.id,
+          newPassword: newPassword
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Mot de passe modifié",
+        description: "Votre mot de passe a été modifié avec succès.",
+      });
+
+      // Réinitialiser les champs et fermer le dialog
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsChangePasswordDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de modifier le mot de passe.",
+        variant: "destructive",
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (roleLoading || planLoading || !isAdmin || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -743,6 +825,25 @@ export default function Parametres() {
         </Card>
       </div>
 
+      {/* Security Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5" />
+            Sécurité du compte
+          </CardTitle>
+          <CardDescription>
+            Modifiez votre mot de passe
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => setIsChangePasswordDialogOpen(true)}>
+            <KeyRound className="w-4 h-4 mr-2" />
+            Modifier mon mot de passe
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Second row - Categories + Print settings */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Gestion des catégories d'assistance - Masquer si module non accessible */}
@@ -862,6 +963,73 @@ export default function Parametres() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Change Password Dialog */}
+      <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier mon mot de passe</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="oldPassword">Ancien mot de passe</Label>
+              <Input
+                id="oldPassword"
+                type="password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="Entrez votre ancien mot de passe"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimum 6 caractères"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirmez le nouveau mot de passe"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsChangePasswordDialogOpen(false);
+                  setOldPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                }}
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleChangePassword} 
+                disabled={changingPassword}
+              >
+                {changingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Modification...
+                  </>
+                ) : (
+                  'Modifier'
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
