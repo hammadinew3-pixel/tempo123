@@ -549,20 +549,18 @@ export default function Clients() {
                   <div className="space-y-3">
                     <Label className="text-sm text-muted-foreground">Type client</Label>
                     <RadioGroup
-                      value={formData.type}
-                      onValueChange={(value) => {
-                        console.log('Type changed to:', value);
-                        setFormData({ ...formData, type: value as 'particulier' | 'entreprise' });
-                      }}
+                      name="client-type"
+                      value={formData.type || 'particulier'}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as 'particulier' | 'entreprise' }))}
                       className="flex gap-4"
                     >
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="particulier" id="particulier" />
-                        <Label htmlFor="particulier" className="font-normal cursor-pointer">Particulier</Label>
+                        <RadioGroupItem value="particulier" id="type-particulier" />
+                        <Label htmlFor="type-particulier" className="font-normal cursor-pointer">Particulier</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="entreprise" id="entreprise" />
-                        <Label htmlFor="entreprise" className="font-normal cursor-pointer">Entreprise</Label>
+                        <RadioGroupItem value="entreprise" id="type-entreprise" />
+                        <Label htmlFor="type-entreprise" className="font-normal cursor-pointer">Entreprise</Label>
                       </div>
                     </RadioGroup>
                   </div>

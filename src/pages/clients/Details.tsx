@@ -843,7 +843,29 @@ export default function ClientDetails() {
             </RadioGroup>
           </div>
 
-          {/* Informations générales */}
+          {/* Informations entreprise (si entreprise) */}
+          {formData.type === 'entreprise' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-raison-sociale">Raison sociale</Label>
+                <Input
+                  id="edit-raison-sociale"
+                  value={formData.raison_sociale || ''}
+                  onChange={(e) => setFormData({ ...formData, raison_sociale: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-ice">ICE</Label>
+                <Input
+                  id="edit-ice"
+                  value={formData.ice || ''}
+                  onChange={(e) => setFormData({ ...formData, ice: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Informations générales - TOUJOURS VISIBLES */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-nom">Nom *</Label>
@@ -854,16 +876,14 @@ export default function ClientDetails() {
                 required
               />
             </div>
-            {formData.type === 'particulier' && (
-              <div className="space-y-2">
-                <Label htmlFor="edit-prenom">Prénom</Label>
-                <Input
-                  id="edit-prenom"
-                  value={formData.prenom || ''}
-                  onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-prenom">Prénom</Label>
+              <Input
+                id="edit-prenom"
+                value={formData.prenom || ''}
+                onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="edit-telephone">Téléphone *</Label>
               <Input
@@ -884,104 +904,100 @@ export default function ClientDetails() {
             </div>
           </div>
 
-          {/* Informations personnelles */}
-          {formData.type === 'particulier' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-cin">N° CIN</Label>
-                <Input
-                  id="edit-cin"
-                  value={formData.cin || ''}
-                  onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-date-naissance">Date de naissance</Label>
-                <Input
-                  id="edit-date-naissance"
-                  type="date"
-                  value={formData.date_naissance || ''}
-                  onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Sexe</Label>
-                <RadioGroup value={sexe} onValueChange={(value: 'homme' | 'femme') => setSexe(value)}>
-                  <div className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="homme" id="edit-homme" />
-                      <Label htmlFor="edit-homme" className="cursor-pointer">Homme</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="femme" id="edit-femme" />
-                      <Label htmlFor="edit-femme" className="cursor-pointer">Femme</Label>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </div>
-              <div className="space-y-2">
-                <Label>Client fiable</Label>
-                <RadioGroup value={clientFiable} onValueChange={(value: 'nouveau' | 'oui' | 'non') => setClientFiable(value)}>
-                  <div className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="nouveau" id="edit-nouveau" />
-                      <Label htmlFor="edit-nouveau" className="cursor-pointer">Nouveau</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="oui" id="edit-oui" />
-                      <Label htmlFor="edit-oui" className="cursor-pointer">Oui</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="non" id="edit-non" />
-                      <Label htmlFor="edit-non" className="cursor-pointer">Non</Label>
-                    </div>
-                  </div>
-                </RadioGroup>
-              </div>
+          {/* Informations personnelles - TOUJOURS VISIBLES */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-cin">N° CIN</Label>
+              <Input
+                id="edit-cin"
+                value={formData.cin || ''}
+                onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
+              />
             </div>
-          )}
-
-          {/* Permis de conduire */}
-          {formData.type === 'particulier' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-permis">N° Permis de conduire</Label>
-                <Input
-                  id="edit-permis"
-                  value={formData.permis_conduire || ''}
-                  onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-date-delivrance">Date de délivrance</Label>
-                <Input
-                  id="edit-date-delivrance"
-                  type="date"
-                  value={formData.date_delivrance_permis || ''}
-                  onChange={(e) => setFormData({ ...formData, date_delivrance_permis: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-date-expiration">Date d'expiration</Label>
-                <Input
-                  id="edit-date-expiration"
-                  type="date"
-                  value={formData.date_expiration_permis || ''}
-                  onChange={(e) => setFormData({ ...formData, date_expiration_permis: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-centre-delivrance">Centre de délivrance</Label>
-                <Input
-                  id="edit-centre-delivrance"
-                  value={formData.centre_delivrance_permis || ''}
-                  onChange={(e) => setFormData({ ...formData, centre_delivrance_permis: e.target.value })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-date-naissance">Date de naissance</Label>
+              <Input
+                id="edit-date-naissance"
+                type="date"
+                value={formData.date_naissance || ''}
+                onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
+              />
             </div>
-          )}
+            <div className="space-y-2">
+              <Label>Sexe</Label>
+              <RadioGroup value={sexe || 'homme'} onValueChange={(value: 'homme' | 'femme') => setSexe(value)}>
+                <div className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="homme" id="edit-homme" />
+                    <Label htmlFor="edit-homme" className="cursor-pointer">Homme</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="femme" id="edit-femme" />
+                    <Label htmlFor="edit-femme" className="cursor-pointer">Femme</Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+            <div className="space-y-2">
+              <Label>Client fiable</Label>
+              <RadioGroup value={clientFiable || 'nouveau'} onValueChange={(value: 'nouveau' | 'oui' | 'non') => setClientFiable(value)}>
+                <div className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="nouveau" id="edit-nouveau" />
+                    <Label htmlFor="edit-nouveau" className="cursor-pointer">Nouveau</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="oui" id="edit-oui" />
+                    <Label htmlFor="edit-oui" className="cursor-pointer">Oui</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="non" id="edit-non" />
+                    <Label htmlFor="edit-non" className="cursor-pointer">Non</Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
 
-          {/* Adresse */}
+          {/* Permis de conduire - TOUJOURS VISIBLE */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-permis">N° Permis de conduire</Label>
+              <Input
+                id="edit-permis"
+                value={formData.permis_conduire || ''}
+                onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-date-delivrance">Date de délivrance</Label>
+              <Input
+                id="edit-date-delivrance"
+                type="date"
+                value={formData.date_delivrance_permis || ''}
+                onChange={(e) => setFormData({ ...formData, date_delivrance_permis: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-date-expiration">Date d'expiration</Label>
+              <Input
+                id="edit-date-expiration"
+                type="date"
+                value={formData.date_expiration_permis || ''}
+                onChange={(e) => setFormData({ ...formData, date_expiration_permis: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-centre-delivrance">Centre de délivrance</Label>
+              <Input
+                id="edit-centre-delivrance"
+                value={formData.centre_delivrance_permis || ''}
+                onChange={(e) => setFormData({ ...formData, centre_delivrance_permis: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Adresse - TOUJOURS VISIBLE */}
           <div className="space-y-2">
             <Label htmlFor="edit-adresse">Adresse</Label>
             <Textarea
@@ -992,61 +1008,37 @@ export default function ClientDetails() {
             />
           </div>
 
-          {/* Documents */}
-          {formData.type === 'particulier' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-cin-file">Photo CIN (optionnel)</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="edit-cin-file"
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => setCinFile(e.target.files?.[0] || null)}
-                  />
-                  {client?.cin_url && !cinFile && (
-                    <Badge variant="outline">Déjà uploadé</Badge>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-permis-file">Photo Permis (optionnel)</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="edit-permis-file"
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
-                  />
-                  {client?.permis_url && !permisFile && (
-                    <Badge variant="outline">Déjà uploadé</Badge>
-                  )}
-                </div>
+          {/* Documents - TOUJOURS VISIBLE */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-cin-file">Photo CIN (optionnel)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="edit-cin-file"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setCinFile(e.target.files?.[0] || null)}
+                />
+                {client?.cin_url && !cinFile && (
+                  <Badge variant="outline">Déjà uploadé</Badge>
+                )}
               </div>
             </div>
-          )}
-
-          {/* Informations entreprise */}
-          {formData.type === 'entreprise' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-ice">ICE</Label>
+            <div className="space-y-2">
+              <Label htmlFor="edit-permis-file">Photo Permis (optionnel)</Label>
+              <div className="flex items-center gap-2">
                 <Input
-                  id="edit-ice"
-                  value={formData.ice || ''}
-                  onChange={(e) => setFormData({ ...formData, ice: e.target.value })}
+                  id="edit-permis-file"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-rc">RC</Label>
-                <Input
-                  id="edit-rc"
-                  value={formData.rc || ''}
-                  onChange={(e) => setFormData({ ...formData, rc: e.target.value })}
-                />
+                {client?.permis_url && !permisFile && (
+                  <Badge variant="outline">Déjà uploadé</Badge>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
           {/* Boutons */}
           <div className="flex justify-end gap-2 pt-4">
