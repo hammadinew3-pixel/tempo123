@@ -663,19 +663,23 @@ export default function LocationDetails() {
         description: "La facture est en cours de génération...",
       });
 
-      // Pour l'instant, on ouvre juste le PDF du contrat
-      // TODO: Créer une fonction edge spécifique pour générer une facture
-      if (contract.pdf_url) {
-        window.open(contract.pdf_url, '_blank');
+      const { data, error } = await supabase.functions.invoke('generate-location-facture-pdf', {
+        body: { contractId: id },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
         toast({
           title: "Facture générée",
           description: "La facture a été ouverte dans un nouvel onglet",
         });
       } else {
-        // Générer le PDF d'abord
-        await handleGeneratePDF();
+        throw new Error("URL de la facture non reçue");
       }
     } catch (error: any) {
+      console.error('Error generating invoice:', error);
       toast({
         variant: "destructive",
         title: "Erreur",

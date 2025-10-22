@@ -25,3 +25,9 @@ verify_jwt = true
 
 [functions.generate-assistance-dossier-complet]
 verify_jwt = true
+
+[functions.generate-assistance-facture-pdf]
+verify_jwt = true
+
+[functions.generate-location-facture-pdf]
+verify_jwt = true

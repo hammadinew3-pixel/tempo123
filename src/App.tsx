@@ -68,6 +68,7 @@ import ContractTemplate from "./pages/ContractTemplate";
 import AssistanceContractTemplate from "./pages/AssistanceContractTemplate";
 import AssistanceDossierTemplate from "./pages/AssistanceDossierTemplate";
 import AssistanceFactureTemplate from "./pages/AssistanceFactureTemplate";
+import LocationFactureTemplate from "./pages/LocationFactureTemplate";
 import AssistanceCompletTemplate from "./pages/AssistanceCompletTemplate";
 
 const queryClient = new QueryClient();
@@ -516,6 +517,16 @@ const App = () => (
                   <AssistanceRoute>
                     <AssistanceFactureTemplate />
                   </AssistanceRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/location-facture-template"
+              element={
+                <ProtectedRoute>
+                  <SubscriptionGuard>
+                    <LocationFactureTemplate />
+                  </SubscriptionGuard>
                 </ProtectedRoute>
               }
             />
