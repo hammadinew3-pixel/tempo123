@@ -585,9 +585,43 @@ export default function Clients() {
                   )}
                 </div>
 
-                {/* Prénom et Nom */}
-                <div className="grid grid-cols-2 gap-4">
-                  {formData.type === 'particulier' && (
+                {/* Raison sociale et ICE pour entreprise */}
+                {formData.type === 'entreprise' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="raison-sociale">
+                          Raison sociale <span className="text-primary">*</span>
+                        </Label>
+                        <Input
+                          id="raison-sociale"
+                          value={formData.raison_sociale || ''}
+                          onChange={(e) => setFormData({ ...formData, raison_sociale: e.target.value })}
+                          placeholder="Raison sociale"
+                          required
+                          className="border-input focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="ice">
+                          ICE <span className="text-primary">*</span>
+                        </Label>
+                        <Input
+                          id="ice"
+                          value={formData.ice || ''}
+                          onChange={(e) => setFormData({ ...formData, ice: e.target.value })}
+                          placeholder="Identifiant Commun de l'Entreprise"
+                          required
+                          className="border-input focus:border-primary transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Prénom et Nom pour particulier */}
+                {formData.type === 'particulier' && (
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="prenom">
                         Prénom <span className="text-primary">*</span>
@@ -597,126 +631,119 @@ export default function Clients() {
                         value={formData.prenom || ''}
                         onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
                         placeholder="Prénom"
+                        required
                         className="border-input focus:border-primary transition-colors"
                       />
                     </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="nom">
-                      {formData.type === 'entreprise' ? 'Raison sociale' : 'Nom'} <span className="text-primary">*</span>
-                    </Label>
-                    <Input
-                      id="nom"
-                      value={formData.nom}
-                      onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                      placeholder={formData.type === 'entreprise' ? 'Nom de l\'entreprise' : 'Nom'}
-                      required
-                      className="border-input focus:border-primary transition-colors"
-                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="nom">
+                        Nom <span className="text-primary">*</span>
+                      </Label>
+                      <Input
+                        id="nom"
+                        value={formData.nom}
+                        onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                        placeholder="Nom"
+                        required
+                        className="border-input focus:border-primary transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* CIN pour tous */}
+                <div className="space-y-2">
+                  <Label htmlFor="cin">
+                    N° CIN <span className="text-primary">*</span>
+                  </Label>
+                  <Input
+                    id="cin"
+                    value={formData.cin || ''}
+                    onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
+                    placeholder="N° CIN"
+                    required
+                    className="border-input focus:border-primary transition-colors"
+                  />
+                  <p className="text-xs text-muted-foreground">Exemple: AB123456</p>
+                </div>
+
+                {/* Photo CIN pour tous */}
+                <div className="space-y-2">
+                  <Label htmlFor="cin-photo">
+                    Photo CIN {!editingClient && <span className="text-primary">*</span>}
+                  </Label>
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                    <label htmlFor="cin-photo" className="cursor-pointer block">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Upload className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {cinFile ? cinFile.name : "Ajouter la photo de la CIN"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Format: JPG, PNG, PDF (max 5MB)
+                          </p>
+                        </div>
+                      </div>
+                      <input
+                        id="cin-photo"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setCinFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
                 </div>
 
-                {/* CIN */}
-                {formData.type === 'particulier' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="cin">
-                      N° CIN <span className="text-primary">*</span>
-                    </Label>
-                    <Input
-                      id="cin"
-                      value={formData.cin || ''}
-                      onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
-                      placeholder="N° CIN"
-                      required
-                      className="border-input focus:border-primary transition-colors"
-                    />
-                    <p className="text-xs text-muted-foreground">Exemple: AB123456</p>
-                  </div>
-                )}
+                {/* Permis pour tous */}
+                <div className="space-y-2">
+                  <Label htmlFor="permis">
+                    N° permis <span className="text-primary">*</span>
+                  </Label>
+                  <Input
+                    id="permis"
+                    value={formData.permis_conduire || ''}
+                    onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
+                    placeholder="N° permis"
+                    required
+                    className="border-input focus:border-primary transition-colors"
+                  />
+                  <p className="text-xs text-muted-foreground">10/8 chiffres de format xx/xxxxxxxx, exemple: 01/123456</p>
+                </div>
 
-                {/* Photo CIN */}
-                {formData.type === 'particulier' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="cin-photo">
-                      Photo CIN {!editingClient && <span className="text-primary">*</span>}
-                    </Label>
-                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
-                      <label htmlFor="cin-photo" className="cursor-pointer block">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Upload className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">
-                              {cinFile ? cinFile.name : "Ajouter la photo de la CIN"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Format: JPG, PNG, PDF (max 5MB)
-                            </p>
-                          </div>
+                {/* Photo Permis pour tous */}
+                <div className="space-y-2">
+                  <Label htmlFor="permis-photo">
+                    Photo permis de conduire {!editingClient && <span className="text-primary">*</span>}
+                  </Label>
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
+                    <label htmlFor="permis-photo" className="cursor-pointer block">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Upload className="w-5 h-5 text-primary" />
                         </div>
-                        <input
-                          id="cin-photo"
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={(e) => setCinFile(e.target.files?.[0] || null)}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {/* Permis */}
-                {formData.type === 'particulier' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="permis">
-                      N° permis <span className="text-primary">*</span>
-                    </Label>
-                    <Input
-                      id="permis"
-                      value={formData.permis_conduire || ''}
-                      onChange={(e) => setFormData({ ...formData, permis_conduire: e.target.value })}
-                      placeholder="N° permis"
-                      required
-                      className="border-input focus:border-primary transition-colors"
-                    />
-                    <p className="text-xs text-muted-foreground">10/8 chiffres de format xx/xxxxxxxx, exemple: 01/123456</p>
-                  </div>
-                )}
-
-                {/* Photo Permis */}
-                {formData.type === 'particulier' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="permis-photo">
-                      Photo permis de conduire {!editingClient && <span className="text-primary">*</span>}
-                    </Label>
-                    <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 hover:border-primary/50 transition-colors">
-                      <label htmlFor="permis-photo" className="cursor-pointer block">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <Upload className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">
-                              {permisFile ? permisFile.name : "Ajouter la photo du permis"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Format: JPG, PNG, PDF (max 5MB)
-                            </p>
-                          </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {permisFile ? permisFile.name : "Ajouter la photo du permis"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Format: JPG, PNG, PDF (max 5MB)
+                          </p>
                         </div>
-                        <input
-                          id="permis-photo"
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
+                      </div>
+                      <input
+                        id="permis-photo"
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => setPermisFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
-                )}
+                </div>
 
                 {/* Téléphone et Client fiable */}
                 <div className="grid grid-cols-2 gap-4">
@@ -756,47 +783,45 @@ export default function Clients() {
                   </div>
                 </div>
 
-                {/* Dates permis */}
-                {formData.type === 'particulier' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="date-delivrance">Date délivrance permis</Label>
-                      <div className="relative">
-                        <Input
-                          id="date-delivrance"
-                          type="date"
-                          value={formData.date_delivrance_permis || ''}
-                          onChange={(e) => setFormData({ ...formData, date_delivrance_permis: e.target.value })}
-                          className="border-input focus:border-primary transition-colors"
-                        />
-                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="date-expiration">Date expiration permis</Label>
-                      <div className="relative">
-                        <Input
-                          id="date-expiration"
-                          type="date"
-                          value={formData.date_expiration_permis || ''}
-                          onChange={(e) => setFormData({ ...formData, date_expiration_permis: e.target.value })}
-                          className="border-input focus:border-primary transition-colors"
-                        />
-                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="centre-delivrance">Centre de délivrance permis</Label>
+                {/* Dates permis pour tous */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date-delivrance">Date délivrance permis</Label>
+                    <div className="relative">
                       <Input
-                        id="centre-delivrance"
-                        value={formData.centre_delivrance_permis || ''}
-                        onChange={(e) => setFormData({ ...formData, centre_delivrance_permis: e.target.value })}
-                        placeholder="Centre de délivrance"
+                        id="date-delivrance"
+                        type="date"
+                        value={formData.date_delivrance_permis || ''}
+                        onChange={(e) => setFormData({ ...formData, date_delivrance_permis: e.target.value })}
                         className="border-input focus:border-primary transition-colors"
                       />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
-                )}
+                  <div className="space-y-2">
+                    <Label htmlFor="date-expiration">Date expiration permis</Label>
+                    <div className="relative">
+                      <Input
+                        id="date-expiration"
+                        type="date"
+                        value={formData.date_expiration_permis || ''}
+                        onChange={(e) => setFormData({ ...formData, date_expiration_permis: e.target.value })}
+                        className="border-input focus:border-primary transition-colors"
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="centre-delivrance">Centre de délivrance permis</Label>
+                    <Input
+                      id="centre-delivrance"
+                      value={formData.centre_delivrance_permis || ''}
+                      onChange={(e) => setFormData({ ...formData, centre_delivrance_permis: e.target.value })}
+                      placeholder="Centre de délivrance"
+                      className="border-input focus:border-primary transition-colors"
+                    />
+                  </div>
+                </div>
 
                 {/* Collapsible pour champs additionnels */}
                 <Collapsible open={showAllFields} onOpenChange={setShowAllFields}>
