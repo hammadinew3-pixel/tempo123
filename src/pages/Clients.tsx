@@ -167,9 +167,7 @@ export default function Clients() {
     try {
       let clientData = { 
         ...formData,
-        sexe,
-        client_fiable: clientFiable,
-      };
+      } as Partial<ClientInsert>;
 
       if (editingClient) {
         // Upload des nouveaux fichiers si fournis
