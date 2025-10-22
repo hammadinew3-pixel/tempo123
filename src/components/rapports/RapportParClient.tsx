@@ -92,14 +92,15 @@ export default function RapportParClient({ dateRange }: Props) {
             .in('contract_id', contractIds)
         : { data: [] };
 
-      // Charger également les paiements depuis la table revenus
-      const clientIds = allClients?.map((c: any) => c.id) || [];
-      const { data: revenusPayments } = clientIds.length > 0
+      // Charger également les paiements depuis la table revenus (filtrés par plage de dates)
+      const { data: revenusPayments } = contractIds.length > 0
         ? await supabase
             .from('revenus')
-            .select('client_id, contract_id, montant')
+            .select('client_id, contract_id, montant, date_encaissement')
             .eq('source_revenu', 'contrat')
-            .in('client_id', clientIds)
+            .in('contract_id', contractIds)
+            .gte('date_encaissement', dateRange.startDate)
+            .lte('date_encaissement', dateRange.endDate)
         : { data: [] };
 
       // Charger les véhicules pour les tarifs
