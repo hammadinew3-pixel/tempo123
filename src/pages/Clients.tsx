@@ -550,7 +550,10 @@ export default function Clients() {
                     <Label className="text-sm text-muted-foreground">Type client</Label>
                     <RadioGroup
                       value={formData.type}
-                      onValueChange={(value) => setFormData({ ...formData, type: value as any })}
+                      onValueChange={(value) => {
+                        console.log('Type changed to:', value);
+                        setFormData({ ...formData, type: value as 'particulier' | 'entreprise' });
+                      }}
                       className="flex gap-4"
                     >
                       <div className="flex items-center space-x-2">
