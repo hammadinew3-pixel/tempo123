@@ -16,6 +16,7 @@ interface DashboardStats {
   maintenanceVehicles: number;
   immobilizedVehicles: number;
   outOfServiceVehicles: number;
+  sousLocationVehicles: number;
   sinistresTotal: number;
   sinistresOuverts: number;
   sinistresEnCours: number;
@@ -39,6 +40,7 @@ export default function Dashboard() {
     maintenanceVehicles: 0,
     immobilizedVehicles: 0,
     outOfServiceVehicles: 0,
+    sousLocationVehicles: 0,
     sinistresTotal: 0,
     sinistresOuverts: 0,
     sinistresEnCours: 0,
@@ -238,6 +240,7 @@ export default function Dashboard() {
       const maintenanceVehicles = vehicles.filter(v => v.statut === 'en_panne' || v.statut === 'reserve').length;
       const immobilizedVehicles = vehicles.filter(v => v.statut === 'immobilise').length;
       const outOfServiceVehicles = vehicles.filter(v => v.en_service === false).length;
+      const sousLocationVehicles = vehicles.filter(v => v.type_vehicule === 'sous_location').length;
       const sinistres = sinistresRes.data || [];
       const sinistresTotal = sinistres.length;
       const sinistresOuverts = sinistres.filter(s => s.statut === 'ouvert').length;
@@ -252,6 +255,7 @@ export default function Dashboard() {
         maintenanceVehicles,
         immobilizedVehicles,
         outOfServiceVehicles,
+        sousLocationVehicles,
         sinistresTotal,
         sinistresOuverts,
         sinistresEnCours,
@@ -542,6 +546,15 @@ export default function Dashboard() {
                   </div>
                   <span className="text-sm font-medium text-foreground">
                     {stats.outOfServiceVehicles} ({stats.vehiclesCount > 0 ? (stats.outOfServiceVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-3 h-3 rounded-full bg-gray-500"></span>
+                    <span className="text-sm text-foreground">Sous location</span>
+                  </div>
+                  <span className="text-sm font-medium text-foreground">
+                    {stats.sousLocationVehicles} ({stats.vehiclesCount > 0 ? (stats.sousLocationVehicles / stats.vehiclesCount * 100).toFixed(0) : 0}%)
                   </span>
                 </div>
               </div>
