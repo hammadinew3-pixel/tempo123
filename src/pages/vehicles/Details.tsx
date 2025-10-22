@@ -810,8 +810,8 @@ export default function VehiculeDetails() {
         </Card>
       </div>
 
-      {/* Alerts Section */}
-      {alerts.length > 0 && <Card>
+      {/* Alerts Section - Masqué si sous-location */}
+      {vehicle.type_vehicule !== 'sous_location' && alerts.length > 0 && <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-warning">
@@ -1078,10 +1078,12 @@ export default function VehiculeDetails() {
                   <Label className="text-muted-foreground">Tarif journalier</Label>
                   <p className="font-medium mt-1">{vehicle.tarif_journalier.toFixed(2)} DH</p>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Valeur d'achat</Label>
-                  <p className="font-medium mt-1">{vehicle.valeur_achat?.toFixed(2) || '-'} DH</p>
-                </div>
+                {vehicle.type_vehicule !== 'sous_location' && (
+                  <div>
+                    <Label className="text-muted-foreground">Valeur d'achat</Label>
+                    <p className="font-medium mt-1">{vehicle.valeur_achat?.toFixed(2) || '-'} DH</p>
+                  </div>
+                )}
                 <div>
                   <Label className="text-muted-foreground">Kilométrage actuel</Label>
                   <p className="font-medium mt-1">{vehicle.kilometrage.toLocaleString()} km</p>
@@ -1445,7 +1447,8 @@ export default function VehiculeDetails() {
         </div>
       )}
 
-      {/* Section Traite Bancaire séparée */}
+      {/* Section Traite Bancaire séparée - Masqué si sous-location */}
+      {vehicle.type_vehicule !== 'sous_location' && (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -1635,6 +1638,7 @@ export default function VehiculeDetails() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Dialog for contracts list */}
       <Dialog open={showContractsList} onOpenChange={setShowContractsList}>
