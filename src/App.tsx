@@ -522,13 +522,7 @@ const App = () => (
             />
             <Route
               path="/location-facture-template"
-              element={
-                <ProtectedRoute>
-                  <SubscriptionGuard>
-                    <LocationFactureTemplate />
-                  </SubscriptionGuard>
-                </ProtectedRoute>
-              }
+              element={<LocationFactureTemplate />}
             />
             <Route
               path="/assistance-complet-template"
