@@ -116,14 +116,6 @@ export default function RapportParClient({ dateRange }: Props) {
         return acc;
       }, {} as Record<string, { tarif_journalier: number }>);
 
-      // Charger les assistances avec paiements
-      const { data: assistances } = await supabase
-        .from('assistance')
-        .select('client_id, montant_total, montant_paye')
-        .gte('date_debut', dateRange.startDate)
-        .lte('date_debut', dateRange.endDate)
-        .neq('etat', 'annule');
-
       // Calculer les statistiques par client
       const data: ClientData[] = allClients.map((client: any) => {
         // Contrats du client
@@ -160,25 +152,20 @@ export default function RapportParClient({ dateRange }: Props) {
           montant_paye_contrats += paymentSum + revenusSum;
         });
 
-        // Assistances du client
-        const clientAssistances = assistances?.filter(a => a.client_id === client.id) || [];
-        const montant_total_assistances = clientAssistances.reduce((sum, a) => sum + (a.montant_total || 0), 0);
-        const montant_paye_assistances = clientAssistances.reduce((sum, a) => sum + (a.montant_paye || 0), 0);
-
         return {
           id: client.id,
           nom_complet: `${client.nom} ${client.prenom || ''}`.trim(),
           type: client.type,
           telephone: client.telephone,
           nombre_contrats: clientContracts.length,
-          nombre_assistances: clientAssistances.length,
+          nombre_assistances: 0, // Toujours 0 - assistance facturée à l'assurance
           montant_total_contrats,
           montant_paye_contrats,
           montant_restant_contrats: Math.max(0, montant_total_contrats - montant_paye_contrats),
-          montant_total_assistances,
-          montant_paye_assistances,
+          montant_total_assistances: 0, // Toujours 0 - assistance facturée à l'assurance
+          montant_paye_assistances: 0, // Toujours 0 - assistance facturée à l'assurance
         };
-      }).filter(c => c.nombre_contrats > 0 || c.nombre_assistances > 0); // Seulement les clients avec activité
+      }).filter(c => c.nombre_contrats > 0); // Seulement les clients avec des contrats
 
       setClients(data);
       generateChartData(data);
@@ -204,23 +191,22 @@ export default function RapportParClient({ dateRange }: Props) {
   };
 
   const generateChartData = (data: ClientData[]) => {
-    // Top 10 clients par montant total
+    // Top 10 clients par montant total (uniquement contrats)
     const sorted = [...data]
-      .sort((a, b) => (b.montant_total_contrats + b.montant_total_assistances) - (a.montant_total_contrats + a.montant_total_assistances))
+      .sort((a, b) => b.montant_total_contrats - a.montant_total_contrats)
       .slice(0, 10);
 
     const chartData = sorted.map(client => ({
       nom: client.nom_complet,
       contrats: client.montant_total_contrats,
-      assistances: client.montant_total_assistances,
     }));
 
     setChartData(chartData);
   };
 
-  const getTotalMontant = () => filteredData.reduce((sum, c) => sum + c.montant_total_contrats + c.montant_total_assistances, 0);
-  const getTotalPaye = () => filteredData.reduce((sum, c) => sum + c.montant_paye_contrats + c.montant_paye_assistances, 0);
-  const getTotalRestant = () => filteredData.reduce((sum, c) => sum + c.montant_restant_contrats + (c.montant_total_assistances - c.montant_paye_assistances), 0);
+  const getTotalMontant = () => filteredData.reduce((sum, c) => sum + c.montant_total_contrats, 0);
+  const getTotalPaye = () => filteredData.reduce((sum, c) => sum + c.montant_paye_contrats, 0);
+  const getTotalRestant = () => filteredData.reduce((sum, c) => sum + c.montant_restant_contrats, 0);
 
   const exportReport = () => {
     const exportData = filteredData.map((c) => ({
@@ -228,12 +214,9 @@ export default function RapportParClient({ dateRange }: Props) {
       'Type': c.type,
       'Téléphone': c.telephone,
       'Nb Contrats': c.nombre_contrats,
-      'Nb Assistances': c.nombre_assistances,
-      'Total Contrats (DH)': c.montant_total_contrats.toFixed(2),
-      'Payé Contrats (DH)': c.montant_paye_contrats.toFixed(2),
-      'Reste Contrats (DH)': c.montant_restant_contrats.toFixed(2),
-      'Total Assistances (DH)': c.montant_total_assistances.toFixed(2),
-      'Payé Assistances (DH)': c.montant_paye_assistances.toFixed(2),
+      'Total (DH)': c.montant_total_contrats.toFixed(2),
+      'Payé (DH)': c.montant_paye_contrats.toFixed(2),
+      'Reste (DH)': c.montant_restant_contrats.toFixed(2),
     }));
     exportToExcel(exportData, 'rapport_par_client');
   };
@@ -306,7 +289,6 @@ export default function RapportParClient({ dateRange }: Props) {
               <Tooltip />
               <Legend />
               <Bar dataKey="contrats" fill="hsl(var(--primary))" name="Contrats (DH)" />
-              <Bar dataKey="assistances" fill="hsl(var(--chart-2))" name="Assistances (DH)" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -347,41 +329,33 @@ export default function RapportParClient({ dateRange }: Props) {
                   <TableHead>Type</TableHead>
                   <TableHead>Téléphone</TableHead>
                   <TableHead className="text-center">Contrats</TableHead>
-                  <TableHead className="text-center">Assistances</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Payé</TableHead>
                   <TableHead className="text-right">Reste</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredData.map((item) => {
-                  const totalGeneral = item.montant_total_contrats + item.montant_total_assistances;
-                  const payeGeneral = item.montant_paye_contrats + item.montant_paye_assistances;
-                  const restantGeneral = totalGeneral - payeGeneral;
-
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.nom_complet}</TableCell>
-                      <TableCell>
-                        <Badge variant={item.type === 'particulier' ? 'default' : 'secondary'}>
-                          {item.type === 'particulier' ? 'Particulier' : 'Entreprise'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{item.telephone}</TableCell>
-                      <TableCell className="text-center">{item.nombre_contrats}</TableCell>
-                      <TableCell className="text-center">{item.nombre_assistances}</TableCell>
-                      <TableCell className="text-right font-medium">
-                        {totalGeneral.toFixed(2)} DH
-                      </TableCell>
-                      <TableCell className="text-right text-green-600">
-                        {payeGeneral.toFixed(2)} DH
-                      </TableCell>
-                      <TableCell className="text-right text-orange-600">
-                        {restantGeneral.toFixed(2)} DH
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {filteredData.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.nom_complet}</TableCell>
+                    <TableCell>
+                      <Badge variant={item.type === 'particulier' ? 'default' : 'secondary'}>
+                        {item.type === 'particulier' ? 'Particulier' : 'Entreprise'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{item.telephone}</TableCell>
+                    <TableCell className="text-center">{item.nombre_contrats}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      {item.montant_total_contrats.toFixed(2)} DH
+                    </TableCell>
+                    <TableCell className="text-right text-green-600">
+                      {item.montant_paye_contrats.toFixed(2)} DH
+                    </TableCell>
+                    <TableCell className="text-right text-orange-600">
+                      {item.montant_restant_contrats.toFixed(2)} DH
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
