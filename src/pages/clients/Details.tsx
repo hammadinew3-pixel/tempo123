@@ -247,7 +247,7 @@ export default function ClientDetails() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/clients`)}
+                    onClick={() => navigate(`/clients?edit=${id}`)}
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     Modifier

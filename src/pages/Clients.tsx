@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Download, Plus, Mail, Phone, Edit, Trash2, ChevronDown, Upload, Calendar, Eye, Columns, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserRole } from "@/hooks/use-user-role";
@@ -27,6 +27,7 @@ type ClientInsert = Database['public']['Tables']['clients']['Insert'];
 
 export default function Clients() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isClientDialogOpen, setIsClientDialogOpen } = useLayoutContext();
   const { isAdmin, isAgent } = useUserRole();
   const [clients, setClients] = useState<Client[]>([]);
@@ -71,7 +72,13 @@ export default function Clients() {
 
   useEffect(() => {
     loadClients();
-  }, []);
+    
+    // Vérifier si on doit ouvrir le dialogue de modification
+    const editId = searchParams.get('edit');
+    if (editId) {
+      handleEditFromUrl(editId);
+    }
+  }, [searchParams]);
 
   // Synchronisation en temps réel avec debounce
   useRealtime<Client>({
@@ -115,6 +122,30 @@ export default function Clients() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditFromUrl = async (clientId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', clientId)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        openEditDialog(data);
+        // Supprimer le paramètre de l'URL
+        setSearchParams({});
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: 'Client introuvable',
+        variant: 'destructive',
+      });
+      setSearchParams({});
     }
   };
 
