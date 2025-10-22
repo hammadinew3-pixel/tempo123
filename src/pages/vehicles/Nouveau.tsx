@@ -49,6 +49,7 @@ export default function NouveauVehicule() {
     kilometrage: 0,
     statut: 'disponible',
     tarif_journalier: 0,
+    tarif_sous_location: 0,
     valeur_achat: 0,
     en_service: true,
     sous_location: false,
@@ -269,6 +270,17 @@ export default function NouveauVehicule() {
           </div>
         </div>
 
+        {/* Encart information pour sous-location */}
+        {formData.type_vehicule === 'sous_location' && (
+          <Alert className="bg-blue-900/20 border-blue-500/50">
+            <AlertCircle className="h-4 w-4 text-blue-400" />
+            <AlertDescription className="text-blue-200">
+              💡 Ce véhicule est en sous-location ; les coûts seront enregistrés automatiquement dans les dépenses.
+              Les alertes et documents techniques ne s'appliquent pas.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Main Form Fields */}
         <div className="grid grid-cols-2 gap-6">
           {/* Left Column */}
@@ -345,18 +357,58 @@ export default function NouveauVehicule() {
               </Select>
             </div>
 
+            {/* Tarif client (toujours affiché) */}
             <div className="space-y-2">
-              <Label htmlFor="valeur">Valeur d'achat (Prix TTC)</Label>
+              <Label htmlFor="tarif">Tarif journalier client (DH)</Label>
               <div className="relative">
-                <Input id="valeur" type="number" step="0.01" value={formData.valeur_achat || ''} onChange={e => setFormData({
-                ...formData,
-                valeur_achat: parseFloat(e.target.value) || 0
-              })} placeholder="0.00" />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  DH
-                </span>
+                <Input
+                  id="tarif"
+                  type="number"
+                  value={formData.tarif_journalier}
+                  onChange={e => setFormData({ ...formData, tarif_journalier: parseFloat(e.target.value) || 0 })}
+                  placeholder="Ex: 300"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">DH</span>
               </div>
             </div>
+
+            {/* Coût fournisseur (uniquement pour sous-location) */}
+            {formData.type_vehicule === 'sous_location' && (
+              <div className="space-y-2">
+                <Label htmlFor="tarif_sous_location" className="text-orange-400">
+                  Coût journalier de sous-location (DH) * <span className="text-xs">(Interne)</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="tarif_sous_location"
+                    type="number"
+                    value={formData.tarif_sous_location || 0}
+                    onChange={e => setFormData({ ...formData, tarif_sous_location: parseFloat(e.target.value) || 0 })}
+                    placeholder="Ex: 200"
+                    required
+                    className="border-orange-500/50"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">DH</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Ce coût ne sera jamais visible dans les contrats clients</p>
+              </div>
+            )}
+
+            {/* Valeur d'achat (masqué pour sous-location) */}
+            {formData.type_vehicule !== 'sous_location' && (
+              <div className="space-y-2">
+                <Label htmlFor="valeur">Valeur d'achat (Prix TTC)</Label>
+                <div className="relative">
+                  <Input id="valeur" type="number" step="0.01" value={formData.valeur_achat || ''} onChange={e => setFormData({
+                    ...formData,
+                    valeur_achat: parseFloat(e.target.value) || 0
+                  })} placeholder="0.00" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    DH
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="chassis">N° Châssis</Label>

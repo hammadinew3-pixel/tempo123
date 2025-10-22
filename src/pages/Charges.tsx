@@ -384,7 +384,7 @@ export default function Charges() {
                           <SelectItem value="assurance">Assurance</SelectItem>
                           <SelectItem value="amende">Amende</SelectItem>
                           <SelectItem value="reparation">Réparation</SelectItem>
-                          <SelectItem value="sous_location">Sous-location</SelectItem>
+                          <SelectItem value="sous_location">🤝 Sous-location</SelectItem>
                           <SelectItem value="autre">Autre</SelectItem>
                         </SelectContent>
                       </Select>

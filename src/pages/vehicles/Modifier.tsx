@@ -57,6 +57,7 @@ export default function ModifierVehicule() {
     categories: [] as any[],
     kilometrage: 0,
     tarif_journalier: 0,
+    tarif_sous_location: 0,
     valeur_achat: 0,
     statut: 'disponible' as VehicleStatus,
     photo_url: '',
@@ -112,6 +113,7 @@ export default function ModifierVehicule() {
         categories: data.categories || [],
         kilometrage: data.kilometrage || 0,
         tarif_journalier: data.tarif_journalier || 0,
+        tarif_sous_location: data.tarif_sous_location || 0,
         valeur_achat: data.valeur_achat || 0,
         statut: data.statut || 'disponible',
         photo_url: data.photo_url || '',
@@ -213,6 +215,7 @@ export default function ModifierVehicule() {
         categories: formData.categories,
         kilometrage: formData.kilometrage,
         tarif_journalier: formData.tarif_journalier,
+        tarif_sous_location: typeVehicule === 'sous_location' ? formData.tarif_sous_location : null,
         valeur_achat: formData.valeur_achat,
         statut: isInService ? formData.statut : 'en_panne' as VehicleStatus,
         en_service: isInService,
@@ -414,9 +417,9 @@ export default function ModifierVehicule() {
               </p>
             </div>
 
-            {/* Prix location */}
+            {/* Prix location client */}
             <div>
-              <Label htmlFor="tarif_journalier">Prix location *</Label>
+              <Label htmlFor="tarif_journalier">Prix location client (DH) *</Label>
               <div className="relative">
                 <Input id="tarif_journalier" type="number" value={formData.tarif_journalier} onChange={e => setFormData({
                 ...formData,
@@ -425,6 +428,31 @@ export default function ModifierVehicule() {
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
               </div>
             </div>
+
+            {/* Coût sous-location (uniquement si sous-location) */}
+            {typeVehicule === 'sous_location' && (
+              <div>
+                <Label htmlFor="tarif_sous_location" className="text-orange-400">
+                  Coût journalier de sous-location (DH) * <span className="text-xs">(Interne)</span>
+                </Label>
+                <div className="relative">
+                  <Input 
+                    id="tarif_sous_location" 
+                    type="number" 
+                    value={formData.tarif_sous_location || 0} 
+                    onChange={e => setFormData({
+                      ...formData,
+                      tarif_sous_location: parseFloat(e.target.value) || 0
+                    })} 
+                    required 
+                    disabled={isAgent}
+                    className="border-orange-500/50"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Ce coût ne sera jamais visible dans les contrats clients</p>
+              </div>
+            )}
 
             {/* Carburant */}
             <div>
@@ -460,17 +488,19 @@ export default function ModifierVehicule() {
               />
             </div>
 
-            {/* Valeur d'achat */}
-            <div>
-              <Label htmlFor="valeur_achat">Valeur d'achat (Prix TTC)</Label>
-              <div className="relative">
-                <Input id="valeur_achat" type="number" step="0.01" value={formData.valeur_achat} onChange={e => setFormData({
-                ...formData,
-                valeur_achat: parseFloat(e.target.value) || 0
-              })} disabled={isAgent} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
+            {/* Valeur d'achat (masqué pour sous-location) */}
+            {typeVehicule !== 'sous_location' && (
+              <div>
+                <Label htmlFor="valeur_achat">Valeur d'achat (Prix TTC)</Label>
+                <div className="relative">
+                  <Input id="valeur_achat" type="number" step="0.01" value={formData.valeur_achat} onChange={e => setFormData({
+                  ...formData,
+                  valeur_achat: parseFloat(e.target.value) || 0
+                })} disabled={isAgent} />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">DH</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* N° Châssis */}
             <div>

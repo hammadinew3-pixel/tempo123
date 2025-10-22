@@ -2282,6 +2282,7 @@ export type Database = {
           sous_location: boolean | null
           statut: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier: number | null
+          tarif_sous_location: number | null
           tenant_id: string
           type_vehicule: string | null
           updated_at: string | null
@@ -2317,6 +2318,7 @@ export type Database = {
           sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier?: number | null
+          tarif_sous_location?: number | null
           tenant_id: string
           type_vehicule?: string | null
           updated_at?: string | null
@@ -2352,6 +2354,7 @@ export type Database = {
           sous_location?: boolean | null
           statut?: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier?: number | null
+          tarif_sous_location?: number | null
           tenant_id?: string
           type_vehicule?: string | null
           updated_at?: string | null
