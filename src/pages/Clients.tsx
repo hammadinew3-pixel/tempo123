@@ -701,26 +701,41 @@ export default function Clients() {
                   </div>
                 </div>
 
-                {/* Sexe - pour tous les types */}
-                <div className="space-y-2">
-                  <Label>
-                    Sexe <span className="text-primary">*</span>
-                  </Label>
-                  <RadioGroup
-                    value={formData.sexe || 'homme'}
-                    onValueChange={(value) => setFormData({ ...formData, sexe: value })}
-                    className="flex gap-6"
-                    required
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="homme" id="homme" />
-                      <Label htmlFor="homme" className="font-normal cursor-pointer">Homme</Label>
+                {/* Sexe et Date de naissance */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>
+                      Sexe <span className="text-primary">*</span>
+                    </Label>
+                    <RadioGroup
+                      value={formData.sexe || 'homme'}
+                      onValueChange={(value) => setFormData({ ...formData, sexe: value })}
+                      className="flex gap-6"
+                      required
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="homme" id="homme" />
+                        <Label htmlFor="homme" className="font-normal cursor-pointer">Homme</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="femme" id="femme" />
+                        <Label htmlFor="femme" className="font-normal cursor-pointer">Femme</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date-naissance">Date de naissance</Label>
+                    <div className="relative">
+                      <Input
+                        id="date-naissance"
+                        type="date"
+                        value={formData.date_naissance || ''}
+                        onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
+                        className="border-input focus:border-primary transition-colors"
+                      />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="femme" id="femme" />
-                      <Label htmlFor="femme" className="font-normal cursor-pointer">Femme</Label>
-                    </div>
-                  </RadioGroup>
+                  </div>
                 </div>
 
                 {/* CIN pour tous */}
@@ -908,31 +923,16 @@ export default function Clients() {
                       Pièces jointes, N° passport, Email, Identifiant Fiscal, ...
                     </p>
 
-                    {/* Passport et Date de naissance */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="passport">N° Passport</Label>
-                        <Input
-                          id="passport"
-                          value={formData.passeport || ''}
-                          onChange={(e) => setFormData({ ...formData, passeport: e.target.value })}
-                          placeholder="N° Passport"
-                          className="border-input focus:border-primary transition-colors"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="date-naissance">Date de naissance</Label>
-                        <div className="relative">
-                          <Input
-                            id="date-naissance"
-                            type="date"
-                            value={formData.date_naissance || ''}
-                            onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
-                            className="border-input focus:border-primary transition-colors"
-                          />
-                          <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                        </div>
-                      </div>
+                    {/* Passport */}
+                    <div className="space-y-2">
+                      <Label htmlFor="passport">N° Passport</Label>
+                      <Input
+                        id="passport"
+                        value={formData.passeport || ''}
+                        onChange={(e) => setFormData({ ...formData, passeport: e.target.value })}
+                        placeholder="N° Passport"
+                        className="border-input focus:border-primary transition-colors"
+                      />
                     </div>
 
                     {/* Email et Adresse */}
