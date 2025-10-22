@@ -730,15 +730,17 @@ export default function VehiculeDetails() {
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Fiche véhicule Mat. N° {vehicle.immatriculation || vehicle.ww || 'N/A'}
         </h1>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={() => navigate(`/vehicules/${id}/modifier`)} className="bg-info hover:bg-info/90 text-white gap-2">
-            <Edit className="w-4 h-4" />
-            MODIFIER LE VÉHICULE
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={() => navigate(`/vehicules/${id}/modifier`)} size="sm" className="bg-info hover:bg-info/90 text-white h-8 md:h-9 text-xs md:text-sm">
+            <Edit className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline ml-2">MODIFIER</span>
+            <span className="sm:hidden ml-2">Modifier</span>
           </Button>
           {isAdmin && (
-            <Button onClick={() => setShowDeleteDialog(true)} variant="destructive" className="gap-2">
-              <AlertCircle className="w-4 h-4" />
-              SUPPRIMER LE VÉHICULE
+            <Button onClick={() => setShowDeleteDialog(true)} variant="destructive" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+              <AlertCircle className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="hidden sm:inline ml-2">SUPPRIMER</span>
+              <span className="sm:hidden ml-2">Suppr.</span>
             </Button>
           )}
         </div>

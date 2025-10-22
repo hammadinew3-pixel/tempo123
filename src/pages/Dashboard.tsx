@@ -389,12 +389,12 @@ export default function Dashboard() {
               <CardTitle className="text-base md:text-lg">Départs - Récupérations</CardTitle>
             </div>
             <CardDescription className="text-xs md:text-sm">Vos départs et retours prévus pour aujourd'hui</CardDescription>
-            <div className="flex space-x-4 md:space-x-8 mt-3 md:mt-4 overflow-x-auto">
-              <button onClick={() => setActiveTab('departures')} className={`pb-2 flex-shrink-0 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+            <div className="flex gap-2 md:gap-4 mt-3 md:mt-4 overflow-x-auto">
+              <button onClick={() => setActiveTab('departures')} className={`pb-2 flex-shrink-0 px-1 ${activeTab === 'departures' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
                 <span className="text-xs md:text-sm font-medium whitespace-nowrap">{departures.length.toString().padStart(2, '0')} Départs</span>
               </button>
-              <button onClick={() => setActiveTab('returns')} className={`pb-2 flex-shrink-0 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-                <span className="text-xs md:text-sm font-medium whitespace-nowrap">{returns.length.toString().padStart(2, '0')} Récupérations</span>
+              <button onClick={() => setActiveTab('returns')} className={`pb-2 flex-shrink-0 px-1 ${activeTab === 'returns' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+                <span className="text-xs md:text-sm font-medium whitespace-nowrap">{returns.length.toString().padStart(2, '0')} Récup.</span>
               </button>
             </div>
           </CardHeader>

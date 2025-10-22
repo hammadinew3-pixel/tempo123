@@ -366,13 +366,14 @@ export default function ClientDetails() {
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-8 md:h-9 text-xs md:text-sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       openEditDialog();
                     }}
                   >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Modifier
+                    <Edit className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline ml-2">Modifier</span>
                   </Button>
                 )}
                 {infoOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}

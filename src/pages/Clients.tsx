@@ -507,12 +507,12 @@ export default function Clients() {
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Liste des clients</h1>
           <p className="text-xs md:text-sm text-muted-foreground">Gérez votre base de clients</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1 md:gap-2 flex-wrap">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Columns className="w-4 h-4 mr-2" />
-                COLONNES
+              <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+                <Columns className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline ml-2">COLONNES</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64" align="end">
@@ -579,15 +579,15 @@ export default function Clients() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            FILTRER
+          <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+            <Filter className="w-3 h-3 md:w-4 md:h-4" />
+            <span className="hidden sm:inline ml-2">FILTRER</span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                EXPORTER
+              <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+                <Download className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline ml-2">EXPORTER</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -604,9 +604,9 @@ export default function Clients() {
           {(isAdmin || isAgent) && (
             <Dialog open={isClientDialogOpen} onOpenChange={(open) => { setIsClientDialogOpen(open); if (!open) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nouveau client
+                <Button size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+                  <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline ml-2">Nouveau</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

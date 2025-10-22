@@ -566,17 +566,17 @@ export default function Locations() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Liste des locations</h1>
-          <p className="text-sm text-muted-foreground">Gérez vos contrats de location</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Liste des locations</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Gérez vos contrats de location</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2 flex-wrap">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Columns className="w-4 h-4 mr-2" />
-                COLONNES
+              <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+                <Columns className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline ml-2">COLONNES</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64" align="end">
@@ -645,9 +645,9 @@ export default function Locations() {
           </Popover>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                FILTRER
+              <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+                <Filter className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline ml-2">FILTRER</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80" align="end">
@@ -701,9 +701,9 @@ export default function Locations() {
           </Popover>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                EXPORTER
+              <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+                <Download className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline ml-2">EXPORTER</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -717,13 +717,14 @@ export default function Locations() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
-            CHECK DISPONIBILITÉ
+          <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+            <span className="hidden sm:inline">CHECK DISPO</span>
+            <span className="sm:hidden">Dispo</span>
           </Button>
           {isAdmin && (
-            <Button size="sm" onClick={() => navigate('/locations/nouveau')}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau contrat
+            <Button size="sm" className="h-8 md:h-9 text-xs md:text-sm" onClick={() => navigate('/locations/nouveau')}>
+              <Plus className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="hidden sm:inline ml-2">Nouveau</span>
             </Button>
           )}
         </div>
