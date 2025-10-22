@@ -724,7 +724,9 @@ export default function Clients() {
                     </RadioGroup>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="date-naissance">Date de naissance</Label>
+                    <Label htmlFor="date-naissance">
+                      Date de naissance <span className="text-primary">*</span>
+                    </Label>
                     <div className="relative">
                       <Input
                         id="date-naissance"
@@ -732,6 +734,7 @@ export default function Clients() {
                         value={formData.date_naissance || ''}
                         onChange={(e) => setFormData({ ...formData, date_naissance: e.target.value })}
                         className="border-input focus:border-primary transition-colors"
+                        required
                       />
                       <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
@@ -873,7 +876,9 @@ export default function Clients() {
                 {/* Dates permis pour tous */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="date-delivrance">Date délivrance permis</Label>
+                    <Label htmlFor="date-delivrance">
+                      Date délivrance permis <span className="text-primary">*</span>
+                    </Label>
                     <div className="relative">
                       <Input
                         id="date-delivrance"
@@ -881,12 +886,15 @@ export default function Clients() {
                         value={formData.date_delivrance_permis || ''}
                         onChange={(e) => setFormData({ ...formData, date_delivrance_permis: e.target.value })}
                         className="border-input focus:border-primary transition-colors"
+                        required
                       />
                       <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="date-expiration">Date expiration permis</Label>
+                    <Label htmlFor="date-expiration">
+                      Date expiration permis <span className="text-primary">*</span>
+                    </Label>
                     <div className="relative">
                       <Input
                         id="date-expiration"
@@ -894,18 +902,22 @@ export default function Clients() {
                         value={formData.date_expiration_permis || ''}
                         onChange={(e) => setFormData({ ...formData, date_expiration_permis: e.target.value })}
                         className="border-input focus:border-primary transition-colors"
+                        required
                       />
                       <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="centre-delivrance">Centre de délivrance permis</Label>
+                    <Label htmlFor="centre-delivrance">
+                      Centre de délivrance permis <span className="text-primary">*</span>
+                    </Label>
                     <Input
                       id="centre-delivrance"
                       value={formData.centre_delivrance_permis || ''}
                       onChange={(e) => setFormData({ ...formData, centre_delivrance_permis: e.target.value })}
                       placeholder="Centre de délivrance"
                       className="border-input focus:border-primary transition-colors"
+                      required
                     />
                   </div>
                 </div>
