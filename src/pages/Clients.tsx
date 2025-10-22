@@ -31,6 +31,7 @@ export default function Clients() {
   const { isClientDialogOpen, setIsClientDialogOpen } = useLayoutContext();
   const { isAdmin, isAgent } = useUserRole();
   const [clients, setClients] = useState<Client[]>([]);
+  const [clientBalances, setClientBalances] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -42,6 +43,7 @@ export default function Clients() {
     telephone: true,
     email: true,
     adresse: true,
+    resteAPayer: true,
     createdAt: true,
   });
   const { toast } = useToast();
@@ -115,6 +117,28 @@ export default function Clients() {
 
       if (error) throw error;
       setClients(data || []);
+      
+      // Calculer le reste à payer pour chaque client
+      if (data && data.length > 0) {
+        const balances = new Map<string, number>();
+        
+        for (const client of data) {
+          // Récupérer les contrats du client
+          const { data: contracts } = await supabase
+            .from('contracts')
+            .select('id, total_amount, remaining_amount')
+            .eq('client_id', client.id);
+          
+          // Calculer le total restant à payer
+          const totalRemaining = (contracts || []).reduce((sum, contract) => {
+            return sum + (contract.remaining_amount || 0);
+          }, 0);
+          
+          balances.set(client.id, totalRemaining);
+        }
+        
+        setClientBalances(balances);
+      }
     } catch (error: any) {
       toast({
         title: 'Erreur',
@@ -496,6 +520,14 @@ export default function Clients() {
                       onCheckedChange={() => toggleColumn('adresse')}
                     />
                     <label htmlFor="col-adresse" className="text-sm cursor-pointer">Adresse</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="col-reste"
+                      checked={visibleColumns.resteAPayer}
+                      onCheckedChange={() => toggleColumn('resteAPayer')}
+                    />
+                    <label htmlFor="col-reste" className="text-sm cursor-pointer">Reste à payer</label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -999,6 +1031,7 @@ export default function Clients() {
                     {visibleColumns.telephone && <th className="pb-3 font-medium">Téléphone</th>}
                     {visibleColumns.email && <th className="pb-3 font-medium">Email</th>}
                     {visibleColumns.adresse && <th className="pb-3 font-medium">Adresse</th>}
+                    {visibleColumns.resteAPayer && <th className="pb-3 font-medium text-right">Reste à payer</th>}
                     {visibleColumns.createdAt && <th className="pb-3 font-medium">Créé le</th>}
                   </tr>
                 </thead>
@@ -1083,6 +1116,13 @@ export default function Clients() {
                       )}
                       {visibleColumns.adresse && (
                         <td className="py-4 text-foreground">{client.adresse || '-'}</td>
+                      )}
+                      {visibleColumns.resteAPayer && (
+                        <td className="py-4 text-right">
+                          <span className={`font-semibold ${(clientBalances.get(client.id) || 0) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                            {(clientBalances.get(client.id) || 0).toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH
+                          </span>
+                        </td>
                       )}
                       {visibleColumns.createdAt && (
                         <td className="py-4 text-foreground text-sm">
