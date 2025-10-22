@@ -365,14 +365,14 @@ export default function ContractTemplate() {
               </div>
               
               <div className="text-center">
-                <div className="h-12 mb-1"></div>
+                <div className="h-16 mb-1"></div>
                 <div className="border-t-2 border-black pt-1">
                   <strong className="text-[9pt]">Signature Locataire</strong>
                 </div>
               </div>
               
               <div className="text-center">
-                <div className="h-12 mb-1"></div>
+                <div className="h-16 mb-1"></div>
                 <div className="border-t-2 border-black pt-1">
                   <strong className="text-[9pt]">Signature 2ème Conducteur</strong>
                 </div>
