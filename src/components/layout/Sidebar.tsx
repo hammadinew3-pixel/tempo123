@@ -103,14 +103,13 @@ const getMainNavItems = (isAdmin: boolean, isAgent: boolean, modules: any): NavI
     icon: BarChart,
   });
 
-  // "Chèque", "Historique" et "Importer" masqués pour les agents
+  // "Chèque" et "Historique" masqués pour les agents
   if (!isAgent) {
     const insertIndex = items.findIndex(item => item.title === "Charges");
     if (insertIndex !== -1) {
       items.splice(insertIndex, 0, { title: "Chèque", href: "/cheques", icon: CreditCard });
     }
     items.push({ title: "Historique", href: "/historique", icon: Clock });
-    items.push({ title: "Importer", href: "/importer", icon: Upload });
   }
 
   return items;
