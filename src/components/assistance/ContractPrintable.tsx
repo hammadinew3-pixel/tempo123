@@ -161,13 +161,12 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
         <div className="mt-auto mb-3">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
-              <div className="h-12 mb-1 flex items-center justify-center">
+              <div className="h-12 mb-1 flex items-center justify-center overflow-visible">
                 {agenceSettings?.signature_agence_url && (
                   <img 
                     src={agenceSettings.signature_agence_url} 
                     alt="Signature agence" 
-                    className="max-h-12 w-auto object-contain"
-                    style={{ transform: 'scale(1.2)' }}
+                    style={{ height: '14.4px', width: 'auto', transform: 'scale(1.2)', transformOrigin: 'center' }}
                     crossOrigin="anonymous"
                   />
                 )}
@@ -188,7 +187,7 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
 
         {/* Footer */}
         {!agenceSettings?.masquer_pied_page && (
-          <div className="text-center text-[10pt] text-gray-600 mt-2 pt-2 border-t border-gray-400">
+          <div className="text-center text-[10pt] text-gray-600 mt-1 pt-2 border-t border-gray-400">
             {agenceSettings?.raison_sociale && <><strong>{agenceSettings.raison_sociale}</strong></>}
             {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
             {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
