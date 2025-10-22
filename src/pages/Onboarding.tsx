@@ -367,7 +367,7 @@ export default function Onboarding() {
               {currentStep === 1 && "Configurez votre agence en quelques étapes simples"}
               {currentStep === 2 && "Ajoutez les informations de contact et les documents de votre agence"}
               {currentStep === 3 && "Configurez les paramètres financiers et administratifs"}
-              {currentStep === 4 && "Consultez et acceptez les conditions générales"}
+              {currentStep === 4 && "Saisissez vos conditions générales de ventes ou utilisez notre modèle déjà prêt à l'emploi"}
             </CardDescription>
           </CardHeader>
 
