@@ -970,31 +970,40 @@ export default function VehiculeDetails() {
                     <span className="text-sm font-medium">En service</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Switch checked={vehicle.sous_location || false} onCheckedChange={async checked => {
-                    try {
-                      const {
-                        error
-                      } = await supabase.from('vehicles').update({
-                        sous_location: checked
-                      }).eq('id', vehicle.id);
-                      if (error) throw error;
-                      setVehicle({
-                        ...vehicle,
-                        sous_location: checked
-                      });
-                      toast({
-                        title: "Succès",
-                        description: `Véhicule ${checked ? 'en' : 'retiré de'} sous-location`
-                      });
-                    } catch (error: any) {
-                      toast({
-                        title: "Erreur",
-                        description: error.message,
-                        variant: "destructive"
-                      });
-                    }
-                  }} />
-                    <span className="text-sm font-medium">Sous location</span>
+                    <Switch 
+                      checked={vehicle.type_vehicule === 'sous_location'} 
+                      onCheckedChange={async (checked) => {
+                        try {
+                          const newType = checked ? 'sous_location' : 'proprietaire';
+                          const { error } = await supabase
+                            .from('vehicles')
+                            .update({ type_vehicule: newType })
+                            .eq('id', vehicle.id);
+                          
+                          if (error) throw error;
+                          
+                          setVehicle({
+                            ...vehicle,
+                            type_vehicule: newType
+                          });
+                          
+                          toast({
+                            title: "Succès",
+                            description: `Véhicule ${checked ? 'en' : 'retiré de'} sous-location`
+                          });
+                          
+                          // Reload to update visibility of tabs
+                          loadVehicle();
+                        } catch (error: any) {
+                          toast({
+                            title: "Erreur",
+                            description: error.message,
+                            variant: "destructive"
+                          });
+                        }
+                      }} 
+                    />
+                    <span className="text-sm font-medium">Sous-location</span>
                   </div>
                 </div>
               </div>
