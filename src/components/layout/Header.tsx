@@ -1,4 +1,5 @@
 import { Bell, LogOut, User, Plus, UserPlus, Car, FileText } from "lucide-react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -23,11 +24,15 @@ import { useTenantSettings } from "@/hooks/use-tenant-settings";
 
 export const Header = () => {
   const { user, signOut } = useAuth();
-  const { totalAlerts } = useAlertes();
+  const { totalAlerts, refreshAlerts } = useAlertes();
   const { role } = useUserRole();
   const navigate = useNavigate();
   const { setIsClientDialogOpen } = useLayoutContext();
   const { data: tenantSettings } = useTenantSettings();
+
+  useEffect(() => {
+    refreshAlerts();
+  }, []);
 
   return (
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-10">
