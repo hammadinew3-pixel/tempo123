@@ -564,92 +564,91 @@ export default function Clients() {
                     </RadioGroup>
                   </div>
 
-                  {formData.type === 'particulier' && (
-                    <div className="space-y-3">
-                      <Label className="text-sm text-muted-foreground">Sexe</Label>
-                      <RadioGroup
-                        value={formData.sexe || 'homme'}
-                        onValueChange={(value) => setFormData({ ...formData, sexe: value })}
-                        className="flex gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="homme" id="homme" />
-                          <Label htmlFor="homme" className="font-normal cursor-pointer">Homme</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="femme" id="femme" />
-                          <Label htmlFor="femme" className="font-normal cursor-pointer">Femme</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  )}
                 </div>
 
-                {/* Raison sociale et ICE pour entreprise */}
+                {/* Raison sociale et ICE pour entreprise uniquement */}
                 {formData.type === 'entreprise' && (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="raison-sociale">
-                          Raison sociale <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="raison-sociale"
-                          value={formData.raison_sociale || ''}
-                          onChange={(e) => setFormData({ ...formData, raison_sociale: e.target.value })}
-                          placeholder="Raison sociale"
-                          required
-                          className="border-input focus:border-primary transition-colors"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="ice">
-                          ICE <span className="text-primary">*</span>
-                        </Label>
-                        <Input
-                          id="ice"
-                          value={formData.ice || ''}
-                          onChange={(e) => setFormData({ ...formData, ice: e.target.value })}
-                          placeholder="Identifiant Commun de l'Entreprise"
-                          required
-                          className="border-input focus:border-primary transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Prénom et Nom pour particulier */}
-                {formData.type === 'particulier' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="prenom">
-                        Prénom <span className="text-primary">*</span>
+                      <Label htmlFor="raison-sociale">
+                        Raison sociale <span className="text-primary">*</span>
                       </Label>
                       <Input
-                        id="prenom"
-                        value={formData.prenom || ''}
-                        onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
-                        placeholder="Prénom"
+                        id="raison-sociale"
+                        value={formData.raison_sociale || ''}
+                        onChange={(e) => setFormData({ ...formData, raison_sociale: e.target.value })}
+                        placeholder="Raison sociale"
                         required
                         className="border-input focus:border-primary transition-colors"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="nom">
-                        Nom <span className="text-primary">*</span>
+                      <Label htmlFor="ice">
+                        ICE <span className="text-primary">*</span>
                       </Label>
                       <Input
-                        id="nom"
-                        value={formData.nom}
-                        onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                        placeholder="Nom"
+                        id="ice"
+                        value={formData.ice || ''}
+                        onChange={(e) => setFormData({ ...formData, ice: e.target.value })}
+                        placeholder="Identifiant Commun de l'Entreprise"
                         required
                         className="border-input focus:border-primary transition-colors"
                       />
                     </div>
                   </div>
                 )}
+
+                {/* Prénom et Nom - pour tous les types */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="prenom">
+                      Prénom <span className="text-primary">*</span>
+                    </Label>
+                    <Input
+                      id="prenom"
+                      value={formData.prenom || ''}
+                      onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+                      placeholder="Prénom"
+                      required
+                      className="border-input focus:border-primary transition-colors"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nom">
+                      Nom <span className="text-primary">*</span>
+                    </Label>
+                    <Input
+                      id="nom"
+                      value={formData.nom}
+                      onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                      placeholder="Nom"
+                      required
+                      className="border-input focus:border-primary transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Sexe - pour tous les types */}
+                <div className="space-y-2">
+                  <Label>
+                    Sexe <span className="text-primary">*</span>
+                  </Label>
+                  <RadioGroup
+                    value={formData.sexe || 'homme'}
+                    onValueChange={(value) => setFormData({ ...formData, sexe: value })}
+                    className="flex gap-6"
+                    required
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="homme" id="homme" />
+                      <Label htmlFor="homme" className="font-normal cursor-pointer">Homme</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="femme" id="femme" />
+                      <Label htmlFor="femme" className="font-normal cursor-pointer">Femme</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
 
                 {/* CIN pour tous */}
                 <div className="space-y-2">
