@@ -63,6 +63,7 @@ import Auth from "./pages/Auth";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
 import MonAbonnement from "./pages/MonAbonnement";
+import Onboarding from "./pages/Onboarding";
 
 import NotFound from "./pages/NotFound";
 import ContractTemplate from "./pages/ContractTemplate";
@@ -126,6 +127,14 @@ const App = () => (
             <Route path="/paiement" element={<Paiement />} />
             <Route path="/attente-validation" element={<AttenteValidation />} />
             <Route path="/admin/login" element={<LoginSuperAdmin />} />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
             
             <Route
               path="/"

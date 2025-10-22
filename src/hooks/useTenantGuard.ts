@@ -15,7 +15,7 @@ export function useTenantGuard() {
       if (!user || isSuperAdmin) return;
 
       // Routes qui ne nécessitent pas de vérification
-      const publicRoutes = ['/auth', '/register', '/choisir-pack', '/paiement', '/attente-validation', '/suspended', '/contact'];
+      const publicRoutes = ['/auth', '/register', '/choisir-pack', '/paiement', '/attente-validation', '/suspended', '/contact', '/onboarding'];
       if (publicRoutes.some(route => location.pathname.startsWith(route))) {
         return;
       }
@@ -50,9 +50,9 @@ export function useTenantGuard() {
 
         const tenant = userTenant.tenants as { id: string; status: string; is_active: boolean; onboarding_completed: boolean };
 
-        // Si tenant actif mais onboarding non terminé, forcer /parametres
-        if (tenant.is_active && !tenant.onboarding_completed && location.pathname !== '/parametres') {
-          navigate('/parametres', { replace: true });
+        // Si tenant actif mais onboarding non terminé, forcer /onboarding
+        if (tenant.is_active && !tenant.onboarding_completed && location.pathname !== '/onboarding') {
+          navigate('/onboarding', { replace: true });
           return;
         }
 

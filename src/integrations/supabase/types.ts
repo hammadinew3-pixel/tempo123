@@ -1707,6 +1707,7 @@ export type Database = {
           max_vehicles: number | null
           name: string
           onboarding_completed: boolean | null
+          onboarding_step: number | null
           plan_id: string | null
           slug: string
           status: string | null
@@ -1721,6 +1722,7 @@ export type Database = {
           max_vehicles?: number | null
           name: string
           onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           plan_id?: string | null
           slug: string
           status?: string | null
@@ -1735,6 +1737,7 @@ export type Database = {
           max_vehicles?: number | null
           name?: string
           onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           plan_id?: string | null
           slug?: string
           status?: string | null
