@@ -1885,7 +1885,7 @@ export default function AssistanceDetails() {
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-3 border-b">
                 <span className="text-sm text-muted-foreground">Montant facturé</span>
-                <span className="text-lg font-bold">{(assistance.montant_facture || 0).toFixed(2)} DH</span>
+                <span className="text-lg font-bold">{(assistance.montant_total || 0).toFixed(2)} DH</span>
               </div>
               
               <div className="flex justify-between items-center pb-3 border-b">
