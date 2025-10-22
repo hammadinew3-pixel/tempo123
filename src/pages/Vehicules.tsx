@@ -24,6 +24,7 @@ export default function Vehicules() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [reservedVehicleIds, setReservedVehicleIds] = useState<Set<string>>(new Set());
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20; // Pagination pour réduire la charge initiale
@@ -75,6 +76,7 @@ export default function Vehicules() {
   });
   useEffect(() => {
     loadVehicles();
+    loadReservedVehicles();
     loadAssurances();
   }, [currentPage]); // Recharger quand la page change
 
@@ -114,6 +116,22 @@ export default function Vehicules() {
       console.error('Error loading assurances:', error);
     }
   };
+  const loadReservedVehicles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('vehicle_id')
+        .eq('statut', 'brouillon');
+      
+      if (error) throw error;
+      
+      const vehicleIds = new Set((data || []).map(c => c.vehicle_id));
+      setReservedVehicleIds(vehicleIds);
+    } catch (error: any) {
+      console.error('Error loading reserved vehicles:', error);
+    }
+  };
+
   const loadVehicles = async () => {
     try {
       const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -321,7 +339,7 @@ export default function Vehicules() {
     // Pour les filtres de statut (disponible, loué, etc.), exclure les véhicules hors service
     if (filter === 'disponible' && (vehicle.statut !== 'disponible' || vehicle.en_service === false)) return false;
     if (filter === 'loue' && (vehicle.statut !== 'loue' || vehicle.en_service === false)) return false;
-    if (filter === 'reserve' && (vehicle.statut !== 'reserve' || vehicle.en_service === false)) return false;
+    if (filter === 'reserve' && ((vehicle.statut !== 'reserve' && !reservedVehicleIds.has(vehicle.id)) || vehicle.en_service === false)) return false;
     if (filter === 'en_panne' && (vehicle.statut !== 'en_panne' || vehicle.en_service === false)) return false;
     if (filter === 'immobilise' && (vehicle.statut !== 'immobilise' || vehicle.en_service === false)) return false;
 
@@ -451,7 +469,9 @@ export default function Vehicules() {
   const countSousLocation = vehicles.filter(v => v.type_vehicule === 'sous_location').length;
   const countDisponible = vehicles.filter(v => v.statut === 'disponible' && v.en_service !== false).length;
   const countLoue = vehicles.filter(v => v.statut === 'loue' && v.en_service !== false).length;
-  const countReserve = vehicles.filter(v => v.statut === 'reserve' && v.en_service !== false).length;
+  const countReserve = vehicles.filter(v => 
+    (v.statut === 'reserve' || reservedVehicleIds.has(v.id)) && v.en_service !== false
+  ).length;
   const countEnPanne = vehicles.filter(v => v.statut === 'en_panne' && v.en_service !== false).length;
   const countImmobilise = vehicles.filter(v => v.statut === 'immobilise' && v.en_service !== false).length;
   return <div className="space-y-4 md:space-y-6 p-3 md:p-6">
