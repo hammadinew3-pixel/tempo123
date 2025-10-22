@@ -188,7 +188,7 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
 
         {/* Footer */}
         {!agenceSettings?.masquer_pied_page && (
-          <div className="text-center text-[10pt] text-gray-600 mt-2 pt-2 border-t border-gray-400">
+          <div className="text-center text-[10pt] text-gray-600 mt-0 pt-1 border-t border-gray-400">
             {agenceSettings?.raison_sociale && <><strong>{agenceSettings.raison_sociale}</strong></>}
             {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
             {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
