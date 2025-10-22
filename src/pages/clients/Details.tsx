@@ -144,33 +144,8 @@ export default function ClientDetails() {
 
   const handleDownloadDocument = async (url: string, filename: string) => {
     try {
-      // Extraire le chemin du fichier depuis l'URL
-      const urlObj = new URL(url);
-      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/client-documents\/(.+)$/);
-      
-      if (!pathMatch) {
-        throw new Error('URL invalide');
-      }
-      
-      const filePath = pathMatch[1];
-      
-      // Télécharger le fichier depuis Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('client-documents')
-        .download(filePath);
-      
-      if (error) throw error;
-      if (!data) throw new Error('Fichier introuvable');
-      
-      // Créer un lien de téléchargement
-      const downloadUrl = window.URL.createObjectURL(data);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
+      await downloadFromSupabase(url, filename);
       
       toast({
         title: 'Succès',
@@ -493,7 +468,7 @@ export default function ClientDetails() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleDownloadDocument(client.cin_url, `CIN_${client.nom}_${client.prenom}.${client.cin_url.split('.').pop()}`)}
+                          onClick={() => handleDownloadDocument(client.cin_url, `CIN_${client.nom}_${client.prenom}`)}
                           className="gap-2"
                         >
                           <Download className="w-4 h-4" />
@@ -504,7 +479,7 @@ export default function ClientDetails() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}.${client.permis_url.split('.').pop()}`)}
+                        onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}`)}
                           className="gap-2"
                         >
                           <Download className="w-4 h-4" />
@@ -570,7 +545,7 @@ export default function ClientDetails() {
                     <div className="col-span-2">
                       <Button 
                         variant="outline"
-                        onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}.${client.permis_url.split('.').pop()}`)}
+                        onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}`)}
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Télécharger le document du permis

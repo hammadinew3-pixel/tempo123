@@ -900,32 +900,13 @@ export default function AssistanceDetails() {
   const handleDownloadOrdreMission = async () => {
     if (!assistance?.ordre_mission_url) return;
     try {
-      const info = extractBucketAndPath(assistance.ordre_mission_url);
-      if (!info) {
-        // Téléchargement direct
-        const link = document.createElement('a');
-        link.href = assistance.ordre_mission_url;
-        link.download = `ordre_mission_${assistance.num_dossier}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        return;
-      }
-      const { data, error } = await supabase.storage
-        .from(info.bucket)
-        .download(info.path);
-      if (error) throw error;
-      if (data) {
-        // Créer un blob et le télécharger
-        const url = URL.createObjectURL(data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `ordre_mission_${assistance.num_dossier}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }
+      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
+      await downloadFromSupabase(assistance.ordre_mission_url, `ordre_mission_${assistance.num_dossier}`);
+      
+      toast({
+        title: 'Succès',
+        description: 'Ordre de mission téléchargé',
+      });
     } catch (e) {
       console.error('Erreur lors du téléchargement:', e);
       toast({
@@ -938,39 +919,20 @@ export default function AssistanceDetails() {
 
   const handleDownloadClientDoc = async (docUrl: string, docType: string) => {
     try {
-      const info = extractBucketAndPath(docUrl);
-      if (!info) {
-        window.open(docUrl, '_blank');
-        return;
-      }
-      const { data, error } = await supabase.storage
-        .from(info.bucket)
-        .createSignedUrl(info.path, 300);
-      if (error) throw error;
-      if (data?.signedUrl) {
-        try {
-          const filename = info.path.split('/').pop() || `${docType}.pdf`;
-          const response = await fetch(data.signedUrl);
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-          toast({ title: 'Téléchargement', description: `${docType} téléchargé` });
-        } catch (e) {
-          console.error('Erreur téléchargement blob:', e);
-          window.open(data.signedUrl, '_blank');
-        }
-      } else {
-        window.open(docUrl, '_blank');
-      }
-    } catch (error: any) {
-      console.error('Erreur téléchargement:', error);
-      toast({ variant: 'destructive', title: 'Erreur', description: `Impossible de télécharger le ${docType}` });
+      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
+      await downloadFromSupabase(docUrl, docType);
+      
+      toast({ 
+        title: 'Succès',
+        description: `${docType} téléchargé` 
+      });
+    } catch (e) {
+      console.error('Erreur téléchargement:', e);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: `Impossible de télécharger ${docType}`,
+      });
     }
   };
 

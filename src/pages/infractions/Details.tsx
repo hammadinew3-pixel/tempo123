@@ -162,58 +162,19 @@ export default function InfractionDetails() {
         return;
       }
 
-      const urlParts = file.file_url.split('/storage/v1/object/public/');
-      const urlPath = file.file_url.split('/').pop() || '';
-      const extension = urlPath.includes('.') ? '.' + urlPath.split('.').pop() : '';
+      // Pour les autres types de fichiers, utiliser la fonction de téléchargement
+      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
+      await downloadFromSupabase(file.file_url, file.file_name);
       
-      let fileName = file.file_name;
-      if (extension && !fileName.endsWith(extension)) {
-        fileName = fileName + extension;
-      }
-
-      if (urlParts.length === 2) {
-        const [bucket, ...pathParts] = urlParts[1].split('/');
-        const filePath = pathParts.join('/');
-        
-        const { data, error } = await supabase.storage
-          .from(bucket)
-          .download(filePath);
-        
-        if (error) throw error;
-        
-        if (data) {
-          const url = URL.createObjectURL(data);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }
-      } else {
-        const response = await fetch(file.file_url);
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }
-
       toast({
         title: "Succès",
-        description: "Document téléchargé avec succès",
+        description: "Fichier téléchargé avec succès",
       });
     } catch (error: any) {
-      console.error('Download error:', error);
       toast({
-        variant: "destructive",
         title: "Erreur",
-        description: error.message || "Erreur lors du téléchargement",
+        description: error.message || "Impossible de télécharger le fichier",
+        variant: "destructive",
       });
     }
   };

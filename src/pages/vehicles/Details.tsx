@@ -1186,7 +1186,7 @@ export default function VehiculeDetails() {
                               {insurance.photo_url ? <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  onClick={() => handleDownloadDocument(insurance.photo_url, `assurance_${insurance.numero_ordre}.pdf`)}
+                                  onClick={() => handleDownloadDocument(insurance.photo_url, `assurance_${insurance.numero_ordre}`)}
                                 >
                                   <Download className="w-4 h-4" />
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
@@ -1247,7 +1247,7 @@ export default function VehiculeDetails() {
                               {inspection.photo_url ? <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  onClick={() => handleDownloadDocument(inspection.photo_url, `visite_technique_${inspection.numero_ordre}.pdf`)}
+                                  onClick={() => handleDownloadDocument(inspection.photo_url, `visite_technique_${inspection.numero_ordre}`)}
                                 >
                                   <Download className="w-4 h-4" />
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
@@ -1314,7 +1314,7 @@ export default function VehiculeDetails() {
                               {vignette.photo_url ? <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  onClick={() => handleDownloadDocument(vignette.photo_url, `vignette_${vignette.annee}.pdf`)}
+                                  onClick={() => handleDownloadDocument(vignette.photo_url, `vignette_${vignette.annee}`)}
                                 >
                                   <Download className="w-4 h-4" />
                                 </Button> : <span className="text-muted-foreground text-xs">-</span>}
@@ -1384,7 +1384,7 @@ export default function VehiculeDetails() {
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  onClick={() => handleDownloadDocument(autorisation.photo_url, `autorisation_${autorisation.numero_ordre}.pdf`)}
+                                  onClick={() => handleDownloadDocument(autorisation.photo_url, `autorisation_${autorisation.numero_ordre}`)}
                                 >
                                   <Download className="w-4 h-4" />
                                 </Button>
