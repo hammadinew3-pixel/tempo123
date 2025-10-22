@@ -137,8 +137,8 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
             <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
               <strong className="text-[10pt]">ÉTAT DU VÉHICULE</strong>
             </div>
-            <div className="p-2 flex items-center justify-center min-h-40">
-              <img src={vehicleInspectionDiagram} alt="Schéma inspection" className="w-full h-auto max-h-36 object-contain" />
+            <div className="p-2 flex items-center justify-center min-h-[165px]">
+              <img src={vehicleInspectionDiagram} alt="Schéma inspection" className="w-full h-auto max-h-[145px] object-contain" />
             </div>
           </div>
 
@@ -146,7 +146,7 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
             <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
               <strong className="text-[10pt]">OBSERVATIONS</strong>
             </div>
-            <div className="p-2 text-[9pt] min-h-40">
+            <div className="p-2 text-[9pt] min-h-[165px]">
               {assistance.etat_vehicule_depart || assistance.remarques || ''}
             </div>
           </div>

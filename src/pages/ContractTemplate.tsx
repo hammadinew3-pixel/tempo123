@@ -322,7 +322,7 @@ export default function ContractTemplate() {
                 <strong className="text-[10pt]">ÉTAT DU VÉHICULE</strong>
               </div>
               <div className="p-2 flex items-center justify-center">
-                <img src={vehicleInspectionDiagram} alt="Schéma inspection" className="w-full h-auto max-h-24 object-contain" />
+                <img src={vehicleInspectionDiagram} alt="Schéma inspection" className="w-full h-auto max-h-[125px] object-contain" />
               </div>
             </div>
 
@@ -330,7 +330,7 @@ export default function ContractTemplate() {
               <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
                 <strong className="text-[10pt]">OBSERVATIONS</strong>
               </div>
-              <div className="p-2 text-[9pt] min-h-24">
+              <div className="p-2 text-[9pt] min-h-[125px]">
                 {contract.delivery_notes || contract.notes || ''}
               </div>
             </div>
