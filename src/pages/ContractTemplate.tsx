@@ -353,7 +353,7 @@ export default function ContractTemplate() {
                     <img 
                       src={agenceSettings.signature_agence_url} 
                       alt="Signature agence" 
-                      style={{ height: '14.4px', width: 'auto', transform: 'scale(1.2)', transformOrigin: 'center' }}
+                      style={{ height: '14.4px', width: 'auto', transform: 'scale(2)', transformOrigin: 'center' }}
                       crossOrigin="anonymous"
                     />
                   )}
