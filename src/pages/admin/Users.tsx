@@ -1,9 +1,21 @@
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users as UsersIcon, Building, Shield } from "lucide-react";
+import { Users as UsersIcon, Building, Shield, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -35,6 +47,8 @@ interface UserWithTenant {
 export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [tenantFilter, setTenantFilter] = useState<string>("all");
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -94,6 +108,35 @@ export default function AdminUsers() {
       return data || [];
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { userId }
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Utilisateur supprimé avec succès");
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setUserToDelete(null);
+    },
+    onError: (error: any) => {
+      console.error('Error deleting user:', error);
+      toast.error(error.message || "Erreur lors de la suppression de l'utilisateur");
+    },
+  });
+
+  const handleDelete = (userId: string) => {
+    setUserToDelete(userId);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      deleteMutation.mutate(userToDelete);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
@@ -162,6 +205,7 @@ export default function AdminUsers() {
                 <TableHead className="text-gray-600 font-semibold">Agence</TableHead>
                 <TableHead className="text-center text-gray-600 font-semibold">Rôle</TableHead>
                 <TableHead className="text-center text-gray-600 font-semibold">Statut</TableHead>
+                <TableHead className="text-center text-gray-600 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -204,6 +248,17 @@ export default function AdminUsers() {
                       {user.actif ? 'Actif' : 'Inactif'}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(user.id)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -224,6 +279,29 @@ export default function AdminUsers() {
           {tenantFilter !== "all" && ` - ${tenants.find(t => t.id === tenantFilter)?.name}`}
         </p>
       </Card>
+
+      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <AlertDialogContent className="bg-white border-gray-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-black">Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
+              Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible et supprimera toutes les données associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white border-gray-300 text-black hover:bg-gray-50">
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteMutation.isPending ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
