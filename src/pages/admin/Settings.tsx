@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Save, Globe, Bell, FileText, Building2 } from "lucide-react";
+import { Settings as SettingsIcon, Save, Globe, Bell, FileText, Building2, Shield } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,9 @@ export default function AdminSettings() {
   const queryClient = useQueryClient();
   const [settings, setSettings] = useState<SuperAdminSettings | null>(null);
   const [bankSettings, setBankSettings] = useState<BankSettings | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ['super-admin-settings'],
@@ -126,6 +129,39 @@ export default function AdminSettings() {
   const handleSaveBank = () => {
     if (bankSettings) {
       updateBankMutation.mutate(bankSettings);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error("Tous les champs sont requis");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success("Mot de passe modifié avec succès");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast.error("Erreur: " + error.message);
     }
   };
 
@@ -238,6 +274,56 @@ export default function AdminSettings() {
             className="bg-white border-gray-300 text-black mt-2"
           />
           <p className="text-sm text-gray-500 mt-2">Les logs plus anciens seront automatiquement supprimés</p>
+        </div>
+      </Card>
+
+      {/* Security & Authentication */}
+      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Shield className="h-5 w-5 text-[#c01533]" />
+          <h2 className="text-xl font-semibold text-black">Sécurité & Authentification</h2>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="current_password" className="text-gray-700 font-medium">Mot de passe actuel</Label>
+            <Input
+              id="current_password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="bg-white border-gray-300 text-black mt-2"
+              placeholder="••••••••"
+            />
+          </div>
+          <div>
+            <Label htmlFor="new_password" className="text-gray-700 font-medium">Nouveau mot de passe</Label>
+            <Input
+              id="new_password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="bg-white border-gray-300 text-black mt-2"
+              placeholder="••••••••"
+            />
+            <p className="text-sm text-gray-500 mt-1">Minimum 8 caractères</p>
+          </div>
+          <div>
+            <Label htmlFor="confirm_password" className="text-gray-700 font-medium">Confirmer le nouveau mot de passe</Label>
+            <Input
+              id="confirm_password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="bg-white border-gray-300 text-black mt-2"
+              placeholder="••••••••"
+            />
+          </div>
+          <Button
+            onClick={handleChangePassword}
+            className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
+          >
+            Changer le mot de passe
+          </Button>
         </div>
       </Card>
 

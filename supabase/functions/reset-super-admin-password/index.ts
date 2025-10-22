@@ -80,10 +80,6 @@ serve(async (req) => {
       // Générer un code OTP à 6 chiffres
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
-      
-      // 🔐 [DEV ONLY] Log temporaire pour afficher l'OTP dans les logs
-      console.log('🔐 [DEV ONLY] Generated OTP for', email, ':', otp);
-      console.log('⏰ [DEV ONLY] OTP expires at:', expiresAt);
 
       // Sauvegarder le token
       const { error: tokenError } = await supabaseAdmin
