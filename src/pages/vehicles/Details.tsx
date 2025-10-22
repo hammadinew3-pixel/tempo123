@@ -185,7 +185,7 @@ export default function VehiculeDetails() {
       }));
     }
   }, [vehicle]);
-  const handleDownloadDocument = async (url: string, filename: string) => {
+  const handleDownloadDocument = async (url: string, filename?: string) => {
     try {
       // Extract the file path from the URL
       const urlParts = url.split('/storage/v1/object/public/');
@@ -215,11 +215,27 @@ export default function VehiculeDetails() {
         throw new Error('Fichier introuvable');
       }
       
-      // Create a download link with proper content type
+      // Determine correct file extension from MIME type or path
+      const mimeToExt: Record<string, string> = {
+        'application/pdf': 'pdf',
+        'image/png': 'png',
+        'image/jpeg': 'jpg',
+        'image/jpg': 'jpg',
+        'image/webp': 'webp',
+        'image/heic': 'heic',
+        'image/heif': 'heif'
+      };
+      const pathExt = filePath.includes('.') ? filePath.split('.').pop()! : '';
+      const inferredExt = mimeToExt[data.type] || pathExt || 'bin';
+      const baseNameFromPath = filePath.split('/').pop()?.replace(/\.[^/.]+$/, '') || 'document';
+      const baseName = filename ? filename.replace(/\.[^/.]+$/, '') : baseNameFromPath;
+      const finalName = `${baseName}.${inferredExt}`;
+      
+      // Create a download link
       const downloadUrl = window.URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = filename;
+      link.download = finalName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
