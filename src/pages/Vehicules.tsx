@@ -70,7 +70,8 @@ export default function Vehicules() {
     kilometrage: 0,
     statut: 'disponible',
     tarif_journalier: 0,
-    valeur_achat: 0
+    valeur_achat: 0,
+    type_vehicule: 'proprietaire'
   });
   useEffect(() => {
     loadVehicles();
@@ -241,7 +242,8 @@ export default function Vehicules() {
       kilometrage: 0,
       statut: 'disponible',
       tarif_journalier: 0,
-      valeur_achat: 0
+      valeur_achat: 0,
+      type_vehicule: 'proprietaire'
     });
     setEditingVehicle(null);
   };
@@ -276,6 +278,17 @@ export default function Vehicules() {
     return <Badge variant="outline" className={`${styles[status]} font-medium`}>
         {labels[status]}
       </Badge>;
+  };
+
+  const getTypeVehiculeBadge = (vehicle: Vehicle) => {
+    if (vehicle.type_vehicule === 'sous_location') {
+      return <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 font-medium">
+        🤝 Sous-location
+      </Badge>;
+    }
+    return <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 font-medium">
+      Propriétaire
+    </Badge>;
   };
   const needsOilChange = (vehicle: Vehicle) => {
     // Si un prochain kilométrage est défini, utiliser celui-ci
@@ -708,6 +721,21 @@ export default function Vehicules() {
                   })} />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="type_vehicule">Type de véhicule *</Label>
+                    <Select value={formData.type_vehicule} onValueChange={value => setFormData({
+                    ...formData,
+                    type_vehicule: value as any
+                  })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="proprietaire">✅ Véhicule propriétaire</SelectItem>
+                        <SelectItem value="sous_location">🤝 Véhicule en sous-location</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="statut">Statut</Label>
                     <Select value={formData.statut} onValueChange={value => setFormData({
                     ...formData,
@@ -835,8 +863,9 @@ export default function Vehicules() {
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
+                          {getTypeVehiculeBadge(vehicle)}
                           {getStatusBadge(vehicle)}
-                          {needsOilChange(vehicle) && <Badge variant="outline" className={`${getOilChangeAlertLevel(vehicle) === 'critical' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-orange-500/10 text-orange-600 border-orange-500/20'} text-xs`}>
+                          {vehicle.type_vehicule !== 'sous_location' && needsOilChange(vehicle) && <Badge variant="outline" className={`${getOilChangeAlertLevel(vehicle) === 'critical' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-orange-500/10 text-orange-600 border-orange-500/20'} text-xs`}>
                               🛠️ Vidange
                             </Badge>}
                         </div>
@@ -950,8 +979,9 @@ export default function Vehicules() {
                         {visibleColumns.etat && (
                           <td className="py-4">
                             <div className="flex flex-col gap-1">
+                              {getTypeVehiculeBadge(vehicle)}
                               {getStatusBadge(vehicle)}
-                              {needsOilChange(vehicle) && <Badge variant="outline" className={`${getOilChangeAlertLevel(vehicle) === 'critical' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-orange-500/10 text-orange-600 border-orange-500/20'} text-xs`}>
+                              {vehicle.type_vehicule !== 'sous_location' && needsOilChange(vehicle) && <Badge variant="outline" className={`${getOilChangeAlertLevel(vehicle) === 'critical' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 'bg-orange-500/10 text-orange-600 border-orange-500/20'} text-xs`}>
                                   🛠️ Vidange à faire
                                 </Badge>}
                             </div>

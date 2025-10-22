@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -109,6 +110,8 @@ export default function LocationDetails() {
     nouvelle_date_fin: '',
     raison: '',
   });
+
+  const [sousLocationExpense, setSousLocationExpense] = useState<any>(null);
 
   useEffect(() => {
     loadContractData();
@@ -252,6 +255,20 @@ export default function LocationDetails() {
 
       if (availableError) throw availableError;
       setAvailableVehicles(availableData || []);
+
+      // Load sous-location expense if vehicle is sous-loué
+      if ((contractData.vehicles as any)?.type_vehicule === 'sous_location') {
+        const { data: expenseData, error: expenseError } = await supabase
+          .from("expenses")
+          .select("*")
+          .eq("contract_id", id)
+          .eq("type_depense", "sous_location")
+          .single();
+
+        if (!expenseError && expenseData) {
+          setSousLocationExpense(expenseData);
+        }
+      }
 
     } catch (error: any) {
       console.error("Erreur chargement:", error);
@@ -1249,6 +1266,29 @@ export default function LocationDetails() {
             </CollapsibleContent>
           </Collapsible>
         </Card>
+
+        {/* Note si véhicule sous-loué */}
+        {(contract?.vehicles as any)?.type_vehicule === 'sous_location' && (
+          <Alert className="bg-primary/5 border-primary/20">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  💡 <strong>Véhicule en sous-location</strong> - Une dépense de sous-location a été générée automatiquement.
+                </div>
+                {sousLocationExpense && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/charges')}
+                  >
+                    Voir la dépense
+                  </Button>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Info de livraison + Conducteurs */}
         <Card>

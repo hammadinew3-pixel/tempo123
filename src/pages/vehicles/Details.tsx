@@ -1048,6 +1048,20 @@ export default function VehiculeDetails() {
                   </p>
                 </div>
                 <div>
+                  <Label className="text-muted-foreground">Type de véhicule</Label>
+                  <div className="mt-1">
+                    {vehicle.type_vehicule === 'sous_location' ? (
+                      <Badge variant="outline" className="bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20 font-medium">
+                        🤝 Sous-location
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 font-medium">
+                        Propriétaire
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div>
                   <Label className="text-muted-foreground">Statut</Label>
                   <Badge variant={statusVariant} className="mt-1">{statusBadge}</Badge>
                 </div>
@@ -1118,30 +1132,31 @@ export default function VehiculeDetails() {
       </Card>
 
 
-      {/* Documents Véhicule Section */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-primary" />
-            Documents véhicule
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="assurance" className="w-full">
-            <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-transparent p-0">
-              <TabsTrigger value="assurance" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                ASSURANCE
-              </TabsTrigger>
-              <TabsTrigger value="visite" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                VISITE TECHNIQUE
-              </TabsTrigger>
-              <TabsTrigger value="vignette" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                VIGNETTE
-              </TabsTrigger>
-              <TabsTrigger value="autorisation" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                AUTORISATION
-              </TabsTrigger>
-            </TabsList>
+      {/* Documents Véhicule Section - Masqué si sous-location */}
+      {vehicle.type_vehicule !== 'sous_location' && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              Documents véhicule
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="assurance" className="w-full">
+              <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-transparent p-0">
+                <TabsTrigger value="assurance" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                  ASSURANCE
+                </TabsTrigger>
+                <TabsTrigger value="visite" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                  VISITE TECHNIQUE
+                </TabsTrigger>
+                <TabsTrigger value="vignette" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                  VIGNETTE
+                </TabsTrigger>
+                <TabsTrigger value="autorisation" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                  AUTORISATION
+                </TabsTrigger>
+              </TabsList>
 
             <TabsContent value="assurance" className="mt-6">
               <div className="space-y-4">
@@ -1411,17 +1426,20 @@ export default function VehiculeDetails() {
           </Tabs>
         </CardContent>
       </Card>
+      )}
 
-      {/* Maintenance & Interventions Section - NEW */}
-      <div id="maintenance-section">
-        <VehicleMaintenanceSummary
-          vehicleId={vehicle.id}
-          currentKm={vehicle.kilometrage}
-          dateLastVidange={vehicle.date_derniere_vidange}
-          kmLastVidange={vehicle.dernier_kilometrage_vidange}
-          nextKmVidange={vehicle.prochain_kilometrage_vidange}
-        />
-      </div>
+      {/* Maintenance & Interventions Section - Masqué si sous-location */}
+      {vehicle.type_vehicule !== 'sous_location' && (
+        <div id="maintenance-section">
+          <VehicleMaintenanceSummary
+            vehicleId={vehicle.id}
+            currentKm={vehicle.kilometrage}
+            dateLastVidange={vehicle.date_derniere_vidange}
+            kmLastVidange={vehicle.dernier_kilometrage_vidange}
+            nextKmVidange={vehicle.prochain_kilometrage_vidange}
+          />
+        </div>
+      )}
 
       {/* Section Traite Bancaire séparée */}
       <Card>

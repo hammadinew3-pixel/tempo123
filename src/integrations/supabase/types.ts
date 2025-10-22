@@ -2283,6 +2283,7 @@ export type Database = {
           statut: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier: number | null
           tenant_id: string
+          type_vehicule: string | null
           updated_at: string | null
           valeur_achat: number | null
           vignette_expire_le: string | null
@@ -2317,6 +2318,7 @@ export type Database = {
           statut?: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier?: number | null
           tenant_id: string
+          type_vehicule?: string | null
           updated_at?: string | null
           valeur_achat?: number | null
           vignette_expire_le?: string | null
@@ -2351,6 +2353,7 @@ export type Database = {
           statut?: Database["public"]["Enums"]["vehicle_status"] | null
           tarif_journalier?: number | null
           tenant_id?: string
+          type_vehicule?: string | null
           updated_at?: string | null
           valeur_achat?: number | null
           vignette_expire_le?: string | null

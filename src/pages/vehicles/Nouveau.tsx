@@ -57,7 +57,8 @@ export default function NouveauVehicule() {
     concessionnaire: '',
     puissance_fiscale: undefined,
     nombre_places: undefined,
-    date_mise_en_circulation: ''
+    date_mise_en_circulation: '',
+    type_vehicule: 'proprietaire'
   });
   const [carburant, setCarburant] = useState<string>('diesel');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -239,7 +240,7 @@ export default function NouveauVehicule() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Toggles */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex items-center gap-3">
             <Switch checked={formData.en_service} onCheckedChange={checked => setFormData({
             ...formData,
@@ -250,18 +251,19 @@ export default function NouveauVehicule() {
             </Label>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <Switch checked={formData.sous_location} onCheckedChange={checked => setFormData({
+            <Label htmlFor="type_vehicule">Type de véhicule *</Label>
+            <Select value={formData.type_vehicule} onValueChange={value => setFormData({
               ...formData,
-              sous_location: checked
-            })} id="sous-location" />
-              <Label htmlFor="sous-location" className="text-base font-normal cursor-pointer">
-                Voiture sous location
-              </Label>
-            </div>
-            <p className="text-xs text-muted-foreground ml-11">
-              Indiquez si la voiture appartient à une autre agence et que vous utilisez en sous location
-            </p>
+              type_vehicule: value as any
+            })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="proprietaire">✅ Véhicule propriétaire</SelectItem>
+                <SelectItem value="sous_location">🤝 Véhicule en sous-location</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

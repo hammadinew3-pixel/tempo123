@@ -70,7 +70,7 @@ export default function ModifierVehicule() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isInService, setIsInService] = useState(true);
-  const [isSousLocation, setIsSousLocation] = useState(false);
+  const [typeVehicule, setTypeVehicule] = useState<'proprietaire' | 'sous_location'>('proprietaire');
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [assistanceCategories, setAssistanceCategories] = useState<string[]>([]);
   useEffect(() => {
@@ -123,7 +123,7 @@ export default function ModifierVehicule() {
         couleur: data.couleur || ''
       });
       setIsInService(data.en_service ?? true);
-      setIsSousLocation(data.sous_location ?? false);
+      setTypeVehicule((data.type_vehicule || 'proprietaire') as 'proprietaire' | 'sous_location');
 
       // Set available models based on the vehicle's brand
       if (data.marque && MARQUES_MODELES[data.marque]) {
@@ -216,7 +216,7 @@ export default function ModifierVehicule() {
         valeur_achat: formData.valeur_achat,
         statut: isInService ? formData.statut : 'en_panne' as VehicleStatus,
         en_service: isInService,
-        sous_location: isSousLocation,
+        type_vehicule: typeVehicule,
         carburant: formData.carburant,
         numero_chassis: formData.chassis,
         nombre_places: formData.places,
@@ -277,14 +277,17 @@ export default function ModifierVehicule() {
               <Switch checked={isInService} onCheckedChange={setIsInService} disabled={isAgent} />
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-              <div className="flex-1 mr-3">
-                <Label className="text-sm md:text-base font-semibold">Voiture sous location</Label>
-                <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                  Indiquez si la voiture appartient à une autre agence et que vous utilisez en sous-location
-                </p>
-              </div>
-              <Switch checked={isSousLocation} onCheckedChange={setIsSousLocation} disabled={isAgent} />
+            <div className="p-3 bg-muted/30 rounded-lg">
+              <Label className="text-sm md:text-base font-semibold mb-2 block">Type de véhicule</Label>
+              <Select value={typeVehicule} onValueChange={(value: any) => setTypeVehicule(value)} disabled={isAgent}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="proprietaire">✅ Véhicule propriétaire</SelectItem>
+                  <SelectItem value="sous_location">🤝 Véhicule en sous-location</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
