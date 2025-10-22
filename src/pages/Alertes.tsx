@@ -280,18 +280,18 @@ const Alertes = () => {
 
   const loadChequeAlerts = async () => {
     // Load checks that are near their due dates or overdue
-    const { data: payments } = await supabase
-      .from("contract_payments")
-      .select("*, contracts(numero_contrat, clients(nom, prenom))")
-      .eq("methode", "cheque")
-      .order("date_paiement", { ascending: true });
+    const { data: cheques } = await supabase
+      .from("cheques")
+      .select("*, clients(nom, prenom), contracts(numero_contrat)")
+      .in("statut", ["en_attente", "encours"])
+      .order("date_echeance", { ascending: true });
 
-    if (payments) {
-      const alerteChequeJours = tenantSettings?.alerte_cheque_jours || 30;
-      const alerts = payments.filter((payment) => {
-        const daysFromPayment = differenceInDays(new Date(), parseISO(payment.date_paiement));
-        // Alert if check is older than configured days (might need to be cashed)
-        return daysFromPayment > alerteChequeJours;
+    if (cheques) {
+      const alerteChequeJours = tenantSettings?.alerte_cheque_jours || 7;
+      const alerts = cheques.filter((cheque) => {
+        const daysUntilDue = differenceInDays(parseISO(cheque.date_echeance), new Date());
+        // Alert if check is due within configured days or overdue
+        return daysUntilDue <= alerteChequeJours;
       });
       setChequeAlerts(alerts);
     }
@@ -574,20 +574,45 @@ const Alertes = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {chequeAlerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="flex items-center justify-between p-4 bg-warning/10 rounded-lg border border-warning/20 hover:bg-warning/20 transition-colors"
-                    >
-                      <span className="text-sm font-medium">
-                        Chèque n°{alert.numero_cheque} du contrat{" "}
-                        {alert.contracts?.numero_contrat}
-                      </span>
-                      <Button size="sm" className="bg-warning hover:bg-warning/90 text-white">
-                        ENCAISSER
-                      </Button>
-                    </div>
-                  ))}
+                  {chequeAlerts.map((cheque) => {
+                    const daysUntilDue = differenceInDays(parseISO(cheque.date_echeance), new Date());
+                    const isOverdue = daysUntilDue < 0;
+                    
+                    return (
+                      <div
+                        key={cheque.id}
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                          isOverdue 
+                            ? 'bg-destructive/10 border-destructive/20 hover:bg-destructive/20' 
+                            : 'bg-warning/10 border-warning/20 hover:bg-warning/20'
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">
+                            Chèque n°{cheque.numero_cheque} - {cheque.montant?.toFixed(2)} DH
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {isOverdue 
+                              ? `Échéance dépassée de ${Math.abs(daysUntilDue)} jour(s) - ${new Date(cheque.date_echeance).toLocaleDateString("fr-FR")}`
+                              : `Échéance dans ${daysUntilDue} jour(s) - ${new Date(cheque.date_echeance).toLocaleDateString("fr-FR")}`
+                            }
+                          </span>
+                          {cheque.type_cheque === 'recu' && cheque.clients && (
+                            <span className="text-xs text-muted-foreground">
+                              Client: {cheque.clients.nom} {cheque.clients.prenom}
+                            </span>
+                          )}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          className={isOverdue ? "bg-destructive hover:bg-destructive/90" : "bg-warning hover:bg-warning/90"}
+                          onClick={() => navigate('/cheques')}
+                        >
+                          {isOverdue ? 'URGENT' : 'VOIR'}
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </AccordionContent>

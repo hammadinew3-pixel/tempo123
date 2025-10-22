@@ -57,14 +57,14 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
       const vehicleIds = vehicles.map(v => v.id);
       const today = new Date().toISOString().split("T")[0];
 
-      // Execute ALL queries in parallel (7 queries instead of 4 per vehicle)
+      // Execute ALL queries in parallel
       const [
         allInsurances,
         allInspections,
         allVignettes,
         departsToday,
         returnsToday,
-        checkPayments,
+        chequesData,
         allTraites
       ] = await Promise.all([
         supabase.from("vehicle_insurance").select("*").in("vehicle_id", vehicleIds),
@@ -72,7 +72,7 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
         supabase.from("vehicle_vignette").select("*").in("vehicle_id", vehicleIds),
         supabase.from("contracts").select("id").eq("date_debut", today).in("statut", ["contrat_valide", "brouillon"]),
         supabase.from("contracts").select("id").eq("date_fin", today).eq("statut", "livre"),
-        supabase.from("contract_payments").select("id, date_paiement").eq("methode", "cheque"),
+        supabase.from("cheques").select("id, date_echeance").in("statut", ["en_attente", "encours"]),
         supabase.from("vehicules_traites_echeances").select("vehicle_id, date_echeance").eq("statut", "À payer").in("vehicle_id", vehicleIds)
       ]);
 
@@ -123,13 +123,14 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
       // Contract alerts are not included in the header notification count
       // They are displayed separately in the Dashboard reservations widget
 
-      // Check old payments
-      if (checkPayments.data) {
-        const checkAlerts = checkPayments.data.filter((payment: any) => {
-          const daysFromPayment = differenceInDays(new Date(), parseISO(payment.date_paiement));
-          return daysFromPayment > alerteChequeJours;
+      // Check cheques near due date or overdue
+      if (chequesData.data) {
+        const chequeAlerts = chequesData.data.filter((cheque: any) => {
+          const daysUntilDue = differenceInDays(parseISO(cheque.date_echeance), new Date());
+          // Count if due within configured days or overdue
+          return daysUntilDue <= alerteChequeJours;
         });
-        count += checkAlerts.length;
+        count += chequeAlerts.length;
       }
 
       // Check traites bancaires
