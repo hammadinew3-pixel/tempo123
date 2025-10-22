@@ -103,7 +103,7 @@ export default function LoginSuperAdmin() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="email" className="text-sm text-gray-700 font-medium block mb-2">
-                Email
+                Email *
               </label>
               <Input
                 id="email"
@@ -120,7 +120,7 @@ export default function LoginSuperAdmin() {
             
             <div>
               <label htmlFor="password" className="text-sm text-gray-700 font-medium block mb-2">
-                Mot de passe
+                Mot de passe *
               </label>
               <Input
                 id="password"

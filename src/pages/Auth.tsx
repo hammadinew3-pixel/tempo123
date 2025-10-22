@@ -47,7 +47,7 @@ export default function Auth() {
         <CardContent>
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -58,7 +58,7 @@ export default function Auth() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">Mot de passe *</Label>
               <Input
                 id="password"
                 type="password"
