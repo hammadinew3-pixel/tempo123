@@ -98,7 +98,7 @@ export default function Parametres() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('tenant_settings')
+        .from('agence_settings')
         .select('*')
         .single();
 
@@ -195,7 +195,7 @@ export default function Parametres() {
     try {
       setSaving(true);
       const { error } = await supabase
-        .from('tenant_settings')
+        .from('agence_settings')
         .update(updates)
         .eq('id', settings?.id);
 
