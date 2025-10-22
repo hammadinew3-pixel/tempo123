@@ -21,6 +21,7 @@ interface DashboardStats {
   sinistresEnCours: number;
   sinistresClos: number;
 }
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const {
@@ -28,7 +29,7 @@ export default function Dashboard() {
   } = useTenantPlan();
   const [lastDashboardLoad, setLastDashboardLoad] = useState<Date | null>(null);
   const DASHBOARD_CACHE = 30 * 1000; // 30 secondes de cache
-
+  
   const [stats, setStats] = useState<DashboardStats>({
     vehiclesCount: 0,
     reservationsCount: 0,
@@ -208,10 +209,11 @@ export default function Dashboard() {
   };
   const loadDashboardData = async () => {
     // Cache check - ne recharge pas si chargé récemment
-    if (lastDashboardLoad && Date.now() - lastDashboardLoad.getTime() < DASHBOARD_CACHE) {
+    if (lastDashboardLoad && (Date.now() - lastDashboardLoad.getTime() < DASHBOARD_CACHE)) {
       console.log('[Dashboard] Using cached data');
       return;
     }
+
     try {
       // Execute ALL main queries in parallel
       const [vehiclesCountRes, vehiclesRes, contractsCountRes, clientsCountRes, reservationsRes, sinistresRes, assistanceRes] = await Promise.all([supabase.from('vehicles').select('*', {
@@ -260,6 +262,7 @@ export default function Dashboard() {
 
       // Load departures and returns
       await loadDeparturesAndReturns();
+      
       setLastDashboardLoad(new Date());
       console.log('[Dashboard] Data refreshed and cached');
     } catch (error) {
@@ -268,6 +271,7 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
   const chartData = [{
     month: 'Août\n2025',
     revenus: 1500,
@@ -281,6 +285,7 @@ export default function Dashboard() {
     revenus: 6000,
     charges: 400
   }];
+
   return <div className="w-full">
       <div className="p-6">
         {/* Stats Cards */}
@@ -372,10 +377,12 @@ export default function Dashboard() {
           {/* Left column: Alerts and Departures-Returns */}
           <div className="lg:col-span-2 space-y-6">
             {/* Alerts Section */}
-            
+            <Card className="border-l-4 border-l-warning shadow-sm hover:shadow-md transition-shadow">
+              
+            </Card>
 
             {/* Departures - Returns Section */}
-            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+            <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow h-full">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-5 h-5 text-primary" />
@@ -412,15 +419,30 @@ export default function Dashboard() {
                         </div>
                       </td>
                     </tr> : (activeTab === 'departures' ? departures : returns).map(item => <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50">
-                        <td className="py-4 font-medium text-foreground">
-                          
+                        <td className="py-4">
+                          <Link 
+                            to={item.type === 'assistance' ? `/assistance/${item.id}` : `/locations/${item.id}`}
+                            className="font-medium text-primary hover:underline"
+                          >
+                            {item.type === 'assistance' ? item.num_dossier : item.numero_contrat}
+                          </Link>
                         </td>
-                        <td className="py-4 text-foreground">
-                          {item.vehicles?.marque} {item.vehicles?.modele}
-                          <div className="text-xs text-muted-foreground">{item.vehicles?.immatriculation}</div>
+                        <td className="py-4">
+                          <Link 
+                            to={`/vehicules/${item.vehicle_id}`}
+                            className="text-foreground hover:text-primary hover:underline"
+                          >
+                            {item.vehicles?.marque} {item.vehicles?.modele}
+                            <div className="text-xs text-muted-foreground">{item.vehicles?.immatriculation}</div>
+                          </Link>
                         </td>
-                        <td className="py-4 text-foreground">
-                          {item.clients?.nom} {item.clients?.prenom}
+                        <td className="py-4">
+                          <Link 
+                            to={`/clients/${item.client_id}`}
+                            className="text-foreground hover:text-primary hover:underline"
+                          >
+                            {item.clients?.nom} {item.clients?.prenom}
+                          </Link>
                         </td>
                       </tr>)}
                 </tbody>
@@ -431,7 +453,7 @@ export default function Dashboard() {
           </div>
 
           {/* Fleet Status */}
-          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
+          <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow h-full">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Car className="w-5 h-5 text-primary" />
