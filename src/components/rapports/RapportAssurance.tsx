@@ -75,13 +75,16 @@ export default function RapportAssurance({ dateRange }: Props) {
             .select('*')
             .eq('assureur_id', assurance.id)
             .gte('date_debut', dateRange.startDate)
-            .lte('date_fin', dateRange.endDate);
+            .lte('date_debut', dateRange.endDate);
 
           const nb_dossiers_ouverts = assistances?.filter(a => a.etat === 'en_cours').length || 0;
           const nb_dossiers_clos = assistances?.filter(a => a.etat === 'termine').length || 0;
 
-          // Calcul des montants
-          const total_facture = assistances?.reduce((sum, a) => sum + (a.montant_facture || 0), 0) || 0;
+          // Calcul des montants - utiliser montant_total (ou montant_facture si rempli)
+          const total_facture = assistances?.reduce((sum, a) => {
+            const montant = a.montant_facture || a.montant_total || 0;
+            return sum + montant;
+          }, 0) || 0;
           const total_paye = assistances?.reduce((sum, a) => sum + (a.montant_paye || 0), 0) || 0;
           const total_attente = total_facture - total_paye;
 
