@@ -1,10 +1,65 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AttenteValidation() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Écouter les changements de statut du tenant en temps réel
+    const checkAndSubscribe = async () => {
+      // Récupérer le tenant actuel de l'utilisateur
+      const { data: userTenant } = await supabase
+        .from('user_tenants')
+        .select('tenant_id, tenants!inner(id, status, is_active)')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!userTenant) return;
+
+      const tenant = userTenant.tenants as { id: string; status: string; is_active: boolean };
+
+      // Si déjà actif, rediriger immédiatement
+      if (tenant.status === 'active' && tenant.is_active) {
+        navigate('/parametres', { replace: true });
+        return;
+      }
+
+      // Sinon, écouter les changements
+      const channel = supabase
+        .channel(`tenant-status-${tenant.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tenants',
+            filter: `id=eq.${tenant.id}`
+          },
+          (payload) => {
+            const newTenant = payload.new as { status: string; is_active: boolean };
+            if (newTenant.status === 'active' && newTenant.is_active) {
+              navigate('/parametres', { replace: true });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    checkAndSubscribe();
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
