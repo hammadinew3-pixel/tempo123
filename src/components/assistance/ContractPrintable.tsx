@@ -97,7 +97,7 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
             <div className="p-3 space-y-1 text-[9pt]">
               <div><strong>Départ:</strong> {assistance.date_debut ? format(new Date(assistance.date_debut), 'dd/MM/yyyy') : ''}</div>
               <div><strong>Retour:</strong> {assistance.date_fin ? format(new Date(assistance.date_fin), 'dd/MM/yyyy') : ''}</div>
-              <div><strong>Durée:</strong> {Math.ceil((new Date(assistance.date_fin || new Date()).getTime() - new Date(assistance.date_debut).getTime()) / (1000 * 60 * 60 * 24))} jour(s)</div>
+              <div><strong>Durée:</strong> {Math.floor((new Date(assistance.date_fin || new Date()).getTime() - new Date(assistance.date_debut).getTime()) / (1000 * 60 * 60 * 24))} jour(s)</div>
             </div>
           </div>
         </div>

@@ -135,7 +135,7 @@ export default function ContractTemplate() {
   const calculateDuration = (start: string, end: string) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
-    return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   };
   
   const duration = contract.duration || calculateDuration(contract.date_debut, contract.date_fin);

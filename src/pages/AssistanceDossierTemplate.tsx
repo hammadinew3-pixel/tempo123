@@ -91,7 +91,7 @@ export default function AssistanceDossierTemplate() {
   const vehicleName = `${assistance.vehicles?.marque || ''} ${assistance.vehicles?.modele || ''}`.trim();
   const startDate = new Date(assistance.date_debut);
   const endDate = assistance.date_fin ? new Date(assistance.date_fin) : new Date();
-  const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {

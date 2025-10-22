@@ -10,7 +10,7 @@ export function normalizeDateStr(dateStr: string): Date {
 export function daysBetweenInclusive(start: string, end: string): number {
   const s = normalizeDateStr(start);
   const e = normalizeDateStr(end);
-  return Math.ceil((e.getTime() - s.getTime()) / DAY_MS);
+  return Math.floor((e.getTime() - s.getTime()) / DAY_MS);
 }
 
 export function computeChangeAmounts(params: {
@@ -24,8 +24,8 @@ export function computeChangeAmounts(params: {
   const endDate = normalizeDateStr(params.end);
   const changeDate = normalizeDateStr(params.change);
 
-  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / DAY_MS);
-  const daysOld = Math.floor((changeDate.getTime() - startDate.getTime()) / DAY_MS) + 1; // include change day for old vehicle
+  const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / DAY_MS);
+  const daysOld = Math.floor((changeDate.getTime() - startDate.getTime()) / DAY_MS);
   const daysNew = totalDays - daysOld;
 
   const amountOld = Math.max(0, daysOld) * (params.oldRate || 0);

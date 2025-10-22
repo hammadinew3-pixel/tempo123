@@ -109,7 +109,7 @@ export default function NouveauAssistance() {
     if (!bareme) return;
 
     const days = dateFin && dateDebut 
-      ? Math.ceil((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / (1000 * 60 * 60 * 24)) 
+      ? Math.floor((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / (1000 * 60 * 60 * 24)) 
       : 1;
 
     const tarif = Number(bareme.tarif_journalier);
