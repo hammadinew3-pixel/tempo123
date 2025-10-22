@@ -83,6 +83,11 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
 
       // Calculate alerts in memory
       for (const vehicle of vehicles) {
+        // Ignorer les véhicules en sous-location
+        if (vehicle.type_vehicule === 'sous_location') {
+          continue;
+        }
+        
         const insurance = latestInsurances[vehicle.id];
         const inspection = latestInspections[vehicle.id];
         const vignette = latestVignettes[vehicle.id];

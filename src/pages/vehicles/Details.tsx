@@ -533,6 +533,12 @@ export default function VehiculeDetails() {
 
   const getAlerts = () => {
     const alerts = [];
+    
+    // Si véhicule en sous-location, ne pas générer d'alertes
+    if (vehicle.type_vehicule === 'sous_location') {
+      return [];
+    }
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -746,8 +752,18 @@ export default function VehiculeDetails() {
         </div>
       </div>
 
+      {/* Badge sous-location */}
+      {vehicle.type_vehicule === 'sous_location' && (
+        <Alert className="bg-gray-500/10 border-gray-500/30">
+          <AlertCircle className="h-4 w-4 text-gray-600" />
+          <AlertDescription className="text-gray-700 dark:text-gray-300">
+            <strong>🤝 Véhicule en sous-location</strong> — Les alertes et documents techniques (assurance, vignette, visite technique) ne s'appliquent pas à ce véhicule.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Alertes Documents */}
-      {alerts.length > 0}
+      {alerts.length > 0 && vehicle.type_vehicule !== 'sous_location'}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1078,10 +1094,12 @@ export default function VehiculeDetails() {
                   <Label className="text-muted-foreground">Tarif journalier</Label>
                   <p className="font-medium mt-1">{vehicle.tarif_journalier.toFixed(2)} DH</p>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Valeur d'achat</Label>
-                  <p className="font-medium mt-1">{vehicle.valeur_achat?.toFixed(2) || '-'} DH</p>
-                </div>
+                {vehicle.type_vehicule !== 'sous_location' && (
+                  <div>
+                    <Label className="text-muted-foreground">Valeur d'achat</Label>
+                    <p className="font-medium mt-1">{vehicle.valeur_achat?.toFixed(2) || '-'} DH</p>
+                  </div>
+                )}
                 <div>
                   <Label className="text-muted-foreground">Kilométrage actuel</Label>
                   <p className="font-medium mt-1">{vehicle.kilometrage.toLocaleString()} km</p>
@@ -1106,29 +1124,31 @@ export default function VehiculeDetails() {
                   <Label className="text-muted-foreground">Nombre de places</Label>
                   <p className="font-medium mt-1">{vehicle.nombre_places || '-'}</p>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Dernière vidange</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="font-medium">
-                      {vehicle.date_derniere_vidange ? safeFormatDate(vehicle.date_derniere_vidange, 'dd/MM/yyyy', { locale: fr }) : 'Non renseignée'}
-                    </p>
-                    {(() => {
-                      if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
-                        const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
-                        if (kmUntilOilChange <= 300) {
-                          return <Badge variant="destructive" className="ml-2">
-                            {kmUntilOilChange <= 0 ? 'Vidange en retard' : 'Vidange critique'}
-                          </Badge>;
-                        } else if (kmUntilOilChange <= 1000) {
-                          return <Badge className="ml-2 bg-warning text-warning-foreground">Vidange urgente</Badge>;
+                {vehicle.type_vehicule !== 'sous_location' && (
+                  <div>
+                    <Label className="text-muted-foreground">Dernière vidange</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="font-medium">
+                        {vehicle.date_derniere_vidange ? safeFormatDate(vehicle.date_derniere_vidange, 'dd/MM/yyyy', { locale: fr }) : 'Non renseignée'}
+                      </p>
+                      {(() => {
+                        if (vehicle.kilometrage && vehicle.prochain_kilometrage_vidange) {
+                          const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
+                          if (kmUntilOilChange <= 300) {
+                            return <Badge variant="destructive" className="ml-2">
+                              {kmUntilOilChange <= 0 ? 'Vidange en retard' : 'Vidange critique'}
+                            </Badge>;
+                          } else if (kmUntilOilChange <= 1000) {
+                            return <Badge className="ml-2 bg-warning text-warning-foreground">Vidange urgente</Badge>;
+                          }
+                        } else if (!vehicle.dernier_kilometrage_vidange) {
+                          return <Badge variant="outline" className="ml-2">Aucune vidange</Badge>;
                         }
-                      } else if (!vehicle.dernier_kilometrage_vidange) {
-                        return <Badge variant="outline" className="ml-2">Aucune vidange</Badge>;
-                      }
-                      return null;
-                    })()}
+                        return null;
+                      })()}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -1445,7 +1465,8 @@ export default function VehiculeDetails() {
         </div>
       )}
 
-      {/* Section Traite Bancaire séparée */}
+      {/* Section Traite Bancaire séparée - Masquée si sous-location */}
+      {vehicle.type_vehicule !== 'sous_location' && (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -1635,6 +1656,7 @@ export default function VehiculeDetails() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Dialog for contracts list */}
       <Dialog open={showContractsList} onOpenChange={setShowContractsList}>
