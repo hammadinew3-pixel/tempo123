@@ -54,13 +54,14 @@ export default function DemandesAbonnement() {
       planId: string;
     }) => {
       if (action === 'approve') {
-        // 1. Activer le tenant
+        // 1. Activer le tenant et forcer l'onboarding
         const { error: tenantError } = await supabase
           .from('tenants')
           .update({ 
             is_active: true, 
             status: 'active',
-            plan_id: planId
+            plan_id: planId,
+            onboarding_completed: false
           })
           .eq('id', tenantId);
 
@@ -105,7 +106,7 @@ export default function DemandesAbonnement() {
       toast({
         title: action === 'approve' ? "✅ Abonnement validé" : "❌ Demande rejetée",
         description: action === 'approve' 
-          ? "Le tenant peut maintenant accéder à l'application." 
+          ? "L'agence doit compléter son onboarding dans Paramètres." 
           : "Le tenant a été informé du rejet.",
       });
     },

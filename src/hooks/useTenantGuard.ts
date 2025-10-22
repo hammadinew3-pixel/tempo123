@@ -29,7 +29,8 @@ export function useTenantGuard() {
             tenants!inner (
               id,
               status,
-              is_active
+              is_active,
+              onboarding_completed
             )
           `)
           .eq('user_id', user.id)
@@ -47,7 +48,13 @@ export function useTenantGuard() {
           return;
         }
 
-        const tenant = userTenant.tenants as { id: string; status: string; is_active: boolean };
+        const tenant = userTenant.tenants as { id: string; status: string; is_active: boolean; onboarding_completed: boolean };
+
+        // Si tenant actif mais onboarding non terminé, forcer /parametres
+        if (tenant.is_active && !tenant.onboarding_completed && location.pathname !== '/parametres') {
+          navigate('/parametres', { replace: true });
+          return;
+        }
 
         // Rediriger selon le statut du tenant
         switch (tenant.status) {
