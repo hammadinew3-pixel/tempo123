@@ -79,7 +79,8 @@ export default function LocationFactureTemplate() {
             vehicles (
               immatriculation,
               marque,
-              modele
+              modele,
+              tarif_journalier
             )
           `)
           .eq('id', contractId)
@@ -88,17 +89,17 @@ export default function LocationFactureTemplate() {
         if (error) throw error;
 
         if (contractData) {
-          // Mapper les champs de la base de données vers l'interface Contract
+          // Mapper les champs de la base de données vers l'interface Contract avec fallbacks
           const mappedContract: Contract = {
             id: contractData.id,
             numero_contrat: contractData.numero_contrat,
             date_debut: contractData.date_debut,
             date_fin: contractData.date_fin,
-            tarif_journalier: contractData.daily_rate,
-            caution: contractData.caution_montant || 0,
-            montant_total: contractData.total_amount,
-            avance: contractData.advance_payment || 0,
-            remaining_amount: contractData.remaining_amount || 0,
+            tarif_journalier: contractData.daily_rate ?? contractData.vehicles?.tarif_journalier ?? 0,
+            caution: contractData.caution_montant ?? 0,
+            montant_total: contractData.total_amount ?? 0,
+            avance: contractData.advance_payment ?? 0,
+            remaining_amount: contractData.remaining_amount ?? 0,
             clients: contractData.clients,
             vehicles: contractData.vehicles,
           };

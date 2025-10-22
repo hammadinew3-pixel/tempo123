@@ -114,7 +114,8 @@ function calculateDuration(dateDebut: string, dateFin: string): number {
 
 export default function InvoicePrintable({ contract, settings }: Props) {
   const duration = calculateDuration(contract.date_debut, contract.date_fin);
-  const montantLocation = duration * contract.tarif_journalier;
+  const tj = Number(contract.tarif_journalier || 0);
+  const montantLocation = duration * tj;
   const tvaTaux = settings?.tva_taux || 0;
   const montantHT = montantLocation;
   const montantTVA = montantHT * (tvaTaux / 100);
@@ -191,7 +192,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
           <tr className="border-b border-gray-300">
             <td className="p-3">Location véhicule</td>
             <td className="p-3 text-center">{duration} jour{duration > 1 ? 's' : ''}</td>
-            <td className="p-3 text-right">{contract.tarif_journalier.toFixed(2)} DH</td>
+            <td className="p-3 text-right">{tj.toFixed(2)} DH</td>
             <td className="p-3 text-right font-semibold">{montantLocation.toFixed(2)} DH</td>
           </tr>
           {contract.caution > 0 && (

@@ -29,18 +29,20 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Générer l'URL du template de facture
-    // Utiliser l'URL Lovable pour accéder au template
-    const templateUrl = `https://32923ba1-bb0f-4cee-9b16-6c46841649d6.lovableproject.com/location-facture-template?id=${contractId}&print=true`;
+    // Générer l'URL du template de facture dynamiquement
+    const origin = req.headers.get('origin') || 
+                   req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 
+                   'https://32923ba1-bb0f-4cee-9b16-6c46841649d6.lovableproject.com';
+    const templateUrl = `${origin}/location-facture-template?id=${contractId}&print=true`;
     console.log('Template URL:', templateUrl);
 
-    // Appeler Browserless pour générer le PDF
+    // Appeler Browserless pour générer le PDF avec token en query param
     console.log('Calling Browserless API...');
-    const browserlessResponse = await fetch('https://chrome.browserless.io/pdf', {
+    const browserlessUrl = `https://chrome.browserless.io/pdf?token=${browserlessToken}`;
+    const browserlessResponse = await fetch(browserlessUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${browserlessToken}`,
       },
       body: JSON.stringify({
         url: templateUrl,
@@ -54,6 +56,7 @@ serve(async (req) => {
             left: '10mm',
           },
         },
+        waitFor: 3000,
       }),
     });
 
