@@ -96,7 +96,9 @@ export default function Onboarding() {
           setEmail(settingsData.email || "");
           setAdresse(settingsData.adresse || "");
           setTauxTva(settingsData.taux_tva?.toString() || "20");
-          setCgv(settingsData.cgv_texte || "");
+          if (settingsData.cgv_texte) {
+            setCgv(settingsData.cgv_texte);
+          }
         }
       } catch (error) {
         console.error("Error loading onboarding data:", error);
