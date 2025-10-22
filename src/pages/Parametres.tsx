@@ -585,6 +585,8 @@ export default function Parametres() {
               <Input
                 value={settings?.raison_sociale || ''}
                 onChange={(e) => setSettings(prev => prev ? {...prev, raison_sociale: e.target.value} : null)}
+                disabled={currentTenant?.is_active}
+                className={currentTenant?.is_active ? 'bg-gray-100 cursor-not-allowed' : ''}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -593,6 +595,8 @@ export default function Parametres() {
                 <Input
                   value={settings?.ice || ''}
                   onChange={(e) => setSettings(prev => prev ? {...prev, ice: e.target.value} : null)}
+                  disabled={currentTenant?.is_active}
+                  className={currentTenant?.is_active ? 'bg-gray-100 cursor-not-allowed' : ''}
                 />
               </div>
               <div className="space-y-2">
