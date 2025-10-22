@@ -126,15 +126,38 @@ export default function Clients() {
           // Récupérer les contrats du client
           const { data: contracts } = await supabase
             .from('contracts')
-            .select('id, total_amount, remaining_amount')
+            .select('id, total_amount')
             .eq('client_id', client.id);
           
-          // Calculer le total restant à payer
-          const totalRemaining = (contracts || []).reduce((sum, contract) => {
-            return sum + (contract.remaining_amount || 0);
+          // Calculer le total des contrats
+          const totalContracts = (contracts || []).reduce((sum, contract) => {
+            return sum + (contract.total_amount || 0);
           }, 0);
           
-          balances.set(client.id, totalRemaining);
+          // Récupérer tous les paiements via contract_payments
+          const { data: contractPayments } = await supabase
+            .from('contract_payments')
+            .select('montant')
+            .in('contract_id', (contracts || []).map(c => c.id));
+          
+          const totalContractPayments = (contractPayments || []).reduce((sum, payment) => {
+            return sum + (payment.montant || 0);
+          }, 0);
+          
+          // Récupérer tous les paiements via revenus
+          const { data: revenus } = await supabase
+            .from('revenus')
+            .select('montant')
+            .eq('client_id', client.id)
+            .eq('source_revenu', 'contrat');
+          
+          const totalRevenus = (revenus || []).reduce((sum, revenu) => {
+            return sum + (revenu.montant || 0);
+          }, 0);
+          
+          // Reste à payer = Total contrats - Total payé
+          const resteAPayer = totalContracts - totalContractPayments - totalRevenus;
+          balances.set(client.id, Math.max(0, resteAPayer)); // Ne pas afficher de montants négatifs
         }
         
         setClientBalances(balances);
