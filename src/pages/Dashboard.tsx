@@ -593,7 +593,7 @@ export default function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
             <div className="text-center mt-4">
-              <Link to="/statistiques" className="text-primary hover:underline text-sm">
+              <Link to="/rapports" className="text-primary hover:underline text-sm">
                 Page de statistiques →
               </Link>
             </div>
