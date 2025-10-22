@@ -30,7 +30,8 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Générer l'URL du template de facture
-    const templateUrl = `${supabaseUrl.replace('vqlusbhqoalhbfiotdhi.supabase.co', 'vqlusbhqoalhbfiotdhi.lovable.app')}/location-facture-template?id=${contractId}&print=true`;
+    // Utiliser l'URL Lovable pour accéder au template
+    const templateUrl = `https://32923ba1-bb0f-4cee-9b16-6c46841649d6.lovableproject.com/location-facture-template?id=${contractId}&print=true`;
     console.log('Template URL:', templateUrl);
 
     // Appeler Browserless pour générer le PDF
