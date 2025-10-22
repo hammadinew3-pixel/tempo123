@@ -348,12 +348,13 @@ export default function ContractTemplate() {
           <div className="mt-auto mb-3">
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="h-12 mb-1 flex items-center justify-center">
+                <div className="h-16 mb-1 flex items-center justify-center">
                   {agenceSettings?.signature_agence_url && (
                     <img 
                       src={agenceSettings.signature_agence_url} 
                       alt="Signature agence" 
-                      className="max-h-12 w-auto object-contain"
+                      className="max-h-16 w-auto object-contain"
+                      style={{ transform: 'scale(1.2)' }}
                       crossOrigin="anonymous"
                     />
                   )}
