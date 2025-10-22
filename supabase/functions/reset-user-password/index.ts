@@ -47,8 +47,8 @@ serve(async (req) => {
       throw new Error('targetUserId is required');
     }
 
-    // Vérifier que l'utilisateur courant est admin
-    const { data: currentUserRole, error: roleError } = await supabaseClient
+    // Vérifier que l'utilisateur courant est admin (utiliser admin client pour bypass RLS)
+    const { data: currentUserRole, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('role, tenant_id')
       .eq('user_id', user.id)
@@ -91,8 +91,8 @@ serve(async (req) => {
     }
 
     // Si l'utilisateur réinitialise le mot de passe d'un autre utilisateur
-    // Vérifier que l'utilisateur cible appartient au même tenant
-    const { data: targetUserTenant, error: targetTenantError } = await supabaseClient
+    // Vérifier que l'utilisateur cible appartient au même tenant (utiliser admin client pour bypass RLS)
+    const { data: targetUserTenant, error: targetTenantError } = await supabaseAdmin
       .from('user_tenants')
       .select('tenant_id')
       .eq('user_id', targetUserId)
@@ -108,8 +108,8 @@ serve(async (req) => {
       throw new Error('Cannot reset password for user in different tenant');
     }
 
-    // Vérifier que l'utilisateur cible n'est pas un admin ou super_admin
-    const { data: targetUserRole, error: targetRoleError } = await supabaseClient
+    // Vérifier que l'utilisateur cible n'est pas un admin ou super_admin (utiliser admin client pour bypass RLS)
+    const { data: targetUserRole, error: targetRoleError } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', targetUserId)
@@ -137,8 +137,8 @@ serve(async (req) => {
       throw new Error('Failed to update password');
     }
 
-    // Log de l'événement d'audit
-    const { data: targetUserProfile } = await supabaseClient
+    // Log de l'événement d'audit (utiliser admin client pour bypass RLS)
+    const { data: targetUserProfile } = await supabaseAdmin
       .from('profiles')
       .select('email')
       .eq('id', targetUserId)
