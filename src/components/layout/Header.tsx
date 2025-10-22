@@ -35,7 +35,7 @@ export const Header = () => {
   }, []);
 
   return (
-    <header className="bg-card shadow-sm border-b border-border sticky top-0 z-10">
+    <header className="bg-card shadow-sm border-b border-border sticky top-0 z-40">
       <div className="flex items-center justify-between px-3 md:px-6 py-2 md:py-3">
         <div className="flex items-center space-x-2 md:space-x-4">
           <SidebarTrigger />
