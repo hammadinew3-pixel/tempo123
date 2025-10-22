@@ -5,9 +5,11 @@ interface InvoicePrintableProps {
   assistances: any[];
   settings: any;
   isGrouped?: boolean;
+  tauxTVA?: number;
 }
 
-export default function InvoicePrintable({ assistances, settings, isGrouped = false }: InvoicePrintableProps) {
+export default function InvoicePrintable({ assistances, settings, isGrouped = false, tauxTVA }: InvoicePrintableProps) {
+  const tvaTaux = tauxTVA ?? settings?.taux_tva ?? 20;
   // Convert number to French words
   const numberToFrench = (num: number): string => {
     const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf'];
@@ -83,11 +85,12 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
 
   const calculateTotals = () => {
     let totalHT = 0;
+    const tvaMultiplier = 1 + (tvaTaux / 100);
     assistances.forEach(assistance => {
       const montant = assistance.montant_facture || assistance.montant_total || 0;
-      totalHT += montant / 1.2;
+      totalHT += montant / tvaMultiplier;
     });
-    const totalTVA = totalHT * 0.2;
+    const totalTVA = totalHT * (tvaTaux / 100);
     const totalTTC = totalHT + totalTVA;
     return { totalHT, totalTVA, totalTTC };
   };
@@ -183,7 +186,8 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
               const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
               const montant = assistance.montant_facture || assistance.montant_total || 0;
               const tarifJournalier = assistance.tarif_journalier || 0;
-              const montantHT = montant / 1.2;
+              const tvaMultiplier = 1 + (tvaTaux / 100);
+              const montantHT = montant / tvaMultiplier;
               
               return (
                 <tr key={index} className="border-b border-gray-200">
@@ -201,7 +205,7 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
                     )}
                   </td>
                   <td className="text-center py-4 px-2">{duration}</td>
-                  <td className="text-right py-4 px-2">{(tarifJournalier / 1.2).toFixed(2)} DH</td>
+                  <td className="text-right py-4 px-2">{(tarifJournalier / tvaMultiplier).toFixed(2)} DH</td>
                   <td className="text-right py-4 px-2 font-semibold">{montantHT.toFixed(2)} DH</td>
                 </tr>
               );
@@ -217,7 +221,7 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
               <span>{totalHT.toFixed(2)} DH</span>
             </div>
             <div className="flex justify-between py-2 border-b">
-              <span className="font-semibold">TVA (20%) :</span>
+              <span className="font-semibold">TVA ({tvaTaux}%) :</span>
               <span>{totalTVA.toFixed(2)} DH</span>
             </div>
             <div className="flex justify-between py-3 border-t-2 border-gray-400">

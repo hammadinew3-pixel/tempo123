@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useTenantInsert } from '@/hooks/use-tenant-insert';
+import { useTenantSettings } from '@/hooks/use-tenant-settings';
 
 const TYPES_INTERVENTION = [
   "Vidange",
@@ -51,6 +52,7 @@ interface AddInterventionDialogProps {
 export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId, defaultType, interventionToEdit }: AddInterventionDialogProps) {
   const isEditMode = !!interventionToEdit;
   const { withTenantId } = useTenantInsert();
+  const { data: tenantSettings } = useTenantSettings();
   const [loading, setLoading] = useState(false);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<string>(vehicleId || "");
@@ -63,7 +65,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
   const [contactGarage, setContactGarage] = useState("");
   const [telephoneGarage, setTelephoneGarage] = useState("");
   const [montantHT, setMontantHT] = useState("");
-  const [tauxTVA, setTauxTVA] = useState("20");
+  const [tauxTVA, setTauxTVA] = useState("");
   const [facturee, setFacturee] = useState(false);
   const [referenceFature, setReferenceFature] = useState("");
   const [notes, setNotes] = useState("");
@@ -72,6 +74,11 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
   useEffect(() => {
     if (open) {
       loadVehicles();
+      
+      // Set default TVA from tenant settings
+      if (!interventionToEdit && tenantSettings?.taux_tva) {
+        setTauxTVA(tenantSettings.taux_tva.toString());
+      }
       
       if (interventionToEdit) {
         // Mode édition: charger les données de l'intervention
@@ -85,7 +92,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
         setContactGarage(interventionToEdit.contact_garage || "");
         setTelephoneGarage(interventionToEdit.telephone_garage || "");
         setMontantHT(interventionToEdit.montant_ht?.toString() || "");
-        setTauxTVA(interventionToEdit.montant_tva ? ((interventionToEdit.montant_tva / interventionToEdit.montant_ht) * 100).toString() : "20");
+        setTauxTVA(interventionToEdit.montant_tva ? ((interventionToEdit.montant_tva / interventionToEdit.montant_ht) * 100).toString() : (tenantSettings?.taux_tva?.toString() || "20"));
         setFacturee(interventionToEdit.facturee || false);
         setReferenceFature(interventionToEdit.reference_facture || "");
         setNotes(interventionToEdit.notes || "");
@@ -101,7 +108,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
         }
       }
     }
-  }, [open, vehicleId, defaultType, interventionToEdit]);
+  }, [open, vehicleId, defaultType, interventionToEdit, tenantSettings]);
 
   const loadVehicles = async () => {
     const { data } = await supabase
@@ -206,7 +213,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
     setContactGarage("");
     setTelephoneGarage("");
     setMontantHT("");
-    setTauxTVA("20");
+    setTauxTVA(tenantSettings?.taux_tva?.toString() || "20");
     setFacturee(false);
     setReferenceFature("");
     setNotes("");

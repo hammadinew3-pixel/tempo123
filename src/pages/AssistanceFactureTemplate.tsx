@@ -202,7 +202,12 @@ export default function AssistanceFactureTemplate() {
         }
       `}</style>
 
-      <InvoicePrintable assistances={assistances} settings={settings} isGrouped={isGrouped} />
+      <InvoicePrintable 
+        assistances={assistances} 
+        settings={settings} 
+        isGrouped={isGrouped}
+        tauxTVA={settings?.taux_tva}
+      />
     </div>
   );
 }

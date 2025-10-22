@@ -32,7 +32,7 @@ interface TenantSettings {
   telephone?: string;
   email?: string;
   logo_url?: string;
-  tva_taux?: number;
+  taux_tva?: number;
   raison_sociale?: string;
   ice?: string;
   if_number?: string;
@@ -145,9 +145,10 @@ export default function InvoicePrintable({ contract, settings }: Props) {
   const duration = calculateDuration(contract.date_debut, contract.date_fin);
   const tj = Number(contract.tarif_journalier || 0);
   const montantLocation = duration * tj;
-  const tvaTaux = settings?.tva_taux || 20;
-  const montantHT = montantLocation / 1.2;
-  const montantTVA = montantHT * 0.2;
+  const tvaTaux = settings?.taux_tva || 20;
+  const tvaMultiplier = 1 + (tvaTaux / 100);
+  const montantHT = montantLocation / tvaMultiplier;
+  const montantTVA = montantHT * (tvaTaux / 100);
   const montantTTC = montantHT + montantTVA;
 
   return (
@@ -234,7 +235,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
                 </p>
               </td>
               <td className="text-center py-4 px-2">{duration}</td>
-              <td className="text-right py-4 px-2">{(tj / 1.2).toFixed(2)} DH</td>
+              <td className="text-right py-4 px-2">{(tj / tvaMultiplier).toFixed(2)} DH</td>
               <td className="text-right py-4 px-2 font-semibold">{montantHT.toFixed(2)} DH</td>
             </tr>
           </tbody>
@@ -248,7 +249,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
               <span>{montantHT.toFixed(2)} DH</span>
             </div>
             <div className="flex justify-between py-2 border-b">
-              <span className="font-semibold">TVA (20%) :</span>
+              <span className="font-semibold">TVA ({tvaTaux}%) :</span>
               <span>{montantTVA.toFixed(2)} DH</span>
             </div>
             <div className="flex justify-between py-3 border-t-2 border-gray-400">

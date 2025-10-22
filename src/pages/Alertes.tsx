@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { differenceInDays, parseISO } from "date-fns";
+import { useTenantSettings } from "@/hooks/use-tenant-settings";
 
 interface VehicleAlert {
   vehicleId: string;
@@ -23,6 +24,7 @@ interface VehicleAlert {
 
 const Alertes = () => {
   const navigate = useNavigate();
+  const { data: tenantSettings } = useTenantSettings();
   const [loading, setLoading] = useState(true);
   const [vehicleAlerts, setVehicleAlerts] = useState<VehicleAlert[]>([]);
   const [chequeAlerts, setChequeAlerts] = useState<any[]>([]);
@@ -81,7 +83,8 @@ const Alertes = () => {
           new Date()
         );
 
-        if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0) {
+        const alerteAssuranceJours = tenantSettings?.alerte_assurance_jours || 30;
+        if (daysUntilExpiry <= alerteAssuranceJours && daysUntilExpiry >= 0) {
           alerts.push({
             vehicleId: vehicle.id,
             vehicleName,
@@ -127,7 +130,8 @@ const Alertes = () => {
           new Date()
         );
 
-        if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0) {
+        const alerteVisiteJours = tenantSettings?.alerte_visite_jours || 30;
+        if (daysUntilExpiry <= alerteVisiteJours && daysUntilExpiry >= 0) {
           alerts.push({
             vehicleId: vehicle.id,
             vehicleName,
@@ -173,7 +177,8 @@ const Alertes = () => {
           new Date()
         );
 
-        if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0) {
+        const alerteVignetteJours = tenantSettings?.alerte_autorisation_jours || 30;
+        if (daysUntilExpiry <= alerteVignetteJours && daysUntilExpiry >= 0) {
           alerts.push({
             vehicleId: vehicle.id,
             vehicleName,
@@ -282,10 +287,11 @@ const Alertes = () => {
       .order("date_paiement", { ascending: true });
 
     if (payments) {
+      const alerteChequeJours = tenantSettings?.alerte_cheque_jours || 30;
       const alerts = payments.filter((payment) => {
         const daysFromPayment = differenceInDays(new Date(), parseISO(payment.date_paiement));
-        // Alert if check is older than 30 days (might need to be cashed)
-        return daysFromPayment > 30;
+        // Alert if check is older than configured days (might need to be cashed)
+        return daysFromPayment > alerteChequeJours;
       });
       setChequeAlerts(alerts);
     }

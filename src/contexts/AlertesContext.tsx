@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, parseISO } from "date-fns";
 import { groupBy, getLatestByGroup } from "@/lib/arrayUtils";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AlertesContextType {
   totalAlerts: number;
@@ -31,6 +32,17 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       let count = 0;
+      
+      // Get tenant settings for alert thresholds
+      const { data: tenantSettings } = await supabase
+        .from("tenant_settings")
+        .select("alerte_assurance_jours, alerte_visite_jours, alerte_autorisation_jours, alerte_cheque_jours")
+        .single();
+      
+      const alerteAssuranceJours = tenantSettings?.alerte_assurance_jours || 30;
+      const alerteVisiteJours = tenantSettings?.alerte_visite_jours || 30;
+      const alerteVignetteJours = tenantSettings?.alerte_autorisation_jours || 30;
+      const alerteChequeJours = tenantSettings?.alerte_cheque_jours || 30;
 
       // Get all vehicles first
       const { data: vehicles } = await supabase
@@ -80,7 +92,7 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
           count++;
         } else if (insurance.date_expiration) {
           const daysUntilExpiry = differenceInDays(parseISO(insurance.date_expiration), new Date());
-          if (daysUntilExpiry <= 30) count++;
+          if (daysUntilExpiry <= alerteAssuranceJours) count++;
         }
 
         // Check technical inspection
@@ -88,7 +100,7 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
           count++;
         } else if (inspection.date_expiration) {
           const daysUntilExpiry = differenceInDays(parseISO(inspection.date_expiration), new Date());
-          if (daysUntilExpiry <= 30) count++;
+          if (daysUntilExpiry <= alerteVisiteJours) count++;
         }
 
         // Check vignette
@@ -96,7 +108,7 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
           count++;
         } else if (vignette.date_expiration) {
           const daysUntilExpiry = differenceInDays(parseISO(vignette.date_expiration), new Date());
-          if (daysUntilExpiry <= 30) count++;
+          if (daysUntilExpiry <= alerteVignetteJours) count++;
         }
 
         // Check oil change
@@ -115,7 +127,7 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
       if (checkPayments.data) {
         const checkAlerts = checkPayments.data.filter((payment: any) => {
           const daysFromPayment = differenceInDays(new Date(), parseISO(payment.date_paiement));
-          return daysFromPayment > 30;
+          return daysFromPayment > alerteChequeJours;
         });
         count += checkAlerts.length;
       }

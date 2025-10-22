@@ -653,7 +653,7 @@ export default function Parametres() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Alerte autorisation (jours)</Label>
+              <Label>Alerte vignette (jours)</Label>
               <Input
                 type="number"
                 value={settings?.alerte_autorisation_jours || 30}
