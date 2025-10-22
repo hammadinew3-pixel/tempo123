@@ -547,25 +547,6 @@ export default function Revenus() {
         </Card>
       </div>
 
-      {/* Graphique */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Encaissements par Mois</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={getMonthlyData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="total" fill="hsl(var(--primary))" name="Total (DH)" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
       {/* Filtres */}
       <Card>
         <CardHeader>
@@ -708,6 +689,25 @@ export default function Revenus() {
               </TableBody>
             </Table>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Graphique - déplacé en dernier */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Encaissements par Mois</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={getMonthlyData()}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="total" fill="hsl(var(--primary))" name="Total (DH)" />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
