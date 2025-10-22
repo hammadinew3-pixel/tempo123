@@ -62,6 +62,7 @@ export default function Revenus() {
   const [revenues, setRevenues] = useState<Revenue[]>([]);
   const [filteredRevenues, setFilteredRevenues] = useState<Revenue[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState('all');
@@ -84,6 +85,7 @@ export default function Revenus() {
   useEffect(() => {
     loadRevenues();
     loadVehicles();
+    loadContracts();
   }, []);
 
   useEffect(() => {
@@ -101,6 +103,20 @@ export default function Revenus() {
       setVehicles(data || []);
     } catch (error) {
       console.error('Error loading vehicles:', error);
+    }
+  };
+
+  const loadContracts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('id, remaining_amount')
+        .not('remaining_amount', 'is', null);
+
+      if (error) throw error;
+      setContracts(data || []);
+    } catch (error) {
+      console.error('Error loading contracts:', error);
     }
   };
 
@@ -362,6 +378,10 @@ export default function Revenus() {
     return filteredRevenues.reduce((sum, r) => sum + r.montant, 0);
   };
 
+  const getTotalRemainingAmount = () => {
+    return contracts.reduce((sum, c) => sum + (c.remaining_amount || 0), 0);
+  };
+
   const getMonthlyData = () => {
     const monthlyTotals: Record<string, number> = {};
     filteredRevenues.forEach(r => {
@@ -527,11 +547,11 @@ export default function Revenus() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">En Attente</CardTitle>
+            <CardTitle className="text-sm">Reste à Payer (Contrats)</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-orange-600">
-              {filteredRevenues.filter(r => r.statut === 'en_attente').reduce((sum, r) => sum + r.montant, 0).toFixed(2)} DH
+              {getTotalRemainingAmount().toFixed(2)} DH
             </p>
           </CardContent>
         </Card>
