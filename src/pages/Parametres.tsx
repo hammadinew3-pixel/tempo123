@@ -584,16 +584,26 @@ export default function Parametres() {
               <Label>Raison sociale</Label>
               <Input
                 value={settings?.raison_sociale || ''}
-                onChange={(e) => setSettings(prev => prev ? {...prev, raison_sociale: e.target.value} : null)}
+                readOnly
+                disabled
+                className="bg-muted cursor-not-allowed"
               />
+              <p className="text-xs text-muted-foreground">
+                Non modifiable après inscription
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>ICE</Label>
                 <Input
                   value={settings?.ice || ''}
-                  onChange={(e) => setSettings(prev => prev ? {...prev, ice: e.target.value} : null)}
+                  readOnly
+                  disabled
+                  className="bg-muted cursor-not-allowed"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Non modifiable après inscription
+                </p>
               </div>
               <div className="space-y-2">
                 <Label>IF</Label>
