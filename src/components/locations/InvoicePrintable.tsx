@@ -33,6 +33,15 @@ interface TenantSettings {
   email?: string;
   logo_url?: string;
   tva_taux?: number;
+  raison_sociale?: string;
+  ice?: string;
+  if_number?: string;
+  rc?: string;
+  cnss?: string;
+  patente?: string;
+  masquer_entete?: boolean;
+  masquer_logo?: boolean;
+  masquer_pied_page?: boolean;
 }
 
 interface Props {
@@ -44,52 +53,72 @@ function numberToFrench(num: number): string {
   const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf'];
   const teens = ['dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
   const tens = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante-dix', 'quatre-vingt', 'quatre-vingt-dix'];
-
+  
   if (num === 0) return 'zéro';
-  if (num < 0) return 'moins ' + numberToFrench(Math.abs(num));
-
-  let result = '';
-
-  // Millions
-  if (num >= 1000000) {
-    const millions = Math.floor(num / 1000000);
-    result += (millions === 1 ? 'un million ' : numberToFrench(millions) + ' millions ');
-    num %= 1000000;
-  }
-
-  // Milliers
-  if (num >= 1000) {
-    const thousands = Math.floor(num / 1000);
-    result += (thousands === 1 ? 'mille ' : numberToFrench(thousands) + ' mille ');
-    num %= 1000;
-  }
-
-  // Centaines
-  if (num >= 100) {
-    const hundreds = Math.floor(num / 100);
-    result += (hundreds === 1 ? 'cent ' : units[hundreds] + ' cent ');
-    num %= 100;
-    if (num === 0) result = result.trim() + 's ';
-  }
-
-  // Dizaines et unités
-  if (num >= 20) {
-    const tensDigit = Math.floor(num / 10);
-    const unitsDigit = num % 10;
-    result += tens[tensDigit];
-    if (unitsDigit === 1 && tensDigit !== 8) {
-      result += ' et ' + units[unitsDigit];
-    } else if (unitsDigit > 0) {
-      result += '-' + units[unitsDigit];
+  
+  const convertHundreds = (n: number): string => {
+    let result = '';
+    
+    const hundred = Math.floor(n / 100);
+    const remainder = n % 100;
+    
+    if (hundred > 0) {
+      result += hundred === 1 ? 'cent' : units[hundred] + ' cent';
+      if (remainder === 0 && hundred > 1) result += 's';
+      if (remainder > 0) result += ' ';
     }
-    if (tensDigit === 8 && unitsDigit === 0) result += 's';
-  } else if (num >= 10) {
-    result += teens[num - 10];
-  } else if (num > 0) {
-    result += units[num];
+    
+    if (remainder >= 20) {
+      const ten = Math.floor(remainder / 10);
+      const unit = remainder % 10;
+      result += tens[ten];
+      if (unit === 1 && ten < 8) {
+        result += ' et un';
+      } else if (unit > 0) {
+        result += ten === 7 || ten === 9 ? '-' : '-';
+        if (ten === 7) result += teens[unit];
+        else if (ten === 9) result += teens[unit];
+        else result += units[unit];
+      }
+      if (ten === 8 && unit === 0) result += 's';
+    } else if (remainder >= 10) {
+      result += teens[remainder - 10];
+    } else if (remainder > 0) {
+      result += units[remainder];
+    }
+    
+    return result;
+  };
+  
+  const intPart = Math.floor(num);
+  const decPart = Math.round((num - intPart) * 100);
+  
+  let words = '';
+  let remaining = intPart;
+  
+  if (remaining >= 1000000) {
+    const millions = Math.floor(remaining / 1000000);
+    words += (millions === 1 ? 'un million' : convertHundreds(millions) + ' millions') + ' ';
+    remaining %= 1000000;
   }
-
-  return result.trim();
+  
+  if (remaining >= 1000) {
+    const thousands = Math.floor(remaining / 1000);
+    words += (thousands === 1 ? 'mille' : convertHundreds(thousands) + ' mille') + ' ';
+    remaining %= 1000;
+  }
+  
+  if (remaining > 0) {
+    words += convertHundreds(remaining);
+  }
+  
+  words = words.trim() + ' dirhams';
+  
+  if (decPart > 0) {
+    words += ' et ' + convertHundreds(decPart) + ' centimes';
+  }
+  
+  return words;
 }
 
 function amountToWords(amount: number): string {
@@ -116,151 +145,161 @@ export default function InvoicePrintable({ contract, settings }: Props) {
   const duration = calculateDuration(contract.date_debut, contract.date_fin);
   const tj = Number(contract.tarif_journalier || 0);
   const montantLocation = duration * tj;
-  const tvaTaux = settings?.tva_taux || 0;
-  const montantHT = montantLocation;
-  const montantTVA = montantHT * (tvaTaux / 100);
+  const tvaTaux = settings?.tva_taux || 20;
+  const montantHT = montantLocation / 1.2;
+  const montantTVA = montantHT * 0.2;
   const montantTTC = montantHT + montantTVA;
 
   return (
-    <div className="bg-white p-8 max-w-4xl mx-auto" style={{ fontFamily: 'Arial, sans-serif' }}>
-      {/* En-tête */}
-      <div className="flex justify-between items-start mb-8 pb-4 border-b-2 border-gray-300">
-        <div>
-          {settings?.logo_url && (
-            <img 
-              src={settings.logo_url} 
-              alt="Logo" 
-              className="h-16 mb-2"
-            />
-          )}
-          <h1 className="text-2xl font-bold text-gray-800">{settings?.nom_agence || 'Agence de Location'}</h1>
-          <p className="text-sm text-gray-600">{settings?.adresse}</p>
-          <p className="text-sm text-gray-600">Tél: {settings?.telephone}</p>
-          <p className="text-sm text-gray-600">Email: {settings?.email}</p>
-        </div>
-        <div className="text-right">
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">FACTURE</h2>
-          <p className="text-sm"><span className="font-semibold">N°:</span> {contract.numero_contrat}</p>
-          <p className="text-sm"><span className="font-semibold">Date:</span> {format(new Date(), 'dd/MM/yyyy', { locale: fr })}</p>
-        </div>
-      </div>
+    <div className="invoice-page">
+      <div className="flex-1 px-4 pt-4">
 
-      {/* Informations client */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Client</h3>
-        <div className="bg-gray-50 p-4 rounded">
-          <p className="font-semibold">{contract.clients.nom} {contract.clients.prenom}</p>
-          <p className="text-sm text-gray-600">CIN: {contract.clients.cin}</p>
-          <p className="text-sm text-gray-600">Adresse: {contract.clients.adresse || 'Non spécifiée'}</p>
-          <p className="text-sm text-gray-600">Tél: {contract.clients.telephone}</p>
-        </div>
-      </div>
+        {/* Header */}
+        {!settings?.masquer_entete && (
+          <div className="mb-6">
+            {!settings?.masquer_logo && settings?.logo_url && (
+              <div className="flex justify-center mb-4">
+                <img 
+                  src={settings.logo_url} 
+                  alt="Logo" 
+                  className="h-16 w-auto object-contain"
+                  crossOrigin="anonymous"
+                />
+              </div>
+            )}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
+                <p className="text-sm text-gray-600">N° {contract.numero_contrat}</p>
+                <p className="text-sm text-gray-600">
+                  Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
+                </p>
+              </div>
+            </div>
 
-      {/* Informations véhicule */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Véhicule Loué</h3>
-        <div className="bg-gray-50 p-4 rounded">
-          <p className="font-semibold">{contract.vehicles.marque} {contract.vehicles.modele}</p>
-          <p className="text-sm text-gray-600">Immatriculation: {contract.vehicles.immatriculation}</p>
-        </div>
-      </div>
-
-      {/* Période de location */}
-      <div className="mb-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">Période de Location</h3>
-        <div className="bg-gray-50 p-4 rounded">
-          <p className="text-sm">
-            <span className="font-semibold">Du:</span> {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })}
-            {' '}
-            <span className="font-semibold">au:</span> {format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr })}
-          </p>
-          <p className="text-sm font-semibold mt-1">Durée totale: {duration} jour{duration > 1 ? 's' : ''}</p>
-        </div>
-      </div>
-
-      {/* Détails de facturation */}
-      <table className="w-full mb-6 border-collapse">
-        <thead>
-          <tr className="bg-gray-800 text-white">
-            <th className="p-3 text-left">Description</th>
-            <th className="p-3 text-center">Quantité</th>
-            <th className="p-3 text-right">Prix Unitaire</th>
-            <th className="p-3 text-right">Montant</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b border-gray-300">
-            <td className="p-3">Location véhicule</td>
-            <td className="p-3 text-center">{duration} jour{duration > 1 ? 's' : ''}</td>
-            <td className="p-3 text-right">{tj.toFixed(2)} DH</td>
-            <td className="p-3 text-right font-semibold">{montantLocation.toFixed(2)} DH</td>
-          </tr>
-          {contract.caution > 0 && (
-            <tr className="border-b border-gray-300 bg-blue-50">
-              <td className="p-3" colSpan={3}>Caution (remboursable)</td>
-              <td className="p-3 text-right font-semibold">{contract.caution.toFixed(2)} DH</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {/* Totaux */}
-      <div className="flex justify-end mb-6">
-        <div className="w-1/2">
-          <div className="flex justify-between py-2 border-b border-gray-300">
-            <span className="font-semibold">Montant HT:</span>
-            <span>{montantHT.toFixed(2)} DH</span>
+            <div className="border-t-2 border-gray-300 pt-4">
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <h3 className="font-bold mb-2">FACTURÉ À :</h3>
+                  <p className="font-semibold">{contract.clients.nom} {contract.clients.prenom}</p>
+                  {contract.clients.cin && (
+                    <p className="text-sm">CIN : {contract.clients.cin}</p>
+                  )}
+                  {contract.clients.telephone && (
+                    <p className="text-sm">Tél : {contract.clients.telephone}</p>
+                  )}
+                  {contract.clients.adresse && (
+                    <p className="text-sm">{contract.clients.adresse}</p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold mb-2">DÉTAILS LOCATION :</h3>
+                  <p className="font-semibold">
+                    {contract.vehicles.marque} {contract.vehicles.modele}
+                  </p>
+                  <p className="text-sm">Immatriculation : {contract.vehicles.immatriculation}</p>
+                  <p className="text-sm mt-2">
+                    Période : {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })} 
+                    {' au '} 
+                    {format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr })}
+                  </p>
+                  <p className="text-sm">Durée : {duration} jour{duration > 1 ? 's' : ''}</p>
+                </div>
+              </div>
+            </div>
           </div>
-          {tvaTaux > 0 && (
-            <div className="flex justify-between py-2 border-b border-gray-300">
-              <span className="font-semibold">TVA ({tvaTaux}%):</span>
+        )}
+
+        {/* Items table */}
+        <table className="w-full mb-6">
+          <thead>
+            <tr className="border-b-2 border-gray-400">
+              <th className="text-left py-3 px-2">DÉSIGNATION</th>
+              <th className="text-center py-3 px-2">QTÉ</th>
+              <th className="text-right py-3 px-2">PRIX UNIT. HT</th>
+              <th className="text-right py-3 px-2">TOTAL HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b border-gray-200">
+              <td className="py-4 px-2">
+                <p className="font-semibold">Location véhicule</p>
+                <p className="text-sm text-gray-600">
+                  {contract.vehicles.marque} {contract.vehicles.modele} - {contract.vehicles.immatriculation}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Période : {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })} 
+                  {' au '} 
+                  {format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr })}
+                </p>
+              </td>
+              <td className="text-center py-4 px-2">{duration}</td>
+              <td className="text-right py-4 px-2">{(tj / 1.2).toFixed(2)} DH</td>
+              <td className="text-right py-4 px-2 font-semibold">{montantHT.toFixed(2)} DH</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Totals */}
+        <div className="flex justify-end mb-4">
+          <div className="w-80">
+            <div className="flex justify-between py-2 border-b">
+              <span className="font-semibold">Sous-total HT :</span>
+              <span>{montantHT.toFixed(2)} DH</span>
+            </div>
+            <div className="flex justify-between py-2 border-b">
+              <span className="font-semibold">TVA (20%) :</span>
               <span>{montantTVA.toFixed(2)} DH</span>
             </div>
-          )}
-          <div className="flex justify-between py-2 border-b-2 border-gray-800">
-            <span className="font-bold text-lg">Total TTC:</span>
-            <span className="font-bold text-lg">{montantTTC.toFixed(2)} DH</span>
+            <div className="flex justify-between py-3 border-t-2 border-gray-400">
+              <span className="font-bold text-lg">TOTAL TTC :</span>
+              <span className="font-bold text-lg">{montantTTC.toFixed(2)} DH</span>
+            </div>
+            {contract.caution > 0 && (
+              <div className="flex justify-between py-2 border-t border-gray-300 mt-2">
+                <span className="font-semibold">Caution (remboursable) :</span>
+                <span className="font-semibold">{contract.caution.toFixed(2)} DH</span>
+              </div>
+            )}
+            {contract.avance > 0 && (
+              <div className="flex justify-between py-2 border-b">
+                <span className="font-semibold">Avance payée :</span>
+                <span>{contract.avance.toFixed(2)} DH</span>
+              </div>
+            )}
+            {contract.remaining_amount > 0 && (
+              <div className="flex justify-between py-2 border-b">
+                <span className="font-bold text-red-600">Reste à payer :</span>
+                <span className="font-bold text-red-600">{contract.remaining_amount.toFixed(2)} DH</span>
+              </div>
+            )}
+            <div className="mt-3 pt-3 border-t border-gray-300">
+              <p className="text-sm italic">
+                Arrêtée la présente facture à la somme de :
+              </p>
+              <p className="text-sm font-semibold italic mt-1">
+                {amountToWords(montantTTC)}
+              </p>
+            </div>
           </div>
-          {contract.caution > 0 && (
-            <div className="flex justify-between py-2 border-b border-gray-300 bg-blue-50 px-2">
-              <span className="font-semibold">Caution:</span>
-              <span className="font-semibold">+ {contract.caution.toFixed(2)} DH</span>
-            </div>
-          )}
-          <div className="flex justify-between py-2 border-b-2 border-gray-800 bg-gray-100 px-2">
-            <span className="font-bold text-lg">Total à payer:</span>
-            <span className="font-bold text-lg">{(montantTTC + (contract.caution || 0)).toFixed(2)} DH</span>
-          </div>
-          {contract.avance > 0 && (
-            <div className="flex justify-between py-2 border-b border-gray-300">
-              <span className="font-semibold">Avance payée:</span>
-              <span>{contract.avance.toFixed(2)} DH</span>
-            </div>
-          )}
-          {contract.remaining_amount > 0 && (
-            <div className="flex justify-between py-2 bg-yellow-50 px-2">
-              <span className="font-bold text-red-600">Reste à payer:</span>
-              <span className="font-bold text-red-600">{contract.remaining_amount.toFixed(2)} DH</span>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Montant en lettres */}
-      <div className="mb-6 p-4 bg-gray-50 rounded">
-        <p className="text-sm">
-          <span className="font-semibold">Arrêté la présente facture à la somme de: </span>
-          <span className="italic">{amountToWords(montantTTC + (contract.caution || 0))}</span>
-        </p>
-      </div>
-
-      {/* Pied de page */}
-      <div className="text-center text-xs text-gray-600 mt-8 pt-4 border-t border-gray-300">
-        <p className="font-semibold">{settings?.nom_agence}</p>
-        <p>{settings?.adresse}</p>
-        <p>Tél: {settings?.telephone} | Email: {settings?.email}</p>
-        <p className="mt-2 italic">Merci de votre confiance</p>
-      </div>
+      {/* Footer */}
+      {!settings?.masquer_pied_page && (
+        <div className="mt-auto text-center text-[10pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+          {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
+          {settings?.ice && <> | ICE: {settings.ice}</>}
+          {settings?.if_number && <> | IF: {settings.if_number}</>}
+          {settings?.rc && <> | RC: {settings.rc}</>}
+          {settings?.cnss && <> | CNSS: {settings.cnss}</>}
+          {settings?.patente && <> | Patente: {settings.patente}</>}
+          <br/>
+          {settings?.adresse && <>Adresse: {settings.adresse}</>}
+          {settings?.telephone && <> | Tél: {settings.telephone}</>}
+          {settings?.email && <> | Email: {settings.email}</>}
+        </div>
+      )}
     </div>
   );
 }
