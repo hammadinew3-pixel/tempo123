@@ -754,18 +754,18 @@ export default function VehiculeDetails() {
 
       {/* Badge sous-location */}
       {vehicle.type_vehicule === 'sous_location' && (
-        <Alert className="bg-blue-900/20 border-blue-500/50">
-          <AlertCircle className="h-4 w-4 text-blue-400" />
-          <AlertDescription className="text-blue-200">
+        <Alert className="bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700">
+          <AlertCircle className="h-4 w-4 text-foreground" />
+          <AlertDescription className="text-foreground">
             <div>
               <strong>Véhicule en sous-location</strong>
             </div>
             <div className="mt-2 space-y-1">
               <div>
-                Coût fournisseur journalier : <strong className="text-orange-400">{vehicle.tarif_sous_location || 0} DH</strong>
-                <span className="text-xs ml-2">(information interne à l'agence)</span>
+                Coût fournisseur journalier : <strong className="text-orange-600 dark:text-orange-400">{vehicle.tarif_sous_location || 0} DH</strong>
+                <span className="text-xs ml-2 text-muted-foreground">(information interne à l'agence)</span>
               </div>
-              <div className="text-xs text-blue-300/80">
+              <div className="text-xs text-muted-foreground">
                 Les alertes et documents techniques ne s'appliquent pas à ce véhicule.
               </div>
             </div>
