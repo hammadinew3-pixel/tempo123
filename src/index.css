@@ -107,3 +107,16 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Invoice page layout */
+.invoice-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+@media print {
+  .invoice-page {
+    min-height: auto;
+  }
+}
