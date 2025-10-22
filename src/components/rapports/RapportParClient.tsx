@@ -128,16 +128,23 @@ export default function RapportParClient({ dateRange }: Props) {
 
         clientContracts.forEach(contract => {
           // Calcul montant total du contrat
+          // PRIORITE 1: Utiliser total_amount si défini et > 0
           let montant = 0;
-          if (Number(contract.total_amount) > 0) {
+          if (contract.total_amount && Number(contract.total_amount) > 0) {
             montant = Number(contract.total_amount);
           } else {
+            // PRIORITE 2: Calculer depuis daily_rate ou tarif véhicule
             const rate = 
-              (Number(contract.daily_rate) > 0 ? Number(contract.daily_rate) : 0) ||
+              (contract.daily_rate && Number(contract.daily_rate) > 0 ? Number(contract.daily_rate) : 0) ||
               (vehiclesMap[contract.vehicle_id]?.tarif_journalier || 0);
+            
+            // Calculer les jours correctement
             const dateDebut = new Date(contract.date_debut);
             const dateFin = new Date(contract.date_fin);
-            const days = Math.ceil((dateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            const diffTime = dateFin.getTime() - dateDebut.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const days = diffDays + 1; // +1 car on inclut le jour de début
+            
             montant = rate * days;
           }
           montant_total_contrats += montant;
