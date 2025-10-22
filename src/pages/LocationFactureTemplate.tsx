@@ -53,18 +53,8 @@ export default function LocationFactureTemplate() {
       if (!contractId) return;
 
       try {
-        // Charger les paramètres du tenant
-        const { data: tenantSettings } = await supabase
-          .from('tenant_settings')
-          .select('*')
-          .single();
-
-        if (tenantSettings) {
-          setSettings(tenantSettings);
-        }
-
         // Charger le contrat avec toutes les relations
-        const { data: contractData, error } = await supabase
+        const { data: fullContractData, error } = await supabase
           .from('contracts')
           .select(`
             *,
@@ -88,20 +78,31 @@ export default function LocationFactureTemplate() {
 
         if (error) throw error;
 
-        if (contractData) {
+        if (fullContractData) {
+          // Charger les paramètres du tenant avec le tenant_id
+          const { data: tenantSettings } = await supabase
+            .from('tenant_settings')
+            .select('*')
+            .eq('tenant_id', fullContractData.tenant_id)
+            .single();
+
+          if (tenantSettings) {
+            setSettings(tenantSettings);
+          }
+
           // Mapper les champs de la base de données vers l'interface Contract avec fallbacks
           const mappedContract: Contract = {
-            id: contractData.id,
-            numero_contrat: contractData.numero_contrat,
-            date_debut: contractData.date_debut,
-            date_fin: contractData.date_fin,
-            tarif_journalier: contractData.daily_rate ?? contractData.vehicles?.tarif_journalier ?? 0,
-            caution: contractData.caution_montant ?? 0,
-            montant_total: contractData.total_amount ?? 0,
-            avance: contractData.advance_payment ?? 0,
-            remaining_amount: contractData.remaining_amount ?? 0,
-            clients: contractData.clients,
-            vehicles: contractData.vehicles,
+            id: fullContractData.id,
+            numero_contrat: fullContractData.numero_contrat,
+            date_debut: fullContractData.date_debut,
+            date_fin: fullContractData.date_fin,
+            tarif_journalier: fullContractData.daily_rate ?? fullContractData.vehicles?.tarif_journalier ?? 0,
+            caution: fullContractData.caution_montant ?? 0,
+            montant_total: fullContractData.total_amount ?? 0,
+            avance: fullContractData.advance_payment ?? 0,
+            remaining_amount: fullContractData.remaining_amount ?? 0,
+            clients: fullContractData.clients,
+            vehicles: fullContractData.vehicles,
           };
           setContract(mappedContract);
         }
