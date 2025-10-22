@@ -1896,7 +1896,7 @@ export default function AssistanceDetails() {
               <div className="flex justify-between items-center pb-3 border-b">
                 <span className="text-sm text-muted-foreground">Reste à payer</span>
                 <span className="text-lg font-bold text-orange-600">
-                  {((assistance.montant_facture || 0) - (assistance.montant_paye || 0)).toFixed(2)} DH
+                  {((assistance.montant_total || 0) - (assistance.montant_paye || 0)).toFixed(2)} DH
                 </span>
               </div>
               
