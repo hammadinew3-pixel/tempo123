@@ -316,7 +316,7 @@ export default function Vehicules() {
   const filteredVehicles = vehicles.filter(vehicle => {
     // Filtres de statut
     if (filter === 'hors_service' && vehicle.en_service !== false) return false;
-    if (filter === 'sous_location' && vehicle.sous_location !== true) return false;
+    if (filter === 'sous_location' && vehicle.type_vehicule !== 'sous_location') return false;
     
     // Pour les filtres de statut (disponible, loué, etc.), exclure les véhicules hors service
     if (filter === 'disponible' && (vehicle.statut !== 'disponible' || vehicle.en_service === false)) return false;
@@ -448,7 +448,7 @@ export default function Vehicules() {
     });
   };
   const countHorsService = vehicles.filter(v => v.en_service === false).length;
-  const countSousLocation = vehicles.filter(v => v.sous_location === true).length;
+  const countSousLocation = vehicles.filter(v => v.type_vehicule === 'sous_location').length;
   const countDisponible = vehicles.filter(v => v.statut === 'disponible' && v.en_service !== false).length;
   const countLoue = vehicles.filter(v => v.statut === 'loue' && v.en_service !== false).length;
   const countReserve = vehicles.filter(v => v.statut === 'reserve' && v.en_service !== false).length;
@@ -819,6 +819,9 @@ export default function Vehicules() {
               <button onClick={() => setFilter('loue')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'loue' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
                 LOUÉ ({countLoue})
               </button>
+              <button onClick={() => setFilter('sous_location')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'sous_location' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
+                SOUS LOCATION ({countSousLocation})
+              </button>
               <button onClick={() => setFilter('reserve')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'reserve' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
                 RÉSERVÉ ({countReserve})
               </button>
@@ -830,9 +833,6 @@ export default function Vehicules() {
               </button>
               <button onClick={() => setFilter('hors_service')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'hors_service' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
                 HORS SERVICE ({countHorsService})
-              </button>
-              <button onClick={() => setFilter('sous_location')} className={`pb-2 transition-colors whitespace-nowrap ${filter === 'sous_location' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-primary'}`}>
-                SOUS LOCATION ({countSousLocation})
               </button>
             </div>
             {selectedIds.size > 0 && <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
