@@ -211,9 +211,12 @@ export default function VehiculeDetails() {
         throw error;
       }
       
-      // Create a download link
-      const blob = new Blob([data]);
-      const downloadUrl = window.URL.createObjectURL(blob);
+      if (!data) {
+        throw new Error('Fichier introuvable');
+      }
+      
+      // Create a download link with proper content type
+      const downloadUrl = window.URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = filename;
