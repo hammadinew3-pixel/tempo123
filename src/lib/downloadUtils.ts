@@ -7,15 +7,39 @@ import { supabase } from "@/integrations/supabase/client";
  * @returns Promise that resolves when download is complete
  */
 export const downloadFromSupabase = async (url: string, baseFilename?: string): Promise<void> => {
-  // Extract the file path from the URL
-  const urlParts = url.split('/storage/v1/object/public/');
-  if (urlParts.length < 2) {
-    throw new Error('URL invalide');
+  let bucketName: string;
+  let filePath: string;
+  
+  // Case 1: Full URL (old system with public bucket or signed URL)
+  if (url.includes('/storage/v1/object/')) {
+    const publicParts = url.split('/storage/v1/object/public/');
+    if (publicParts.length >= 2) {
+      // Public URL format
+      const pathParts = publicParts[1].split('/');
+      bucketName = pathParts[0];
+      filePath = pathParts.slice(1).join('/');
+    } else {
+      // Signed URL format
+      const signedParts = url.split('/storage/v1/object/sign/');
+      if (signedParts.length >= 2) {
+        const pathParts = signedParts[1].split('?')[0].split('/');
+        bucketName = pathParts[0];
+        filePath = pathParts.slice(1).join('/');
+      } else {
+        throw new Error('URL invalide');
+      }
+    }
+  } 
+  // Case 2: Relative path (new system with private bucket)
+  else {
+    const pathParts = url.split('/');
+    bucketName = pathParts[0];
+    filePath = pathParts.slice(1).join('/');
   }
   
-  const pathParts = urlParts[1].split('/');
-  const bucketName = pathParts[0];
-  const filePath = pathParts.slice(1).join('/');
+  if (!bucketName || !filePath) {
+    throw new Error('Chemin de fichier invalide');
+  }
   
   // Download the file from Supabase Storage
   const { data, error } = await supabase.storage
