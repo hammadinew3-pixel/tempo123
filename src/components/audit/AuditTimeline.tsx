@@ -152,9 +152,9 @@ export function AuditTimeline({ tableName, recordId, limit = 20 }: AuditTimeline
                     <Badge variant="outline" className={ACTION_COLORS[log.action]}>
                       {ACTION_LABELS[log.action]}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <Badge variant="secondary" className="text-xs font-medium">
                       {format(new Date(log.created_at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
-                    </span>
+                    </Badge>
                   </div>
 
                   {log.user_email && (
