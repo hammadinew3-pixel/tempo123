@@ -906,7 +906,9 @@ export default function Locations() {
                           })()}</td>
                         )}
                         {visibleColumns.statut && (
-                          <td className="py-4">{getStatusBadge(contract.statut)}</td>
+                          <td className="py-4">
+                            {getStatusBadge(isAssistance ? (contract as any).etat : contract.statut)}
+                          </td>
                         )}
                         <td className="py-4 text-foreground text-sm">
                           {new Date(contract.created_at).toLocaleString('fr-FR', {
