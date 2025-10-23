@@ -825,25 +825,6 @@ export default function Parametres() {
         </Card>
       </div>
 
-      {/* Security Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <KeyRound className="w-5 h-5" />
-            Sécurité du compte
-          </CardTitle>
-          <CardDescription>
-            Modifiez votre mot de passe
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={() => setIsChangePasswordDialogOpen(true)}>
-            <KeyRound className="w-4 h-4 mr-2" />
-            Modifier mon mot de passe
-          </Button>
-        </CardContent>
-      </Card>
-
       {/* Second row - Categories + Print settings */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Gestion des catégories d'assistance - Masquer si module non accessible */}
@@ -963,6 +944,25 @@ export default function Parametres() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Security Section - Moved to bottom */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <KeyRound className="w-5 h-5" />
+            Sécurité du compte
+          </CardTitle>
+          <CardDescription>
+            Modifiez votre mot de passe
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={() => setIsChangePasswordDialogOpen(true)}>
+            <KeyRound className="w-4 h-4 mr-2" />
+            Modifier mon mot de passe
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Change Password Dialog */}
       <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
