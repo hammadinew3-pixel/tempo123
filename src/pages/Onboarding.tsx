@@ -211,6 +211,8 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
           telephone,
           email,
           adresse,
+        }, {
+          onConflict: 'tenant_id'
         });
 
       if (error) throw error;
@@ -248,6 +250,8 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
           tenant_id: currentTenant.id,
           taux_tva: parseFloat(tauxTva),
           alerte_cheque_jours: alertesActives ? parseInt(delaiReglement) : null,
+        }, {
+          onConflict: 'tenant_id'
         });
 
       if (error) throw error;
@@ -282,6 +286,8 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
         .upsert({
           tenant_id: currentTenant.id,
           cgv_texte: cgv,
+        }, {
+          onConflict: 'tenant_id'
         });
 
       // Mark onboarding as completed
