@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useUserRole } from "@/hooks/use-user-role";
+import { ClientDocumentButton } from "@/components/clients/ClientDocumentButton";
 
 export default function AssistanceDetails() {
   const { id } = useParams<{ id: string }>();
@@ -917,24 +918,6 @@ export default function AssistanceDetails() {
     }
   };
 
-  const handleDownloadClientDoc = async (docUrl: string, docType: string) => {
-    try {
-      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
-      await downloadFromSupabase(docUrl, docType);
-      
-      toast({ 
-        title: 'Succès',
-        description: `${docType} téléchargé` 
-      });
-    } catch (e) {
-      console.error('Erreur téléchargement:', e);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: `Impossible de télécharger ${docType}`,
-      });
-    }
-  };
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -1056,16 +1039,28 @@ export default function AssistanceDetails() {
                 </DropdownMenuItem>
               )}
               {assistance.clients?.cin_url && (
-                <DropdownMenuItem onClick={() => handleDownloadClientDoc(assistance.clients.cin_url, 'CIN')}>
+                <ClientDocumentButton
+                  documentPath={assistance.clients.cin_url}
+                  filename="CIN"
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   CIN Client
-                </DropdownMenuItem>
+                </ClientDocumentButton>
               )}
               {assistance.clients?.permis_url && (
-                <DropdownMenuItem onClick={() => handleDownloadClientDoc(assistance.clients.permis_url, 'Permis')}>
+                <ClientDocumentButton
+                  documentPath={assistance.clients.permis_url}
+                  filename="Permis"
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Permis Client
-                </DropdownMenuItem>
+                </ClientDocumentButton>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -1644,14 +1639,15 @@ export default function AssistanceDetails() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{assistance.clients.cin}</span>
                       {assistance.clients.cin_url && (
-                        <Button
-                          variant="ghost"
+                        <ClientDocumentButton
+                          documentPath={assistance.clients.cin_url}
+                          filename="CIN"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleDownloadClientDoc(assistance.clients.cin_url, 'CIN')}
                           className="h-7 px-2"
                         >
                           <Download className="w-4 h-4" />
-                        </Button>
+                        </ClientDocumentButton>
                       )}
                     </div>
                   </div>
@@ -1662,14 +1658,15 @@ export default function AssistanceDetails() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{assistance.clients.permis_conduire}</span>
                       {assistance.clients.permis_url && (
-                        <Button
-                          variant="ghost"
+                        <ClientDocumentButton
+                          documentPath={assistance.clients.permis_url}
+                          filename="Permis"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleDownloadClientDoc(assistance.clients.permis_url, 'Permis')}
                           className="h-7 px-2"
                         >
                           <Download className="w-4 h-4" />
-                        </Button>
+                        </ClientDocumentButton>
                       )}
                     </div>
                   </div>
