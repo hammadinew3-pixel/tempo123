@@ -726,10 +726,6 @@ export default function Locations() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
-            <span className="hidden sm:inline">CHECK DISPO</span>
-            <span className="sm:hidden">Dispo</span>
-          </Button>
           {isAdmin && (
             <Button size="sm" className="h-8 md:h-9 text-xs md:text-sm" onClick={() => navigate('/locations/nouveau')}>
               <Plus className="w-3 h-3 md:w-4 md:h-4" />
