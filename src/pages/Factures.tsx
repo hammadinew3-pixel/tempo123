@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Filter, Download, Plus, Eye, Printer, FileText, Edit, Trash2 } from "lucide-react";
+import { Search, Filter, Download, Plus, Eye, Printer, FileText, Edit, Trash2, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,15 @@ export default function FacturesAssurance() {
   const [groupDialogDateRange, setGroupDialogDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [groupDialogSearch, setGroupDialogSearch] = useState("");
   const [filteredGroupDossiers, setFilteredGroupDossiers] = useState<any[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState({
+    numeroFacture: true,
+    numeroDossier: true,
+    assurance: true,
+    client: true,
+    date: true,
+    montant: true,
+    statut: true,
+  });
 
   useEffect(() => {
     loadData();
@@ -234,6 +243,10 @@ export default function FacturesAssurance() {
         {status.label}
       </Badge>
     );
+  };
+
+  const toggleColumn = (column: keyof typeof visibleColumns) => {
+    setVisibleColumns(prev => ({ ...prev, [column]: !prev[column] }));
   };
 
   const getTotalAmount = (assistance: any) => {
@@ -452,6 +465,77 @@ export default function FacturesAssurance() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings2 className="w-4 h-4 mr-2" />
+                    Colonnes
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56" align="end">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Afficher les colonnes</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="col-numero-facture"
+                          checked={visibleColumns.numeroFacture}
+                          onCheckedChange={() => toggleColumn('numeroFacture')}
+                        />
+                        <label htmlFor="col-numero-facture" className="text-sm cursor-pointer">N° Facture</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="col-numero-dossier"
+                          checked={visibleColumns.numeroDossier}
+                          onCheckedChange={() => toggleColumn('numeroDossier')}
+                        />
+                        <label htmlFor="col-numero-dossier" className="text-sm cursor-pointer">N° Dossier</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="col-assurance"
+                          checked={visibleColumns.assurance}
+                          onCheckedChange={() => toggleColumn('assurance')}
+                        />
+                        <label htmlFor="col-assurance" className="text-sm cursor-pointer">Assurance</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="col-client"
+                          checked={visibleColumns.client}
+                          onCheckedChange={() => toggleColumn('client')}
+                        />
+                        <label htmlFor="col-client" className="text-sm cursor-pointer">Client</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="col-date"
+                          checked={visibleColumns.date}
+                          onCheckedChange={() => toggleColumn('date')}
+                        />
+                        <label htmlFor="col-date" className="text-sm cursor-pointer">Date</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="col-montant"
+                          checked={visibleColumns.montant}
+                          onCheckedChange={() => toggleColumn('montant')}
+                        />
+                        <label htmlFor="col-montant" className="text-sm cursor-pointer">Montant</label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="col-statut"
+                          checked={visibleColumns.statut}
+                          onCheckedChange={() => toggleColumn('statut')}
+                        />
+                        <label htmlFor="col-statut" className="text-sm cursor-pointer">Statut</label>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -533,13 +617,13 @@ export default function FacturesAssurance() {
                       onCheckedChange={toggleSelectAllForStatus}
                     />
                   </th>
-                  <th className="pb-3 font-medium">N° Facture</th>
-                  <th className="pb-3 font-medium">N° Dossier</th>
-                  <th className="pb-3 font-medium">Assurance</th>
-                  <th className="pb-3 font-medium">Client</th>
-                  <th className="pb-3 font-medium">Date</th>
-                  <th className="pb-3 font-medium">Montant</th>
-                  <th className="pb-3 font-medium">Statut</th>
+                  {visibleColumns.numeroFacture && <th className="pb-3 font-medium">N° Facture</th>}
+                  {visibleColumns.numeroDossier && <th className="pb-3 font-medium">N° Dossier</th>}
+                  {visibleColumns.assurance && <th className="pb-3 font-medium">Assurance</th>}
+                  {visibleColumns.client && <th className="pb-3 font-medium">Client</th>}
+                  {visibleColumns.date && <th className="pb-3 font-medium">Date</th>}
+                  {visibleColumns.montant && <th className="pb-3 font-medium">Montant</th>}
+                  {visibleColumns.statut && <th className="pb-3 font-medium">Statut</th>}
                   <th className="pb-3 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -563,23 +647,37 @@ export default function FacturesAssurance() {
                           onCheckedChange={() => toggleStatusSelection(assistance.id)}
                         />
                       </td>
-                      <td className="py-4 font-medium text-foreground">FAC-{assistance.num_dossier}</td>
-                      <td className="py-4 text-foreground">{assistance.num_dossier}</td>
-                      <td className="py-4 text-foreground">
-                        {assistance.assurances?.nom || assistance.assureur_nom}
-                      </td>
-                      <td className="py-4 text-foreground">
-                        {assistance.clients?.nom} {assistance.clients?.prenom}
-                      </td>
-                      <td className="py-4 text-foreground">
-                        {format(new Date(assistance.date_debut), 'dd/MM/yyyy', { locale: fr })}
-                      </td>
-                      <td className="py-4 font-medium text-foreground">
-                        {getTotalAmount(assistance)} DH
-                      </td>
-                      <td className="py-4">
-                        {getStatusBadge(assistance.etat_paiement)}
-                      </td>
+                      {visibleColumns.numeroFacture && (
+                        <td className="py-4 font-medium text-foreground">FAC-{assistance.num_dossier}</td>
+                      )}
+                      {visibleColumns.numeroDossier && (
+                        <td className="py-4 text-foreground">{assistance.num_dossier}</td>
+                      )}
+                      {visibleColumns.assurance && (
+                        <td className="py-4 text-foreground">
+                          {assistance.assurances?.nom || assistance.assureur_nom}
+                        </td>
+                      )}
+                      {visibleColumns.client && (
+                        <td className="py-4 text-foreground">
+                          {assistance.clients?.nom} {assistance.clients?.prenom}
+                        </td>
+                      )}
+                      {visibleColumns.date && (
+                        <td className="py-4 text-foreground">
+                          {format(new Date(assistance.date_debut), 'dd/MM/yyyy', { locale: fr })}
+                        </td>
+                      )}
+                      {visibleColumns.montant && (
+                        <td className="py-4 font-medium text-foreground">
+                          {getTotalAmount(assistance)} DH
+                        </td>
+                      )}
+                      {visibleColumns.statut && (
+                        <td className="py-4">
+                          {getStatusBadge(assistance.etat_paiement)}
+                        </td>
+                      )}
                       <td className="py-4">
                         <div className="flex space-x-1">
                           <Button 
