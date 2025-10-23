@@ -11,16 +11,19 @@ import { FileEdit, Plus, Trash2 } from 'lucide-react';
 interface AuditTimelineProps {
   tableName?: string;
   recordId?: string;
+  action?: string;
+  startDate?: string;
+  endDate?: string;
   limit?: number;
 }
 
-export function AuditTimeline({ tableName, recordId, limit = 20 }: AuditTimelineProps) {
+export function AuditTimeline({ tableName, recordId, action, startDate, endDate, limit = 20 }: AuditTimelineProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadLogs();
-  }, [tableName, recordId]);
+  }, [tableName, recordId, action, startDate, endDate]);
 
   const loadLogs = async () => {
     try {
@@ -30,11 +33,20 @@ export function AuditTimeline({ tableName, recordId, limit = 20 }: AuditTimeline
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (tableName) {
+      if (tableName && tableName.trim()) {
         query = query.eq('table_name', tableName);
       }
       if (recordId) {
         query = query.eq('record_id', recordId);
+      }
+      if (action && action.trim()) {
+        query = query.eq('action', action);
+      }
+      if (startDate) {
+        query = query.gte('created_at', `${startDate}T00:00:00`);
+      }
+      if (endDate) {
+        query = query.lte('created_at', `${endDate}T23:59:59`);
       }
 
       const { data, error } = await query;

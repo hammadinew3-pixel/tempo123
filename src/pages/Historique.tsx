@@ -122,6 +122,9 @@ export default function Historique() {
         <CardContent>
           <AuditTimeline 
             tableName={filters.tableName || undefined}
+            action={filters.action || undefined}
+            startDate={filters.startDate || undefined}
+            endDate={filters.endDate || undefined}
             limit={50}
           />
         </CardContent>
