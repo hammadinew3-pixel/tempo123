@@ -434,7 +434,16 @@ export default function Locations() {
     setIsDialogOpen(true);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, etatPaiement?: string) => {
+    // Pour les assistances: si retour effectué mais en attente de paiement, afficher "En attente de paiement"
+    if (status === 'retour_effectue' && etatPaiement && etatPaiement !== 'paye') {
+      return (
+        <Badge variant="outline" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-0">
+          En attente de paiement
+        </Badge>
+      );
+    }
+
     const styles: Record<string, string> = {
       // Statuts pour les contrats de location
       brouillon: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100',
@@ -907,7 +916,10 @@ export default function Locations() {
                         )}
                         {visibleColumns.statut && (
                           <td className="py-4">
-                            {getStatusBadge(isAssistance ? (contract as any).etat : contract.statut)}
+                            {isAssistance 
+                              ? getStatusBadge((contract as any).etat, (contract as any).etat_paiement)
+                              : getStatusBadge(contract.statut)
+                            }
                           </td>
                         )}
                         <td className="py-4 text-foreground text-sm">
