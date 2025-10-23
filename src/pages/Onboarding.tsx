@@ -114,11 +114,11 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
           setCurrentStep(stepToResume);
         }
 
-        // Load agency settings (includes raison_sociale and ICE)
+        // Load tenant settings (includes raison_sociale and ICE)
         const { data: settingsData } = await supabase
-          .from("agence_settings")
+          .from("tenant_settings")
           .select("*")
-          .eq("id", currentTenant.id)
+          .eq("tenant_id", currentTenant.id)
           .single();
 
         if (settingsData) {
@@ -201,11 +201,11 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
         finalCachetUrl = await uploadFile(cachet, "agency-logos", "cachet");
       }
 
-      // Update or insert agency settings
+      // Update or insert tenant settings
       const { error } = await supabase
-        .from("agence_settings")
+        .from("tenant_settings")
         .upsert({
-          id: currentTenant.id,
+          tenant_id: currentTenant.id,
           logo_url: finalLogoUrl,
           signature_agence_url: finalCachetUrl,
           telephone,
@@ -243,9 +243,9 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
     setLoading(true);
     try {
       const { error } = await supabase
-        .from("agence_settings")
+        .from("tenant_settings")
         .upsert({
-          id: currentTenant.id,
+          tenant_id: currentTenant.id,
           taux_tva: parseFloat(tauxTva),
           alerte_cheque_jours: alertesActives ? parseInt(delaiReglement) : null,
         });
@@ -278,9 +278,9 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
     try {
       // Save CGV
       await supabase
-        .from("agence_settings")
+        .from("tenant_settings")
         .upsert({
-          id: currentTenant.id,
+          tenant_id: currentTenant.id,
           cgv_texte: cgv,
         });
 
