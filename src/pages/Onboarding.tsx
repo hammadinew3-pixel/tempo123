@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-
+import logoCrsapp from "@/assets/logo-crsapp.png";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Check, Building2, Settings, FileText, Upload, Loader2 } from "lucide-react";
@@ -350,7 +350,7 @@ Le client demeure seul responsable des amendes, contraventions, procès-verbaux 
       <div className="w-full max-w-3xl">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">CRSApp</h1>
+          <img src={logoCrsapp} alt="CRSApp" className="h-16 mx-auto mb-4" />
           <p className="text-muted-foreground">Configuration de votre agence</p>
         </div>
 
