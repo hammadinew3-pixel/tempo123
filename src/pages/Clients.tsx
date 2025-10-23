@@ -316,18 +316,10 @@ export default function Clients() {
         if (cinUpload.error) throw cinUpload.error;
         if (permisUpload.error) throw permisUpload.error;
 
-        const { data: { publicUrl: cinUrl } } = supabase.storage
-          .from('client-documents')
-          .getPublicUrl(cinPath);
-        
-        const { data: { publicUrl: permisUrl } } = supabase.storage
-          .from('client-documents')
-          .getPublicUrl(permisPath);
-
-        // Mise à jour avec les URLs
+        // Stocker les chemins relatifs (pas les URLs publiques)
         const { error: updateError } = await supabase
           .from('clients')
-          .update({ cin_url: cinUrl, permis_url: permisUrl })
+          .update({ cin_url: cinPath, permis_url: permisPath })
           .eq('id', newClient.id);
 
         if (updateError) throw updateError;

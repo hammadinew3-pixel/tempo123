@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useUserRole } from '@/hooks/use-user-role';
+import { ClientDocumentButton } from '@/components/clients/ClientDocumentButton';
 
 export default function ClientDetails() {
   const { id } = useParams();
@@ -142,24 +143,6 @@ export default function ClientDetails() {
     }
   };
 
-  const handleDownloadDocument = async (url: string, filename: string) => {
-    try {
-      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
-      await downloadFromSupabase(url, filename);
-      
-      toast({
-        title: 'Succès',
-        description: 'Document téléchargé',
-      });
-    } catch (error: any) {
-      console.error('Error downloading document:', error);
-      toast({
-        title: 'Erreur',
-        description: error.message || 'Impossible de télécharger le document',
-        variant: 'destructive',
-      });
-    }
-  };
 
 
 
@@ -204,11 +187,8 @@ export default function ClientDetails() {
         
         if (uploadError) throw uploadError;
         
-        const { data: { publicUrl } } = supabase.storage
-          .from('client-documents')
-          .getPublicUrl(cinPath);
-        
-        clientData.cin_url = publicUrl;
+        // Stocker le chemin relatif (pas l'URL publique)
+        clientData.cin_url = cinPath;
       }
 
       if (permisFile) {
@@ -219,11 +199,8 @@ export default function ClientDetails() {
         
         if (uploadError) throw uploadError;
         
-        const { data: { publicUrl } } = supabase.storage
-          .from('client-documents')
-          .getPublicUrl(permisPath);
-        
-        clientData.permis_url = publicUrl;
+        // Stocker le chemin relatif (pas l'URL publique)
+        clientData.permis_url = permisPath;
       }
 
       const { error } = await supabase
@@ -465,28 +442,24 @@ export default function ClientDetails() {
                   <div className="col-span-2">
                     <p className="text-sm text-muted-foreground mb-3">Pièces jointes</p>
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                      {client.cin_url && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDownloadDocument(client.cin_url, `CIN_${client.nom}_${client.prenom}`)}
-                          className="h-8 md:h-9 text-xs md:text-sm w-full sm:w-auto"
-                        >
-                          <Download className="w-3 h-3 md:w-4 md:h-4" />
-                          <span className="ml-2">CIN</span>
-                        </Button>
-                      )}
-                      {client.permis_url && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                        onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}`)}
-                          className="h-8 md:h-9 text-xs md:text-sm w-full sm:w-auto"
-                        >
-                          <Download className="w-3 h-3 md:w-4 md:h-4" />
-                          <span className="ml-2">Permis</span>
-                        </Button>
-                      )}
+                      <ClientDocumentButton
+                        documentPath={client.cin_url}
+                        filename={`CIN_${client.nom}_${client.prenom}`}
+                        size="sm"
+                        className="h-8 md:h-9 text-xs md:text-sm w-full sm:w-auto"
+                      >
+                        <Download className="w-3 h-3 md:w-4 md:h-4" />
+                        <span className="ml-2">CIN</span>
+                      </ClientDocumentButton>
+                      <ClientDocumentButton
+                        documentPath={client.permis_url}
+                        filename={`Permis_${client.nom}_${client.prenom}`}
+                        size="sm"
+                        className="h-8 md:h-9 text-xs md:text-sm w-full sm:w-auto"
+                      >
+                        <Download className="w-3 h-3 md:w-4 md:h-4" />
+                        <span className="ml-2">Permis</span>
+                      </ClientDocumentButton>
                       {!client.cin_url && !client.permis_url && (
                         <p className="text-sm text-muted-foreground">Aucun document</p>
                       )}
@@ -544,13 +517,13 @@ export default function ClientDetails() {
                   </div>
                   {client.permis_url && (
                     <div className="col-span-2">
-                      <Button 
-                        variant="outline"
-                        onClick={() => handleDownloadDocument(client.permis_url, `Permis_${client.nom}_${client.prenom}`)}
+                      <ClientDocumentButton
+                        documentPath={client.permis_url}
+                        filename={`Permis_${client.nom}_${client.prenom}`}
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Télécharger le document du permis
-                      </Button>
+                      </ClientDocumentButton>
                     </div>
                   )}
                 </div>
