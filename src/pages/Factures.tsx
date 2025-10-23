@@ -175,10 +175,45 @@ export default function FacturesAssurance() {
     if (selectedForStatus.length === 0) return;
     
     try {
+      // Récupérer les assistances sélectionnées pour créer des revenus
+      const selectedAssistances = assistances.filter(a => selectedForStatus.includes(a.id));
+      
+      // Mettre à jour le statut de paiement
       await supabase
         .from('assistance')
         .update({ etat_paiement: newStatus as 'en_attente' | 'partiellement_paye' | 'paye' })
         .in('id', selectedForStatus);
+      
+      // Si le statut est "payé", créer automatiquement des revenus pour chaque assistance
+      if (newStatus === 'paye') {
+        for (const assistance of selectedAssistances) {
+          // Vérifier si un revenu existe déjà pour cette assistance
+          const { data: existingRevenu } = await supabase
+            .from('revenus')
+            .select('id')
+            .eq('source_revenu', 'assistance')
+            .eq('note', `Paiement assistance ${assistance.num_dossier}`)
+            .single();
+          
+          // Si aucun revenu n'existe, en créer un
+          if (!existingRevenu) {
+            const montant = assistance.montant_paye || assistance.montant_facture || assistance.montant_total || 0;
+            
+            await supabase
+              .from('revenus')
+              .insert([{
+                montant: montant,
+                date_encaissement: assistance.date_paiement_assurance || new Date().toISOString().split('T')[0],
+                source_revenu: 'assistance',
+                mode_paiement: 'virement',
+                statut: 'paye',
+                client_id: assistance.client_id,
+                tenant_id: assistance.tenant_id,
+                note: `Paiement assistance ${assistance.num_dossier}`,
+              }]);
+          }
+        }
+      }
       
       await loadData();
       setSelectedForStatus([]);
