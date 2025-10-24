@@ -144,21 +144,37 @@ export default function InfractionDetails() {
         urlObj.searchParams.set('download', 'true');
         iframe.src = urlObj.toString();
 
-        // Attendre que la page soit chargée puis laisser le template générer le PDF
+        // Écouter le message de fin de téléchargement
+        const handlePdfComplete = (event: MessageEvent) => {
+          if (event.data.type === 'pdf-download-complete') {
+            // Nettoyer
+            if (iframe.parentNode) {
+              document.body.removeChild(iframe);
+            }
+            window.removeEventListener('message', handlePdfComplete);
+            
+            toast({
+              title: "Succès",
+              description: "Contrat téléchargé avec succès",
+            });
+          }
+        };
+        
+        window.addEventListener('message', handlePdfComplete);
+        
+        // Attendre que la page soit chargée
         await new Promise((resolve) => {
           iframe.onload = resolve;
         });
-        await new Promise(resolve => setTimeout(resolve, 2500));
-
-        // Nettoyer l'iframe
-        if (iframe.parentNode) {
-          document.body.removeChild(iframe);
-        }
-
-        toast({
-          title: "Succès",
-          description: "Contrat téléchargé avec succès",
-        });
+        
+        // Timeout de sécurité (10 secondes)
+        setTimeout(() => {
+          window.removeEventListener('message', handlePdfComplete);
+          if (iframe.parentNode) {
+            document.body.removeChild(iframe);
+          }
+        }, 10000);
+        
         return;
       }
 

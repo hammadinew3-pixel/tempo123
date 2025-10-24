@@ -49,11 +49,10 @@ export default function ContractTemplate() {
           };
           
           html2pdf().set(opt).from(element).save().then(() => {
-            setTimeout(() => {
-              if (window.parent !== window) {
-                window.parent.document.querySelector('iframe')?.remove();
-              }
-            }, 1000);
+            // Notifier le parent que le téléchargement est terminé
+            if (window.parent !== window) {
+              window.parent.postMessage({ type: 'pdf-download-complete' }, '*');
+            }
           });
         }, 500);
       } else {
