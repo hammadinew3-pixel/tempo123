@@ -738,7 +738,7 @@ export default function ClientDetails() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Immat: </span>
-                      <span className="font-medium">{contract.vehicles?.immatriculation}</span>
+                      <span className="font-medium">{contract.vehicles?.immatriculation || contract.vehicles?.matricule_provisoire || '—'}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Début: </span>
