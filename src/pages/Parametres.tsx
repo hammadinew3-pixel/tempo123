@@ -80,6 +80,24 @@ export default function Parametres() {
   }, [isAdmin, roleLoading, navigate, toast]);
 
   useEffect(() => {
+    const handlePdfMessage = (event: MessageEvent) => {
+      if (event.data.type === 'pdf-ready') {
+        const { filename, blob } = event.data;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setGeneratingBlankContract(false);
+      }
+    };
+    
+    window.addEventListener('message', handlePdfMessage);
+    return () => window.removeEventListener('message', handlePdfMessage);
+  }, []);
+
+  useEffect(() => {
     if (isAdmin) {
       loadSettings();
       loadTenantOnboardingStatus();
@@ -523,7 +541,21 @@ export default function Parametres() {
   };
 
   const handleDownloadBlankContract = () => {
-    window.open('/contract-template?blank=true&download=true', '_blank');
+    setGeneratingBlankContract(true);
+    
+    // Créer un iframe caché
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = '/contract-template?blank=true&download=true';
+    document.body.appendChild(iframe);
+    
+    // Nettoyer l'iframe après 10 secondes
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+      setGeneratingBlankContract(false);
+    }, 10000);
   };
 
   if (roleLoading || planLoading || !isAdmin || loading) {
@@ -954,10 +986,11 @@ export default function Parametres() {
             <div className="pt-4 border-t">
               <Button
                 onClick={handleDownloadBlankContract}
+                disabled={generatingBlankContract}
                 className="w-full bg-red-600 hover:bg-red-700 text-white"
               >
                 <FileDown className="w-4 h-4 mr-2" />
-                Télécharger un contrat vierge
+                {generatingBlankContract ? "Génération en cours..." : "Télécharger un contrat vierge"}
               </Button>
               <p className="text-xs text-muted-foreground mt-2 text-center">
                 Génère un PDF de contrat sans informations client/véhicule, à remplir manuellement
