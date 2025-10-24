@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,9 +129,9 @@ export default function Auth() {
                     <Label htmlFor="password" className="text-foreground font-medium">
                       Mot de passe
                     </Label>
-                    <button type="button" className="text-sm text-[#c01533] hover:text-[#8a0f24] transition-colors hover:underline">
-                      Oublié?
-                    </button>
+                    <Link to="/auth/forgot-password" className="text-sm text-[#c01533] hover:text-[#8a0f24] transition-colors hover:underline">
+                      Mot de passe oublié ?
+                    </Link>
                   </div>
                   <div className="relative group">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-[#c01533] transition-colors" />

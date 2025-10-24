@@ -60,6 +60,8 @@ import NouvelleInfraction from "./pages/infractions/Nouveau";
 import InfractionDetails from "./pages/infractions/Details";
 import ModifierInfraction from "./pages/infractions/Modifier";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
 import MonAbonnement from "./pages/MonAbonnement";
@@ -122,6 +124,8 @@ const App = () => (
             <Routes>
             {/* Routes publiques */}
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/register" element={<Register />} />
             <Route path="/choisir-pack" element={<ChoisirPack />} />
             <Route path="/paiement" element={<Paiement />} />
