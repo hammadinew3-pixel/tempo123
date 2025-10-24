@@ -233,9 +233,9 @@ export default function NouveauVehicule() {
         </div>
       </div>
 
-      {showWarning && <Alert className="bg-orange-900/20 border-orange-500/50">
-          <AlertCircle className="h-4 w-4 text-orange-400" />
-          <AlertDescription className="text-orange-200">
+      {showWarning && <Alert variant="destructive" className="border-orange-500">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
             Vous approchez de la limite : {planData.usage.vehicles.current}/{planData.usage.vehicles.max} véhicules utilisés ({planData.usage.vehicles.percentage}%).
             Pensez à mettre à niveau votre plan.
           </AlertDescription>
@@ -272,9 +272,9 @@ export default function NouveauVehicule() {
 
         {/* Encart information pour sous-location */}
         {formData.type_vehicule === 'sous_location' && (
-          <Alert className="bg-blue-900/20 border-blue-500/50">
-            <AlertCircle className="h-4 w-4 text-blue-400" />
-            <AlertDescription className="text-blue-200">
+          <Alert className="bg-muted border-border">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
               💡 Ce véhicule est en sous-location ; les coûts seront enregistrés automatiquement dans les dépenses.
               Les alertes et documents techniques ne s'appliquent pas.
             </AlertDescription>
