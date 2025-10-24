@@ -7,38 +7,37 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, Car, Truck, Bus, Shield, ArrowRight } from "lucide-react";
 import logoImage from "@/assets/logo-crsapp.png";
-
 export default function Auth() {
-  const { signIn } = useAuth();
-  const { toast } = useToast();
+  const {
+    signIn
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const { error } = await signIn(email, password);
-
+    const {
+      error
+    } = await signIn(email, password);
     if (error) {
       toast({
         title: "Erreur de connexion",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } else {
       toast({
         title: "Connexion réussie",
-        description: "Bienvenue!",
+        description: "Bienvenue!"
       });
     }
-
     setLoading(false);
   };
-
-  return (
-    <div className="min-h-screen flex">
+  return <div className="min-h-screen flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#c01533] to-[#8a0f24] relative overflow-hidden">
         {/* Geometric shapes background */}
@@ -52,11 +51,7 @@ export default function Auth() {
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-white">
           {/* Logo */}
           <div className="animate-fade-in">
-            <img 
-              src={logoImage} 
-              alt="CRSApp Logo" 
-              className="w-64 h-auto mb-8 drop-shadow-2xl"
-            />
+            
           </div>
 
           {/* Slogan */}
@@ -95,11 +90,7 @@ export default function Auth() {
             <CardContent className="pt-8">
               {/* Logo */}
               <div className="flex justify-center mb-6">
-                <img 
-                  src={logoImage} 
-                  alt="CRSApp Logo" 
-                  className="w-40 h-auto"
-                />
+                <img src={logoImage} alt="CRSApp Logo" className="w-40 h-auto" />
               </div>
 
               {/* Welcome message */}
@@ -127,15 +118,7 @@ export default function Auth() {
                   </Label>
                   <div className="relative group">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-[#c01533] transition-colors" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="votre@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="pl-11 h-12 border-input focus:border-[#c01533] transition-all duration-300 hover:border-[#c01533]/50"
-                    />
+                    <Input id="email" type="email" placeholder="votre@email.com" value={email} onChange={e => setEmail(e.target.value)} required className="pl-11 h-12 border-input focus:border-[#c01533] transition-all duration-300 hover:border-[#c01533]/50" />
                   </div>
                 </div>
 
@@ -145,44 +128,25 @@ export default function Auth() {
                     <Label htmlFor="password" className="text-foreground font-medium">
                       Mot de passe
                     </Label>
-                    <button
-                      type="button"
-                      className="text-sm text-[#c01533] hover:text-[#8a0f24] transition-colors hover:underline"
-                    >
+                    <button type="button" className="text-sm text-[#c01533] hover:text-[#8a0f24] transition-colors hover:underline">
                       Oublié?
                     </button>
                   </div>
                   <div className="relative group">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-[#c01533] transition-colors" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="pl-11 h-12 border-input focus:border-[#c01533] transition-all duration-300 hover:border-[#c01533]/50"
-                    />
+                    <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="pl-11 h-12 border-input focus:border-[#c01533] transition-all duration-300 hover:border-[#c01533]/50" />
                   </div>
                 </div>
 
                 {/* Submit button */}
-                <Button 
-                  type="submit" 
-                  className="w-full h-12 bg-[#c01533] hover:bg-[#8a0f24] text-white font-semibold text-base transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group" 
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
+                <Button type="submit" className="w-full h-12 bg-[#c01533] hover:bg-[#8a0f24] text-white font-semibold text-base transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group" disabled={loading}>
+                  {loading ? <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                       Connexion...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       Se connecter
                       <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
+                    </>}
                 </Button>
               </form>
 
@@ -212,6 +176,5 @@ export default function Auth() {
           50% { transform: translateY(-20px); }
         }
       `}</style>
-    </div>
-  );
+    </div>;
 }
