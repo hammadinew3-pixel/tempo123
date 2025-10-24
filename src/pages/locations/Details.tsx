@@ -1036,43 +1036,43 @@ export default function LocationDetails() {
   const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl md:text-2xl font-bold">
             Location N° {contract.numero_contrat}
           </h1>
-          <div className="flex items-center text-sm text-muted-foreground space-x-2 mt-2">
-            <Link to="/" className="hover:text-foreground">Tableau de bord</Link>
+          <div className="flex items-center text-xs md:text-sm text-muted-foreground space-x-2 mt-2 overflow-x-auto">
+            <Link to="/" className="hover:text-foreground whitespace-nowrap">Tableau de bord</Link>
             <span>›</span>
-            <Link to="/locations" className="hover:text-foreground">Locations</Link>
+            <Link to="/locations" className="hover:text-foreground whitespace-nowrap">Locations</Link>
             <span>›</span>
-            <span className="text-foreground">N° {contract.numero_contrat}</span>
+            <span className="text-foreground whitespace-nowrap">N° {contract.numero_contrat}</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {getStatusBadge(contract.statut)}
-          <Button variant="outline" size="sm" onClick={handleGenerateInvoice}>
-            <FileText className="w-4 h-4 mr-2" />
-            Générer facture
+          <Button variant="outline" size="sm" onClick={handleGenerateInvoice} className="flex-1 md:flex-none min-w-0">
+            <FileText className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Générer facture</span>
           </Button>
           {(contract.statut === 'livre' || contract.statut === 'contrat_valide') && (
-            <Button variant="outline" size="sm" onClick={() => setShowChangeVehicleDialog(true)}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Changer véhicule
+            <Button variant="outline" size="sm" onClick={() => setShowChangeVehicleDialog(true)} className="flex-1 md:flex-none min-w-0">
+              <RefreshCw className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Changer véhicule</span>
             </Button>
           )}
           {contract.pdf_url && (
-            <Button variant="outline" size="sm" onClick={handleDownloadExistingPDF}>
-              <Download className="w-4 h-4 mr-2" />
-              Télécharger contrat
+            <Button variant="outline" size="sm" onClick={handleDownloadExistingPDF} className="flex-1 md:flex-none min-w-0">
+              <Download className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Télécharger contrat</span>
             </Button>
           )}
           {!contract.pdf_url && contract.statut !== 'brouillon' && (
-            <Button variant="outline" size="sm" onClick={handleGeneratePDF}>
-              <FileText className="w-4 h-4 mr-2" />
-              Générer PDF
+            <Button variant="outline" size="sm" onClick={handleGeneratePDF} className="flex-1 md:flex-none min-w-0">
+              <FileText className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Générer PDF</span>
             </Button>
           )}
         </div>

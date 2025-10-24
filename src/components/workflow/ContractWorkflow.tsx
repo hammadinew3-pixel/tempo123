@@ -68,17 +68,17 @@ export function ContractWorkflow({ currentStatus, onStepAction, canProceed }: Co
 
   return (
     <Card className="border-primary/20">
-      <CardContent className="pt-6">
-        <div className="space-y-6">
+      <CardContent className="pt-4 md:pt-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Visual Steps */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between overflow-x-auto pb-2">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center flex-1">
+              <div key={step.id} className="flex items-center flex-shrink-0">
                 {/* Step Circle */}
                 <div className="flex flex-col items-center relative">
                   <div
                     className={`
-                      w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all
+                      w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-all flex-shrink-0
                       ${step.status === 'completed' 
                         ? 'bg-primary border-primary text-primary-foreground' 
                         : step.status === 'current'
@@ -88,14 +88,14 @@ export function ContractWorkflow({ currentStatus, onStepAction, canProceed }: Co
                     `}
                   >
                     {step.status === 'completed' ? (
-                      <CheckCircle2 className="w-5 h-5" />
+                      <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5" />
                     ) : (
-                      <Circle className="w-5 h-5" />
+                      <Circle className="w-4 h-4 md:w-5 md:h-5" />
                     )}
                   </div>
                   <span
                     className={`
-                      text-xs mt-2 font-medium text-center whitespace-nowrap
+                      text-[10px] md:text-xs mt-1 md:mt-2 font-medium text-center whitespace-nowrap
                       ${step.status === 'current' ? 'text-primary' : 'text-muted-foreground'}
                     `}
                   >
@@ -105,7 +105,7 @@ export function ContractWorkflow({ currentStatus, onStepAction, canProceed }: Co
 
                 {/* Connector Line */}
                 {index < steps.length - 1 && (
-                  <div className="flex-1 mx-2">
+                  <div className="flex-shrink-0 mx-1 md:mx-2 w-6 md:w-12">
                     <div
                       className={`
                         h-0.5 w-full transition-all
@@ -123,15 +123,15 @@ export function ContractWorkflow({ currentStatus, onStepAction, canProceed }: Co
 
           {/* Current Step Action */}
           {currentStep?.action && canProceed && (
-            <div className="bg-muted/30 rounded-lg p-4 border border-primary/20">
-              <div className="flex items-center justify-between">
+            <div className="bg-muted/30 rounded-lg p-3 md:p-4 border border-primary/20">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                  <p className="font-semibold text-foreground">Étape suivante</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-semibold text-sm md:text-base text-foreground">Étape suivante</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Cliquez pour passer à : {currentStep.actionLabel}
                   </p>
                 </div>
-                <Button onClick={currentStep.action} size="sm">
+                <Button onClick={currentStep.action} size="sm" className="w-full md:w-auto">
                   <ArrowRight className="w-4 h-4 mr-2" />
                   {currentStep.actionLabel}
                 </Button>
@@ -141,7 +141,7 @@ export function ContractWorkflow({ currentStatus, onStepAction, canProceed }: Co
 
           {/* Status Badge */}
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Statut actuel : <span className="font-semibold text-foreground">{currentStep?.label}</span>
             </p>
           </div>
