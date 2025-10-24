@@ -530,10 +530,9 @@ export default function Cheques() {
                     setDialogType('reçu');
                   }}>
                     <DialogTrigger asChild>
-                      <Button onClick={() => setDialogType('reçu')} size="sm" className="md:size-default whitespace-nowrap">
-                        <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Nouveau Chèque Reçu</span>
-                        <span className="sm:hidden">Nouveau</span>
+                      <Button onClick={() => setDialogType('reçu')} size="sm" className="md:size-default">
+                        <Plus className="w-4 h-4 md:mr-2" />
+                        <span className="hidden md:inline">Nouveau Chèque Reçu</span>
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
@@ -646,10 +645,9 @@ export default function Cheques() {
                     setDialogType('émis');
                   }}>
                     <DialogTrigger asChild>
-                      <Button onClick={() => setDialogType('émis')} size="sm" className="md:size-default whitespace-nowrap">
-                        <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Nouveau Chèque Émis</span>
-                        <span className="sm:hidden">Nouveau</span>
+                      <Button onClick={() => setDialogType('émis')} size="sm" className="md:size-default">
+                        <Plus className="w-4 h-4 md:mr-2" />
+                        <span className="hidden md:inline">Nouveau Chèque Émis</span>
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl">
