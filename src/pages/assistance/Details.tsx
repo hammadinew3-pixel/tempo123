@@ -626,21 +626,26 @@ export default function AssistanceDetails() {
         description: "Veuillez patienter...",
       });
 
-      // Ouvrir le template dans un iframe caché pour générer le PDF
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.top = '-10000px';
-      iframe.style.left = '-10000px';
-      iframe.style.width = '210mm';
-      iframe.style.height = '297mm';
-      document.body.appendChild(iframe);
+      const { data, error } = await supabase.functions.invoke('generate-assistance-contract-pdf', {
+        body: { assistanceId: id },
+      });
 
-      iframe.src = `/assistance-contract-template?id=${id}&download=true`;
+      if (error) {
+        console.error('Erreur lors de la génération:', error);
+        throw error;
+      }
 
-      // Attendre que le PDF soit généré (l'iframe se supprimera automatiquement)
+      if (!data?.url) {
+        throw new Error('URL du PDF non reçue');
+      }
+
+      // Télécharger le PDF
+      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
+      await downloadFromSupabase(data.url, `contrat_assistance_${assistance.num_dossier}`);
+
       toast({
-        title: 'Contrat en cours de téléchargement',
-        description: 'Le PDF sera téléchargé automatiquement',
+        title: 'Contrat téléchargé',
+        description: 'Le contrat a été généré et téléchargé avec succès',
       });
     } catch (error: any) {
       console.error('Erreur génération contrat:', error);
