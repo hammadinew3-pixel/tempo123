@@ -117,25 +117,25 @@ export default function Maintenance() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-3 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Wrench className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <Wrench className="h-6 w-6 md:h-8 md:w-8 text-primary" />
             Maintenance & Interventions
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Gestion complète des interventions mécaniques
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleExport} variant="outline">
-            <FileDown className="h-4 w-4 mr-2" />
-            Exporter
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleExport} variant="outline" size="sm" className="md:size-default">
+            <FileDown className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Exporter</span>
           </Button>
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle intervention
+          <Button onClick={() => setShowAddDialog(true)} size="sm" className="md:size-default">
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Nouvelle intervention</span>
           </Button>
         </div>
       </div>

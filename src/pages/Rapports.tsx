@@ -20,14 +20,14 @@ export default function Rapports() {
   });
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-3 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <BarChart3 className="w-6 h-6" />
+          <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 md:w-6 md:h-6" />
             Rapports Détaillés
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Analysez vos données avec des rapports complets et exports
           </p>
         </div>
@@ -62,7 +62,7 @@ export default function Rapports() {
       </Card>
 
       <Tabs defaultValue="vehicles" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="vehicles">
             <Car className="w-4 h-4 mr-2" />
             Par Voiture

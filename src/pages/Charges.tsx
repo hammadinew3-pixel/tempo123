@@ -331,21 +331,21 @@ export default function Charges() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-3 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <TrendingDown className="w-6 h-6" />
+          <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+            <TrendingDown className="w-5 h-5 md:w-6 md:h-6" />
             Charges & Dépenses
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Gérez toutes vos dépenses et charges de l'agence
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportData}>
-            <Download className="w-4 h-4 mr-2" />
-            Exporter
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={exportData} size="sm" className="md:size-default">
+            <Download className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Exporter</span>
           </Button>
           {isAdmin && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

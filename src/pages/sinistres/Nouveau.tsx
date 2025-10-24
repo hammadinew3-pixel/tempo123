@@ -219,14 +219,14 @@ export default function NouveauSinistre() {
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-4xl mx-auto">
+    <div className="space-y-6 p-3 md:p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" onClick={() => navigate('/sinistres')}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Nouveau sinistre</h1>
-          <p className="text-sm text-muted-foreground">Déclarez un incident lié à un véhicule</p>
+          <h1 className="text-xl md:text-2xl font-bold">Nouveau sinistre</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Déclarez un incident lié à un véhicule</p>
         </div>
       </div>
 

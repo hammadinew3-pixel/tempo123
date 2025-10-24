@@ -347,14 +347,14 @@ export default function Cheques() {
   );
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-3 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <CreditCard className="w-6 h-6" />
+          <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+            <CreditCard className="w-5 h-5 md:w-6 md:h-6" />
             Gestion des Chèques
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Gérez les chèques reçus et émis
           </p>
         </div>
