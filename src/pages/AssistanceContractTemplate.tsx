@@ -17,9 +17,23 @@ export default function AssistanceContractTemplate() {
   }, [assistanceId]);
 
   const loadData = async () => {
-    if (!assistanceId) return;
+    if (!assistanceId) {
+      const errorMsg = "ID d'assistance manquant";
+      console.error(errorMsg);
+      if (downloadMode && window.parent !== window) {
+        window.parent.postMessage({ 
+          type: 'pdf-error', 
+          message: errorMsg,
+          details: 'Aucun ID fourni dans l\'URL'
+        }, '*');
+      }
+      setLoading(false);
+      return;
+    }
 
     try {
+      console.log('[AssistanceContract] Chargement assistance:', assistanceId);
+      
       const assistanceRes = await supabase
         .from("assistance")
         .select(`
@@ -31,8 +45,23 @@ export default function AssistanceContractTemplate() {
         .single();
 
       if (assistanceRes.error) {
-        console.error("Error loading assistance:", assistanceRes.error);
+        const errorMsg = `Erreur chargement assistance: ${assistanceRes.error.message}`;
+        console.error("[AssistanceContract] Erreur Supabase:", assistanceRes.error);
+        
+        if (downloadMode && window.parent !== window) {
+          window.parent.postMessage({ 
+            type: 'pdf-error', 
+            message: 'Impossible de charger le dossier d\'assistance',
+            details: assistanceRes.error.message,
+            code: assistanceRes.error.code,
+            hint: assistanceRes.error.hint
+          }, '*');
+        }
+        
+        setLoading(false);
+        return;
       } else {
+        console.log('[AssistanceContract] Assistance chargée avec succès');
         let assistanceData: any = assistanceRes.data;
         
         // Charger les données de l'assurance si assureur_id existe
