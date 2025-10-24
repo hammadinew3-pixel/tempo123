@@ -234,7 +234,7 @@ export default function NouvelleInfraction() {
           withTenantId({
             infraction_id: infractionData.id,
             file_name: `Contrat_${contract.numero_contrat}`,
-            file_url: `/contrat/${contract.id}`,
+            file_url: `/contract-template?id=${contract.id}`,
             file_type: "contrat",
           }),
         ]);

@@ -131,6 +131,13 @@ export default function InfractionDetails() {
           description: "Veuillez patienter pendant la génération du PDF...",
         });
 
+        // Corriger l'URL si c'est l'ancien format
+        let contractUrl = file.file_url;
+        if (contractUrl.startsWith('/contrat/')) {
+          const contractId = contractUrl.split('/contrat/')[1];
+          contractUrl = `/contract-template?id=${contractId}`;
+        }
+
         // Créer un iframe invisible pour charger la page
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
@@ -139,14 +146,17 @@ export default function InfractionDetails() {
         iframe.style.height = '297mm';
         document.body.appendChild(iframe);
 
-        // Charger la page du contrat en mode téléchargement (désactive l'impression)
-        const urlObj = new URL(file.file_url, window.location.origin);
+        // Charger la page du contrat en mode téléchargement
+        const urlObj = new URL(contractUrl, window.location.origin);
         urlObj.searchParams.set('download', 'true');
         iframe.src = urlObj.toString();
 
+        let downloadCompleted = false;
+
         // Écouter le message de fin de téléchargement
         const handlePdfComplete = (event: MessageEvent) => {
-          if (event.data.type === 'pdf-download-complete') {
+          if (event.data.type === 'pdf-download-complete' && !downloadCompleted) {
+            downloadCompleted = true;
             // Nettoyer
             if (iframe.parentNode) {
               document.body.removeChild(iframe);
@@ -166,6 +176,23 @@ export default function InfractionDetails() {
         await new Promise((resolve) => {
           iframe.onload = resolve;
         });
+        
+        // Fallback: Si pas de message après 3 secondes, ouvrir dans un nouvel onglet
+        setTimeout(() => {
+          if (!downloadCompleted) {
+            window.open(urlObj.toString(), '_blank');
+            
+            if (iframe.parentNode) {
+              document.body.removeChild(iframe);
+            }
+            window.removeEventListener('message', handlePdfComplete);
+            
+            toast({
+              title: "Téléchargement démarré",
+              description: "Le contrat s'ouvre dans un nouvel onglet",
+            });
+          }
+        }, 3000);
         
         // Timeout de sécurité (10 secondes)
         setTimeout(() => {
