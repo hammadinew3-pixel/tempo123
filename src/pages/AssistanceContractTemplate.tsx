@@ -78,29 +78,45 @@ export default function AssistanceContractTemplate() {
           if (!element) return;
 
           const opt = {
-            margin: [10, 10, 10, 10] as [number, number, number, number],
-            filename: `Contrat_${assistance.num_dossier}.pdf`,
+            margin: 10,
+            filename: `Contrat_${assistance.num_dossier || assistanceId}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+            html2canvas: { 
+              scale: 2, 
+              useCORS: true, 
+              allowTaint: true, 
+              logging: false, 
+              backgroundColor: '#ffffff' 
+            },
+            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
 
-          html2pdf().set(opt).from(element).save().then(() => {
-            setTimeout(() => {
-              try {
+          html2pdf()
+            .set(opt)
+            .from(element)
+            .toPdf()
+            .get('pdf')
+            .then((pdf: any) => {
+              const blob: Blob = pdf.output('blob');
+              const filename = `Contrat_${assistance.num_dossier || assistanceId}.pdf`;
+
+              if (window.parent !== window) {
+                // En iframe: envoyer au parent
+                window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
+              } else {
+                // Fallback: déclencher ici + fermer si nouvel onglet
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
                 if (window.opener) {
-                  // Ouvert dans un nouvel onglet: on ferme l'onglet
-                  window.close();
-                } else if (window.parent !== window) {
-                  // Ouvert dans un iframe: on tente de retirer l'iframe
-                  window.parent.document.querySelector('iframe')?.remove();
+                  setTimeout(() => window.close(), 800);
                 }
-              } catch (e) {
-                // Ignorer les erreurs cross-origin
               }
-            }, 800);
-          });
+            });
         }, 500);
       } else {
         // Mode impression classique

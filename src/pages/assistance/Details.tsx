@@ -620,13 +620,53 @@ export default function AssistanceDetails() {
   };
 
   const handleGenerateContractPDF = () => {
-    const url = `/assistance-contract-template?id=${id}&download=true`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-    
-    toast({
-      title: 'Contrat généré',
-      description: 'Le téléchargement du PDF va démarrer automatiquement.',
-    });
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      const handleMessage = (event: MessageEvent) => {
+        const data: any = (event as any).data;
+        if (data?.type === 'pdf-ready' && data?.blob) {
+          try {
+            const url = URL.createObjectURL(data.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.filename || `Contrat_${assistance?.num_dossier || id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+          } finally {
+            window.removeEventListener('message', handleMessage);
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+          }
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+      iframe.src = `/assistance-contract-template?id=${id}&download=true`;
+
+      toast({
+        title: 'Contrat en cours de téléchargement',
+        description: 'Le PDF sera téléchargé automatiquement',
+      });
+
+      // Fallback: si aucun message dans 20s, nettoyer
+      setTimeout(() => {
+        try {
+          window.removeEventListener('message', handleMessage);
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        } catch {}
+      }, 20000);
+    } catch (error: any) {
+      console.error('Erreur génération PDF Assistance:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de générer le PDF",
+      });
+    }
   };
 
   const handleGenerateDossierPDF = async () => {
