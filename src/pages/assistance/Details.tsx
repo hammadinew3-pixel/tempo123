@@ -641,6 +641,14 @@ export default function AssistanceDetails() {
             window.removeEventListener('message', handleMessage);
             if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
           }
+        } else if (data?.type === 'pdf-error') {
+          toast({
+            variant: "destructive",
+            title: "Erreur PDF",
+            description: data.message || "Erreur lors de la génération du contrat"
+          });
+          window.removeEventListener('message', handleMessage);
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
         }
       };
 
@@ -652,13 +660,18 @@ export default function AssistanceDetails() {
         description: 'Le PDF sera téléchargé automatiquement',
       });
 
-      // Fallback: si aucun message dans 20s, nettoyer
+      // Fallback: si aucun message dans 10s, ouvrir en nouvel onglet
       setTimeout(() => {
         try {
           window.removeEventListener('message', handleMessage);
           if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+          window.open(`/assistance-contract-template?id=${id}&download=true`, '_blank');
+          toast({
+            title: 'Fallback activé',
+            description: 'Consultez le nouvel onglet pour télécharger le contrat.'
+          });
         } catch {}
-      }, 20000);
+      }, 10000);
     } catch (error: any) {
       console.error('Erreur génération PDF Assistance:', error);
       toast({

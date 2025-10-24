@@ -57,7 +57,7 @@ export default function AssistanceContractTemplate() {
       const settingsRes = await supabase
         .from('tenant_settings')
         .select('*')
-        .maybeSingle();
+        .single();
       
       if (!settingsRes.error && settingsRes.data) {
         setAgenceSettings(settingsRes.data);
@@ -72,10 +72,16 @@ export default function AssistanceContractTemplate() {
   useEffect(() => {
     if (assistance && !loading) {
       if (downloadMode) {
-        // Mode téléchargement PDF
+        // Mode téléchargement PDF - attendre que les images se chargent
         setTimeout(() => {
           const element = document.getElementById('contract-content');
-          if (!element) return;
+          if (!element) {
+            const message = 'Élément contract-content introuvable';
+            if (window.parent !== window) {
+              window.parent.postMessage({ type: 'pdf-error', message }, '*');
+            }
+            return;
+          }
 
           const opt = {
             margin: 10,
@@ -116,8 +122,15 @@ export default function AssistanceContractTemplate() {
                   setTimeout(() => window.close(), 800);
                 }
               }
+            })
+            .catch((err: any) => {
+              const message = err?.message || 'Erreur lors de la génération du PDF Assistance';
+              console.error('Erreur html2pdf:', err);
+              if (window.parent !== window) {
+                window.parent.postMessage({ type: 'pdf-error', message }, '*');
+              }
             });
-        }, 500);
+        }, 1000);
       } else {
         // Mode impression classique
         setTimeout(() => window.print(), 500);
