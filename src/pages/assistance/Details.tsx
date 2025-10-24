@@ -619,65 +619,35 @@ export default function AssistanceDetails() {
     }
   };
 
-  const handleGenerateContractPDF = () => {
+  const handleGenerateContractPDF = async () => {
     try {
+      toast({
+        title: "Génération du contrat",
+        description: "Veuillez patienter...",
+      });
+
+      // Ouvrir le template dans un iframe caché pour générer le PDF
       const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
+      iframe.style.position = 'fixed';
+      iframe.style.top = '-10000px';
+      iframe.style.left = '-10000px';
+      iframe.style.width = '210mm';
+      iframe.style.height = '297mm';
       document.body.appendChild(iframe);
 
-      const handleMessage = (event: MessageEvent) => {
-        const data: any = (event as any).data;
-        if (data?.type === 'pdf-ready' && data?.blob) {
-          try {
-            const url = URL.createObjectURL(data.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = data.filename || `Contrat_${assistance?.num_dossier || id}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1500);
-          } finally {
-            window.removeEventListener('message', handleMessage);
-            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-          }
-        } else if (data?.type === 'pdf-error') {
-          toast({
-            variant: "destructive",
-            title: "Erreur PDF",
-            description: data.message || "Erreur lors de la génération du contrat"
-          });
-          window.removeEventListener('message', handleMessage);
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
       iframe.src = `/assistance-contract-template?id=${id}&download=true`;
 
+      // Attendre que le PDF soit généré (l'iframe se supprimera automatiquement)
       toast({
         title: 'Contrat en cours de téléchargement',
         description: 'Le PDF sera téléchargé automatiquement',
       });
-
-      // Fallback: si aucun message dans 10s, ouvrir en nouvel onglet
-      setTimeout(() => {
-        try {
-          window.removeEventListener('message', handleMessage);
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-          window.open(`/assistance-contract-template?id=${id}&download=true`, '_blank');
-          toast({
-            title: 'Fallback activé',
-            description: 'Consultez le nouvel onglet pour télécharger le contrat.'
-          });
-        } catch {}
-      }, 10000);
     } catch (error: any) {
-      console.error('Erreur génération PDF Assistance:', error);
+      console.error('Erreur génération contrat:', error);
       toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: error.message || "Impossible de générer le PDF",
+        title: 'Erreur de génération',
+        description: error.message || 'Impossible de générer le contrat',
+        variant: 'destructive',
       });
     }
   };

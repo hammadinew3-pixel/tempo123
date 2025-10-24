@@ -57,7 +57,7 @@ export default function AssistanceContractTemplate() {
       const settingsRes = await supabase
         .from('tenant_settings')
         .select('*')
-        .single();
+        .maybeSingle();
       
       if (!settingsRes.error && settingsRes.data) {
         setAgenceSettings(settingsRes.data);
@@ -72,65 +72,29 @@ export default function AssistanceContractTemplate() {
   useEffect(() => {
     if (assistance && !loading) {
       if (downloadMode) {
-        // Mode téléchargement PDF - attendre que les images se chargent
+        // Mode téléchargement PDF
         setTimeout(() => {
           const element = document.getElementById('contract-content');
-          if (!element) {
-            const message = 'Élément contract-content introuvable';
-            if (window.parent !== window) {
-              window.parent.postMessage({ type: 'pdf-error', message }, '*');
-            }
-            return;
-          }
+          if (!element) return;
 
           const opt = {
-            margin: 10,
-            filename: `Contrat_${assistance.num_dossier || assistanceId}.pdf`,
+            margin: [10, 10, 10, 10] as [number, number, number, number],
+            filename: `Contrat_${assistance.num_dossier}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-              scale: 2, 
-              useCORS: true, 
-              allowTaint: true, 
-              logging: false, 
-              backgroundColor: '#ffffff' 
-            },
-            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+            html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
 
-          html2pdf()
-            .set(opt)
-            .from(element)
-            .toPdf()
-            .get('pdf')
-            .then((pdf: any) => {
-              const blob: Blob = pdf.output('blob');
-              const filename = `Contrat_${assistance.num_dossier || assistanceId}.pdf`;
-
+          html2pdf().set(opt).from(element).save().then(() => {
+            // Fermer l'iframe après le téléchargement
+            setTimeout(() => {
               if (window.parent !== window) {
-                // En iframe: envoyer au parent
-                window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
-              } else {
-                // Fallback: déclencher ici + fermer si nouvel onglet
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-                if (window.opener) {
-                  setTimeout(() => window.close(), 800);
-                }
+                window.parent.document.querySelector('iframe')?.remove();
               }
-            })
-            .catch((err: any) => {
-              const message = err?.message || 'Erreur lors de la génération du PDF Assistance';
-              console.error('Erreur html2pdf:', err);
-              if (window.parent !== window) {
-                window.parent.postMessage({ type: 'pdf-error', message }, '*');
-              }
-            });
-        }, 1000);
+            }, 1000);
+          });
+        }, 500);
       } else {
         // Mode impression classique
         setTimeout(() => window.print(), 500);
