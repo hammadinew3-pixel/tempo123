@@ -25,7 +25,7 @@ interface PostCreationWorkflowProps {
   };
 }
 
-type Step = 'assurance' | 'visite_technique' | 'vignette' | 'autorisation_circulation' | 'complete';
+type Step = 'assurance' | 'visite_technique' | 'vignette' | 'autorisation_circulation' | 'carte_grise' | 'complete';
 
 export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCreationWorkflowProps) {
   const { withTenantId } = useTenantInsert();
@@ -40,10 +40,12 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
   const [visiteFiles, setVisiteFiles] = useState<File[]>([]);
   const [vignetteFiles, setVignetteFiles] = useState<File[]>([]);
   const [autorisationFiles, setAutorisationFiles] = useState<File[]>([]);
+  const [carteGriseFiles, setCarteGriseFiles] = useState<File[]>([]);
   const assuranceFileRef = useRef<HTMLInputElement>(null);
   const visiteFileRef = useRef<HTMLInputElement>(null);
   const vignetteFileRef = useRef<HTMLInputElement>(null);
   const autorisationFileRef = useRef<HTMLInputElement>(null);
+  const carteGriseFileRef = useRef<HTMLInputElement>(null);
 
   // Assurance form data
   const [assuranceData, setAssuranceData] = useState({
@@ -331,12 +333,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
       });
 
       setCompletedSteps([...completedSteps, 'autorisation_circulation']);
-      setCurrentStep('complete');
-      
-      // Redirect to vehicle details after a short delay
-      setTimeout(() => {
-        navigate(`/vehicules/${vehicleId}`);
-      }, 1500);
+      setCurrentStep('carte_grise');
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -356,7 +353,12 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
     } else if (currentStep === 'vignette') {
       setCurrentStep('autorisation_circulation');
     } else if (currentStep === 'autorisation_circulation') {
-      navigate(`/vehicules/${vehicleId}`);
+      setCurrentStep('carte_grise');
+    } else if (currentStep === 'carte_grise') {
+      setCurrentStep('complete');
+      setTimeout(() => {
+        navigate(`/vehicules/${vehicleId}`);
+      }, 1500);
     }
   };
 
@@ -367,6 +369,8 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
       setCurrentStep('visite_technique');
     } else if (currentStep === 'autorisation_circulation') {
       setCurrentStep('vignette');
+    } else if (currentStep === 'carte_grise') {
+      setCurrentStep('autorisation_circulation');
     }
   };
 
@@ -380,6 +384,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
       { key: 'visite_technique' as Step, label: 'Visite Technique' },
       { key: 'vignette' as Step, label: 'Vignette' },
       { key: 'autorisation_circulation' as Step, label: 'Autorisation' },
+      { key: 'carte_grise' as Step, label: 'Carte Grise' },
     ];
 
     return (
@@ -451,7 +456,7 @@ export default function PostCreationWorkflow({ vehicleId, vehicleInfo }: PostCre
   );
 };
 
-const handleFileSelect = (files: FileList | null, type: 'assurance' | 'visite' | 'vignette' | 'autorisation') => {
+const handleFileSelect = (files: FileList | null, type: 'assurance' | 'visite' | 'vignette' | 'autorisation' | 'carte_grise') => {
   if (!files) return;
   
   const validFiles = Array.from(files).filter(file => {
@@ -476,27 +481,31 @@ const handleFileSelect = (files: FileList | null, type: 'assurance' | 'visite' |
     setVisiteFiles(prev => [...prev, ...validFiles]);
   } else if (type === 'vignette') {
     setVignetteFiles(prev => [...prev, ...validFiles]);
-  } else {
+  } else if (type === 'autorisation') {
     setAutorisationFiles(prev => [...prev, ...validFiles]);
+  } else {
+    setCarteGriseFiles(prev => [...prev, ...validFiles]);
   }
 };
 
-const removeFile = (index: number, type: 'assurance' | 'visite' | 'vignette' | 'autorisation') => {
+const removeFile = (index: number, type: 'assurance' | 'visite' | 'vignette' | 'autorisation' | 'carte_grise') => {
   if (type === 'assurance') {
     setAssuranceFiles(prev => prev.filter((_, i) => i !== index));
   } else if (type === 'visite') {
     setVisiteFiles(prev => prev.filter((_, i) => i !== index));
   } else if (type === 'vignette') {
     setVignetteFiles(prev => prev.filter((_, i) => i !== index));
-  } else {
+  } else if (type === 'autorisation') {
     setAutorisationFiles(prev => prev.filter((_, i) => i !== index));
+  } else {
+    setCarteGriseFiles(prev => prev.filter((_, i) => i !== index));
   }
 };
 
 const renderFileUpload = (
   files: File[],
   fileRef: React.RefObject<HTMLInputElement>,
-  type: 'assurance' | 'visite' | 'vignette' | 'autorisation',
+  type: 'assurance' | 'visite' | 'vignette' | 'autorisation' | 'carte_grise',
   label: string
 ) => {
   return (
@@ -1065,10 +1074,120 @@ const renderFileUpload = (
                 </Button>
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" onClick={handleSkip}>
+                    Passer
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Enregistrement...' : 'Enregistrer et continuer'}
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Carte Grise Form */}
+      {currentStep === 'carte_grise' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Carte grise du véhicule</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              
+              if (carteGriseFiles.length === 0) {
+                handleSkip();
+                return;
+              }
+
+              setLoading(true);
+
+              try {
+                const uploadPromises = carteGriseFiles.map(async (file) => {
+                  const fileExt = file.name.split('.').pop();
+                  const fileName = `${vehicleId}/carte_grise/${Date.now()}_${Math.random()}.${fileExt}`;
+                  
+                  const { error: uploadError } = await supabase.storage
+                    .from('documents_vehicules')
+                    .upload(fileName, file);
+                  
+                  if (uploadError) throw uploadError;
+
+                  const { data: { publicUrl } } = supabase.storage
+                    .from('documents_vehicules')
+                    .getPublicUrl(fileName);
+
+                  return publicUrl;
+                });
+
+                const photoUrls = await Promise.all(uploadPromises);
+
+                const insertPromises = photoUrls.map(photoUrl => 
+                  supabase.from('vehicle_carte_grise').insert(withTenantId({
+                    vehicle_id: vehicleId,
+                    photo_url: photoUrl
+                  }))
+                );
+
+                await Promise.all(insertPromises);
+
+                toast({
+                  title: "Succès",
+                  description: "Carte(s) grise(s) ajoutée(s) avec succès",
+                });
+
+                setCompletedSteps([...completedSteps, 'carte_grise']);
+                setCurrentStep('complete');
+                setTimeout(() => {
+                  navigate(`/vehicules/${vehicleId}`);
+                }, 1500);
+              } catch (error: any) {
+                console.error('Error adding carte grise:', error);
+                toast({
+                  title: "Erreur",
+                  description: error.message || "Impossible d'ajouter la carte grise",
+                  variant: "destructive",
+                });
+              } finally {
+                setLoading(false);
+              }
+            }} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Photos de la carte grise</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Vous pouvez ajouter plusieurs photos (recto, verso, etc.)
+                </p>
+                {renderFileUpload(
+                  carteGriseFiles,
+                  carteGriseFileRef,
+                  'carte_grise',
+                  'Carte grise'
+                )}
+              </div>
+
+              <div className="flex justify-between pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour
+                </Button>
+                
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleSkip}
+                  >
                     Terminer plus tard
                   </Button>
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Enregistrement...' : 'Enregistrer et terminer'}
+                    {loading ? "Enregistrement..." : carteGriseFiles.length > 0 ? "Enregistrer et terminer" : "Terminer"}
+                    <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </div>

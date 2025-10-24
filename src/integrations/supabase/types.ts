@@ -2006,6 +2006,48 @@ export type Database = {
           },
         ]
       }
+      vehicle_carte_grise: {
+        Row: {
+          created_at: string | null
+          id: string
+          photo_url: string
+          tenant_id: string
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          photo_url: string
+          tenant_id: string
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          photo_url?: string
+          tenant_id?: string
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_carte_grise_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_carte_grise_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_changes: {
         Row: {
           change_date: string

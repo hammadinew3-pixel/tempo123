@@ -47,6 +47,7 @@ export default function VehiculeDetails() {
   const [technicalInspections, setTechnicalInspections] = useState<any[]>([]);
   const [vignettes, setVignettes] = useState<any[]>([]);
   const [autorisations, setAutorisations] = useState<any[]>([]);
+  const [cartesGrises, setCartesGrises] = useState<any[]>([]);
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showContractsList, setShowContractsList] = useState(false);
@@ -96,6 +97,7 @@ export default function VehiculeDetails() {
   const [showInspectionDialog, setShowInspectionDialog] = useState(false);
   const [showVignetteDialog, setShowVignetteDialog] = useState(false);
   const [showAutorisationDialog, setShowAutorisationDialog] = useState(false);
+  const [showCarteGriseDialog, setShowCarteGriseDialog] = useState(false);
 
   // Form states for insurance
   const [insuranceForm, setInsuranceForm] = useState({
@@ -155,6 +157,10 @@ export default function VehiculeDetails() {
   });
   const [autorisationPhoto, setAutorisationPhoto] = useState<File | null>(null);
   const [uploadingAutorisation, setUploadingAutorisation] = useState(false);
+  
+  // Form states for carte grise
+  const [carteGrisePhoto, setCarteGrisePhoto] = useState<File | null>(null);
+  const [uploadingCarteGrise, setUploadingCarteGrise] = useState(false);
   
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -257,7 +263,7 @@ export default function VehiculeDetails() {
 
   const loadVehicle = async () => {
     try {
-      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, autorisationsRes, traitesRes, echeancesRes, categoriesRes] = await Promise.all([
+      const [vehicleRes, contractsRes, assistancesRes, expensesRes, insurancesRes, inspectionsRes, vignettesRes, autorisationsRes, cartesGrisesRes, traitesRes, echeancesRes, categoriesRes] = await Promise.all([
         supabase.from('vehicles').select('*').eq('id', id).single(), 
         supabase.from('contracts').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }), 
         supabase.from('assistance').select(`*, clients (nom, prenom, telephone)`).eq('vehicle_id', id).order('created_at', { ascending: false }), 
@@ -266,6 +272,7 @@ export default function VehiculeDetails() {
         supabase.from('vehicle_technical_inspection').select('*').eq('vehicle_id', id).order('date_visite', { ascending: false }), 
         supabase.from('vehicle_vignette').select('*').eq('vehicle_id', id).order('annee', { ascending: false }), 
         supabase.from('vehicle_autorisation_circulation').select('*').eq('vehicle_id', id).order('date_delivrance', { ascending: false }), 
+        supabase.from('vehicle_carte_grise').select('*').eq('vehicle_id', id).order('created_at', { ascending: false }),
         supabase.from('vehicules_traite').select('*').eq('vehicle_id', id).order('created_at', { ascending: false }), 
         supabase.from('vehicules_traites_echeances').select('*').eq('vehicle_id', id).order('date_echeance', { ascending: true }),
         supabase.from('vehicle_assistance_categories').select('*').eq('actif', true).order('ordre', { ascending: true })
@@ -280,6 +287,7 @@ export default function VehiculeDetails() {
       setTechnicalInspections(inspectionsRes.data || []);
       setVignettes(vignettesRes.data || []);
       setAutorisations(autorisationsRes.data || []);
+      setCartesGrises(cartesGrisesRes.data || []);
       setTraites(traitesRes.data || []);
       setEcheances(echeancesRes.data || []);
       setAssistanceCategories(categoriesRes.data || []);
@@ -1191,6 +1199,9 @@ export default function VehiculeDetails() {
                 <TabsTrigger value="autorisation" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
                   AUTORISATION
                 </TabsTrigger>
+                <TabsTrigger value="carte_grise" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                  CARTE GRISE
+                </TabsTrigger>
               </TabsList>
 
             <TabsContent value="assurance" className="mt-6">
@@ -1454,6 +1465,90 @@ export default function VehiculeDetails() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     Aucune autorisation de circulation enregistrée
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="carte_grise" className="mt-6">
+              <div className="space-y-4">
+                <div className="flex justify-end">
+                  <Button 
+                    size="sm" 
+                    className="gap-2" 
+                    onClick={() => setShowCarteGriseDialog(true)}
+                  >
+                    <Plus className="w-4 h-4" />
+                    AJOUTER CARTE GRISE
+                  </Button>
+                </div>
+                
+                {cartesGrises.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date d'ajout</TableHead>
+                        <TableHead className="text-center">Photo</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {cartesGrises.map(carteGrise => (
+                        <TableRow key={carteGrise.id}>
+                          <TableCell>
+                            {safeFormatDate(carteGrise.created_at, 'dd/MM/yyyy HH:mm', { locale: fr })}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDownloadDocument(carteGrise.photo_url, `carte_grise_${vehicle?.immatriculation}`)}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {isAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={async () => {
+                                  if (!confirm('Êtes-vous sûr de vouloir supprimer cette carte grise ?')) return;
+                                  
+                                  try {
+                                    const { error } = await supabase
+                                      .from('vehicle_carte_grise')
+                                      .delete()
+                                      .eq('id', carteGrise.id);
+                                    
+                                    if (error) throw error;
+                                    
+                                    toast({
+                                      title: "Succès",
+                                      description: "Carte grise supprimée"
+                                    });
+                                    
+                                    loadVehicle();
+                                  } catch (error: any) {
+                                    toast({
+                                      title: "Erreur",
+                                      description: error.message,
+                                      variant: "destructive"
+                                    });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Aucune carte grise enregistrée
                   </div>
                 )}
               </div>
@@ -2744,6 +2839,100 @@ export default function VehiculeDetails() {
               disabled={uploadingAutorisation}
             >
               {uploadingAutorisation ? "Upload en cours..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for adding carte grise */}
+      <Dialog open={showCarteGriseDialog} onOpenChange={setShowCarteGriseDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ajouter une carte grise</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="carte-grise-photo">Photo de la carte grise *</Label>
+              <Input 
+                id="carte-grise-photo" 
+                type="file" 
+                accept="image/*,application/pdf" 
+                onChange={(e) => setCarteGrisePhoto(e.target.files?.[0] || null)} 
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Formats acceptés: JPG, PNG, WEBP, PDF
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowCarteGriseDialog(false);
+                setCarteGrisePhoto(null);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button 
+              onClick={async () => {
+                try {
+                  if (!carteGrisePhoto) {
+                    toast({
+                      title: "Erreur",
+                      description: "Veuillez sélectionner une photo",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+
+                  setUploadingCarteGrise(true);
+
+                  // Upload photo
+                  const fileExt = carteGrisePhoto.name.split('.').pop();
+                  const fileName = `${vehicle!.id}/carte_grise/${Date.now()}.${fileExt}`;
+                  
+                  const { error: uploadError } = await supabase.storage
+                    .from('documents_vehicules')
+                    .upload(fileName, carteGrisePhoto);
+                  
+                  if (uploadError) throw uploadError;
+
+                  const { data: { publicUrl } } = supabase.storage
+                    .from('documents_vehicules')
+                    .getPublicUrl(fileName);
+
+                  // Insert into database
+                  const { error } = await supabase
+                    .from('vehicle_carte_grise')
+                    .insert(withTenantId({
+                      vehicle_id: vehicle!.id,
+                      photo_url: publicUrl
+                    }));
+
+                  if (error) throw error;
+
+                  toast({
+                    title: "Succès",
+                    description: "Carte grise ajoutée avec succès"
+                  });
+
+                  setShowCarteGriseDialog(false);
+                  setCarteGrisePhoto(null);
+                  loadVehicle();
+                } catch (error: any) {
+                  toast({
+                    title: "Erreur",
+                    description: error.message,
+                    variant: "destructive"
+                  });
+                } finally {
+                  setUploadingCarteGrise(false);
+                }
+              }}
+              disabled={uploadingCarteGrise}
+            >
+              {uploadingCarteGrise ? "Upload en cours..." : "Enregistrer"}
             </Button>
           </DialogFooter>
         </DialogContent>
