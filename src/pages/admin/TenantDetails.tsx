@@ -26,9 +26,13 @@ import {
   Users,
   FileText,
   UserCheck,
-  AlertCircle
+  AlertCircle,
+  Pencil
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function TenantDetails() {
   const { id } = useParams();
@@ -36,6 +40,8 @@ export default function TenantDetails() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [showEditNameDialog, setShowEditNameDialog] = useState(false);
+  const [newName, setNewName] = useState('');
 
   // Handler pour rafraîchir après assignation de plan
   const handlePlanAssigned = () => {
@@ -157,6 +163,47 @@ export default function TenantDetails() {
     },
   });
 
+  // Mutation pour mettre à jour le nom de l'agence
+  const updateTenantNameMutation = useMutation({
+    mutationFn: async (updatedName: string) => {
+      const trimmedName = updatedName.trim();
+      
+      if (!trimmedName) {
+        throw new Error("Le nom ne peut pas être vide");
+      }
+      if (trimmedName.length < 3) {
+        throw new Error("Le nom doit contenir au moins 3 caractères");
+      }
+      if (trimmedName.length > 100) {
+        throw new Error("Le nom ne peut pas dépasser 100 caractères");
+      }
+      
+      const { error } = await supabase
+        .from('tenants')
+        .update({ name: trimmedName })
+        .eq('id', id!);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-details', id] });
+      queryClient.invalidateQueries({ queryKey: ['all-tenants'] });
+      setShowEditNameDialog(false);
+      setNewName('');
+      toast({
+        title: "Succès",
+        description: "Nom de l'agence modifié avec succès",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de modifier le nom",
+      });
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
@@ -196,6 +243,17 @@ export default function TenantDetails() {
             <h1 className="text-3xl font-bold text-black flex items-center gap-2">
               <Building className="h-8 w-8 text-[#c01533]" />
               {tenant.name}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setNewName(tenant.name);
+                  setShowEditNameDialog(true);
+                }}
+                className="text-gray-400 hover:text-[#c01533] transition-colors ml-2"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </h1>
             <p className="text-gray-600 text-sm mt-1">
               Slug: {tenant.slug} • Créé le {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
@@ -451,6 +509,60 @@ export default function TenantDetails() {
         tenant={tenant}
         currentUsage={usage}
       />
+
+      {/* Dialog de modification du nom */}
+      <Dialog open={showEditNameDialog} onOpenChange={setShowEditNameDialog}>
+        <DialogContent className="bg-white border-gray-200">
+          <DialogHeader>
+            <DialogTitle className="text-[#c01533]">Modifier le nom de l'agence</DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Changez le nom d'affichage de cette agence.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-name" className="text-black">
+                Nouveau nom
+              </Label>
+              <Input
+                id="new-name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Nom de l'agence"
+                className="bg-white border-gray-300 text-black"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newName.trim().length >= 3) {
+                    updateTenantNameMutation.mutate(newName);
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500">
+                Minimum 3 caractères, maximum 100 caractères
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEditNameDialog(false);
+                setNewName('');
+              }}
+              disabled={updateTenantNameMutation.isPending}
+              className="border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={() => updateTenantNameMutation.mutate(newName)}
+              disabled={updateTenantNameMutation.isPending || newName.trim().length < 3}
+              className="bg-[#c01533] hover:bg-[#9a0f26] text-white"
+            >
+              {updateTenantNameMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
