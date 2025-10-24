@@ -83,7 +83,7 @@ export default function ClientDetails() {
           .from('contracts')
           .select(`
             *,
-            vehicles (marque, modele, immatriculation)
+            vehicles (marque, modele, immatriculation, immatriculation_provisoire)
           `)
           .eq('client_id', id)
           .order('created_at', { ascending: false }),
@@ -95,7 +95,7 @@ export default function ClientDetails() {
           .from('infractions')
           .select(`
             *,
-            vehicles (marque, modele, immatriculation)
+            vehicles (marque, modele, immatriculation, immatriculation_provisoire)
           `)
           .eq('client_id', id)
           .order('date_infraction', { ascending: false }),
@@ -103,7 +103,7 @@ export default function ClientDetails() {
           .from('sinistres')
           .select(`
             *,
-            vehicles (marque, modele, immatriculation)
+            vehicles (marque, modele, immatriculation, immatriculation_provisoire)
           `)
           .eq('client_id', id)
           .order('date_sinistre', { ascending: false }),
