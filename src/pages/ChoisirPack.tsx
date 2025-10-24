@@ -13,6 +13,7 @@ export default function ChoisirPack() {
   const { toast } = useToast();
   const [subscribing, setSubscribing] = useState<string | null>(null);
   const [duration, setDuration] = useState<6 | 12>(6);
+  const TVA_PLANS = 20; // TVA fixe pour les abonnements
 
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ['active-plans'],
@@ -163,11 +164,14 @@ export default function ChoisirPack() {
                 {/* Prix et bouton */}
                 <div className="mt-auto pt-4">
                   <div className="text-center mb-4">
-                    <div className="text-3xl font-bold text-[#c01533]">
-                      {duration === 6 ? plan.price_6_months : plan.price_12_months} DH
+                    <div className="text-sm text-gray-500 mb-1">
+                      {duration === 6 ? plan.price_6_months : plan.price_12_months} DH HT
                     </div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      pour {duration} mois
+                    <div className="text-3xl font-bold text-[#c01533]">
+                      {Math.round((duration === 6 ? plan.price_6_months : plan.price_12_months) * 1.20)} DH
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      TTC (TVA 20% incluse) • {duration} mois
                     </div>
                   </div>
                   <Button

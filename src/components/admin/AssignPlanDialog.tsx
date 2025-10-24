@@ -48,6 +48,7 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
   const [updating, setUpdating] = useState(false);
   const [forceAssign, setForceAssign] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState<"6" | "12">("12");
+  const TVA_PLANS = 20; // TVA fixe pour les abonnements
 
   useEffect(() => {
     if (open) {
@@ -243,7 +244,8 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
               // Prix et remise selon la durée sélectionnée
               const basePrice = selectedDuration === "6" ? plan.price_6_months : plan.price_12_months;
               const discount = selectedDuration === "6" ? plan.discount_6_months : plan.discount_12_months;
-              const finalPrice = Math.round(basePrice * (1 - discount / 100));
+              const finalPriceHT = Math.round(basePrice * (1 - discount / 100));
+              const finalPriceTTC = Math.round(finalPriceHT * 1.20);
               
               // Vérifier les violations (sauf si illimité = 0)
               const hasViolations = currentUsage && (
@@ -279,20 +281,30 @@ export function AssignPlanDialog({ open, onOpenChange, tenant, currentUsage }: A
                       {discount > 0 ? (
                         <>
                           <p className="text-sm text-gray-400 line-through">
-                            {basePrice} {plan.currency}
+                            {basePrice} DH HT
                           </p>
-                          <p className="text-3xl font-bold text-emerald-400">
-                            {finalPrice} {plan.currency}
+                          <p className="text-xl font-semibold text-emerald-400">
+                            {finalPriceHT} DH HT
+                          </p>
+                          <p className="text-2xl font-bold text-white">
+                            {finalPriceTTC} DH TTC
                           </p>
                           <p className="text-xs text-emerald-400">
-                            -{discount}% de remise ({selectedDuration} mois)
+                            -{discount}% • TVA 20% • {selectedDuration} mois
                           </p>
                         </>
                       ) : (
-                        <p className="text-3xl font-bold text-emerald-400">
-                          {finalPrice} {plan.currency}
-                          <span className="text-sm text-gray-400 font-normal"> / {selectedDuration} mois</span>
-                        </p>
+                        <>
+                          <p className="text-xl font-semibold text-emerald-400">
+                            {finalPriceHT} DH HT
+                          </p>
+                          <p className="text-2xl font-bold text-white">
+                            {finalPriceTTC} DH TTC
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            TVA 20% • {selectedDuration} mois
+                          </p>
+                        </>
                       )}
                     </div>
                   </CardHeader>

@@ -47,6 +47,7 @@ export default function Plans() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Plan | null>(null);
+  const TVA_PLANS = 20; // TVA fixe pour les abonnements
 
   const [form, setForm] = useState<Plan>({
     name: "",
@@ -233,8 +234,8 @@ export default function Plans() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nom</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Prix 6 mois</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Prix 12 mois</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Prix 6 mois (HT / TTC)</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Prix 12 mois (HT / TTC)</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Remise 6M</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Remise 12M</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Quotas</th>
@@ -248,10 +249,12 @@ export default function Plans() {
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 font-semibold text-black">{p.name}</td>
                   <td className="px-6 py-4 text-gray-700">
-                    {p.price_6_months || 0} DH
+                    <div className="font-semibold">{p.price_6_months || 0} DH HT</div>
+                    <div className="text-sm text-[#c01533]">{Math.round((p.price_6_months || 0) * 1.20)} DH TTC</div>
                   </td>
                   <td className="px-6 py-4 text-gray-700">
-                    {p.price_12_months || 0} DH
+                    <div className="font-semibold">{p.price_12_months || 0} DH HT</div>
+                    <div className="text-sm text-[#c01533]">{Math.round((p.price_12_months || 0) * 1.20)} DH TTC</div>
                   </td>
                   <td className="px-6 py-4 text-gray-700">
                     {p.discount_6_months || 0}%
@@ -367,6 +370,9 @@ export default function Plans() {
                     }
                     className="bg-white border-gray-300 text-black"
                   />
+                  <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                    Prix TTC : <strong>{Math.round((form.price_6_months || 0) * 1.20)} DH</strong> (TVA 20%)
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-700 font-medium">Remise 6 mois (%)</Label>
@@ -390,6 +396,9 @@ export default function Plans() {
                     <strong className="text-green-800">
                       {Math.round((form.price_6_months || 0) * (1 - (form.discount_6_months || 0) / 100))} DH HT
                     </strong>
+                    <span className="ml-2">
+                      ({Math.round(Math.round((form.price_6_months || 0) * (1 - (form.discount_6_months || 0) / 100)) * 1.20)} DH TTC)
+                    </span>
                   </p>
                 </div>
               )}
@@ -406,6 +415,9 @@ export default function Plans() {
                     }
                     className="bg-white border-gray-300 text-black"
                   />
+                  <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                    Prix TTC : <strong>{Math.round((form.price_12_months || 0) * 1.20)} DH</strong> (TVA 20%)
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-gray-700 font-medium">Remise 12 mois (%)</Label>
@@ -429,6 +441,9 @@ export default function Plans() {
                     <strong className="text-green-800">
                       {Math.round((form.price_12_months || 0) * (1 - (form.discount_12_months || 0) / 100))} DH HT
                     </strong>
+                    <span className="ml-2">
+                      ({Math.round(Math.round((form.price_12_months || 0) * (1 - (form.discount_12_months || 0) / 100)) * 1.20)} DH TTC)
+                    </span>
                   </p>
                 </div>
               )}

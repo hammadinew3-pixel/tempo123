@@ -20,6 +20,7 @@ export default function MonAbonnement() {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(12);
+  const TVA_PLANS = 20; // TVA fixe pour les abonnements
 
   // Fetch all available plans sorted by price
   const { data: plans = [] } = useQuery({
@@ -142,9 +143,10 @@ export default function MonAbonnement() {
     discountAmount = plan.discount_12_months || 0;
   }
   
-  const finalPrice = discountAmount > 0 
+  const finalPriceHT = discountAmount > 0 
     ? displayPrice * (1 - discountAmount / 100) 
     : displayPrice;
+  const finalPriceTTC = Math.round(finalPriceHT * 1.20);
 
   const expirationDate = subscription?.end_date 
     ? new Date(subscription.end_date).toLocaleDateString('fr-FR', { 
@@ -188,18 +190,31 @@ export default function MonAbonnement() {
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
             <h3 className="text-sm font-semibold text-foreground mb-3">💰 Tarification</h3>
             {duration === 6 && (
-              <p className="text-foreground">
-                Prix 6 mois : <strong className="text-foreground">{plan.price_6_months} {plan.currency} HT</strong>
-              </p>
+              <div className="space-y-1">
+                <p className="text-foreground text-sm">
+                  Prix 6 mois : <strong>{plan.price_6_months} DH HT</strong>
+                </p>
+                <p className="text-foreground">
+                  Prix TTC : <strong className="text-primary text-lg">{Math.round(plan.price_6_months * 1.20)} DH</strong>
+                  <span className="text-xs text-muted-foreground ml-2">(TVA 20% incluse)</span>
+                </p>
+              </div>
             )}
             {duration === 12 && (
-              <p className="text-foreground">
-                Prix 12 mois : <strong className="text-foreground">{plan.price_12_months} {plan.currency} HT</strong>
-              </p>
+              <div className="space-y-1">
+                <p className="text-foreground text-sm">
+                  Prix 12 mois : <strong>{plan.price_12_months} DH HT</strong>
+                </p>
+                <p className="text-foreground">
+                  Prix TTC : <strong className="text-primary text-lg">{Math.round(plan.price_12_months * 1.20)} DH</strong>
+                  <span className="text-xs text-muted-foreground ml-2">(TVA 20% incluse)</span>
+                </p>
+              </div>
             )}
             {discountAmount > 0 && (
               <p className="text-primary font-medium">
-                🎁 Remise {discountAmount}% → <strong>{Math.round(finalPrice)} {plan.currency} HT</strong>
+                🎁 Remise {discountAmount}% → <strong>{Math.round(finalPriceHT)} DH HT</strong>
+                <span className="text-sm ml-2">({finalPriceTTC} DH TTC)</span>
               </p>
             )}
           </div>
@@ -321,9 +336,10 @@ export default function MonAbonnement() {
           
           <div className="space-y-3 max-h-[500px] overflow-y-auto">
             {plans.map((p) => {
-              const displayPrice = selectedDuration === 6 ? p.price_6_months : p.price_12_months;
+              const displayPriceHT = selectedDuration === 6 ? p.price_6_months : p.price_12_months;
               const discount = selectedDuration === 6 ? p.discount_6_months : p.discount_12_months;
-              const finalPrice = discount > 0 ? displayPrice * (1 - discount / 100) : displayPrice;
+              const finalPriceHT = discount > 0 ? displayPriceHT * (1 - discount / 100) : displayPriceHT;
+              const finalPriceTTC = Math.round(finalPriceHT * 1.20);
               
               return (
                 <Card
@@ -340,10 +356,13 @@ export default function MonAbonnement() {
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-lg text-foreground">{p.name}</h3>
                         <div className="text-right">
+                          <p className="text-xs text-muted-foreground">{Math.round(finalPriceHT)} DH HT</p>
                           <p className="text-2xl font-bold text-primary">
-                            {Math.round(finalPrice)} {p.currency}
+                            {finalPriceTTC} DH
                           </p>
-                          <p className="text-xs text-muted-foreground">pour {selectedDuration} mois</p>
+                          <p className="text-xs text-muted-foreground">
+                            TTC (TVA 20%) • {selectedDuration} mois
+                          </p>
                           {discount > 0 && (
                             <p className="text-xs text-warning">-{discount}% de réduction</p>
                           )}
