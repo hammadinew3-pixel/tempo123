@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { useUserRole } from "@/hooks/use-user-role";
+import { getDisplayMatricule } from "@/lib/vehicleUtils";
 type Vehicle = Database['public']['Tables']['vehicles']['Row'];
 type VehicleStatus = Database['public']['Enums']['vehicle_status'];
 
@@ -254,7 +255,7 @@ export default function ModifierVehicule() {
       {/* Header */}
       <div className="mb-4 md:mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-foreground mb-2">
-          Modifier le véhicule {formData.immatriculation}
+          Modifier le véhicule {getDisplayMatricule(formData)}
         </h1>
         <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground overflow-x-auto">
           <Link to="/" className="hover:text-foreground whitespace-nowrap">Tableau de bord</Link>
@@ -262,7 +263,7 @@ export default function ModifierVehicule() {
           <Link to="/vehicules" className="hover:text-foreground whitespace-nowrap">Véhicules</Link>
           <ChevronRight className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
           <Link to={`/vehicules/${id}`} className="hover:text-foreground whitespace-nowrap">
-            Véhicule Mat. {formData.immatriculation}
+            Véhicule Mat. {getDisplayMatricule(formData)}
           </Link>
           <ChevronRight className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
           <span className="text-foreground whitespace-nowrap">Modifier</span>
