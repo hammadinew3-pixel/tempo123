@@ -798,13 +798,29 @@ export default function LocationDetails() {
       });
 
       const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.top = '-10000px';
-      iframe.style.left = '-10000px';
-      iframe.style.width = '210mm';
-      iframe.style.height = '297mm';
+      iframe.style.display = 'none';
       document.body.appendChild(iframe);
 
+      const handleMessage = (event: MessageEvent) => {
+        const data: any = (event as any).data;
+        if (data?.type === 'pdf-ready' && data?.blob) {
+          try {
+            const url = URL.createObjectURL(data.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.filename || `Contrat_${contract?.numero_contrat || id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+          } finally {
+            window.removeEventListener('message', handleMessage);
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+          }
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
       iframe.src = `/contract-template?id=${id}&download=true`;
 
       toast({
@@ -1048,7 +1064,7 @@ export default function LocationDetails() {
             </Button>
           )}
           {contract.pdf_url && (
-            <Button variant="outline" size="sm" onClick={handleGeneratePDF}>
+            <Button variant="outline" size="sm" onClick={handleDownloadExistingPDF}>
               <Download className="w-4 h-4 mr-2" />
               Télécharger contrat
             </Button>
