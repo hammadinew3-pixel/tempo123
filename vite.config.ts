@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,webp,jpg,jpeg}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+        maximumFileSizeToCacheInBytes: 7 * 1024 * 1024, // 7 MB
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
         navigateFallbackAllowlist: [/^(?!\/(api|auth\/reset-password)).*/],
