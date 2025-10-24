@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, Car, Truck, Bus, Shield, ArrowRight } from "lucide-react";
+import { Mail, Lock, Car, Shield, ArrowRight } from "lucide-react";
 import logoImage from "@/assets/logo-crsapp.png";
 export default function Auth() {
   const {
@@ -68,10 +68,10 @@ export default function Auth() {
               <Car className="w-16 h-16 text-white/80" />
             </div>
             <div className="animate-[float_3s_ease-in-out_infinite_0.5s]">
-              <Truck className="w-16 h-16 text-white/80" />
+              <Car className="w-16 h-16 text-white/80" />
             </div>
             <div className="animate-[float_3s_ease-in-out_infinite_1s]">
-              <Bus className="w-16 h-16 text-white/80" />
+              <Car className="w-16 h-16 text-white/80" />
             </div>
           </div>
 
