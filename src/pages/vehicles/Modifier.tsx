@@ -49,7 +49,7 @@ export default function ModifierVehicule() {
   const [formData, setFormData] = useState({
     marque: '',
     modele: '',
-    ww: '',
+    immatriculation_provisoire: '',
     immatriculation: '',
     annee: new Date().getFullYear(),
     date_mise_en_circulation: '',
@@ -105,7 +105,7 @@ export default function ModifierVehicule() {
       setFormData({
         marque: data.marque || '',
         modele: data.modele || '',
-        ww: data.ww || '',
+        immatriculation_provisoire: data.immatriculation_provisoire || '',
         immatriculation: data.immatriculation || '',
         annee: data.annee || new Date().getFullYear(),
         date_mise_en_circulation: data.date_mise_en_circulation || '',
@@ -207,7 +207,7 @@ export default function ModifierVehicule() {
       const updateData = {
         marque: formData.marque,
         modele: formData.modele,
-        ww: formData.immatriculation ? null : formData.ww,
+        immatriculation_provisoire: formData.immatriculation ? null : formData.immatriculation_provisoire,
         immatriculation: formData.immatriculation,
         annee: formData.annee,
         date_mise_en_circulation: formData.date_mise_en_circulation || null,
@@ -380,13 +380,13 @@ export default function ModifierVehicule() {
 
             {/* WW (Matricule provisoire) */}
             <div>
-              <Label htmlFor="ww">WW (Matricule provisoire)</Label>
+              <Label htmlFor="immatriculation_provisoire">WW (Matricule provisoire)</Label>
               <Input 
-                id="ww" 
-                value={formData.ww || ''} 
+                id="immatriculation_provisoire" 
+                value={formData.immatriculation_provisoire || ''} 
                 onChange={e => setFormData({
                   ...formData,
-                  ww: e.target.value
+                  immatriculation_provisoire: e.target.value
                 })} 
                 placeholder="Ex: WW-1234-2024"
                 disabled={isAgent} 
