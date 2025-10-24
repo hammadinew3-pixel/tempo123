@@ -130,7 +130,8 @@ export default function NouveauLocation() {
       const { data: overlappingContracts, error } = await supabase
         .from('contracts')
         .select('vehicle_id')
-        .or(`and(date_debut.lte.${endDate},date_fin.gte.${startDate})`)
+        .lte('date_debut', endDate)
+        .gte('date_fin', startDate)
         .in('statut', ['brouillon', 'contrat_valide', 'livre']);
 
       if (error) throw error;
