@@ -1019,20 +1019,22 @@ export default function Parametres() {
               </p>
             </div>
 
-            {/* Bouton télécharger contrat assistance vierge */}
-            <div className="pt-4">
-              <Button
-                onClick={handleDownloadBlankAssistanceContract}
-                disabled={generatingBlankAssistanceContract}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <FileDown className="w-4 h-4 mr-2" />
-                {generatingBlankAssistanceContract ? "Génération en cours..." : "Télécharger contrat assistance vierge"}
-              </Button>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                Génère un PDF de contrat d'assistance sans informations, à remplir manuellement
-              </p>
-            </div>
+            {/* Bouton télécharger contrat assistance vierge - visible uniquement si module assistance activé */}
+            {hasModuleAccess('assistance') && (
+              <div className="pt-4">
+                <Button
+                  onClick={handleDownloadBlankAssistanceContract}
+                  disabled={generatingBlankAssistanceContract}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <FileDown className="w-4 h-4 mr-2" />
+                  {generatingBlankAssistanceContract ? "Génération en cours..." : "Télécharger contrat assistance vierge"}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Génère un PDF de contrat d'assistance sans informations, à remplir manuellement
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
