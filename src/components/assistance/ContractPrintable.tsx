@@ -2,13 +2,14 @@ import { format } from "date-fns";
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
 
 interface ContractPrintableProps {
-  assistance: any;
+  assistance?: any;
   agenceSettings: any;
 }
 
 export default function ContractPrintable({ assistance, agenceSettings }: ContractPrintableProps) {
-  const client = assistance.clients;
-  const vehicle = assistance.vehicles;
+  const ph = (text = '') => text;
+  const client = assistance?.clients;
+  const vehicle = assistance?.vehicles;
   const hasCgvPage = Boolean(
     agenceSettings?.inclure_cgv &&
     agenceSettings?.cgv_texte &&
@@ -35,7 +36,7 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
               )}
               <div className={`flex-1 text-center ${!agenceSettings?.masquer_logo && agenceSettings?.logo_url ? '' : 'w-full'}`}>
                 <h1 className="text-[14pt] font-bold mb-1">CONTRAT DE LOCATION</h1>
-                <p className="text-[11pt] font-semibold">N° {assistance.num_dossier}</p>
+                <p className="text-[11pt] font-semibold">N° {assistance?.num_dossier || ph()}</p>
               </div>
               {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
                 <div className="w-1/4 text-right text-[8pt] text-gray-600">
@@ -54,13 +55,13 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
               <strong className="text-[11pt]">BÉNÉFICIAIRE</strong>
             </div>
             <div className="p-3 space-y-1 text-[9pt]">
-              <div><strong>Nom & Prénom:</strong> {client?.nom} {client?.prenom}</div>
+              <div><strong>Nom & Prénom:</strong> {client?.nom || ph()} {client?.prenom || ph()}</div>
               <div className="grid grid-cols-2 gap-4">
-                <div><strong>CIN:</strong> {client?.cin}</div>
-                <div><strong>Permis:</strong> {client?.permis_conduire}</div>
+                <div><strong>CIN:</strong> {client?.cin || ph()}</div>
+                <div><strong>Permis:</strong> {client?.permis_conduire || ph()}</div>
               </div>
-              <div><strong>Téléphone:</strong> {client?.telephone}</div>
-              <div><strong>Adresse:</strong> {client?.adresse}</div>
+              <div><strong>Téléphone:</strong> {client?.telephone || ph()}</div>
+              <div><strong>Adresse:</strong> {client?.adresse || ph()}</div>
             </div>
           </div>
 
@@ -70,8 +71,8 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
               <strong className="text-[11pt]">ASSURANCE</strong>
             </div>
             <div className="p-3 space-y-1 text-[9pt]">
-              <div><strong>Compagnie:</strong> {assistance.assurance?.nom || assistance.assureur_nom || ''}</div>
-              <div><strong>Ordre de mission:</strong> {assistance.ordre_mission || 'N/A'}</div>
+              <div><strong>Compagnie:</strong> {assistance?.assurance?.nom || assistance?.assureur_nom || ph()}</div>
+              <div><strong>Ordre de mission:</strong> {assistance?.ordre_mission || ph()}</div>
             </div>
           </div>
         </div>
@@ -84,10 +85,10 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
               <strong className="text-[11pt]">VÉHICULE</strong>
             </div>
             <div className="p-3 space-y-1 text-[9pt]">
-              <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
-              <div><strong>Immatriculation:</strong> {vehicle?.immatriculation || vehicle?.immatriculation_provisoire || vehicle?.ww || 'N/A'}</div>
-              <div><strong>Catégorie:</strong> {vehicle?.categorie || vehicle?.categories?.[0] || ''}</div>
-              <div><strong>Km départ:</strong> {assistance.kilometrage_depart || vehicle?.kilometrage}</div>
+              <div><strong>Marque/Modèle:</strong> {vehicle?.marque || ph()} {vehicle?.modele || ph()}</div>
+              <div><strong>Immatriculation:</strong> {vehicle?.immatriculation || vehicle?.immatriculation_provisoire || vehicle?.ww || ph()}</div>
+              <div><strong>Catégorie:</strong> {vehicle?.categorie || vehicle?.categories?.[0] || ph()}</div>
+              <div><strong>Km départ:</strong> {assistance?.kilometrage_depart || vehicle?.kilometrage || ph()}</div>
             </div>
           </div>
 
@@ -97,15 +98,15 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
               <strong className="text-[11pt]">LOCATION</strong>
             </div>
             <div className="p-3 space-y-1 text-[9pt]">
-              <div><strong>Départ:</strong> {assistance.date_debut ? format(new Date(assistance.date_debut), 'dd/MM/yyyy') : ''}</div>
-              <div><strong>Retour:</strong> {assistance.date_fin ? format(new Date(assistance.date_fin), 'dd/MM/yyyy') : ''}</div>
-              <div><strong>Durée:</strong> {Math.floor((new Date(assistance.date_fin || new Date()).getTime() - new Date(assistance.date_debut).getTime()) / (1000 * 60 * 60 * 24))} jour(s)</div>
+              <div><strong>Départ:</strong> {assistance?.date_debut ? format(new Date(assistance.date_debut), 'dd/MM/yyyy') : ph()}</div>
+              <div><strong>Retour:</strong> {assistance?.date_fin ? format(new Date(assistance.date_fin), 'dd/MM/yyyy') : ph()}</div>
+              <div><strong>Durée:</strong> {assistance?.date_debut && assistance?.date_fin ? Math.floor((new Date(assistance.date_fin).getTime() - new Date(assistance.date_debut).getTime()) / (1000 * 60 * 60 * 24)) : ph()} {assistance?.date_debut && assistance?.date_fin ? 'jour(s)' : ''}</div>
             </div>
           </div>
         </div>
 
         {/* Prolongations */}
-        {assistance.prolongations && assistance.prolongations.length > 0 && (
+        {assistance?.prolongations && assistance.prolongations.length > 0 && (
           <div className="border-2 border-yellow-500 bg-yellow-50 mb-3">
             <div className="bg-yellow-200 border-b-2 border-yellow-500 p-2 text-center">
               <strong className="text-[10pt]">⚠️ PROLONGATION(S)</strong>
@@ -149,7 +150,7 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
               <strong className="text-[10pt]">OBSERVATIONS</strong>
             </div>
             <div className="p-2 text-[9pt] min-h-[165px]">
-              {assistance.etat_vehicule_depart || assistance.remarques || ''}
+              {assistance?.etat_vehicule_depart || assistance?.remarques || ph()}
             </div>
           </div>
         </div>

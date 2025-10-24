@@ -8,13 +8,34 @@ export default function AssistanceContractTemplate() {
   const [searchParams] = useSearchParams();
   const assistanceId = searchParams.get("id");
   const downloadMode = searchParams.get("download") === "true";
+  const blankMode = searchParams.get("blank") === "true";
   const [assistance, setAssistance] = useState<any>(null);
   const [agenceSettings, setAgenceSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-  }, [assistanceId]);
+    if (blankMode) {
+      // Mode contrat vierge : charger uniquement les paramètres
+      (async () => {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('tenant_settings')
+            .select('*')
+            .single();
+          
+          if (error) throw error;
+          setAgenceSettings(data);
+        } catch (error) {
+          console.error('Error loading settings for blank assistance contract:', error);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    } else if (assistanceId) {
+      loadData();
+    }
+  }, [assistanceId, blankMode]);
 
   const loadData = async () => {
     if (!assistanceId) {
@@ -99,7 +120,7 @@ export default function AssistanceContractTemplate() {
   };
 
   useEffect(() => {
-    if (assistance && !loading) {
+    if ((assistance || blankMode) && !loading) {
       if (downloadMode) {
         // Signaler au parent que la génération démarre
         if (window.parent !== window) {
@@ -116,16 +137,9 @@ export default function AssistanceContractTemplate() {
             return;
           }
 
-          if (!assistance) {
-            if (window.parent !== window) {
-              window.parent.postMessage({ type: 'pdf-error', message: 'Dossier introuvable' }, '*');
-            }
-            return;
-          }
-
           const opt = {
             margin: [10, 10, 10, 10] as [number, number, number, number],
-            filename: `Contrat_${assistance.num_dossier || assistanceId}.pdf`,
+            filename: blankMode ? 'Contrat_Assistance_Vierge_CRSAPP.pdf' : `Contrat_${assistance?.num_dossier || assistanceId}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: { scale: 1.5, useCORS: true, allowTaint: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
@@ -139,13 +153,11 @@ export default function AssistanceContractTemplate() {
             .get('pdf')
             .then((pdf: any) => {
               const blob: Blob = pdf.output('blob');
-              const filename = `Contrat_${assistance.num_dossier || assistanceId}.pdf`;
+              const filename = blankMode ? 'Contrat_Assistance_Vierge_CRSAPP.pdf' : `Contrat_${assistance?.num_dossier || assistanceId}.pdf`;
               
               if (window.parent !== window) {
-                // Envoyer le blob au parent via postMessage
                 window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
               } else {
-                // Fallback: téléchargement direct si pas dans iframe
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -163,12 +175,12 @@ export default function AssistanceContractTemplate() {
               }
             });
         }, 1500);
-      } else {
-        // Mode impression classique
+      } else if (!blankMode) {
+        // Mode impression classique (seulement si pas en mode vierge)
         setTimeout(() => window.print(), 500);
       }
     }
-  }, [assistance, loading, downloadMode]);
+  }, [assistance, loading, downloadMode, blankMode, assistanceId]);
 
   if (loading) {
     return (
@@ -178,7 +190,7 @@ export default function AssistanceContractTemplate() {
     );
   }
 
-  if (!assistance) {
+  if (!blankMode && !assistance) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Dossier d'assistance introuvable</div>

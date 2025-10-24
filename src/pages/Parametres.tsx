@@ -67,6 +67,7 @@ export default function Parametres() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [generatingBlankContract, setGeneratingBlankContract] = useState(false);
+  const [generatingBlankAssistanceContract, setGeneratingBlankAssistanceContract] = useState(false);
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -89,7 +90,10 @@ export default function Parametres() {
         a.download = filename;
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+        
+        // Réinitialiser les deux states possibles
         setGeneratingBlankContract(false);
+        setGeneratingBlankAssistanceContract(false);
       }
     };
     
@@ -558,6 +562,24 @@ export default function Parametres() {
     }, 10000);
   };
 
+  const handleDownloadBlankAssistanceContract = () => {
+    setGeneratingBlankAssistanceContract(true);
+    
+    // Créer un iframe caché
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = '/assistance-contract-template?blank=true&download=true';
+    document.body.appendChild(iframe);
+    
+    // Nettoyer l'iframe après 10 secondes
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+      setGeneratingBlankAssistanceContract(false);
+    }, 10000);
+  };
+
   if (roleLoading || planLoading || !isAdmin || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -994,6 +1016,21 @@ export default function Parametres() {
               </Button>
               <p className="text-xs text-muted-foreground mt-2 text-center">
                 Génère un PDF de contrat sans informations client/véhicule, à remplir manuellement
+              </p>
+            </div>
+
+            {/* Bouton télécharger contrat assistance vierge */}
+            <div className="pt-4">
+              <Button
+                onClick={handleDownloadBlankAssistanceContract}
+                disabled={generatingBlankAssistanceContract}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <FileDown className="w-4 h-4 mr-2" />
+                {generatingBlankAssistanceContract ? "Génération en cours..." : "Télécharger contrat assistance vierge"}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2 text-center">
+                Génère un PDF de contrat d'assistance sans informations, à remplir manuellement
               </p>
             </div>
           </CardContent>
