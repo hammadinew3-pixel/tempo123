@@ -990,7 +990,7 @@ export default function Parametres() {
                 className="w-full bg-red-600 hover:bg-red-700 text-white"
               >
                 <FileDown className="w-4 h-4 mr-2" />
-                {generatingBlankContract ? "Génération en cours..." : "Télécharger un contrat standard vierge"}
+                {generatingBlankContract ? "Génération en cours..." : "Télécharger contrat standard vierge"}
               </Button>
               <p className="text-xs text-muted-foreground mt-2 text-center">
                 Génère un PDF de contrat sans informations client/véhicule, à remplir manuellement
