@@ -91,17 +91,17 @@ export default function Auth() {
       {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-background">
         <div className="w-full max-w-md animate-fade-in">
-          {/* Logo for mobile */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <img 
-              src={logoImage} 
-              alt="CRSApp Logo" 
-              className="w-32 h-auto"
-            />
-          </div>
-
           <Card className="border-border shadow-lg">
             <CardContent className="pt-8">
+              {/* Logo */}
+              <div className="flex justify-center mb-6">
+                <img 
+                  src={logoImage} 
+                  alt="CRSApp Logo" 
+                  className="w-40 h-auto"
+                />
+              </div>
+
               {/* Welcome message */}
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-foreground mb-2">
