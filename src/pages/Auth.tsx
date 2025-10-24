@@ -164,7 +164,7 @@ export default function Auth() {
 
           {/* Footer */}
           <p className="text-center text-xs text-muted-foreground mt-8">
-            © 2024 CRSApp. Tous droits réservés.
+            © 2025 crsapp. Tous droits réservés.
           </p>
         </div>
       </div>
