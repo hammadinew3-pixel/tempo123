@@ -1265,7 +1265,7 @@ export default function AssistanceDetails() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFranchiseDialog(true)}
-                className="h-6 w-6 md:h-7 md:w-7 p-0 hover:bg-primary/10"
+                className="h-6 w-6 md:h-7 md:w-7 p-0 hover:bg-background hover:text-primary transition-colors"
                 title="Modifier le montant"
               >
                 <Edit className="w-3 h-3 md:w-4 md:h-4" />
@@ -1346,6 +1346,7 @@ export default function AssistanceDetails() {
                       e.stopPropagation();
                       setShowEditDialog(true);
                     }}
+                    className="hover:bg-background hover:text-primary transition-colors"
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -1458,6 +1459,7 @@ export default function AssistanceDetails() {
                               setEditData(prev => ({ ...prev, ordre_mission: assistance.ordre_mission || '' }));
                               setShowEditDialog(true);
                             }}
+                            className="hover:bg-background hover:text-primary transition-colors"
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -1477,6 +1479,7 @@ export default function AssistanceDetails() {
                           variant="outline"
                           size="sm"
                           onClick={handleDownloadOrdreMission}
+                          className="hover:bg-background hover:text-primary hover:border-primary transition-colors"
                         >
                           <Download className="h-4 w-4 mr-2" />
                           Télécharger
@@ -1501,7 +1504,7 @@ export default function AssistanceDetails() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={removeFile}
-                                className="h-6 w-6 flex-shrink-0"
+                                className="h-6 w-6 flex-shrink-0 hover:bg-background hover:text-primary transition-colors"
                               >
                                 <X className="h-4 w-4" />
                               </Button>
@@ -1522,6 +1525,7 @@ export default function AssistanceDetails() {
                             variant="outline"
                             size="sm"
                             onClick={() => fileInputRef.current?.click()}
+                            className="hover:bg-background hover:text-primary hover:border-primary transition-colors"
                           >
                             <Upload className="h-4 w-4 mr-2" />
                             Uploader le fichier
