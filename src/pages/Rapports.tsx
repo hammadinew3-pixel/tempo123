@@ -62,25 +62,29 @@ export default function Rapports() {
       </Card>
 
       <Tabs defaultValue="vehicles" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-          <TabsTrigger value="vehicles">
-            <Car className="w-4 h-4 mr-2" />
-            Par Voiture
+        <TabsList className="grid w-full grid-cols-2 gap-2 h-auto p-2">
+          <TabsTrigger value="vehicles" className="whitespace-nowrap text-xs sm:text-sm">
+            <Car className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Par Voiture</span>
+            <span className="sm:hidden">Voitures</span>
           </TabsTrigger>
-          <TabsTrigger value="clients">
-            <Users className="w-4 h-4 mr-2" />
-            Par Client
+          <TabsTrigger value="clients" className="whitespace-nowrap text-xs sm:text-sm">
+            <Users className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Par Client</span>
+            <span className="sm:hidden">Clients</span>
           </TabsTrigger>
-            <TabsTrigger value="encaissement">
-              <DollarSign className="w-4 h-4 mr-2" />
-              Encaissement
+          <TabsTrigger value="encaissement" className="whitespace-nowrap text-xs sm:text-sm">
+            <DollarSign className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Encaissement</span>
+            <span className="sm:hidden">Encaiss.</span>
+          </TabsTrigger>
+          {hasModuleAccess('assistance') && (
+            <TabsTrigger value="assurance" className="whitespace-nowrap text-xs sm:text-sm">
+              <Shield className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Assurance</span>
+              <span className="sm:hidden">Assur.</span>
             </TabsTrigger>
-            {hasModuleAccess('assistance') && (
-              <TabsTrigger value="assurance">
-                <Shield className="w-4 h-4 mr-2" />
-                Assurance
-              </TabsTrigger>
-            )}
+          )}
         </TabsList>
 
         <TabsContent value="vehicles" className="space-y-4">

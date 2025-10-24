@@ -236,9 +236,10 @@ export default function Infractions() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => navigate("/infractions/nouveau")} className="gap-2">
+          <Button onClick={() => navigate("/infractions/nouveau")} size="sm" className="gap-2 md:size-default whitespace-nowrap">
             <Plus className="w-4 h-4" />
-            NOUVELLE INFRACTION
+            <span className="hidden sm:inline">NOUVELLE INFRACTION</span>
+            <span className="sm:hidden">NOUVEAU</span>
           </Button>
         </div>
       </div>

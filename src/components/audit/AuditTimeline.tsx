@@ -78,12 +78,12 @@ export function AuditTimeline({ tableName, recordId, action, startDate, endDate,
     const fieldLabel = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     return (
-      <div key={field} className="flex gap-4 py-2 text-sm">
-        <span className="font-medium text-muted-foreground min-w-[120px]">{fieldLabel}:</span>
-        <div className="flex-1 flex items-center gap-2">
-          <span className="text-destructive line-through">{oldValue?.toString() || 'N/A'}</span>
+      <div key={field} className="flex flex-col sm:flex-row gap-2 sm:gap-4 py-2 text-sm">
+        <span className="font-medium text-muted-foreground sm:min-w-[120px]">{fieldLabel}:</span>
+        <div className="flex-1 flex items-center gap-2 flex-wrap">
+          <span className="text-destructive line-through break-all">{oldValue?.toString() || 'N/A'}</span>
           <span>→</span>
-          <span className="text-primary font-medium">{newValue?.toString() || 'N/A'}</span>
+          <span className="text-primary font-medium break-all">{newValue?.toString() || 'N/A'}</span>
         </div>
       </div>
     );
@@ -128,9 +128,9 @@ export function AuditTimeline({ tableName, recordId, action, startDate, endDate,
             }
 
             return (
-              <div key={field} className="flex gap-4 py-1 text-sm">
-                <span className="font-medium text-muted-foreground min-w-[120px]">{fieldLabel}:</span>
-                <span className="flex-1">{value.toString()}</span>
+              <div key={field} className="flex flex-col sm:flex-row gap-1 sm:gap-4 py-1 text-sm">
+                <span className="font-medium text-muted-foreground sm:min-w-[120px]">{fieldLabel}:</span>
+                <span className="flex-1 break-all">{value.toString()}</span>
               </div>
             );
           }
@@ -153,18 +153,18 @@ export function AuditTimeline({ tableName, recordId, action, startDate, endDate,
       <div className="space-y-4">
         {logs.map((log) => (
           <Card key={log.id}>
-            <CardContent className="p-4">
-              <div className="flex items-start gap-4">
-                <div className={`p-2 rounded-full bg-muted ${ACTION_COLORS[log.action]}`}>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-2 sm:gap-4">
+                <div className={`p-2 rounded-full bg-muted flex-shrink-0 ${ACTION_COLORS[log.action]}`}>
                   {getActionIcon(log.action)}
                 </div>
                 
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className={ACTION_COLORS[log.action]}>
+                <div className="flex-1 space-y-2 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+                    <Badge variant="outline" className={`${ACTION_COLORS[log.action]} w-fit`}>
                       {ACTION_LABELS[log.action]}
                     </Badge>
-                    <Badge variant="secondary" className="text-xs font-medium">
+                    <Badge variant="secondary" className="text-xs font-medium w-fit">
                       {format(new Date(log.created_at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
                     </Badge>
                   </div>
