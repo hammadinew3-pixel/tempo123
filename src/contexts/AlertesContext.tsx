@@ -62,6 +62,7 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
         allInsurances,
         allInspections,
         allVignettes,
+        allCartesGrises,
         departsToday,
         returnsToday,
         chequesData,
@@ -70,6 +71,7 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
         supabase.from("vehicle_insurance").select("*").in("vehicle_id", vehicleIds),
         supabase.from("vehicle_technical_inspection").select("*").in("vehicle_id", vehicleIds),
         supabase.from("vehicle_vignette").select("*").in("vehicle_id", vehicleIds),
+        supabase.from("vehicle_carte_grise").select("vehicle_id").in("vehicle_id", vehicleIds),
         supabase.from("contracts").select("id").eq("date_debut", today).in("statut", ["contrat_valide", "brouillon"]),
         supabase.from("contracts").select("id").eq("date_fin", today).eq("statut", "livre"),
         supabase.from("cheques").select("id, date_echeance").in("statut", ["en_attente", "encours"]),
@@ -80,6 +82,11 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
       const latestInsurances = getLatestByGroup(allInsurances.data || [], 'vehicle_id' as any, 'date_expiration' as any);
       const latestInspections = getLatestByGroup(allInspections.data || [], 'vehicle_id' as any, 'date_expiration' as any);
       const latestVignettes = getLatestByGroup(allVignettes.data || [], 'vehicle_id' as any, 'date_expiration' as any);
+      
+      // Create set of vehicles with carte grise
+      const vehiclesWithCarteGrise = new Set(
+        (allCartesGrises.data || []).map((cg: any) => cg.vehicle_id)
+      );
 
       // Calculate alerts in memory
       for (const vehicle of vehicles) {
@@ -121,6 +128,11 @@ export const AlertesProvider = ({ children }: { children: ReactNode }) => {
           const kmUntilOilChange = vehicle.prochain_kilometrage_vidange - vehicle.kilometrage;
           if (kmUntilOilChange <= 1000) count++;
         } else if (!vehicle.dernier_kilometrage_vidange) {
+          count++;
+        }
+
+        // Check carte grise
+        if (!vehiclesWithCarteGrise.has(vehicle.id)) {
           count++;
         }
       }

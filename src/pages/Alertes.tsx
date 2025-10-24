@@ -18,7 +18,7 @@ interface VehicleAlert {
   vehicleName: string;
   message: string;
   severity: "warning" | "critical" | "missing";
-  type: "assurance" | "visite_technique" | "vignette" | "vidange" | "traite";
+  type: "assurance" | "visite_technique" | "vignette" | "vidange" | "traite" | "carte_grise";
   actionText: string;
 }
 
@@ -278,6 +278,24 @@ const Alertes = () => {
           }
         }
       }
+
+      // Carte grise alerts
+      const { data: cartesGrises } = await supabase
+        .from("vehicle_carte_grise")
+        .select("id")
+        .eq("vehicle_id", vehicle.id)
+        .limit(1);
+
+      if (!cartesGrises || cartesGrises.length === 0) {
+        alerts.push({
+          vehicleId: vehicle.id,
+          vehicleName,
+          message: "aucune carte grise enregistrée",
+          severity: "missing",
+          type: "carte_grise",
+          actionText: "AJOUTER CARTE GRISE",
+        });
+      }
     }
 
     setVehicleAlerts(alerts);
@@ -521,6 +539,9 @@ const Alertes = () => {
                                 {alert.type === "assurance" && "Assurance"}
                                 {alert.type === "visite_technique" && "Visite technique"}
                                 {alert.type === "vignette" && "Vignette"}
+                                {alert.type === "vidange" && "Vidange"}
+                                {alert.type === "traite" && "Traite"}
+                                {alert.type === "carte_grise" && "Carte grise"}
                               </span>
                             </div>
                             <p className="text-sm">{alert.message}</p>
