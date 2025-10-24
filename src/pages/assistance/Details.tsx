@@ -998,15 +998,15 @@ export default function AssistanceDetails() {
   const duration = calculateDuration(assistance.date_debut, assistance.date_fin);
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl md:text-2xl font-bold">
             Dossier d'assistance N° {assistance.num_dossier}
           </h1>
-          <div className="flex items-center text-sm text-muted-foreground space-x-2 mt-2">
-            <Link to="/" className="hover:text-foreground">Tableau de bord</Link>
+          <div className="flex items-center text-xs md:text-sm text-muted-foreground space-x-2 mt-2 overflow-x-auto">
+            <Link to="/" className="hover:text-foreground whitespace-nowrap">Tableau de bord</Link>
             <span>›</span>
             <Link to="/assistance" className="hover:text-foreground">Assistances</Link>
             <span>›</span>
@@ -1235,19 +1235,19 @@ export default function AssistanceDetails() {
       )}
 
       {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* Montant */}
         <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-              <DollarSign className="w-4 h-4 text-primary" />
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-2 md:mb-3">
+              <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-primary" />
               <span>MONTANT FACTURÉ</span>
             </div>
-            <div className="text-3xl font-bold text-foreground mb-2">
+            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1 md:mb-2">
               {totalAmount.toFixed(2)}
-              <span className="text-lg ml-1">DH</span>
+              <span className="text-base md:text-lg ml-1">DH</span>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs md:text-sm text-muted-foreground">
               {assistance.tarif_journalier ? `${assistance.tarif_journalier} DH/jour` : ''}
             </div>
           </CardContent>
@@ -1255,30 +1255,30 @@ export default function AssistanceDetails() {
 
         {/* Franchise */}
         <Card className="border-l-4 border-l-primary shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Key className="w-4 h-4 text-primary" />
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                <Key className="w-3 h-3 md:w-4 md:h-4 text-primary" />
                 <span>FRANCHISE</span>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFranchiseDialog(true)}
-                className="h-7 w-7 p-0 hover:bg-primary/10"
+                className="h-6 w-6 md:h-7 md:w-7 p-0 hover:bg-primary/10"
                 title="Modifier le montant"
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-3 h-3 md:w-4 md:h-4" />
               </Button>
             </div>
-            <div className="text-3xl font-bold text-foreground mb-2">
+            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1 md:mb-2">
               {assistance.franchise_montant ? assistance.franchise_montant.toFixed(2) : '0.00'}
-              <span className="text-lg ml-1">DH</span>
+              <span className="text-base md:text-lg ml-1">DH</span>
             </div>
             <Badge variant="outline" className={
-              assistance.franchise_statut === 'remboursee' ? 'bg-green-100 text-green-800 border-green-200' :
-              assistance.franchise_statut === 'utilisee' ? 'bg-red-100 text-red-800 border-red-200' :
-              'bg-orange-100 text-orange-800 border-orange-200'
+              assistance.franchise_statut === 'remboursee' ? 'bg-green-100 text-green-800 border-green-200 text-[10px] md:text-xs' :
+              assistance.franchise_statut === 'utilisee' ? 'bg-red-100 text-red-800 border-red-200 text-[10px] md:text-xs' :
+              'bg-orange-100 text-orange-800 border-orange-200 text-[10px] md:text-xs'
             }>
               {assistance.franchise_statut === 'bloquee' && 'Bloquée'}
               {assistance.franchise_statut === 'remboursee' && 'Remboursée'}

@@ -261,21 +261,21 @@ export default function Assistance() {
 
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6 p-3 md:p-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Dossiers d'assistance</h1>
-          <p className="text-sm text-muted-foreground">Gérez les véhicules de remplacement pour les assurances</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Dossiers d'assistance</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">Gérez les véhicules de remplacement pour les assurances</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Columns className="w-4 h-4 mr-2" />
-                COLONNES
+              <Button variant="outline" size="sm" className="flex-1 md:flex-none min-w-0">
+                <Columns className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">COLONNES</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64" align="end">
+            <PopoverContent className="w-64 bg-background z-50" align="end">
               <div className="space-y-3">
                 <h4 className="font-medium text-sm">Afficher les colonnes</h4>
                 <div className="space-y-2">
@@ -341,12 +341,12 @@ export default function Assistance() {
           </Popover>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                FILTRER
+              <Button variant="outline" size="sm" className="flex-1 md:flex-none min-w-0">
+                <Filter className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">FILTRER</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80" align="end">
+            <PopoverContent className="w-80 bg-background z-50" align="end">
               <div className="space-y-4">
                 <h4 className="font-medium">Filtres</h4>
                 <div className="space-y-3">
@@ -356,7 +356,7 @@ export default function Assistance() {
                       <SelectTrigger>
                         <SelectValue placeholder="Tous" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value=" ">Tous</SelectItem>
                         <SelectItem value="remplacement">Véhicule de remplacement</SelectItem>
                         <SelectItem value="panne">Panne</SelectItem>
@@ -370,7 +370,7 @@ export default function Assistance() {
                       <SelectTrigger>
                         <SelectValue placeholder="Tous" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value=" ">Tous</SelectItem>
                         <SelectItem value="ouvert">Ouvert</SelectItem>
                         <SelectItem value="contrat_valide">Validé</SelectItem>
@@ -410,12 +410,12 @@ export default function Assistance() {
           </Popover>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                EXPORTER
+              <Button variant="outline" size="sm" className="flex-1 md:flex-none min-w-0">
+                <Download className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">EXPORTER</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="bg-background z-50">
               <DropdownMenuItem onClick={() => handleExport('excel')}>
                 <FileText className="w-4 h-4 mr-2" />
                 Exporter en Excel
@@ -430,9 +430,10 @@ export default function Assistance() {
             <Button 
               size="sm"
               onClick={() => navigate('/assistance/nouveau')}
+              className="flex-1 md:flex-none min-w-0"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau dossier
+              <Plus className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Nouveau dossier</span>
             </Button>
           )}
         </div>
