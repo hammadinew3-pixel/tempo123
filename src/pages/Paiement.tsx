@@ -9,6 +9,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, CreditCard, Building2, CheckCircle, Calendar, DollarSign } from "lucide-react";
+
+const TVA_PLANS = 20; // TVA fixe pour les abonnements
+
 export default function Paiement() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -53,7 +56,8 @@ export default function Paiement() {
     }
   });
   const motif = subscriptionData ? `${subscriptionData.tenant.name.replace(/\s/g, '')}${subscriptionData.duration}moiscrsapp` : '';
-  const price = subscriptionData?.plan ? subscriptionData.duration === 6 ? subscriptionData.plan.price_6_months : subscriptionData.plan.price_12_months : 0;
+  const priceHT = subscriptionData?.plan ? subscriptionData.duration === 6 ? subscriptionData.plan.price_6_months : subscriptionData.plan.price_12_months : 0;
+  const priceTTC = Math.round(priceHT * 1.20);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -223,12 +227,25 @@ export default function Paiement() {
               </div>
             </div>
             <div className="pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-gray-700">Total à payer</span>
-                <span className="text-3xl font-bold text-[#c01533] flex items-center gap-1">
-                  
-                  {price} DH
-                </span>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Prix HT</span>
+                  <span className="text-lg font-semibold text-gray-700">
+                    {priceHT} DH
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">TVA (20%)</span>
+                  <span className="text-lg font-semibold text-gray-700">
+                    {Math.round(priceHT * 0.20)} DH
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-300">
+                  <span className="text-lg font-semibold text-gray-700">Total à payer TTC</span>
+                  <span className="text-3xl font-bold text-[#c01533]">
+                    {priceTTC} DH
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
