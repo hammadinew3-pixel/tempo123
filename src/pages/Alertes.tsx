@@ -48,7 +48,7 @@ const Alertes = () => {
   const loadVehicleAlerts = async () => {
     const { data: vehicles } = await supabase
       .from("vehicles")
-      .select("id, marque, modele, immatriculation, ww, immatriculation_provisoire, kilometrage, prochain_kilometrage_vidange, dernier_kilometrage_vidange, type_vehicule")
+      .select("id, marque, modele, immatriculation, immatriculation_provisoire, kilometrage, prochain_kilometrage_vidange, dernier_kilometrage_vidange, type_vehicule")
       .order("marque");
 
     if (!vehicles) return;
@@ -61,7 +61,7 @@ const Alertes = () => {
         continue;
       }
       
-      const vehicleName = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || vehicle.ww || vehicle.immatriculation_provisoire || 'N/A'})`;
+      const vehicleName = `${vehicle.marque} ${vehicle.modele} (${vehicle.immatriculation || vehicle.immatriculation_provisoire || 'N/A'})`;
 
       // Insurance alerts
       const { data: insurances } = await supabase

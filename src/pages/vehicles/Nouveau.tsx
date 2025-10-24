@@ -42,7 +42,7 @@ export default function NouveauVehicule() {
   } = useTenantPlan();
   const [formData, setFormData] = useState<Partial<VehicleInsert>>({
     marque: '',
-    ww: '',
+    immatriculation_provisoire: '',
     immatriculation: '',
     modele: '',
     annee: new Date().getFullYear(),
@@ -327,10 +327,10 @@ export default function NouveauVehicule() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ww">WW (Matricule provisoire)</Label>
-              <Input id="ww" value={formData.ww || ''} onChange={e => setFormData({
+              <Label htmlFor="immatriculation_provisoire">WW (Matricule provisoire)</Label>
+              <Input id="immatriculation_provisoire" value={formData.immatriculation_provisoire || ''} onChange={e => setFormData({
               ...formData,
-              ww: e.target.value
+              immatriculation_provisoire: e.target.value
             })} placeholder="Ex: WW-1234-2024" />
             </div>
 

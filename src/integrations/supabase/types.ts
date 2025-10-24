@@ -2322,7 +2322,6 @@ export type Database = {
           valeur_achat: number | null
           vignette_expire_le: string | null
           visite_technique_expire_le: string | null
-          ww: string | null
         }
         Insert: {
           annee?: number | null
@@ -2358,7 +2357,6 @@ export type Database = {
           valeur_achat?: number | null
           vignette_expire_le?: string | null
           visite_technique_expire_le?: string | null
-          ww?: string | null
         }
         Update: {
           annee?: number | null
@@ -2394,7 +2392,6 @@ export type Database = {
           valeur_achat?: number | null
           vignette_expire_le?: string | null
           visite_technique_expire_le?: string | null
-          ww?: string | null
         }
         Relationships: [
           {

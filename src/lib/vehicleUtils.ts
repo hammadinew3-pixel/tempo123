@@ -5,9 +5,8 @@
 export const getDisplayMatricule = (vehicle: {
   immatriculation?: string | null;
   immatriculation_provisoire?: string | null;
-  ww?: string | null;
 }): string => {
-  return vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A';
+  return vehicle.immatriculation || vehicle.immatriculation_provisoire || 'N/A';
 };
 
 /**
@@ -18,7 +17,6 @@ export const matchesMatriculeSearch = (
   vehicle: {
     immatriculation?: string | null;
     immatriculation_provisoire?: string | null;
-    ww?: string | null;
   },
   searchTerm: string
 ): boolean => {
@@ -26,7 +24,6 @@ export const matchesMatriculeSearch = (
   return (
     vehicle.immatriculation?.toLowerCase().includes(searchLower) ||
     vehicle.immatriculation_provisoire?.toLowerCase().includes(searchLower) ||
-    vehicle.ww?.toLowerCase().includes(searchLower) ||
     false
   );
 };

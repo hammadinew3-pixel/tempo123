@@ -734,7 +734,7 @@ export default function VehiculeDetails() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-          Fiche véhicule Mat. N° {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}
+          Fiche véhicule Mat. N° {vehicle.immatriculation || vehicle.immatriculation_provisoire || 'N/A'}
         </h1>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button onClick={() => navigate(`/vehicules/${id}/modifier`)} size="sm" className="bg-info hover:bg-info/90 text-white h-8 md:h-9 text-xs md:text-sm">
@@ -1047,7 +1047,7 @@ export default function VehiculeDetails() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">WW (Matricule provisoire)</Label>
-                  <p className="font-medium mt-1">{vehicle.ww || '-'}</p>
+                  <p className="font-medium mt-1">{vehicle.immatriculation_provisoire || '—'}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Année</Label>

@@ -49,7 +49,7 @@ interface Expense {
   vehicle_id?: string;
   contract_id?: string;
   fournisseur?: string;
-  vehicles?: { immatriculation: string; immatriculation_provisoire?: string | null; ww?: string | null; marque: string; modele: string };
+  vehicles?: { immatriculation: string; immatriculation_provisoire?: string | null; marque: string; modele: string };
   contracts?: { numero_contrat: string };
 }
 
@@ -130,7 +130,7 @@ export default function Charges() {
         .from('expenses')
         .select(`
           *,
-          vehicles (immatriculation, ww, marque, modele),
+          vehicles (immatriculation, immatriculation_provisoire, marque, modele),
           contracts (numero_contrat)
         `)
         .order('date_depense', { ascending: false });
@@ -148,7 +148,7 @@ export default function Charges() {
           ),
           vehicles!inner (
             immatriculation,
-            ww,
+            immatriculation_provisoire,
             marque,
             modele
           )
@@ -710,7 +710,7 @@ export default function Charges() {
                         {expense.vehicles ? (
                           <div className="text-sm">
                             <div className="font-medium">
-                              {expense.vehicles.immatriculation || expense.vehicles.immatriculation_provisoire || expense.vehicles.ww || 'N/A'}
+                              {expense.vehicles.immatriculation || expense.vehicles.immatriculation_provisoire || 'N/A'}
                             </div>
                             <div className="text-muted-foreground text-xs">
                               {expense.vehicles.marque} {expense.vehicles.modele}
