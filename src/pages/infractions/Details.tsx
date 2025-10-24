@@ -155,18 +155,35 @@ export default function InfractionDetails() {
 
         // Écouter le message de fin de téléchargement
         const handlePdfComplete = (event: MessageEvent) => {
-          if (event.data.type === 'pdf-download-complete' && !downloadCompleted) {
+          // Réception du PDF en blob depuis l'iframe (méthode fiable)
+          if (event.data?.type === 'pdf-ready' && !downloadCompleted) {
             downloadCompleted = true;
-            // Nettoyer
+            try {
+              const { blob, filename } = event.data as any;
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename || 'Contrat.pdf';
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } finally {
+              if (iframe.parentNode) {
+                document.body.removeChild(iframe);
+              }
+              window.removeEventListener('message', handlePdfComplete);
+              toast({ title: 'Succès', description: 'Contrat téléchargé avec succès' });
+            }
+            return;
+          }
+
+          // Ancienne méthode (l'iframe signale juste la fin)
+          if (event.data?.type === 'pdf-download-complete' && !downloadCompleted) {
+            downloadCompleted = true;
             if (iframe.parentNode) {
               document.body.removeChild(iframe);
             }
             window.removeEventListener('message', handlePdfComplete);
-            
-            toast({
-              title: "Succès",
-              description: "Contrat téléchargé avec succès",
-            });
+            toast({ title: 'Succès', description: 'Contrat téléchargé avec succès' });
           }
         };
         

@@ -48,12 +48,28 @@ export default function ContractTemplate() {
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
           
-          html2pdf().set(opt).from(element).save().then(() => {
-            // Notifier le parent que le téléchargement est terminé
-            if (window.parent !== window) {
-              window.parent.postMessage({ type: 'pdf-download-complete' }, '*');
-            }
-          });
+          html2pdf()
+            .set(opt)
+            .from(element)
+            .toPdf()
+            .get('pdf')
+            .then((pdf: any) => {
+              const blob: Blob = pdf.output('blob');
+              const filename = `Contrat_${contract.numero_contrat || contractId}.pdf`;
+
+              if (window.parent !== window) {
+                // Envoyer le blob au parent pour déclencher le téléchargement côté top window
+                window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
+              } else {
+                // Fallback: déclencher le téléchargement ici si pas d'iframe
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+              }
+            });
         }, 500);
       } else {
         setTimeout(() => window.print(), 500);
