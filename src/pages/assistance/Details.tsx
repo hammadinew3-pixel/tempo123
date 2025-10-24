@@ -620,11 +620,8 @@ export default function AssistanceDetails() {
   };
 
   const handleGenerateContractPDF = () => {
-    // Créer un iframe caché pour générer le PDF automatiquement
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `/assistance-contract-template?id=${id}&download=true`;
-    document.body.appendChild(iframe);
+    const url = `/assistance-contract-template?id=${id}&download=true`;
+    window.open(url, '_blank', 'noopener,noreferrer');
     
     toast({
       title: 'Contrat généré',

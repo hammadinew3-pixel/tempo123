@@ -87,12 +87,19 @@ export default function AssistanceContractTemplate() {
           };
 
           html2pdf().set(opt).from(element).save().then(() => {
-            // Fermer l'iframe après le téléchargement
             setTimeout(() => {
-              if (window.parent !== window) {
-                window.parent.document.querySelector('iframe')?.remove();
+              try {
+                if (window.opener) {
+                  // Ouvert dans un nouvel onglet: on ferme l'onglet
+                  window.close();
+                } else if (window.parent !== window) {
+                  // Ouvert dans un iframe: on tente de retirer l'iframe
+                  window.parent.document.querySelector('iframe')?.remove();
+                }
+              } catch (e) {
+                // Ignorer les erreurs cross-origin
               }
-            }, 1000);
+            }, 800);
           });
         }, 500);
       } else {
