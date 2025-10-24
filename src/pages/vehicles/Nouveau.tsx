@@ -463,19 +463,6 @@ export default function NouveauVehicule() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="prix">Prix location *</Label>
-              <div className="relative">
-                <Input id="prix" type="number" step="0.01" value={formData.tarif_journalier} onChange={e => setFormData({
-                ...formData,
-                tarif_journalier: parseFloat(e.target.value) || 0
-              })} placeholder="0.00" required />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                  DH
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="date-circulation">Date de mise en circulation</Label>
               <Input id="date-circulation" type="date" value={formData.date_mise_en_circulation || ''} onChange={e => setFormData({
               ...formData,
