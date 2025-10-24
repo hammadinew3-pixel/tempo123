@@ -49,7 +49,7 @@ interface Expense {
   vehicle_id?: string;
   contract_id?: string;
   fournisseur?: string;
-  vehicles?: { immatriculation: string; ww?: string | null; marque: string; modele: string };
+  vehicles?: { immatriculation: string; immatriculation_provisoire?: string | null; ww?: string | null; marque: string; modele: string };
   contracts?: { numero_contrat: string };
 }
 
@@ -586,7 +586,7 @@ export default function Charges() {
                   <SelectItem value="all">Tous les véhicules</SelectItem>
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.immatriculation || vehicle.ww || 'N/A'} - {vehicle.marque} {vehicle.modele}
+                      {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'} - {vehicle.marque} {vehicle.modele}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -710,7 +710,7 @@ export default function Charges() {
                         {expense.vehicles ? (
                           <div className="text-sm">
                             <div className="font-medium">
-                              {expense.vehicles.immatriculation || expense.vehicles.ww || 'N/A'}
+                              {expense.vehicles.immatriculation || expense.vehicles.immatriculation_provisoire || expense.vehicles.ww || 'N/A'}
                             </div>
                             <div className="text-muted-foreground text-xs">
                               {expense.vehicles.marque} {expense.vehicles.modele}

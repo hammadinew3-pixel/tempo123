@@ -18,6 +18,7 @@ import {
 interface VehicleReport {
   id: string;
   immatriculation: string;
+  immatriculation_provisoire?: string | null;
   ww?: string | null;
   marque: string;
   modele: string;
@@ -116,6 +117,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
           return {
             id: vehicle.id,
             immatriculation: vehicle.immatriculation,
+            immatriculation_provisoire: vehicle.immatriculation_provisoire,
             ww: vehicle.ww,
             marque: vehicle.marque,
             modele: vehicle.modele,
@@ -240,7 +242,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
 
   const exportReport = () => {
     const exportData = vehicles.map(v => ({
-      'Immatriculation': v.immatriculation || v.ww || 'N/A',
+      'Immatriculation': v.immatriculation || v.immatriculation_provisoire || v.ww || 'N/A',
       'Marque': v.marque,
       'Modèle': v.modele,
       'Nb Contrats': v.nombre_contrats,
@@ -337,7 +339,7 @@ export default function RapportParVoiture({ dateRange }: Props) {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => handleVehicleClick(vehicle.id)}
                   >
-                    <TableCell className="font-medium">{vehicle.immatriculation || vehicle.ww || 'N/A'}</TableCell>
+                    <TableCell className="font-medium">{vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}</TableCell>
                     <TableCell>{vehicle.marque} {vehicle.modele}</TableCell>
                     <TableCell className="text-right">{vehicle.nombre_contrats}</TableCell>
                     <TableCell className="text-right text-green-600">

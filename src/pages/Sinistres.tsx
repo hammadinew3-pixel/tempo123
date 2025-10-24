@@ -33,7 +33,7 @@ interface Sinistre {
   cout_estime: number | null;
   statut: string;
   created_at: string;
-  vehicles?: { immatriculation: string; marque: string; modele: string };
+  vehicles?: { immatriculation: string; immatriculation_provisoire?: string; marque: string; modele: string };
   clients?: { nom: string; prenom: string };
 }
 
@@ -259,7 +259,7 @@ export default function Sinistres() {
     return filteredSinistres.map(s => ({
       'Référence': s.reference,
       'Type': getTypeLabel(s.type_sinistre),
-      'Véhicule': s.vehicles ? `${s.vehicles.marque} ${s.vehicles.modele} (${s.vehicles.immatriculation})` : '-',
+      'Véhicule': s.vehicles ? `${s.vehicles.marque} ${s.vehicles.modele} (${s.vehicles.immatriculation || s.vehicles.immatriculation_provisoire || 'N/A'})` : '-',
       'Client': s.clients ? `${s.clients.prenom || ''} ${s.clients.nom}`.trim() : '-',
       'Date': format(new Date(s.date_sinistre), 'dd/MM/yyyy'),
       'Lieu': s.lieu,

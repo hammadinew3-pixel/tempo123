@@ -31,7 +31,7 @@ export default function AssistanceDossierTemplate() {
         .select(`
           *,
           clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
-          vehicles (immatriculation, marque, modele, annee, categorie, kilometrage)
+          vehicles (immatriculation, immatriculation_provisoire, ww, marque, modele, annee, categorie, kilometrage)
         `)
         .eq("id", assistanceId)
         .single();

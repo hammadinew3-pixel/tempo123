@@ -591,7 +591,7 @@ export default function ClientDetails() {
                           <div className="text-sm text-muted-foreground space-y-1">
                             <p>📅 {infraction.date_infraction ? format(new Date(infraction.date_infraction), 'dd/MM/yyyy', { locale: fr }) : '—'}</p>
                             {infraction.vehicles && (
-                              <p>🚗 {infraction.vehicles.marque} {infraction.vehicles.modele} - {infraction.vehicles.immatriculation}</p>
+                              <p>🚗 {infraction.vehicles.marque} {infraction.vehicles.modele} - {infraction.vehicles.immatriculation || infraction.vehicles.immatriculation_provisoire || 'N/A'}</p>
                             )}
                             {infraction.type_infraction && <p>Type: {infraction.type_infraction}</p>}
                           </div>
@@ -658,7 +658,7 @@ export default function ClientDetails() {
                           <div className="text-sm text-muted-foreground space-y-1">
                             <p>📅 {sinistre.date_sinistre ? format(new Date(sinistre.date_sinistre), 'dd/MM/yyyy', { locale: fr }) : '—'}</p>
                             {sinistre.vehicles && (
-                              <p>🚗 {sinistre.vehicles.marque} {sinistre.vehicles.modele} - {sinistre.vehicles.immatriculation}</p>
+                              <p>🚗 {sinistre.vehicles.marque} {sinistre.vehicles.modele} - {sinistre.vehicles.immatriculation || sinistre.vehicles.immatriculation_provisoire || 'N/A'}</p>
                             )}
                             {sinistre.type_sinistre && <p>Type: {sinistre.type_sinistre}</p>}
                             {sinistre.description && <p className="text-xs">{sinistre.description}</p>}

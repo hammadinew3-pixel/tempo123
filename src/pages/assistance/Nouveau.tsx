@@ -351,7 +351,7 @@ export default function NouveauAssistance() {
                   <SelectContent>
                     {filteredVehicles.map((vehicle) => (
                       <SelectItem key={vehicle.id} value={vehicle.id}>
-                        {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                        {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}
                         {vehicle.categories && vehicle.categories.length > 0 && 
                           ` (Cat. ${vehicle.categories.join(', ')})`
                         }

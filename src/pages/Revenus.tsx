@@ -631,7 +631,7 @@ export default function Revenus() {
                   <SelectItem value="all">Tous</SelectItem>
                   {vehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.immatriculation || vehicle.ww || 'N/A'} - {vehicle.marque} {vehicle.modele}
+                      {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'} - {vehicle.marque} {vehicle.modele}
                     </SelectItem>
                   ))}
                 </SelectContent>

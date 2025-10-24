@@ -2404,7 +2404,7 @@ export default function AssistanceDetails() {
                 <SelectContent>
                   {availableVehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -388,7 +388,7 @@ export default function NouveauSinistre() {
                 <SelectContent>
                   {vehicles.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
-                      {v.marque} {v.modele} ({v.immatriculation})
+                      {v.marque} {v.modele} ({v.immatriculation || v.immatriculation_provisoire || v.ww || 'N/A'})
                     </SelectItem>
                   ))}
                 </SelectContent>

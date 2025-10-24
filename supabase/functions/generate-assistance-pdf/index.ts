@@ -33,7 +33,7 @@ serve(async (req) => {
       .select(`
         *,
         clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
-        vehicles (immatriculation, marque, modele, annee, categorie),
+        vehicles (immatriculation, immatriculation_provisoire, ww, marque, modele, annee, categorie),
         assurances (nom, contact_nom, contact_telephone, contact_email, adresse)
       `)
       .eq('id', assistanceId)
@@ -275,7 +275,7 @@ serve(async (req) => {
     <div class="info-grid">
       <div class="info-item">
         <div class="info-label">Immatriculation:</div>
-        <div class="info-value">${assistance.vehicles?.immatriculation || 'N/A'}</div>
+        <div class="info-value">${assistance.vehicles?.immatriculation || assistance.vehicles?.immatriculation_provisoire || assistance.vehicles?.ww || 'N/A'}</div>
       </div>
       <div class="info-item">
         <div class="info-label">Marque/Modèle:</div>

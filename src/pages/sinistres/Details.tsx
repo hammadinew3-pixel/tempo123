@@ -278,7 +278,7 @@ export default function SinistreDetails() {
                     Véhicule
                   </p>
                   <p className="font-medium">
-                    {sinistre.vehicles.marque} {sinistre.vehicles.modele} ({sinistre.vehicles.immatriculation})
+                    {sinistre.vehicles.marque} {sinistre.vehicles.modele} ({sinistre.vehicles.immatriculation || sinistre.vehicles.immatriculation_provisoire || 'N/A'})
                   </p>
                 </div>
               )}

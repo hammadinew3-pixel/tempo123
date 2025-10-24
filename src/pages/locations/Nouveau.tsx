@@ -683,7 +683,7 @@ export default function NouveauLocation() {
                       <div className="flex items-center space-x-2">
                         <Car className="w-4 h-4" />
                         <span>
-                          {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation}
+                          {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}
                           {contractType === "assistance" && (
                             <span className="ml-2 text-xs text-muted-foreground">
                               {Array.isArray(vehicle.categories) && vehicle.categories.length > 0

@@ -148,7 +148,7 @@ export default function Infractions() {
     return filteredInfractions.map(i => ({
       'Référence': i.reference,
       'Date': format(new Date(i.date_infraction), 'dd/MM/yyyy', { locale: fr }),
-      'Véhicule': i.vehicles ? `${i.vehicles.marque} ${i.vehicles.modele} (${i.vehicles.immatriculation})` : '-',
+      'Véhicule': i.vehicles ? `${i.vehicles.marque} ${i.vehicles.modele} (${i.vehicles.immatriculation || i.vehicles.immatriculation_provisoire || 'N/A'})` : '-',
       'Client': i.clients ? `${i.clients.nom} ${i.clients.prenom}`.trim() : '-',
       'Type': getTypeLabel(i.type_infraction),
       'Lieu': i.lieu,

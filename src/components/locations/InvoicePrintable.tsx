@@ -21,6 +21,8 @@ interface Contract {
   };
   vehicles: {
     immatriculation: string;
+    immatriculation_provisoire?: string;
+    ww?: string;
     marque: string;
     modele: string;
   };
@@ -198,7 +200,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
                   <p className="font-semibold">
                     {contract.vehicles.marque} {contract.vehicles.modele}
                   </p>
-                  <p className="text-sm">Immatriculation : {contract.vehicles.immatriculation}</p>
+                  <p className="text-sm">Immatriculation : {contract.vehicles.immatriculation || contract.vehicles.immatriculation_provisoire || 'N/A'}</p>
                   <p className="text-sm mt-2">
                     Période : {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })} 
                     {' au '} 
@@ -226,7 +228,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
               <td className="py-4 px-2">
                 <p className="font-semibold">Location véhicule</p>
                 <p className="text-sm text-gray-600">
-                  {contract.vehicles.marque} {contract.vehicles.modele} - {contract.vehicles.immatriculation}
+                  {contract.vehicles.marque} {contract.vehicles.modele} - {contract.vehicles.immatriculation || contract.vehicles.immatriculation_provisoire || 'N/A'}
                 </p>
                 <p className="text-sm text-gray-600">
                   Période : {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })} 

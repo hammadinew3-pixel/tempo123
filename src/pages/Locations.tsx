@@ -507,7 +507,7 @@ export default function Locations() {
       'Type': c.type_contrat === 'location' ? 'Location' : 'Assistance',
       'N° Contrat': c.numero_contrat,
       'Client': c.clients ? `${c.clients.prenom || ''} ${c.clients.nom}`.trim() : '-',
-      'Véhicule': c.vehicles ? `${c.vehicles.marque} ${c.vehicles.modele} (${c.vehicles.immatriculation})` : '-',
+      'Véhicule': c.vehicles ? `${c.vehicles.marque} ${c.vehicles.modele} (${c.vehicles.immatriculation || c.vehicles.immatriculation_provisoire || 'N/A'})` : '-',
       'Date début': format(new Date(c.date_debut), 'dd/MM/yyyy'),
       'Date fin': format(new Date(c.date_fin), 'dd/MM/yyyy'),
       'Durée (jours)': calculateDuration(c.date_debut, c.date_fin),

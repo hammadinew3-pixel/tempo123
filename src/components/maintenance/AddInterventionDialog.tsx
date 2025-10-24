@@ -249,7 +249,7 @@ export function AddInterventionDialog({ open, onOpenChange, onSuccess, vehicleId
                 <SelectContent>
                   {vehicles.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
-                      {v.immatriculation} - {v.marque} {v.modele}
+                      {v.immatriculation || v.immatriculation_provisoire || v.ww || 'N/A'} - {v.marque} {v.modele}
                     </SelectItem>
                   ))}
                 </SelectContent>

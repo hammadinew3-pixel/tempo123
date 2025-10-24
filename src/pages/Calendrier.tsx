@@ -63,6 +63,8 @@ type Contract = {
   prolongations?: any;
   vehicles?: {
     immatriculation: string;
+    immatriculation_provisoire?: string;
+    ww?: string;
     marque: string;
     modele: string;
   };
@@ -389,7 +391,7 @@ export default function Calendrier() {
       if (contract.vehicles && !vehicleMap.has(contract.vehicle_id)) {
         vehicleMap.set(contract.vehicle_id, {
           id: contract.vehicle_id,
-          immatriculation: contract.vehicles.immatriculation,
+          immatriculation: contract.vehicles.immatriculation || contract.vehicles.immatriculation_provisoire || contract.vehicles.ww || 'N/A',
           marque: contract.vehicles.marque,
           modele: contract.vehicles.modele,
           color: getVehicleColor(contract.vehicle_id),
@@ -496,7 +498,7 @@ export default function Calendrier() {
                         onClick={() => setSelectedVehicleFilter(vehicle.id)}
                       >
                         <div className={`w-3 h-3 rounded mr-2 ${vehicle.color.bg}`} />
-                        {vehicle.immatriculation}
+                        {vehicle.immatriculation || 'N/A'}
                         <Badge variant="outline" className="ml-auto">
                           {vehicle.count}
                         </Badge>
@@ -563,7 +565,7 @@ export default function Calendrier() {
                   onClick={() => setSelectedVehicleFilter(selectedVehicleFilter === vehicle.id ? null : vehicle.id)}
                 >
                   <div className={`w-3 h-3 rounded ${vehicle.color.bg} ${vehicle.color.border} border`} />
-                  <span className="text-foreground">{vehicle.immatriculation}</span>
+                  <span className="text-foreground">{vehicle.immatriculation || 'N/A'}</span>
                   <Badge variant="secondary" className="text-[10px] px-1 py-0">
                     {vehicle.count}
                   </Badge>
@@ -955,7 +957,7 @@ export default function Calendrier() {
                                 {vehicle.marque} {vehicle.modele}
                               </div>
                               <div className="text-sm text-muted-foreground">
-                                {vehicle.immatriculation}
+                                {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}
                               </div>
                             </div>
                           </div>

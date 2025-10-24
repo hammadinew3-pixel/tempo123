@@ -2205,7 +2205,7 @@ export default function LocationDetails() {
                 <SelectContent>
                   {availableVehicles.map((vehicle) => (
                     <SelectItem key={vehicle.id} value={vehicle.id}>
-                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation} ({vehicle.tarif_journalier} DH/jour)
+                      {vehicle.marque} {vehicle.modele} - {vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'} ({vehicle.tarif_journalier} DH/jour)
                     </SelectItem>
                   ))}
                 </SelectContent>

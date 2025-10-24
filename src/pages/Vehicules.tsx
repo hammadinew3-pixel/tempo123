@@ -346,7 +346,7 @@ export default function Vehicules() {
     // Recherche par mot-clé
     if (advancedFilters.searchText) {
       const searchLower = advancedFilters.searchText.toLowerCase();
-      const matchesSearch = vehicle.immatriculation?.toLowerCase().includes(searchLower) || vehicle.marque?.toLowerCase().includes(searchLower) || vehicle.modele?.toLowerCase().includes(searchLower) || vehicle.categorie?.toLowerCase().includes(searchLower);
+      const matchesSearch = vehicle.immatriculation?.toLowerCase().includes(searchLower) || vehicle.immatriculation_provisoire?.toLowerCase().includes(searchLower) || vehicle.marque?.toLowerCase().includes(searchLower) || vehicle.modele?.toLowerCase().includes(searchLower) || vehicle.categorie?.toLowerCase().includes(searchLower);
       if (!matchesSearch) return false;
     }
 
@@ -433,7 +433,7 @@ export default function Vehicules() {
 
   const prepareVehiclesExport = () => {
     return filteredVehicles.map(v => ({
-      'Matricule': v.immatriculation || v.ww || 'N/A',
+      'Matricule': v.immatriculation || v.immatriculation_provisoire || v.ww || 'N/A',
       'Marque': v.marque,
       'Modèle': v.modele,
       'Année': v.annee,
@@ -879,7 +879,7 @@ export default function Vehicules() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="font-semibold text-foreground truncate">{vehicle.marque} {vehicle.modele}</div>
-                            <div className="text-xs text-muted-foreground">{vehicle.immatriculation || vehicle.ww || 'N/A'}</div>
+                            <div className="text-xs text-muted-foreground">{vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}</div>
                           </div>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -994,7 +994,7 @@ export default function Vehicules() {
                           </td>
                         )}
                         {visibleColumns.matricule && (
-                          <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation || vehicle.ww || 'N/A'}</td>
+                          <td className="py-4 font-semibold text-foreground">{vehicle.immatriculation || vehicle.immatriculation_provisoire || vehicle.ww || 'N/A'}</td>
                         )}
                         {visibleColumns.etat && (
                           <td className="py-4">

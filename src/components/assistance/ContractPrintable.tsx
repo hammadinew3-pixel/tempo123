@@ -85,7 +85,7 @@ export default function ContractPrintable({ assistance, agenceSettings }: Contra
             </div>
             <div className="p-3 space-y-1 text-[9pt]">
               <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
-              <div><strong>Immatriculation:</strong> {vehicle?.immatriculation}</div>
+              <div><strong>Immatriculation:</strong> {vehicle?.immatriculation || vehicle?.immatriculation_provisoire || vehicle?.ww || 'N/A'}</div>
               <div><strong>Catégorie:</strong> {vehicle?.categorie || vehicle?.categories?.[0] || ''}</div>
               <div><strong>Km départ:</strong> {assistance.kilometrage_depart || vehicle?.kilometrage}</div>
             </div>

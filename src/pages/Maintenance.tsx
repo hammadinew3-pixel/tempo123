@@ -93,6 +93,7 @@ export default function Maintenance() {
       (statutFilter === "non_facturee" && !intervention.facturee);
     const matchesSearch = searchTerm === "" || 
       intervention.vehicles?.immatriculation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      intervention.vehicles?.immatriculation_provisoire?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       intervention.type_intervention.toLowerCase().includes(searchTerm.toLowerCase()) ||
       intervention.nom_garage?.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -102,7 +103,7 @@ export default function Maintenance() {
   const handleExport = () => {
     const exportData = filteredInterventions.map(i => ({
       "Date": safeFormatDate(i.date_intervention, "dd/MM/yyyy"),
-      "Véhicule": i.vehicles?.immatriculation || "-",
+      "Véhicule": i.vehicles?.immatriculation || i.vehicles?.immatriculation_provisoire || "-",
       "Type": i.type_intervention,
       "Km": i.kilometrage_actuel,
       "Garage": i.garage_externe ? (i.nom_garage || "Externe") : "Interne",
@@ -178,7 +179,7 @@ export default function Maintenance() {
                 <SelectItem value="all">Tous les véhicules</SelectItem>
                 {vehicles.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
-                    {v.immatriculation}
+                    {v.immatriculation || v.immatriculation_provisoire || v.ww || 'N/A'}
                   </SelectItem>
                 ))}
               </SelectContent>
