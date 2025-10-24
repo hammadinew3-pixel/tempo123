@@ -721,6 +721,17 @@ export default function VehiculeDetails() {
         }
       }
     }
+
+    // Check carte grise
+    if (cartesGrises.length === 0) {
+      alerts.push({
+        message: "Véhicule sans carte grise ajoutée.",
+        action: "AJOUTER CARTE GRISE",
+        onClick: () => setShowCarteGriseDialog(true),
+        severity: "high"
+      });
+    }
+
     return alerts;
   };
   if (loading) {
