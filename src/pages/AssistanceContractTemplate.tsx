@@ -39,7 +39,7 @@ export default function AssistanceContractTemplate() {
         .select(`
           *,
           clients (nom, prenom, telephone, email, cin, permis_conduire, adresse),
-          vehicles (immatriculation, immatriculation_provisoire, ww, marque, modele, kilometrage, categorie, categories)
+          vehicles (immatriculation, immatriculation_provisoire, marque, modele, kilometrage, categorie, categories)
         `)
         .eq("id", assistanceId)
         .single();
