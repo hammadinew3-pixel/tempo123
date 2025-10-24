@@ -115,7 +115,7 @@ serve(async (req) => {
   <div class="section">
     <h2>Véhicule</h2>
     <div class="info-grid">
-      <div class="info-item"><span class="info-label">Immatriculation:</span> ${contract.vehicles?.immatriculation || 'N/A'}</div>
+      <div class="info-item"><span class="info-label">Immatriculation:</span> ${contract.vehicles?.immatriculation || contract.vehicles?.immatriculation_provisoire || 'N/A'}</div>
       <div class="info-item"><span class="info-label">Marque:</span> ${contract.vehicles?.marque || 'N/A'}</div>
       <div class="info-item"><span class="info-label">Modèle:</span> ${contract.vehicles?.modele || 'N/A'}</div>
       <div class="info-item"><span class="info-label">Année:</span> ${contract.vehicles?.annee || 'N/A'}</div>
@@ -161,7 +161,7 @@ serve(async (req) => {
     ${vehicleChanges.map((change: any, i: number) => `
       <div style="margin-bottom: 10px;">
         <strong>Changement ${i + 1}</strong> - ${formatDate(change.change_date)}<br>
-        De: ${change.old_vehicle?.immatriculation || 'N/A'} → À: ${change.new_vehicle?.immatriculation || 'N/A'}<br>
+        De: ${change.old_vehicle?.immatriculation || change.old_vehicle?.immatriculation_provisoire || 'N/A'} → À: ${change.new_vehicle?.immatriculation || change.new_vehicle?.immatriculation_provisoire || 'N/A'}<br>
         Raison: ${change.reason || 'N/A'}
       </div>
     `).join('')}

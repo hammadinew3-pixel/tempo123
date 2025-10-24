@@ -268,7 +268,7 @@ export default function ContractTemplate() {
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
                 <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
-                <div><strong>Immatriculation:</strong> {vehicle?.immatriculation}</div>
+                <div><strong>Immatriculation:</strong> {vehicle?.immatriculation || vehicle?.immatriculation_provisoire || 'N/A'}</div>
                 <div><strong>Km départ:</strong> {contract.delivery_km || vehicle?.kilometrage}</div>
               </div>
             </div>
