@@ -621,38 +621,22 @@ export default function AssistanceDetails() {
 
   const handleGenerateContractPDF = async () => {
     try {
-      toast({
-        title: "Génération du contrat",
-        description: "Veuillez patienter...",
-      });
-
       const { data, error } = await supabase.functions.invoke('generate-assistance-contract-pdf', {
         body: { assistanceId: id },
       });
 
-      if (error) {
-        console.error('Erreur lors de la génération:', error);
-        throw error;
+      if (error) throw error;
+
+      if (data?.pdfUrl) {
+        // Ouvrir le template dans une nouvelle fenêtre pour générer le PDF côté client
+        window.open(`${data.pdfUrl}&download=true`, '_blank');
       }
-
-      if (!data?.url) {
-        throw new Error('URL du PDF non reçue');
-      }
-
-      // Télécharger le PDF
-      const { downloadFromSupabase } = await import('@/lib/downloadUtils');
-      await downloadFromSupabase(data.url, `contrat_assistance_${assistance.num_dossier}`);
-
-      toast({
-        title: 'Contrat téléchargé',
-        description: 'Le contrat a été généré et téléchargé avec succès',
-      });
     } catch (error: any) {
-      console.error('Erreur génération contrat:', error);
+      console.error('Error generating contract PDF:', error);
       toast({
-        title: 'Erreur de génération',
-        description: error.message || 'Impossible de générer le contrat',
-        variant: 'destructive',
+        variant: "destructive",
+        title: "Erreur de génération",
+        description: error.message || "Une erreur est survenue lors de la génération du contrat",
       });
     }
   };
