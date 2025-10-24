@@ -139,9 +139,12 @@ export default function NouveauLocation() {
       // IDs des véhicules déjà réservés
       const reservedVehicleIds = overlappingContracts?.map(c => c.vehicle_id) || [];
 
+      // Exclure seulement les véhicules avec des statuts permanents qui les rendent indisponibles
+      const permanentlyUnavailableStatuses = ['maintenance', 'vendu', 'hors_service'];
+
       // Filtrer les véhicules
       let availableVehicles = allVehicles.filter(v => 
-        v.statut === 'disponible' && !reservedVehicleIds.includes(v.id)
+        !permanentlyUnavailableStatuses.includes(v.statut || '') && !reservedVehicleIds.includes(v.id)
       );
 
       // Si c'est une assistance, filtrer par catégorie
