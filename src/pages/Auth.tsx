@@ -78,7 +78,7 @@ export default function Auth() {
           {/* Trust badge */}
           <div className="mt-16 flex items-center gap-2 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full animate-fade-in delay-500">
             <Shield className="w-5 h-5" />
-            <span className="text-sm font-medium">1000+ agences nous font confiance</span>
+            <span className="text-sm font-medium">Déjà utilisé par plus de 20 agences à travers le Maroc</span>
           </div>
         </div>
       </div>
