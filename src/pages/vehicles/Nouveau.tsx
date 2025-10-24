@@ -134,7 +134,7 @@ export default function NouveauVehicule() {
       if (!formData.marque || !formData.modele || !formData.tarif_journalier || !carburant) {
         toast({
           title: "Erreur",
-          description: "Veuillez remplir tous les champs obligatoires (Marque, Modèle, Carburant, Prix location)",
+          description: "Veuillez remplir tous les champs obligatoires (Marque, Modèle, Carburant, Tarif journalier)",
           variant: "destructive"
         });
         setLoading(false);
@@ -359,7 +359,7 @@ export default function NouveauVehicule() {
 
             {/* Tarif client (toujours affiché) */}
             <div className="space-y-2">
-              <Label htmlFor="tarif">Tarif journalier client (DH)</Label>
+              <Label htmlFor="tarif">Tarif journalier (DH) *</Label>
               <div className="relative">
                 <Input
                   id="tarif"
