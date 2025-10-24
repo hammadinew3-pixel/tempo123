@@ -619,26 +619,17 @@ export default function AssistanceDetails() {
     }
   };
 
-  const handleGenerateContractPDF = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-assistance-contract-pdf', {
-        body: { assistanceId: id },
-      });
-
-      if (error) throw error;
-
-      if (data?.pdfUrl) {
-        // Ouvrir le template dans une nouvelle fenêtre pour générer le PDF côté client
-        window.open(`${data.pdfUrl}&download=true`, '_blank');
-      }
-    } catch (error: any) {
-      console.error('Error generating contract PDF:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de génération",
-        description: error.message || "Une erreur est survenue lors de la génération du contrat",
-      });
-    }
+  const handleGenerateContractPDF = () => {
+    // Créer un iframe caché pour générer le PDF automatiquement
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `/assistance-contract-template?id=${id}&download=true`;
+    document.body.appendChild(iframe);
+    
+    toast({
+      title: 'Contrat généré',
+      description: 'Le téléchargement du PDF va démarrer automatiquement.',
+    });
   };
 
   const handleGenerateDossierPDF = async () => {
