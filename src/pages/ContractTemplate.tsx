@@ -160,7 +160,7 @@ export default function ContractTemplate() {
     );
   }
 
-  const ph = (text = '________________') => text;
+  const ph = (text = '') => text;
   const client = contract?.clients;
   const vehicle = contract?.vehicles;
   const secondaryDriver = secondaryDrivers[0];
