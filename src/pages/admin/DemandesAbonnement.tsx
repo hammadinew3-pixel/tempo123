@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
+
+const TVA_PLANS = 20; // TVA fixe pour les abonnements
+
 export default function DemandesAbonnement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -187,9 +190,10 @@ export default function DemandesAbonnement() {
             En attente de validation ({subscriptions.length})
           </h2>
           {subscriptions.map((subscription) => {
-            const price = subscription.duration === 6 
+            const priceHT = subscription.duration === 6 
               ? subscription.plan.price_6_months 
               : subscription.plan.price_12_months;
+            const priceTTC = Math.round(priceHT * 1.20);
 
             return (
               <Card key={subscription.id} className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
@@ -222,7 +226,11 @@ export default function DemandesAbonnement() {
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                       <p className="text-xs text-gray-600 mb-1">Montant</p>
-                      <p className="font-semibold text-[#c01533]">{price} DH</p>
+                      <div>
+                        <p className="text-xs text-gray-500">{priceHT} DH HT</p>
+                        <p className="font-semibold text-[#c01533]">{priceTTC} DH TTC</p>
+                        <p className="text-xs text-gray-500">TVA 20%</p>
+                      </div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                       <p className="text-xs text-gray-600 mb-1">Mode</p>
