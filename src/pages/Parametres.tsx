@@ -721,7 +721,7 @@ export default function Parametres() {
         <!-- Page 2 - CGV -->
         ${hasCgvPage ? `
           <div class="page-break-before cgv-page" style="padding: 16px; font-family: Arial, Helvetica, sans-serif;">
-            <div style="text-center; margin-bottom: 12px;">
+            <div style="text-align: center; margin-bottom: 12px;">
               <h2 style="font-size: 13pt; font-weight: bold; text-transform: uppercase;">CONDITIONS GÉNÉRALES DE LOCATION</h2>
             </div>
             <div style="white-space: pre-wrap; text-align: justify; font-size: 9.5pt; line-height: 1.4;">
@@ -759,8 +759,39 @@ ${agenceSettings.cgv_texte}
       const contractHTML = generateBlankContractHTML(settings);
       tempDiv.innerHTML = contractHTML;
 
-      // Attendre que les images se chargent
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Debug: vérifier le contenu généré
+      console.log('HTML généré (premiers 500 chars):', contractHTML.substring(0, 500));
+      console.log('Nombre d\'éléments dans tempDiv:', tempDiv.children.length);
+
+      // Attendre que toutes les images se chargent avec vérification réelle
+      const images = tempDiv.querySelectorAll('img');
+      console.log('Nombre d\'images détectées:', images.length);
+
+      await Promise.all(
+        Array.from(images).map(img => {
+          return new Promise((resolve) => {
+            if (img.complete) {
+              console.log('Image déjà chargée:', img.src);
+              resolve(null);
+            } else {
+              img.onload = () => {
+                console.log('Image chargée avec succès:', img.src);
+                resolve(null);
+              };
+              img.onerror = () => {
+                console.warn('Erreur de chargement image:', img.src);
+                resolve(null);
+              };
+              setTimeout(() => {
+                console.log('Timeout pour image:', img.src);
+                resolve(null);
+              }, 2000);
+            }
+          });
+        })
+      );
+
+      console.log('Toutes les images traitées, génération du PDF...');
 
       // Configuration PDF
       const opt = {
@@ -794,9 +825,10 @@ ${agenceSettings.cgv_texte}
       });
     } catch (error: any) {
       console.error('Error generating blank contract:', error);
+      console.error('Error stack:', error.stack);
       toast({
         title: "Erreur",
-        description: "Impossible de générer le contrat vierge.",
+        description: `Impossible de générer le contrat vierge: ${error.message}`,
         variant: "destructive",
       });
     } finally {
