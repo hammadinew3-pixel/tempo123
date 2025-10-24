@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useUserRole } from '@/hooks/use-user-role';
 import { ClientDocumentButton } from '@/components/clients/ClientDocumentButton';
+import { getDisplayMatricule } from '@/lib/vehicleUtils';
 
 export default function ClientDetails() {
   const { id } = useParams();
@@ -738,7 +739,7 @@ export default function ClientDetails() {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Immat: </span>
-                      <span className="font-medium">{contract.vehicles?.immatriculation || contract.vehicles?.immatriculation_provisoire || '—'}</span>
+                      <span className="font-medium">{contract.vehicles ? getDisplayMatricule(contract.vehicles) : '—'}</span>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Début: </span>
