@@ -229,17 +229,15 @@ export default function NouvelleInfraction() {
           }
         }
 
-        // Add contract PDF if available
-        if (contract.pdf_url) {
-          await supabase.from("infraction_files").insert([
-            withTenantId({
-              infraction_id: infractionData.id,
-              file_name: `Contrat_${contract.numero_contrat}`,
-              file_url: contract.pdf_url,
-              file_type: "contrat",
-            }),
-          ]);
-        }
+        // Add contract link (always, regardless of pdf_url)
+        await supabase.from("infraction_files").insert([
+          withTenantId({
+            infraction_id: infractionData.id,
+            file_name: `Contrat_${contract.numero_contrat}`,
+            file_url: `/contrat/${contract.id}`,
+            file_type: "contrat",
+          }),
+        ]);
       }
 
       toast({

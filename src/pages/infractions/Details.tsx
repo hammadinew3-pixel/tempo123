@@ -162,6 +162,25 @@ export default function InfractionDetails() {
         return;
       }
 
+      // Pour CIN et Permis (bucket privé client-documents), générer une URL signée
+      if (file.file_type === 'cin' || file.file_type === 'permis') {
+        const { data, error: signError } = await supabase.storage
+          .from('client-documents')
+          .createSignedUrl(file.file_url, 3600);
+
+        if (signError) throw signError;
+        if (!data?.signedUrl) throw new Error('URL signée non générée');
+
+        const { downloadFromSupabase } = await import('@/lib/downloadUtils');
+        await downloadFromSupabase(data.signedUrl, file.file_name);
+        
+        toast({
+          title: "Succès",
+          description: "Document téléchargé",
+        });
+        return;
+      }
+
       // Pour les autres types de fichiers, utiliser la fonction de téléchargement
       const { downloadFromSupabase } = await import('@/lib/downloadUtils');
       await downloadFromSupabase(file.file_url, file.file_name);
