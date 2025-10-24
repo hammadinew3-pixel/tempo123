@@ -9,6 +9,7 @@ export default function ContractTemplate() {
   const [searchParams] = useSearchParams();
   const contractId = searchParams.get('id');
   const downloadMode = searchParams.get('download') === 'true';
+  const blankMode = searchParams.get('blank') === 'true';
   const [contract, setContract] = useState<any>(null);
   const [vehicleChanges, setVehicleChanges] = useState<any[]>([]);
   const [secondaryDrivers, setSecondaryDrivers] = useState<any[]>([]);
@@ -17,13 +18,30 @@ export default function ContractTemplate() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (contractId) {
+    if (blankMode) {
+      (async () => {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('tenant_settings')
+            .select('*')
+            .single();
+          
+          if (error) throw error;
+          setAgenceSettings(data);
+        } catch (error) {
+          console.error('Error loading settings for blank contract:', error);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    } else if (contractId) {
       loadContractData();
     }
-  }, [contractId]);
+  }, [contractId, blankMode]);
 
   useEffect(() => {
-    if (!loading && contract) {
+    if (!loading && (contract || blankMode)) {
       if (downloadMode) {
         setTimeout(() => {
           const element = document.getElementById('contract-content');
@@ -31,7 +49,7 @@ export default function ContractTemplate() {
           
           const opt = {
             margin: 10,
-            filename: `Contrat_${contract.numero_contrat || contractId}.pdf`,
+            filename: blankMode ? 'Contrat_Vierge_CRSAPP.pdf' : `Contrat_${contract.numero_contrat || contractId}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: { 
               scale: 2, 
@@ -55,7 +73,7 @@ export default function ContractTemplate() {
             .get('pdf')
             .then((pdf: any) => {
               const blob: Blob = pdf.output('blob');
-              const filename = `Contrat_${contract.numero_contrat || contractId}.pdf`;
+              const filename = blankMode ? 'Contrat_Vierge_CRSAPP.pdf' : `Contrat_${contract.numero_contrat || contractId}.pdf`;
 
               if (window.parent !== window) {
                 // Envoyer le blob au parent pour déclencher le téléchargement côté top window
@@ -71,11 +89,11 @@ export default function ContractTemplate() {
               }
             });
         }, 500);
-      } else {
+      } else if (!blankMode) {
         setTimeout(() => window.print(), 500);
       }
     }
-  }, [loading, contract, downloadMode, contractId]);
+  }, [loading, contract, downloadMode, contractId, blankMode]);
 
   const loadContractData = async () => {
     try {
@@ -134,7 +152,7 @@ export default function ContractTemplate() {
     return <div className="p-10 text-center">Chargement...</div>;
   }
 
-  if (!contractId || !contract) {
+  if (!blankMode && (!contractId || !contract)) {
     return (
       <div className="p-10 text-center">
         <h2 className="text-xl font-bold mb-4">Contrat non trouvé</h2>
@@ -142,8 +160,9 @@ export default function ContractTemplate() {
     );
   }
 
-  const client = contract.clients;
-  const vehicle = contract.vehicles;
+  const ph = (text = '________________') => text;
+  const client = contract?.clients;
+  const vehicle = contract?.vehicles;
   const secondaryDriver = secondaryDrivers[0];
   
   // Calculer la durée et les montants
@@ -153,9 +172,9 @@ export default function ContractTemplate() {
     return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   };
   
-  const duration = contract.duration || calculateDuration(contract.date_debut, contract.date_fin);
-  const dailyRate = contract.daily_rate || vehicle?.tarif_journalier || 0;
-  const totalAmount = contract.total_amount || (duration * dailyRate);
+  const duration = contract?.duration || (contract ? calculateDuration(contract.date_debut, contract.date_fin) : 0);
+  const dailyRate = contract?.daily_rate || vehicle?.tarif_journalier || 0;
+  const totalAmount = contract?.total_amount || (duration * dailyRate);
   const paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.montant || 0), 0);
   const remainingAmount = Math.max(0, totalAmount - paidAmount);
   
@@ -217,7 +236,7 @@ export default function ContractTemplate() {
                 )}
                 <div className={`flex-1 text-center ${!agenceSettings?.masquer_logo && agenceSettings?.logo_url ? '' : 'w-full'}`}>
                   <h1 className="text-[14pt] font-bold mb-1">CONTRAT DE LOCATION</h1>
-                  <p className="text-[11pt] font-semibold">N° {contract.numero_contrat}</p>
+                  <p className="text-[11pt] font-semibold">N° {blankMode ? ph() : contract.numero_contrat}</p>
                 </div>
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
                   <div className="w-1/4 text-right text-[8pt] text-gray-600">
@@ -236,13 +255,13 @@ export default function ContractTemplate() {
                 <strong className="text-[11pt]">LOCATAIRE</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
-                <div><strong>Nom & Prénom:</strong> {client?.nom} {client?.prenom}</div>
+                <div><strong>Nom & Prénom:</strong> {blankMode ? ph() : `${client?.nom || ''} ${client?.prenom || ''}`}</div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><strong>CIN:</strong> {client?.cin}</div>
-                  <div><strong>Permis:</strong> {client?.permis_conduire}</div>
+                  <div><strong>CIN:</strong> {blankMode ? ph() : client?.cin}</div>
+                  <div><strong>Permis:</strong> {blankMode ? ph() : client?.permis_conduire}</div>
                 </div>
-                <div><strong>Téléphone:</strong> {client?.telephone}</div>
-                <div><strong>Adresse:</strong> {client?.adresse}</div>
+                <div><strong>Téléphone:</strong> {blankMode ? ph() : client?.telephone}</div>
+                <div><strong>Adresse:</strong> {blankMode ? ph() : client?.adresse}</div>
               </div>
             </div>
 
@@ -252,9 +271,9 @@ export default function ContractTemplate() {
                 <strong className="text-[11pt]">2ÈME CONDUCTEUR</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
-                <div><strong>Nom & Prénom:</strong> {secondaryDriver?.nom || ''} {secondaryDriver?.prenom || ''}</div>
-                <div><strong>CIN:</strong> {secondaryDriver?.cin || ''}</div>
-                <div><strong>Permis:</strong> {secondaryDriver?.permis_conduire || ''}</div>
+                <div><strong>Nom & Prénom:</strong> {blankMode ? ph() : `${secondaryDriver?.nom || ''} ${secondaryDriver?.prenom || ''}`}</div>
+                <div><strong>CIN:</strong> {blankMode ? ph() : (secondaryDriver?.cin || '')}</div>
+                <div><strong>Permis:</strong> {blankMode ? ph() : (secondaryDriver?.permis_conduire || '')}</div>
               </div>
             </div>
           </div>
@@ -267,9 +286,9 @@ export default function ContractTemplate() {
                 <strong className="text-[11pt]">VÉHICULE</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
-                <div><strong>Marque/Modèle:</strong> {vehicle?.marque} {vehicle?.modele}</div>
-                <div><strong>Immatriculation:</strong> {vehicle?.immatriculation || vehicle?.immatriculation_provisoire || 'N/A'}</div>
-                <div><strong>Km départ:</strong> {contract.delivery_km || vehicle?.kilometrage}</div>
+                <div><strong>Marque/Modèle:</strong> {blankMode ? ph() : `${vehicle?.marque || ''} ${vehicle?.modele || ''}`}</div>
+                <div><strong>Immatriculation:</strong> {blankMode ? ph() : (vehicle?.immatriculation || vehicle?.immatriculation_provisoire || 'N/A')}</div>
+                <div><strong>Km départ:</strong> {blankMode ? ph() : (contract?.delivery_km || vehicle?.kilometrage)}</div>
               </div>
             </div>
 
@@ -279,15 +298,15 @@ export default function ContractTemplate() {
                 <strong className="text-[11pt]">LOCATION</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
-                <div><strong>Départ:</strong> {contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : ''} - <strong>Retour:</strong> {contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : ''}</div>
-                <div><strong>Durée:</strong> {duration} jour(s) - <strong>Prix/Jr:</strong> {dailyRate.toFixed(2)} DH</div>
-                <div><strong>Prix total:</strong> {totalAmount.toFixed(2)} DH - <strong>Caution:</strong> {contract.caution_montant?.toFixed(2)} DH</div>
+                <div><strong>Départ:</strong> {blankMode ? ph() : (contract.date_debut ? format(new Date(contract.date_debut), 'dd/MM/yyyy') : '')} - <strong>Retour:</strong> {blankMode ? ph() : (contract.date_fin ? format(new Date(contract.date_fin), 'dd/MM/yyyy') : '')}</div>
+                <div><strong>Durée:</strong> {blankMode ? ph() : `${duration} jour(s)`} - <strong>Prix/Jr:</strong> {blankMode ? ph() : `${dailyRate.toFixed(2)} DH`}</div>
+                <div><strong>Prix total:</strong> {blankMode ? ph() : `${totalAmount.toFixed(2)} DH`} - <strong>Caution:</strong> {blankMode ? ph() : `${contract?.caution_montant?.toFixed(2) || '0.00'} DH`}</div>
               </div>
             </div>
           </div>
 
           {/* Prolongations */}
-          {contract.prolongations && contract.prolongations.length > 0 && (
+          {!blankMode && contract?.prolongations && contract.prolongations.length > 0 && (
             <div className="border-2 border-yellow-500 bg-yellow-50 mb-3">
               <div className="bg-yellow-200 border-b-2 border-yellow-500 p-2 text-center">
                 <strong className="text-[10pt]">⚠️ PROLONGATION(S)</strong>
@@ -317,7 +336,7 @@ export default function ContractTemplate() {
           )}
 
           {/* Changements de véhicule */}
-          {vehicleChanges && vehicleChanges.length > 0 && (
+          {!blankMode && vehicleChanges && vehicleChanges.length > 0 && (
             <div className="border-2 border-orange-500 bg-orange-50 mb-3">
               <div className="bg-orange-200 border-b-2 border-orange-500 p-2 text-center">
                 <strong className="text-[10pt]">CHANGEMENT(S) DE VÉHICULE</strong>
@@ -348,7 +367,7 @@ export default function ContractTemplate() {
                 <strong className="text-[10pt]">OBSERVATIONS</strong>
               </div>
               <div className="p-2 text-[9pt] min-h-[125px]">
-                {contract.delivery_notes || contract.notes || ''}
+                {blankMode ? '' : (contract?.delivery_notes || contract?.notes || '')}
               </div>
             </div>
           </div>
