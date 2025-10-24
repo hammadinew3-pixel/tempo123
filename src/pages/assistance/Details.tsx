@@ -626,22 +626,54 @@ export default function AssistanceDetails() {
         description: "Veuillez patienter...",
       });
 
-      // Ouvrir le template dans un iframe caché pour générer le PDF
       const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.top = '-10000px';
-      iframe.style.left = '-10000px';
-      iframe.style.width = '210mm';
-      iframe.style.height = '297mm';
+      iframe.style.display = 'none';
       document.body.appendChild(iframe);
 
+      const handleMessage = (event: MessageEvent) => {
+        const data: any = (event as any).data;
+        if (data?.type === 'pdf-ready' && data?.blob) {
+          try {
+            const url = URL.createObjectURL(data.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.filename || `Contrat_${assistance?.num_dossier || id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+          } finally {
+            window.removeEventListener('message', handleMessage);
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+          }
+        } else if (data?.type === 'pdf-error') {
+          window.removeEventListener('message', handleMessage);
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+          toast({
+            variant: "destructive",
+            title: "Erreur PDF",
+            description: data.message || "Erreur lors de la génération du PDF",
+          });
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
       iframe.src = `/assistance-contract-template?id=${id}&download=true`;
 
-      // Attendre que le PDF soit généré (l'iframe se supprimera automatiquement)
       toast({
         title: 'Contrat en cours de téléchargement',
         description: 'Le PDF sera téléchargé automatiquement',
       });
+
+      // Fallback: nettoyer après 10s si aucun message reçu
+      setTimeout(() => {
+        try {
+          window.removeEventListener('message', handleMessage);
+          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+      }, 10000);
     } catch (error: any) {
       console.error('Erreur génération contrat:', error);
       toast({

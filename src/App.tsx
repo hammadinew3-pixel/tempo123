@@ -504,9 +504,7 @@ const App = () => (
               path="/assistance-contract-template"
               element={
                 <ProtectedRoute>
-                  <AssistanceRoute>
-                    <AssistanceContractTemplate />
-                  </AssistanceRoute>
+                  <AssistanceContractTemplate />
                 </ProtectedRoute>
               }
             />

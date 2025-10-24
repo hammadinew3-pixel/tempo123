@@ -57,7 +57,7 @@ export default function AssistanceContractTemplate() {
       const settingsRes = await supabase
         .from('tenant_settings')
         .select('*')
-        .maybeSingle();
+        .single();
       
       if (!settingsRes.error && settingsRes.data) {
         setAgenceSettings(settingsRes.data);
@@ -72,29 +72,51 @@ export default function AssistanceContractTemplate() {
   useEffect(() => {
     if (assistance && !loading) {
       if (downloadMode) {
-        // Mode téléchargement PDF
+        // Mode téléchargement PDF - attendre que les images soient chargées
         setTimeout(() => {
           const element = document.getElementById('contract-content');
           if (!element) return;
 
           const opt = {
             margin: [10, 10, 10, 10] as [number, number, number, number],
-            filename: `Contrat_${assistance.num_dossier}.pdf`,
+            filename: `Contrat_${assistance.num_dossier || assistanceId}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
 
-          html2pdf().set(opt).from(element).save().then(() => {
-            // Fermer l'iframe après le téléchargement
-            setTimeout(() => {
+          html2pdf()
+            .set(opt)
+            .from(element)
+            .toPdf()
+            .get('pdf')
+            .then((pdf: any) => {
+              const blob: Blob = pdf.output('blob');
+              const filename = `Contrat_${assistance.num_dossier || assistanceId}.pdf`;
+              
               if (window.parent !== window) {
-                window.parent.document.querySelector('iframe')?.remove();
+                // Envoyer le blob au parent via postMessage
+                window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
+              } else {
+                // Fallback: téléchargement direct si pas dans iframe
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
               }
-            }, 1000);
-          });
-        }, 500);
+            })
+            .catch((err: any) => {
+              const message = err?.message || 'Erreur génération PDF Assistance';
+              if (window.parent !== window) {
+                window.parent.postMessage({ type: 'pdf-error', message }, '*');
+              } else {
+                console.error(message, err);
+              }
+            });
+        }, 1000);
       } else {
         // Mode impression classique
         setTimeout(() => window.print(), 500);
