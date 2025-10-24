@@ -178,7 +178,7 @@ export default function LocationDetails() {
         .select(`
           *,
           clients (nom, prenom, telephone, email, cin, permis_conduire),
-          vehicles (immatriculation, matricule_provisoire, marque, modele, kilometrage, tarif_journalier)
+          vehicles (immatriculation, immatriculation_provisoire, marque, modele, kilometrage, tarif_journalier)
         `)
         .eq("id", id)
         .single();
@@ -1186,7 +1186,7 @@ export default function LocationDetails() {
               {contract.vehicles?.marque} {contract.vehicles?.modele}
             </div>
             <div className="text-sm text-muted-foreground space-y-1">
-              <div>{contract.vehicles?.immatriculation || contract.vehicles?.matricule_provisoire || '—'}</div>
+              <div>{contract.vehicles?.immatriculation || contract.vehicles?.immatriculation_provisoire || '—'}</div>
               <div>KM: {contract.vehicles?.kilometrage}</div>
             </div>
           </CardContent>
