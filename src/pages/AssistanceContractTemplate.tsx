@@ -72,16 +72,33 @@ export default function AssistanceContractTemplate() {
   useEffect(() => {
     if (assistance && !loading) {
       if (downloadMode) {
+        // Signaler au parent que la génération démarre
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'pdf-started' }, '*');
+        }
+
         // Mode téléchargement PDF - attendre que les images soient chargées
         setTimeout(() => {
           const element = document.getElementById('contract-content');
-          if (!element) return;
+          if (!element) {
+            if (window.parent !== window) {
+              window.parent.postMessage({ type: 'pdf-error', message: 'Contenu introuvable' }, '*');
+            }
+            return;
+          }
+
+          if (!assistance) {
+            if (window.parent !== window) {
+              window.parent.postMessage({ type: 'pdf-error', message: 'Dossier introuvable' }, '*');
+            }
+            return;
+          }
 
           const opt = {
             margin: [10, 10, 10, 10] as [number, number, number, number],
             filename: `Contrat_${assistance.num_dossier || assistanceId}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+            html2canvas: { scale: 1.5, useCORS: true, allowTaint: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
           };
@@ -116,7 +133,7 @@ export default function AssistanceContractTemplate() {
                 console.error(message, err);
               }
             });
-        }, 1000);
+        }, 1500);
       } else {
         // Mode impression classique
         setTimeout(() => window.print(), 500);

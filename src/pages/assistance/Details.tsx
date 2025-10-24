@@ -627,12 +627,21 @@ export default function AssistanceDetails() {
       });
 
       const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
+      iframe.style.cssText = "position:fixed; left:-9999px; width:0; height:0; border:0; visibility:hidden;";
       document.body.appendChild(iframe);
+
+      let messageReceived = false;
 
       const handleMessage = (event: MessageEvent) => {
         const data: any = (event as any).data;
+        
+        if (data?.type === 'pdf-started') {
+          messageReceived = true;
+          return;
+        }
+        
         if (data?.type === 'pdf-ready' && data?.blob) {
+          messageReceived = true;
           try {
             const url = URL.createObjectURL(data.blob);
             const a = document.createElement('a');
@@ -647,6 +656,7 @@ export default function AssistanceDetails() {
             if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
           }
         } else if (data?.type === 'pdf-error') {
+          messageReceived = true;
           window.removeEventListener('message', handleMessage);
           if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
           toast({
@@ -665,15 +675,19 @@ export default function AssistanceDetails() {
         description: 'Le PDF sera téléchargé automatiquement',
       });
 
-      // Fallback: nettoyer après 10s si aucun message reçu
+      // Fallback: nettoyer après 30s si aucun message reçu
       setTimeout(() => {
-        try {
-          window.removeEventListener('message', handleMessage);
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        } catch (e) {
-          // Ignore cleanup errors
+        window.removeEventListener('message', handleMessage);
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+        
+        if (!messageReceived) {
+          window.open(`/assistance-contract-template?id=${id}&download=true`, '_blank', 'noopener');
+          toast({
+            title: 'Ouverture en nouvel onglet',
+            description: 'Le téléchargement sera déclenché dans la nouvelle fenêtre',
+          });
         }
-      }, 10000);
+      }, 30000);
     } catch (error: any) {
       console.error('Erreur génération contrat:', error);
       toast({
