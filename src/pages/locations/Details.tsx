@@ -723,7 +723,7 @@ export default function LocationDetails() {
 
   const handleGenerateInvoice = () => {
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+    iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
     iframe.src = `/location-facture-template?id=${id}&download=true`;
     document.body.appendChild(iframe);
     
@@ -798,7 +798,7 @@ export default function LocationDetails() {
       });
 
       const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
+      iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
       document.body.appendChild(iframe);
 
       const handleMessage = (event: MessageEvent) => {

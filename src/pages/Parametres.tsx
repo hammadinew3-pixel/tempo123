@@ -547,9 +547,9 @@ export default function Parametres() {
   const handleDownloadBlankContract = () => {
     setGeneratingBlankContract(true);
     
-    // Créer un iframe caché
+    // Créer un iframe hors écran
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+    iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
     iframe.src = '/contract-template?blank=true&download=true';
     document.body.appendChild(iframe);
     
@@ -565,9 +565,9 @@ export default function Parametres() {
   const handleDownloadBlankAssistanceContract = () => {
     setGeneratingBlankAssistanceContract(true);
     
-    // Créer un iframe caché
+    // Créer un iframe hors écran
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+    iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
     iframe.src = '/assistance-contract-template?blank=true&download=true';
     document.body.appendChild(iframe);
     
