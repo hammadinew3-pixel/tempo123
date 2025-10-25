@@ -183,9 +183,9 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .contract-page {
       width: 190mm;
-      height: 277mm;
+      min-height: 277mm;
       overflow: hidden;
-      padding: 15mm;
+      padding: 1.5cm 2cm 0.7cm 2cm;
       background: white;
       display: flex;
       flex-direction: column;
@@ -208,7 +208,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .logo-container {
       width: 25%;
-      margin-top: -60px;
+      margin-top: -20px;
     }
     .logo {
       height: 80px;
@@ -334,7 +334,8 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       font-size: 10pt;
       color: #666;
       margin-top: auto;
-      padding-top: 12px;
+      padding-top: 40px;
+      padding-bottom: 20px;
       border-top: 1px solid #999;
     }
     .cgv-title {
