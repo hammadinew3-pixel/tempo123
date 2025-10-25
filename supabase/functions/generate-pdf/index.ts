@@ -16,26 +16,37 @@ serve(async (req) => {
     
     console.log('📄 Generating PDF:', { type, id, ids });
     
-    // Mapping des 8 types de templates
-    const templates: Record<string, string> = {
-      'contract': `/contract-template?id=${id}&print=true`,
-      'contract-blank': `/contract-template?blankMode=true&print=true`,
-      'facture-location': `/location-facture-template?id=${id}&print=true`,
-      'assistance-contract': `/assistance-contract-template?id=${id}&print=true`,
-      'assistance-contract-blank': `/assistance-contract-template?blankMode=true&print=true`,
-      'facture-assistance': ids 
-        ? `/assistance-facture-template?ids=${ids}&print=true`
-        : `/assistance-facture-template?id=${id}&print=true`,
-      'dossier-complet-assistance': `/assistance-complet-template?id=${id}&download=true`
-    };
+    // Créer client Supabase avec service role key pour accès sans auth
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
-    if (!templates[type]) {
-      throw new Error(`Type de PDF invalide: ${type}`);
+    // Pour les contrats, utiliser l'edge function qui génère le HTML côté serveur
+    let templateUrl: string;
+    
+    if (type === 'contract') {
+      templateUrl = `${supabaseUrl}/functions/v1/serve-contract-html?id=${id}`;
+    } else if (type === 'contract-blank') {
+      templateUrl = `${supabaseUrl}/functions/v1/serve-contract-html?blank=true`;
+    } else {
+      // Pour les autres types, utiliser les templates React (à migrer progressivement)
+      const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://app.crsapp.ma';
+      const templates: Record<string, string> = {
+        'facture-location': `/location-facture-template?id=${id}&print=true`,
+        'assistance-contract': `/assistance-contract-template?id=${id}&print=true`,
+        'assistance-contract-blank': `/assistance-contract-template?blankMode=true&print=true`,
+        'facture-assistance': ids 
+          ? `/assistance-facture-template?ids=${ids}&print=true`
+          : `/assistance-facture-template?id=${id}&print=true`,
+        'dossier-complet-assistance': `/assistance-complet-template?id=${id}&download=true`
+      };
+      
+      if (!templates[type]) {
+        throw new Error(`Type de PDF invalide: ${type}`);
+      }
+      
+      templateUrl = `${origin}${templates[type]}`;
     }
-    
-    // Construire l'URL du template en utilisant le domaine public de l'app
-    const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://app.crsapp.ma';
-    const templateUrl = `${origin}${templates[type]}`;
     
     console.log('🌐 Template URL:', templateUrl);
     
@@ -47,7 +58,7 @@ serve(async (req) => {
     
     const formData = new FormData();
     formData.append('url', templateUrl);
-    formData.append('waitDelay', '2s'); // Attendre 2s pour le chargement complet
+    formData.append('waitDelay', '3s'); // Augmenter le délai pour le chargement des données
     formData.append('emulatedMediaType', 'print');
     formData.append('paperWidth', '8.27'); // A4 width in inches
     formData.append('paperHeight', '11.7'); // A4 height in inches
@@ -72,11 +83,6 @@ serve(async (req) => {
     
     const pdfBuffer = await pdfResponse.arrayBuffer();
     console.log('✅ PDF generated, size:', pdfBuffer.byteLength, 'bytes');
-    
-    // Upload vers Supabase Storage
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Déterminer le bucket selon le type
     const bucket = type.includes('assistance') ? 'assistance-pdfs' : 
