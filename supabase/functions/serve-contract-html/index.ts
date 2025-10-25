@@ -212,7 +212,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       margin-top: -15px;
     }
     .logo {
-      height: 80px;
+      height: 30px;
       width: auto;
       object-fit: contain;
     }
