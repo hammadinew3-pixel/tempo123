@@ -37,6 +37,15 @@ interface TenantSettings {
   email?: string;
   logo_url?: string;
   tva_taux?: number;
+  raison_sociale?: string;
+  ice?: string;
+  if_number?: string;
+  rc?: string;
+  cnss?: string;
+  patente?: string;
+  masquer_entete?: boolean;
+  masquer_logo?: boolean;
+  masquer_pied_page?: boolean;
 }
 
 export default function LocationFactureTemplate() {
@@ -77,13 +86,31 @@ export default function LocationFactureTemplate() {
           .single();
 
         if (tenantSettings) {
+          console.log('=== DEBUG SETTINGS ===');
+          console.log('Logo URL:', tenantSettings.logo_url);
+          console.log('Masquer logo?', tenantSettings.masquer_logo);
+          console.log('Masquer entête?', tenantSettings.masquer_entete);
+          console.log('Masquer pied de page?', tenantSettings.masquer_pied_page);
+          console.log('Raison sociale:', tenantSettings.raison_sociale);
+          console.log('ICE:', tenantSettings.ice);
+          console.log('======================');
+          
           setSettings({
             nom_agence: tenantSettings.nom,
             adresse: tenantSettings.adresse,
             telephone: tenantSettings.telephone,
             email: tenantSettings.email,
             logo_url: tenantSettings.logo_url,
-            tva_taux: tenantSettings.taux_tva
+            tva_taux: tenantSettings.taux_tva,
+            raison_sociale: tenantSettings.raison_sociale,
+            ice: tenantSettings.ice,
+            if_number: tenantSettings.if_number,
+            rc: tenantSettings.rc,
+            cnss: tenantSettings.cnss,
+            patente: tenantSettings.patente,
+            masquer_entete: tenantSettings.masquer_entete,
+            masquer_logo: tenantSettings.masquer_logo,
+            masquer_pied_page: tenantSettings.masquer_pied_page
           });
         }
 
