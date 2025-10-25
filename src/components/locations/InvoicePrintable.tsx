@@ -168,10 +168,10 @@ export default function InvoicePrintable({ contract, settings }: Props) {
                     src={settings.logo_url} 
                     alt="Logo" 
                     crossOrigin="anonymous"
-                    className="h-20 w-auto object-contain max-w-[250px]"
+                    className="h-24 w-auto object-contain max-w-[250px]"
                   />
                 ) : (
-                  <div className="h-20" />
+                  <div className="h-24" />
                 )}
               </div>
             )}
