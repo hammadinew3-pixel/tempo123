@@ -200,7 +200,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       margin-bottom: 8px;
       padding-bottom: 5px;
       border-bottom: 2px solid #000;
-      margin-top: 0;
+      margin-top: -0.5cm;
       text-align: center;
     }
     .header-flex {
@@ -224,7 +224,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .header-date {
       position: absolute;
-      top: 1cm;
+      top: 0.5cm;
       right: 2cm;
       font-size: 9pt;
     }
