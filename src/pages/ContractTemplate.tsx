@@ -202,7 +202,7 @@ export default function ContractTemplate() {
         }
         .contract-page {
           width: 190mm;
-          height: 297mm;
+          height: 287mm;
           padding: 0;
           overflow: hidden;
           background: white;
@@ -220,7 +220,7 @@ export default function ContractTemplate() {
         
         {/* Page 1 - Contrat */}
         <div className="contract-page flex flex-col bg-white"
-             style={{ height: '297mm', overflow: 'hidden', background: 'white' }}>
+             style={{ height: '287mm', overflow: 'hidden', background: 'white' }}>
           <div className="flex-1">
           {!agenceSettings?.masquer_entete && (
             <div className="mb-8 pb-4 border-b-2 border-black">
