@@ -105,12 +105,12 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
   const assuranceInfo = firstAssistance.assurance || { nom: firstAssistance.assureur_nom };
 
   return (
-    <div className="invoice-page">
-      <div className="flex-1 px-4 pt-4">
+      <div className="invoice-page flex flex-col">
+        <div className="flex-1 px-3 pt-3">
 
         {/* Header */}
         {!settings?.masquer_entete && (
-          <div className="mb-6">
+          <div className="mb-4">
             {settings?.logo_url && (
               <div className="flex justify-center mb-3">
                 {!settings?.masquer_logo ? (
@@ -125,7 +125,7 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
                 )}
               </div>
             )}
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex justify-between items-start mb-4">
               <div>
                 <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
                 <p className="text-sm text-gray-600">N° {invoiceNumber}</p>
@@ -136,7 +136,7 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
             </div>
 
             <div className="border-t-2 border-gray-300 pt-4">
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="font-bold mb-2">FACTURÉ À :</h3>
                   <p className="font-semibold">{assuranceInfo.nom}</p>
@@ -174,7 +174,7 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
         )}
 
         {/* Items table */}
-        <table className="w-full mb-6">
+        <table className="w-full mb-4 text-xs">
           <thead>
             <tr className="border-b-2 border-gray-400">
               <th className="text-left py-3 px-2 text-xs">DÉSIGNATION</th>
@@ -246,7 +246,7 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="mt-auto text-center text-[9.5pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+        <div className="text-center text-[9.5pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
           {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
           {settings?.ice && <> | ICE: {settings.ice}</>}
           {settings?.if_number && <> | IF: {settings.if_number}</>}
