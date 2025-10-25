@@ -161,14 +161,18 @@ export default function InvoicePrintable({ contract, settings }: Props) {
         {/* Header */}
         {!settings?.masquer_entete && (
           <div className="mb-4">
-            {!settings?.masquer_logo && settings?.logo_url && (
+            {settings?.logo_url && (
               <div className="flex justify-center mb-3">
-                <img 
-                  src={settings.logo_url} 
-                  alt="Logo" 
-                  crossOrigin="anonymous"
-                  className="h-20 w-auto object-contain max-w-[250px]"
-                />
+                {!settings?.masquer_logo ? (
+                  <img 
+                    src={settings.logo_url} 
+                    alt="Logo" 
+                    crossOrigin="anonymous"
+                    className="h-20 w-auto object-contain max-w-[250px]"
+                  />
+                ) : (
+                  <div className="h-20" />
+                )}
               </div>
             )}
             <div className="flex justify-between items-start mb-4">
