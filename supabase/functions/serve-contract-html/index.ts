@@ -183,9 +183,9 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .contract-page {
       width: 190mm;
-      min-height: 277mm;
-      overflow: visible;
-      padding: 1cm 2cm 0cm 2cm;
+      height: 277mm;
+      overflow: hidden;
+      padding: 10mm;
       background: white;
       display: flex;
       flex-direction: column;
@@ -197,35 +197,33 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       padding: 10mm;
     }
     .header {
-      margin-bottom: 16px;
+      margin-bottom: 5px;
       padding-bottom: 8px;
-      border-bottom: 1px solid #ddd;
-      margin-top: -0.5cm;
-      text-align: center;
+      border-bottom: 2px solid #000;
+      margin-top: -20px;
     }
     .header-flex {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
+      justify-content: space-between;
+      align-items: start;
     }
     .logo-container {
-      width: 100%;
-      text-align: center;
-      margin-bottom: 8px;
+      width: 25%;
+      margin-top: -15px;
     }
     .logo {
-      height: 50px;
+      height: 80px;
       width: auto;
       object-fit: contain;
     }
-    .header-title {
+    .header-center {
+      flex: 1;
       text-align: center;
+      margin-top: 30px;
     }
-    .header-date {
-      position: absolute;
-      top: 0.5cm;
-      right: 2cm;
+    .header-right {
+      width: 25%;
+      text-align: right;
       font-size: 8pt;
       color: #666;
     }
@@ -366,18 +364,16 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       ${!settings?.masquer_entete ? `
       <div class="header">
         <div class="header-flex">
-          ${!settings?.masquer_logo && settings?.logo_url ? `
           <div class="logo-container">
-            <img src="${settings.logo_url}" alt="Logo" class="logo" crossorigin="anonymous">
+            ${!settings?.masquer_logo && settings?.logo_url ? `<img src="${settings.logo_url}" alt="Logo" class="logo" crossorigin="anonymous">` : ''}
           </div>
-          ` : ''}
-          <div class="header-title">
-            <h1 style="font-size: 12pt; font-weight: 600; margin: 0; color: #333;">CONTRAT DE LOCATION</h1>
-            <p style="font-size: 9pt; font-weight: 400; margin: 4px 0 0 0; color: #666;">N° ${ph(contract?.numero_contrat || '')}</p>
+          <div class="header-center">
+            <h1 style="font-size: 14pt; font-weight: bold; margin: 0;">CONTRAT DE LOCATION</h1>
+            <p style="font-size: 10pt; font-weight: 600; margin: 2px 0 0 0;">N° ${ph(contract?.numero_contrat || '')}</p>
           </div>
-        </div>
-        <div class="header-date">
-          ${new Date().toLocaleDateString('fr-FR')}
+          <div class="header-right">
+            ${new Date().toLocaleDateString('fr-FR')}
+          </div>
         </div>
       </div>
       ` : ''}
