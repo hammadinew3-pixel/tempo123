@@ -197,9 +197,9 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       padding: 10mm;
     }
     .header {
-      margin-bottom: 8px;
-      padding-bottom: 5px;
-      border-bottom: 2px solid #000;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ddd;
       margin-top: -0.5cm;
       text-align: center;
     }
@@ -207,15 +207,15 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .logo-container {
       width: 100%;
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
     }
     .logo {
-      height: 80px;
+      height: 50px;
       width: auto;
       object-fit: contain;
     }
@@ -226,7 +226,8 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       position: absolute;
       top: 0.5cm;
       right: 2cm;
-      font-size: 9pt;
+      font-size: 8pt;
+      color: #666;
     }
     .grid-2 {
       display: grid;
@@ -371,12 +372,12 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
           </div>
           ` : ''}
           <div class="header-title">
-            <h1 style="font-size: 14pt; font-weight: bold; margin: 0;">CONTRAT DE LOCATION</h1>
-            <p style="font-size: 10pt; font-weight: 600; margin: 2px 0 0 0;">N° ${ph(contract?.numero_contrat || '')}</p>
+            <h1 style="font-size: 12pt; font-weight: 600; margin: 0; color: #333;">CONTRAT DE LOCATION</h1>
+            <p style="font-size: 9pt; font-weight: 400; margin: 4px 0 0 0; color: #666;">N° ${ph(contract?.numero_contrat || '')}</p>
           </div>
         </div>
         <div class="header-date">
-          Date: ${new Date().toLocaleDateString('fr-FR')}
+          ${new Date().toLocaleDateString('fr-FR')}
         </div>
       </div>
       ` : ''}
