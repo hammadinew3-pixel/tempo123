@@ -406,6 +406,8 @@ export default function ContractTemplate() {
             </div>
           </div>
 
+          </div>
+          
           {/* Footer */}
           {!agenceSettings?.masquer_pied_page && (
             <div className="text-center text-[9.5pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
@@ -421,7 +423,6 @@ export default function ContractTemplate() {
               {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
             </div>
           )}
-          </div>
         </div>
 
         {/* Page 2 - CGV */}
