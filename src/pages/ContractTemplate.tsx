@@ -197,14 +197,14 @@ export default function ContractTemplate() {
         .contract-page {
           width: 190mm;
           height: 297mm;
-          padding: 30mm 0 10mm 0;
+          padding: 10mm 0 10mm 0;
           overflow: hidden;
           background: white;
         }
         .cgv-page {
           width: 190mm;
           min-height: 297mm;
-          padding: 30mm 0 10mm 0;
+          padding: 10mm 0 10mm 0;
           background: white;
         }
       `}</style>
@@ -218,7 +218,7 @@ export default function ContractTemplate() {
           <div className="flex-1 px-3 pt-3">
           {!agenceSettings?.masquer_entete && (
             <div className="mb-8 pb-4 border-b-2 border-black">
-              <div className="flex justify-between items-start">
+              <div className="flex justify-between items-end">
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
                   <div className="w-1/4">
                     <img 
@@ -234,7 +234,7 @@ export default function ContractTemplate() {
                   <p className="text-[11pt] font-semibold">N° {blankMode ? ph() : contract.numero_contrat}</p>
                 </div>
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
-                  <div className="w-1/4 text-right text-[8pt] text-gray-600 self-start">
+                  <div className="w-1/4 text-right text-[11pt] text-gray-600">
                     {format(new Date(), 'dd/MM/yyyy')}
                   </div>
                 )}
@@ -246,7 +246,7 @@ export default function ContractTemplate() {
           <div className="grid grid-cols-2 gap-3 mb-3">
             {/* Locataire */}
             <div className="border-2 border-black">
-              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+              <div className="bg-white border-b-2 border-black p-2 text-center">
                 <strong className="text-[11pt]">LOCATAIRE</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
@@ -262,7 +262,7 @@ export default function ContractTemplate() {
 
             {/* 2ème conducteur */}
             <div className="border-2 border-black">
-              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+              <div className="bg-white border-b-2 border-black p-2 text-center">
                 <strong className="text-[11pt]">2ÈME CONDUCTEUR</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
@@ -277,7 +277,7 @@ export default function ContractTemplate() {
           <div className="grid grid-cols-2 gap-3 mb-3">
             {/* Véhicule */}
             <div className="border-2 border-black">
-              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+              <div className="bg-white border-b-2 border-black p-2 text-center">
                 <strong className="text-[11pt]">VÉHICULE</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
@@ -289,7 +289,7 @@ export default function ContractTemplate() {
 
             {/* Location */}
             <div className="border-2 border-black">
-              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+              <div className="bg-white border-b-2 border-black p-2 text-center">
                 <strong className="text-[11pt]">LOCATION</strong>
               </div>
               <div className="p-3 space-y-1 text-[9pt]">
@@ -303,7 +303,7 @@ export default function ContractTemplate() {
           {/* Prolongations */}
           {!blankMode && contract?.prolongations && contract.prolongations.length > 0 && (
             <div className="border-2 border-yellow-500 bg-yellow-50 mb-3">
-              <div className="bg-yellow-200 border-b-2 border-yellow-500 p-2 text-center">
+              <div className="bg-white border-b-2 border-yellow-500 p-2 text-center">
                 <strong className="text-[10pt]">⚠️ PROLONGATION(S)</strong>
               </div>
               <div className="p-3">
@@ -333,7 +333,7 @@ export default function ContractTemplate() {
           {/* Changements de véhicule */}
           {!blankMode && vehicleChanges && vehicleChanges.length > 0 && (
             <div className="border-2 border-orange-500 bg-orange-50 mb-3">
-              <div className="bg-orange-200 border-b-2 border-orange-500 p-2 text-center">
+              <div className="bg-white border-b-2 border-orange-500 p-2 text-center">
                 <strong className="text-[10pt]">CHANGEMENT(S) DE VÉHICULE</strong>
               </div>
               <div className="p-3">
@@ -349,7 +349,7 @@ export default function ContractTemplate() {
 
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div className="border-2 border-black">
-              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+              <div className="bg-white border-b-2 border-black p-2 text-center">
                 <strong className="text-[10pt]">ÉTAT DU VÉHICULE</strong>
               </div>
               <div className="p-2 flex items-center justify-center">
@@ -358,7 +358,7 @@ export default function ContractTemplate() {
             </div>
 
             <div className="border-2 border-black">
-              <div className="bg-gray-200 border-b-2 border-black p-2 text-center">
+              <div className="bg-white border-b-2 border-black p-2 text-center">
                 <strong className="text-[10pt]">OBSERVATIONS</strong>
               </div>
               <div className="p-2 text-[9pt] min-h-[125px]">
