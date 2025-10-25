@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
@@ -13,6 +14,19 @@ export default function ContractTemplate() {
   const blankMode = searchParams.get('blank') === 'true';
   const isPrintMode = searchParams.get('print') === 'true';
   const { user } = useAuth();
+  
+  // Fonction pour obtenir le client Supabase approprié
+  const getSupabaseClient = () => {
+    // En mode print (appelé par Gotenberg), utiliser le service role key
+    if (isPrintMode) {
+      return createClient(
+        'https://vqlusbhqoalhbfiotdhi.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxbHVzYmhxb2FsaGJmaW90ZGhpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDUwMjEyOCwiZXhwIjoyMDc2MDc4MTI4fQ.ZHU2LEi0o7ZQCVSsnEwZxEHsT-cuBMgGlndeBtyUH7g'
+      );
+    }
+    // En mode normal, utiliser le client standard (avec auth)
+    return supabase;
+  };
   
   // Redirect to auth if not in print mode and not authenticated
   if (!isPrintMode && !user && !blankMode && contractId) {
@@ -28,16 +42,17 @@ export default function ContractTemplate() {
   useEffect(() => {
     if (blankMode) {
       (async () => {
+        const client = getSupabaseClient();
         setLoading(true);
         try {
-          const { data: userTenant } = await supabase
+          const { data: userTenant } = await client
             .from('user_tenants')
             .select('tenant_id')
-            .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+            .eq('user_id', (await client.auth.getUser()).data.user?.id)
             .eq('is_active', true)
             .single();
 
-          const { data, error } = await supabase
+          const { data, error } = await client
             .from('tenant_settings')
             .select('*')
             .eq('tenant_id', userTenant?.tenant_id)
@@ -63,9 +78,11 @@ export default function ContractTemplate() {
   }, [loading, contract, downloadMode, blankMode]);
 
   const loadContractData = async () => {
+    const client = getSupabaseClient();
+    
     try {
       // Charger d'abord le contrat pour récupérer le tenant_id
-      const contractRes = await supabase
+      const contractRes = await client
         .from('contracts')
         .select('*, clients(*), vehicles(*)')
         .eq('id', contractId)
@@ -75,21 +92,21 @@ export default function ContractTemplate() {
 
       // Charger le reste des données en parallèle
       const [changesRes, driversRes, paymentsRes, settingsRes] = await Promise.all([
-        supabase
+        client
           .from('vehicle_changes')
           .select('*, old_vehicle:old_vehicle_id(*), new_vehicle:new_vehicle_id(*)')
           .eq('contract_id', contractId)
           .order('change_date', { ascending: true }),
-        supabase
+        client
           .from('secondary_drivers')
           .select('*')
           .eq('contract_id', contractId),
-        supabase
+        client
           .from('contract_payments')
           .select('*')
           .eq('contract_id', contractId)
           .order('date_paiement', { ascending: true }),
-        supabase
+        client
           .from('tenant_settings')
           .select('*')
           .eq('tenant_id', contractRes.data?.tenant_id)
