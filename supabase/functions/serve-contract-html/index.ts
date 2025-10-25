@@ -207,7 +207,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .logo-container {
       width: 25%;
-      margin-top: -30px;
+      margin-top: -45px;
     }
     .logo {
       height: 80px;
@@ -333,7 +333,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       font-size: 10pt;
       color: #666;
       margin-top: auto;
-      padding-top: 30px;
+      padding-top: 50px;
       border-top: 1px solid #999;
     }
     .cgv-title {
@@ -346,7 +346,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .cgv-text {
       white-space: pre-wrap;
       text-align: justify;
-      font-size: 9pt;
+      font-size: 8.5pt;
       line-height: 1.4;
     }
   </style>
