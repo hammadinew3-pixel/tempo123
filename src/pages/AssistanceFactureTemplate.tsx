@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 
 import InvoicePrintable from "@/components/assistance/InvoicePrintable";
 
@@ -30,17 +32,23 @@ export default function AssistanceFactureTemplate() {
 
   const loadData = async () => {
     try {
-      // Load settings
-      const { data: settingsData } = await supabase
-        .from("tenant_settings")
-        .select("*")
-        .single();
-      setSettings(settingsData);
+      // Créer un client Supabase avec service_role_key pour bypasser RLS
+      const supabaseUrl = 'https://vqlusbhqoalhbfiotdhi.supabase.co';
+      const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+      
+      const supabaseClient = serviceRoleKey 
+        ? createClient<Database>(supabaseUrl, serviceRoleKey, {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          })
+        : supabase;
 
       if (assistanceIds) {
         // Multiple IDs for grouped invoice
         const ids = assistanceIds.split(',');
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from("assistance")
           .select(`
             *,
@@ -49,34 +57,44 @@ export default function AssistanceFactureTemplate() {
           `)
           .in("id", ids);
 
-        if (error) {
-          console.error("Error loading assistances:", error);
-        } else {
-          // Charger les assurances pour chaque assistance
-          const assistancesWithAssurance = await Promise.all(
-            (data || []).map(async (assistance: any) => {
-              if (assistance.assureur_id) {
-                const { data: assuranceData } = await supabase
-                  .from('assurances')
-                  .select('nom, adresse, contact_telephone')
-                  .eq('id', assistance.assureur_id)
-                  .maybeSingle();
-                
-                return {
-                  ...assistance,
-                  assurance: assuranceData
-                };
-              }
-              return assistance;
-            })
-          );
-          
-          setAssistances(assistancesWithAssurance);
-          setIsGrouped(true);
-        }
+        if (error) throw error;
+
+        // Récupérer tenant_id depuis la première assistance
+        const tenantId = data?.[0]?.tenant_id;
+        
+        // Charger les settings depuis agence_settings
+        const { data: settingsData } = await supabaseClient
+          .from("agence_settings")
+          .select("*")
+          .eq('id', tenantId)
+          .single();
+        
+        setSettings(settingsData);
+
+        // Charger les assurances pour chaque assistance
+        const assistancesWithAssurance = await Promise.all(
+          (data || []).map(async (assistance: any) => {
+            if (assistance.assureur_id) {
+              const { data: assuranceData } = await supabaseClient
+                .from('assurances')
+                .select('nom, adresse, contact_telephone')
+                .eq('id', assistance.assureur_id)
+                .maybeSingle();
+              
+              return {
+                ...assistance,
+                assurance: assuranceData
+              };
+            }
+            return assistance;
+          })
+        );
+        
+        setAssistances(assistancesWithAssurance);
+        setIsGrouped(true);
       } else if (assistanceId) {
         // Single ID
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from("assistance")
           .select(`
             *,
@@ -86,30 +104,37 @@ export default function AssistanceFactureTemplate() {
           .eq("id", assistanceId)
           .single();
 
-        if (error) {
-          console.error("Error loading assistance:", error);
-        } else {
-          let assistanceData: any = data;
+        if (error) throw error;
+
+        // Charger les settings depuis agence_settings
+        const { data: settingsData } = await supabaseClient
+          .from("agence_settings")
+          .select("*")
+          .eq('id', data.tenant_id)
+          .single();
+        
+        setSettings(settingsData);
+
+        let assistanceData: any = data;
+        
+        // Charger l'assurance si assureur_id existe
+        if (data?.assureur_id) {
+          const { data: assuranceData } = await supabaseClient
+            .from('assurances')
+            .select('nom, adresse, contact_telephone')
+            .eq('id', data.assureur_id)
+            .maybeSingle();
           
-          // Charger l'assurance si assureur_id existe
-          if (data?.assureur_id) {
-            const { data: assuranceData } = await supabase
-              .from('assurances')
-              .select('nom, adresse, contact_telephone')
-              .eq('id', data.assureur_id)
-              .maybeSingle();
-            
-            if (assuranceData) {
-              assistanceData = {
-                ...data,
-                assurance: assuranceData
-              };
-            }
+          if (assuranceData) {
+            assistanceData = {
+              ...data,
+              assurance: assuranceData
+            };
           }
-          
-          setAssistances([assistanceData]);
-          setIsGrouped(false);
         }
+        
+        setAssistances([assistanceData]);
+        setIsGrouped(false);
       }
     } catch (error) {
       console.error("Error in loadData:", error);

@@ -111,14 +111,18 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
         {/* Header */}
         {!settings?.masquer_entete && (
           <div className="mb-6">
-            {!settings?.masquer_logo && settings?.logo_url && (
-              <div className="flex justify-center mb-4">
-                <img 
-                  src={settings.logo_url} 
-                  alt="Logo" 
-                  className="h-16 w-auto object-contain"
-                  crossOrigin="anonymous"
-                />
+            {settings?.logo_url && (
+              <div className="flex justify-center mb-3">
+                {!settings?.masquer_logo ? (
+                  <img 
+                    src={settings.logo_url} 
+                    alt="Logo" 
+                    crossOrigin="anonymous"
+                    className="h-24 w-auto object-contain max-w-[250px]"
+                  />
+                ) : (
+                  <div className="h-24" />
+                )}
               </div>
             )}
             <div className="flex justify-between items-start mb-6">
@@ -173,10 +177,10 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
         <table className="w-full mb-6">
           <thead>
             <tr className="border-b-2 border-gray-400">
-              <th className="text-left py-3 px-2">DÉSIGNATION</th>
-              <th className="text-center py-3 px-2">QTÉ</th>
-              <th className="text-right py-3 px-2">PRIX UNIT. HT</th>
-              <th className="text-right py-3 px-2">TOTAL HT</th>
+              <th className="text-left py-3 px-2 text-xs">DÉSIGNATION</th>
+              <th className="text-center py-3 px-2 text-xs">QTÉ</th>
+              <th className="text-right py-3 px-2 text-xs">PRIX UNIT. HT</th>
+              <th className="text-right py-3 px-2 text-xs">TOTAL HT</th>
             </tr>
           </thead>
           <tbody>
@@ -192,21 +196,21 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
               return (
                 <tr key={index} className="border-b border-gray-200">
                   <td className="py-4 px-2">
-                    <p className="font-semibold">
+                    <p className="font-semibold text-xs">
                       {isGrouped ? `Dossier ${assistance.num_dossier}` : `Dossier ${assistance.num_dossier}`}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600">
                       Période : {format(startDate, 'dd/MM/yyyy', { locale: fr })} au {format(endDate, 'dd/MM/yyyy', { locale: fr })}
                     </p>
                     {isGrouped && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs text-gray-600">
                         Client : {assistance.clients?.nom} {assistance.clients?.prenom}
                       </p>
                     )}
                   </td>
-                  <td className="text-center py-4 px-2">{duration}</td>
-                  <td className="text-right py-4 px-2">{(tarifJournalier / tvaMultiplier).toFixed(2)} DH</td>
-                  <td className="text-right py-4 px-2 font-semibold">{montantHT.toFixed(2)} DH</td>
+                  <td className="text-center py-4 px-2 text-xs">{duration}</td>
+                  <td className="text-right py-4 px-2 text-xs">{(tarifJournalier / tvaMultiplier).toFixed(2)} DH</td>
+                  <td className="text-right py-4 px-2 font-semibold text-xs">{montantHT.toFixed(2)} DH</td>
                 </tr>
               );
             })}
@@ -242,7 +246,7 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="mt-auto text-center text-[10pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+        <div className="mt-auto text-center text-[9.5pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
           {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
           {settings?.ice && <> | ICE: {settings.ice}</>}
           {settings?.if_number && <> | IF: {settings.if_number}</>}
