@@ -215,20 +215,20 @@ export default function ContractTemplate() {
              style={{ height: '297mm', overflow: 'hidden' }}>
           <div className="flex-1 px-3 pt-3">
           {!agenceSettings?.masquer_entete && (
-            <div className="mb-4 pb-2 border-b-2 border-black">
+            <div className="mb-8 pb-4 border-b-2 border-black">
               <div className="flex justify-between items-start">
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
                   <div className="w-1/4">
                     <img 
                       src={agenceSettings.logo_url} 
                       alt="Logo" 
-                      className="h-16 w-auto object-contain" 
+                      className="h-24 w-auto object-contain" 
                       crossOrigin="anonymous"
                     />
                   </div>
                 )}
                 <div className={`flex-1 text-center ${!agenceSettings?.masquer_logo && agenceSettings?.logo_url ? '' : 'w-full'}`}>
-                  <h1 className="text-[14pt] font-bold mb-1">CONTRAT DE LOCATION</h1>
+                  <h1 className="text-[14pt] font-bold mb-3 mt-2">CONTRAT DE LOCATION</h1>
                   <p className="text-[11pt] font-semibold">N° {blankMode ? ph() : contract.numero_contrat}</p>
                 </div>
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
