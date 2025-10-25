@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/contexts/AuthContext';
 
 import ContractPrintable from "@/components/assistance/ContractPrintable";
 
@@ -9,6 +10,13 @@ export default function AssistanceContractTemplate() {
   const assistanceId = searchParams.get("id");
   const downloadMode = searchParams.get("download") === "true";
   const blankMode = searchParams.get("blank") === "true";
+  const isPrintMode = searchParams.get('print') === 'true';
+  const { user } = useAuth();
+  
+  // Redirect to auth if not in print mode and not authenticated
+  if (!isPrintMode && !user && !blankMode && assistanceId) {
+    return <Navigate to="/auth" />;
+  }
   const [assistance, setAssistance] = useState<any>(null);
   const [agenceSettings, setAgenceSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);

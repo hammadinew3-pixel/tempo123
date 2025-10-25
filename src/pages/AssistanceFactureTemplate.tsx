@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/contexts/AuthContext';
 
 import InvoicePrintable from "@/components/assistance/InvoicePrintable";
 
@@ -10,6 +11,14 @@ export default function AssistanceFactureTemplate() {
   const assistanceIds = searchParams.get("ids");
   const downloadMode = searchParams.get("download") === "true";
   const shouldPrint = searchParams.get("print") === "true";
+  const isPrintMode = searchParams.get('print') === 'true';
+  const { user } = useAuth();
+  
+  // Redirect to auth if not in print mode and not authenticated
+  const hasData = assistanceId || assistanceIds;
+  if (!isPrintMode && !user && hasData) {
+    return <Navigate to="/auth" />;
+  }
   const [assistances, setAssistances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGrouped, setIsGrouped] = useState(false);

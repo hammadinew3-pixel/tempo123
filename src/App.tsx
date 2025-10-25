@@ -498,39 +498,19 @@ const App = () => (
             />
             <Route
               path="/contract-template"
-              element={
-                <ProtectedRoute>
-                  <ContractTemplate />
-                </ProtectedRoute>
-              }
+              element={<ContractTemplate />}
             />
             <Route
               path="/assistance-contract-template"
-              element={
-                <ProtectedRoute>
-                  <AssistanceContractTemplate />
-                </ProtectedRoute>
-              }
+              element={<AssistanceContractTemplate />}
             />
             <Route
               path="/assistance-dossier-template"
-              element={
-                <ProtectedRoute>
-                  <AssistanceRoute>
-                    <AssistanceDossierTemplate />
-                  </AssistanceRoute>
-                </ProtectedRoute>
-              }
+              element={<AssistanceDossierTemplate />}
             />
             <Route
               path="/assistance-facture-template"
-              element={
-                <ProtectedRoute>
-                  <AssistanceRoute>
-                    <AssistanceFactureTemplate />
-                  </AssistanceRoute>
-                </ProtectedRoute>
-              }
+              element={<AssistanceFactureTemplate />}
             />
             <Route
               path="/location-facture-template"
@@ -538,13 +518,7 @@ const App = () => (
             />
             <Route
               path="/assistance-complet-template"
-              element={
-                <ProtectedRoute>
-                  <AssistanceRoute>
-                    <AssistanceCompletTemplate />
-                  </AssistanceRoute>
-                </ProtectedRoute>
-              }
+              element={<AssistanceCompletTemplate />}
             />
             <Route
               path="/suspended"

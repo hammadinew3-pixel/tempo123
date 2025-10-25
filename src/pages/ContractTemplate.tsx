@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
 
@@ -10,6 +11,13 @@ export default function ContractTemplate() {
   const contractId = searchParams.get('id');
   const downloadMode = searchParams.get('download') === 'true';
   const blankMode = searchParams.get('blank') === 'true';
+  const isPrintMode = searchParams.get('print') === 'true';
+  const { user } = useAuth();
+  
+  // Redirect to auth if not in print mode and not authenticated
+  if (!isPrintMode && !user && !blankMode && contractId) {
+    return <Navigate to="/auth" />;
+  }
   const [contract, setContract] = useState<any>(null);
   const [vehicleChanges, setVehicleChanges] = useState<any[]>([]);
   const [secondaryDrivers, setSecondaryDrivers] = useState<any[]>([]);

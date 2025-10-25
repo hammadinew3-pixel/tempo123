@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/contexts/AuthContext';
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 export default function AssistanceDossierTemplate() {
   const [searchParams] = useSearchParams();
   const assistanceId = searchParams.get("id");
+  const isPrintMode = searchParams.get('print') === 'true';
+  const { user } = useAuth();
+  
+  // Redirect to auth if not in print mode and not authenticated
+  if (!isPrintMode && !user && assistanceId) {
+    return <Navigate to="/auth" />;
+  }
   const [assistance, setAssistance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<any>(null);

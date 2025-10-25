@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import ContractPrintable from '@/components/assistance/ContractPrintable';
 import InvoicePrintable from '@/components/assistance/InvoicePrintable';
 
@@ -8,6 +9,13 @@ import InvoicePrintable from '@/components/assistance/InvoicePrintable';
 export default function AssistanceCompletTemplate() {
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
+  const isPrintMode = searchParams.get('print') === 'true';
+  const { user } = useAuth();
+  
+  // Redirect to auth if not in print mode and not authenticated
+  if (!isPrintMode && !user && id) {
+    return <Navigate to="/auth" />;
+  }
   const [data, setData] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
