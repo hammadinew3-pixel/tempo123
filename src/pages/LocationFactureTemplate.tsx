@@ -36,7 +36,7 @@ interface TenantSettings {
   telephone?: string;
   email?: string;
   logo_url?: string;
-  tva_taux?: number;
+  taux_tva?: number;
   raison_sociale?: string;
   ice?: string;
   if_number?: string;
@@ -129,7 +129,7 @@ export default function LocationFactureTemplate() {
             telephone: tenantSettings.telephone,
             email: tenantSettings.email,
             logo_url: logoUrl,
-            tva_taux: tenantSettings.taux_tva,
+            taux_tva: tenantSettings.taux_tva,
             raison_sociale: tenantSettings.raison_sociale,
             ice: tenantSettings.ice,
             if_number: tenantSettings.if_number,
@@ -140,6 +140,7 @@ export default function LocationFactureTemplate() {
             masquer_logo: tenantSettings.masquer_logo,
             masquer_pied_page: tenantSettings.masquer_pied_page
           });
+          console.log('Logo URL finale:', logoUrl);
         }
 
         // Charger le contrat avec toutes les relations
@@ -237,10 +238,10 @@ export default function LocationFactureTemplate() {
         }
         .invoice-page {
           width: 190mm;
-          height: 297mm;
+          min-height: 277mm;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
+          overflow: visible;
           padding: 0;
           background: white;
           box-sizing: border-box;
