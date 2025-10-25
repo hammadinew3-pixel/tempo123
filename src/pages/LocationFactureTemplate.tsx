@@ -261,7 +261,7 @@ export default function LocationFactureTemplate() {
           width: 100%;
           max-width: 190mm;
           margin: auto;
-          overflow: hidden;
+          overflow: visible;
           background: #ffffff;
         }
         .invoice-page {
@@ -273,6 +273,9 @@ export default function LocationFactureTemplate() {
           padding: 0;
           background: white;
           box-sizing: border-box;
+        }
+        .invoice-page > .flex-1 {
+          padding-bottom: 12mm;
         }
         table {
           table-layout: fixed;
