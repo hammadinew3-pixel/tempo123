@@ -106,11 +106,45 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     return new Date(date).toLocaleDateString('fr-FR');
   };
 
-  const duration = contract?.duration || 0;
-  const dailyRate = contract?.daily_rate || 0;
-  const totalAmount = contract?.total_amount || 0;
-  const paidAmount = contract?.advance_payment || 0;
+  const formatReason = (reason: string) => {
+    const reasons: Record<string, string> = {
+      'panne': 'Panne technique',
+      'accident': 'Accident',
+      'demande_client': 'Demande du client',
+      'maintenance': 'Maintenance urgente',
+      'autre': 'Autre'
+    };
+    return reasons[reason] || reason;
+  };
+
+  const ph = (text = '') => blankMode ? '' : text;
+  const client = contract?.clients;
+  const vehicle = contract?.vehicles;
+  const secondaryDriver = contract?.secondary_drivers?.[0];
+  const vehicleChanges = contract?.vehicle_changes || [];
+  const payments = contract?.payments || [];
+  
+  // Calcul durée
+  const calculateDuration = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  };
+  
+  const duration = contract?.duration || (contract ? calculateDuration(contract.date_debut, contract.date_fin) : 0);
+  const dailyRate = contract?.daily_rate || vehicle?.tarif_journalier || 0;
+  const totalAmount = contract?.total_amount || (duration * dailyRate);
+  const paidAmount = payments.reduce((sum: number, p: any) => sum + parseFloat(p.montant || 0), 0);
   const remainingAmount = Math.max(0, totalAmount - paidAmount);
+  
+  const hasCgvPage = Boolean(
+    settings?.inclure_cgv &&
+    settings?.cgv_texte &&
+    settings.cgv_texte.trim().length > 0
+  );
+
+  // URL du diagramme d'inspection
+  const inspectionDiagramUrl = 'https://vqlusbhqoalhbfiotdhi.supabase.co/storage/v1/object/public/documents_vehicules/vehicle-inspection-diagram.png';
 
   return `<!DOCTYPE html>
 <html>
@@ -119,83 +153,383 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contrat de Location</title>
   <style>
-    @page { size: A4; margin: 10mm; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #000; }
-    .page { width: 210mm; min-height: 297mm; padding: 15mm; background: white; }
-    .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-    .logo { max-width: 150px; margin-bottom: 10px; }
-    .section { margin-bottom: 15px; }
-    .section-title { font-weight: bold; font-size: 12pt; margin-bottom: 8px; background: #f0f0f0; padding: 5px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .info-item { margin-bottom: 5px; }
-    .info-label { font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    th, td { border: 1px solid #000; padding: 6px; text-align: left; }
-    th { background: #f0f0f0; font-weight: bold; }
-    .signature-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-    .signature-box { text-align: center; padding-top: 60px; border-top: 1px solid #000; }
-    .footer { margin-top: 30px; text-align: center; font-size: 9pt; padding-top: 10px; border-top: 1px solid #ccc; }
+    @page { 
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    @media print {
+      body { margin: 0; padding: 0; }
+      .page-break-before { 
+        page-break-before: always;
+      }
+    }
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    body { 
+      font-family: Arial, Helvetica, sans-serif; 
+      font-size: 11pt; 
+      line-height: 1.4; 
+      color: #000; 
+    }
+    #contract-content {
+      width: 100%;
+      max-width: 190mm;
+      margin: auto;
+      overflow: hidden;
+    }
+    .contract-page {
+      width: 190mm;
+      height: 277mm;
+      overflow: hidden;
+      padding: 15mm;
+      background: white;
+      display: flex;
+      flex-direction: column;
+    }
+    .cgv-page {
+      width: 190mm;
+      min-height: 277mm;
+      padding: 10mm;
+    }
+    .header {
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #000;
+    }
+    .header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+    }
+    .logo-container {
+      width: 25%;
+    }
+    .logo {
+      height: 64px;
+      width: auto;
+      object-fit: contain;
+    }
+    .header-center {
+      flex: 1;
+      text-align: center;
+    }
+    .header-right {
+      width: 25%;
+      text-align: right;
+      font-size: 8pt;
+      color: #666;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .box {
+      border: 2px solid #000;
+    }
+    .box-header {
+      background: #e0e0e0;
+      border-bottom: 2px solid #000;
+      padding: 6px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 11pt;
+    }
+    .box-content {
+      padding: 10px;
+    }
+    .info-line {
+      font-size: 9pt;
+      margin-bottom: 4px;
+    }
+    .info-label {
+      font-weight: bold;
+    }
+    .info-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .alert-box {
+      border: 2px solid #d97706;
+      background: #fef3c7;
+      margin-bottom: 12px;
+    }
+    .alert-header {
+      background: #fde68a;
+      border-bottom: 2px solid #d97706;
+      padding: 6px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 10pt;
+    }
+    .vehicle-change-box {
+      border: 2px solid #ea580c;
+      background: #ffedd5;
+      margin-bottom: 12px;
+    }
+    .vehicle-change-header {
+      background: #fed7aa;
+      border-bottom: 2px solid #ea580c;
+      padding: 6px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 10pt;
+    }
+    .inspection-img {
+      width: 100%;
+      height: auto;
+      max-height: 125px;
+      object-fit: contain;
+    }
+    .observations-box {
+      min-height: 125px;
+      font-size: 9pt;
+    }
+    .cgv-note {
+      text-align: center;
+      font-size: 8pt;
+      font-style: italic;
+      margin: 8px 0;
+    }
+    .signatures {
+      margin-top: auto;
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    .signature-box {
+      text-align: center;
+    }
+    .signature-area {
+      height: 64px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .signature-img {
+      max-height: 64px;
+      width: auto;
+      object-fit: contain;
+      transform: scale(1.2);
+    }
+    .signature-line {
+      border-top: 2px solid #000;
+      padding-top: 4px;
+      font-weight: bold;
+      font-size: 9pt;
+    }
+    .footer {
+      text-align: center;
+      font-size: 10pt;
+      color: #666;
+      margin-top: 0;
+      padding-top: 4px;
+      border-top: 1px solid #999;
+    }
+    .cgv-title {
+      text-align: center;
+      margin-bottom: 12px;
+      font-size: 13pt;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .cgv-text {
+      white-space: pre-wrap;
+      text-align: justify;
+      font-size: 9.5pt;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
-  <div class="page">
-    <div class="header">
-      ${settings?.logo_url ? `<img src="${settings.logo_url}" class="logo" alt="Logo">` : ''}
-      <h1>Contrat de Location de Véhicule</h1>
-      ${!blankMode && contract ? `<p>N° ${contract.numero_contrat || ''}</p>` : ''}
+  <div id="contract-content">
+    
+    <!-- Page 1 - Contrat -->
+    <div class="contract-page">
+      ${!settings?.masquer_entete ? `
+      <div class="header">
+        <div class="header-flex">
+          ${!settings?.masquer_logo && settings?.logo_url ? `
+          <div class="logo-container">
+            <img src="${settings.logo_url}" alt="Logo" class="logo" crossorigin="anonymous">
+          </div>
+          ` : ''}
+          <div class="header-center">
+            <h1 style="font-size: 14pt; font-weight: bold; margin-bottom: 4px;">CONTRAT DE LOCATION</h1>
+            <p style="font-size: 11pt; font-weight: 600;">N° ${ph(contract?.numero_contrat || '')}</p>
+          </div>
+          ${!settings?.masquer_logo && settings?.logo_url ? `
+          <div class="header-right">
+            ${new Date().toLocaleDateString('fr-FR')}
+          </div>
+          ` : ''}
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- Informations principales -->
+      <div class="grid-2">
+        <!-- Locataire -->
+        <div class="box">
+          <div class="box-header">LOCATAIRE</div>
+          <div class="box-content">
+            <div class="info-line"><span class="info-label">Nom & Prénom:</span> ${ph(`${client?.nom || ''} ${client?.prenom || ''}`)}</div>
+            <div class="info-grid-2">
+              <div class="info-line"><span class="info-label">CIN:</span> ${ph(client?.cin || '')}</div>
+              <div class="info-line"><span class="info-label">Permis:</span> ${ph(client?.permis_conduire || '')}</div>
+            </div>
+            <div class="info-line"><span class="info-label">Téléphone:</span> ${ph(client?.telephone || '')}</div>
+            <div class="info-line"><span class="info-label">Adresse:</span> ${ph(client?.adresse || '')}</div>
+          </div>
+        </div>
+
+        <!-- 2ème conducteur -->
+        <div class="box">
+          <div class="box-header">2ÈME CONDUCTEUR</div>
+          <div class="box-content">
+            <div class="info-line"><span class="info-label">Nom & Prénom:</span> ${ph(`${secondaryDriver?.nom || ''} ${secondaryDriver?.prenom || ''}`)}</div>
+            <div class="info-line"><span class="info-label">CIN:</span> ${ph(secondaryDriver?.cin || '')}</div>
+            <div class="info-line"><span class="info-label">Permis:</span> ${ph(secondaryDriver?.permis_conduire || '')}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Véhicule et Location -->
+      <div class="grid-2">
+        <!-- Véhicule -->
+        <div class="box">
+          <div class="box-header">VÉHICULE</div>
+          <div class="box-content">
+            <div class="info-line"><span class="info-label">Marque/Modèle:</span> ${ph(`${vehicle?.marque || ''} ${vehicle?.modele || ''}`)}</div>
+            <div class="info-line"><span class="info-label">Immatriculation:</span> ${ph(vehicle?.immatriculation || vehicle?.immatriculation_provisoire || 'N/A')}</div>
+            <div class="info-line"><span class="info-label">Km départ:</span> ${ph(contract?.delivery_km || vehicle?.kilometrage || '')}</div>
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="box">
+          <div class="box-header">LOCATION</div>
+          <div class="box-content">
+            <div class="info-line"><span class="info-label">Départ:</span> ${ph(contract?.date_debut ? formatDate(contract.date_debut) : '')} - <span class="info-label">Retour:</span> ${ph(contract?.date_fin ? formatDate(contract.date_fin) : '')}</div>
+            <div class="info-line"><span class="info-label">Durée:</span> ${ph(`${duration} jour(s)`)} - <span class="info-label">Prix/Jr:</span> ${ph(`${dailyRate.toFixed(2)} DH`)}</div>
+            <div class="info-line"><span class="info-label">Prix total:</span> ${ph(`${totalAmount.toFixed(2)} DH`)} - <span class="info-label">Caution:</span> ${ph(`${(contract?.caution_montant || 0).toFixed(2)} DH`)}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prolongations -->
+      ${!blankMode && contract?.prolongations && contract.prolongations.length > 0 ? `
+      <div class="alert-box">
+        <div class="alert-header">⚠️ PROLONGATION(S)</div>
+        <div class="box-content">
+          ${contract.prolongations.map((p: any, i: number) => {
+            const ancienneDate = p.ancienne_date_fin ? new Date(p.ancienne_date_fin) : null;
+            const nouvelleDate = p.nouvelle_date_fin ? new Date(p.nouvelle_date_fin) : null;
+            const duree = ancienneDate && nouvelleDate 
+              ? Math.ceil((nouvelleDate.getTime() - ancienneDate.getTime()) / (1000 * 60 * 60 * 24))
+              : 0;
+            const montant = duree * (contract.daily_rate || 0);
+            
+            return ancienneDate && nouvelleDate ? `
+              <div class="info-line">
+                <strong>Prolongation #${i + 1}:</strong> Du ${formatDate(p.ancienne_date_fin)} au ${formatDate(p.nouvelle_date_fin)} - ${duree} jour(s) - ${montant.toFixed(2)} DH
+                ${p.raison ? `<span style="color: #666;"> (${p.raison})</span>` : ''}
+              </div>
+            ` : '';
+          }).join('')}
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- Changements de véhicule -->
+      ${!blankMode && vehicleChanges && vehicleChanges.length > 0 ? `
+      <div class="vehicle-change-box">
+        <div class="vehicle-change-header">CHANGEMENT(S) DE VÉHICULE</div>
+        <div class="box-content">
+          ${vehicleChanges.map((change: any, idx: number) => `
+            <div class="info-line">
+              <strong>#${idx + 1}:</strong> ${change.old_vehicle?.immatriculation || 'N/A'} → ${change.new_vehicle?.immatriculation || 'N/A'} - ${formatReason(change.reason)}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+
+      <div class="grid-2">
+        <div class="box">
+          <div class="box-header">ÉTAT DU VÉHICULE</div>
+          <div class="box-content" style="padding: 8px; display: flex; align-items: center; justify-content: center;">
+            <img src="${inspectionDiagramUrl}" alt="Schéma inspection" class="inspection-img">
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="box-header">OBSERVATIONS</div>
+          <div class="box-content observations-box">
+            ${blankMode ? '' : (contract?.delivery_notes || contract?.notes || '')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Note CGV -->
+      <div class="cgv-note">
+        * En signant le contrat, le client accepte les conditions générales de location.
+      </div>
+
+      <!-- Signatures -->
+      <div class="signatures">
+        <div class="signature-box">
+          <div class="signature-area">
+            ${settings?.signature_agence_url ? `
+            <img src="${settings.signature_agence_url}" alt="Signature agence" class="signature-img" crossorigin="anonymous">
+            ` : ''}
+          </div>
+          <div class="signature-line">Signature Agence</div>
+        </div>
+        
+        <div class="signature-box">
+          <div class="signature-area"></div>
+          <div class="signature-line">Signature Locataire</div>
+        </div>
+        
+        <div class="signature-box">
+          <div class="signature-area"></div>
+          <div class="signature-line">Signature 2ème Conducteur</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      ${!settings?.masquer_pied_page ? `
+      <div class="footer">
+        ${settings?.raison_sociale ? `<strong>${settings.raison_sociale}</strong>` : ''}
+        ${settings?.ice ? ` | ICE: ${settings.ice}` : ''}
+        ${settings?.if_number ? ` | IF: ${settings.if_number}` : ''}
+        ${settings?.rc ? ` | RC: ${settings.rc}` : ''}
+        ${settings?.cnss ? ` | CNSS: ${settings.cnss}` : ''}
+        ${settings?.patente ? ` | Patente: ${settings.patente}` : ''}
+        <br/>
+        ${settings?.adresse ? `Adresse: ${settings.adresse}` : ''}
+        ${settings?.telephone ? ` | Tél: ${settings.telephone}` : ''}
+        ${settings?.email ? ` | Email: ${settings.email}` : ''}
+      </div>
+      ` : ''}
     </div>
 
-    ${!blankMode && contract ? `
-    <div class="section">
-      <div class="section-title">Informations du Locataire</div>
-      <div class="info-grid">
-        <div class="info-item"><span class="info-label">Nom:</span> ${contract.clients?.nom || ''}</div>
-        <div class="info-item"><span class="info-label">CIN:</span> ${contract.clients?.cin || ''}</div>
-        <div class="info-item"><span class="info-label">Téléphone:</span> ${contract.clients?.telephone || ''}</div>
-        <div class="info-item"><span class="info-label">Adresse:</span> ${contract.clients?.adresse || ''}</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Informations du Véhicule</div>
-      <div class="info-grid">
-        <div class="info-item"><span class="info-label">Marque/Modèle:</span> ${contract.vehicles?.marque || ''} ${contract.vehicles?.modele || ''}</div>
-        <div class="info-item"><span class="info-label">Immatriculation:</span> ${contract.vehicles?.immatriculation || ''}</div>
-        <div class="info-item"><span class="info-label">Couleur:</span> ${contract.vehicles?.couleur || ''}</div>
-        <div class="info-item"><span class="info-label">Kilométrage:</span> ${contract.kilometrage_depart || ''} km</div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Détails de la Location</div>
-      <div class="info-grid">
-        <div class="info-item"><span class="info-label">Date début:</span> ${formatDate(contract.date_debut)}</div>
-        <div class="info-item"><span class="info-label">Date fin:</span> ${formatDate(contract.date_fin)}</div>
-        <div class="info-item"><span class="info-label">Durée:</span> ${duration} jour(s)</div>
-        <div class="info-item"><span class="info-label">Tarif journalier:</span> ${dailyRate} MAD</div>
-        <div class="info-item"><span class="info-label">Montant total:</span> ${totalAmount} MAD</div>
-        <div class="info-item"><span class="info-label">Avance payée:</span> ${paidAmount} MAD</div>
-        <div class="info-item"><span class="info-label">Reste à payer:</span> ${remainingAmount} MAD</div>
-      </div>
+    <!-- Page 2 - CGV -->
+    ${hasCgvPage ? `
+    <div class="page-break-before cgv-page">
+      <div class="cgv-title">CONDITIONS GÉNÉRALES DE LOCATION</div>
+      <div class="cgv-text">${settings.cgv_texte}</div>
     </div>
     ` : ''}
 
-    <div class="signature-section">
-      <div class="signature-box">
-        <p><strong>Signature de l'Agence</strong></p>
-        <p>${settings?.nom || ''}</p>
-      </div>
-      <div class="signature-box">
-        <p><strong>Signature du Locataire</strong></p>
-      </div>
-    </div>
-
-    <div class="footer">
-      <p>${settings?.nom || ''} - ${settings?.adresse || ''}</p>
-      <p>Tél: ${settings?.telephone || ''} | Email: ${settings?.email || ''}</p>
-      ${settings?.ice ? `<p>ICE: ${settings.ice}</p>` : ''}
-    </div>
   </div>
 </body>
 </html>`;
