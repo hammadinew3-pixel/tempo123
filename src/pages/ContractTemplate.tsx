@@ -30,9 +30,17 @@ export default function ContractTemplate() {
       (async () => {
         setLoading(true);
         try {
+          const { data: userTenant } = await supabase
+            .from('user_tenants')
+            .select('tenant_id')
+            .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+            .eq('is_active', true)
+            .single();
+
           const { data, error } = await supabase
             .from('tenant_settings')
             .select('*')
+            .eq('tenant_id', userTenant?.tenant_id)
             .single();
           
           if (error) throw error;
@@ -56,12 +64,17 @@ export default function ContractTemplate() {
 
   const loadContractData = async () => {
     try {
-      const [contractRes, changesRes, driversRes, paymentsRes, settingsRes] = await Promise.all([
-        supabase
-          .from('contracts')
-          .select('*, clients(*), vehicles(*)')
-          .eq('id', contractId)
-          .single(),
+      // Charger d'abord le contrat pour récupérer le tenant_id
+      const contractRes = await supabase
+        .from('contracts')
+        .select('*, clients(*), vehicles(*)')
+        .eq('id', contractId)
+        .single();
+
+      if (contractRes.error) throw contractRes.error;
+
+      // Charger le reste des données en parallèle
+      const [changesRes, driversRes, paymentsRes, settingsRes] = await Promise.all([
         supabase
           .from('vehicle_changes')
           .select('*, old_vehicle:old_vehicle_id(*), new_vehicle:new_vehicle_id(*)')
@@ -79,6 +92,7 @@ export default function ContractTemplate() {
         supabase
           .from('tenant_settings')
           .select('*')
+          .eq('tenant_id', contractRes.data?.tenant_id)
           .single()
       ]);
 

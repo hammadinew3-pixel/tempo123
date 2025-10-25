@@ -30,50 +30,29 @@ serve(async (req) => {
     const formData = new FormData();
     let gotenbergEndpoint: string;
     
-    // Pour les contrats, récupérer le HTML et l'envoyer directement
-    if (type === 'contract' || type === 'contract-blank') {
-      console.log('🔧 Fetching HTML from serve-contract-html...');
-      
-      const htmlUrl = type === 'contract' 
-        ? `${supabaseUrl}/functions/v1/serve-contract-html?id=${id}`
-        : `${supabaseUrl}/functions/v1/serve-contract-html?blank=true`;
-      
-      const htmlResponse = await fetch(htmlUrl);
-      if (!htmlResponse.ok) {
-        throw new Error(`Failed to fetch HTML: ${htmlResponse.statusText}`);
-      }
-      
-      const htmlContent = await htmlResponse.text();
-      console.log('✅ HTML fetched, size:', htmlContent.length, 'bytes');
-      
-      // Créer un fichier HTML pour Gotenberg
-      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
-      formData.append('files', htmlBlob, 'index.html');
-      gotenbergEndpoint = '/forms/chromium/convert/html';
-      
-    } else {
-      // Pour les autres types, utiliser les templates React via URL
-      const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://app.crsapp.ma';
-      const templates: Record<string, string> = {
-        'facture-location': `/location-facture-template?id=${id}&print=true`,
-        'assistance-contract': `/assistance-contract-template?id=${id}&print=true`,
-        'assistance-contract-blank': `/assistance-contract-template?blankMode=true&print=true`,
-        'facture-assistance': ids 
-          ? `/assistance-facture-template?ids=${ids}&print=true`
-          : `/assistance-facture-template?id=${id}&print=true`,
-        'dossier-complet-assistance': `/assistance-complet-template?id=${id}&download=true`
-      };
-      
-      if (!templates[type]) {
-        throw new Error(`Type de PDF invalide: ${type}`);
-      }
-      
-      const templateUrl = `${origin}${templates[type]}`;
-      console.log('🌐 Template URL:', templateUrl);
-      
-      formData.append('url', templateUrl);
-      gotenbergEndpoint = '/forms/chromium/convert/url';
+    // Utiliser les templates React via URL pour tous les types
+    const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://app.crsapp.ma';
+    const templates: Record<string, string> = {
+      'contract': `/contract-template?id=${id}&print=true`,
+      'contract-blank': `/contract-template?blank=true&print=true`,
+      'facture-location': `/location-facture-template?id=${id}&print=true`,
+      'assistance-contract': `/assistance-contract-template?id=${id}&print=true`,
+      'assistance-contract-blank': `/assistance-contract-template?blankMode=true&print=true`,
+      'facture-assistance': ids 
+        ? `/assistance-facture-template?ids=${ids}&print=true`
+        : `/assistance-facture-template?id=${id}&print=true`,
+      'dossier-complet-assistance': `/assistance-complet-template?id=${id}&download=true`
+    };
+    
+    if (!templates[type]) {
+      throw new Error(`Type de PDF invalide: ${type}`);
     }
+    
+    const templateUrl = `${origin}${templates[type]}`;
+    console.log('🌐 Template URL:', templateUrl);
+    
+    formData.append('url', templateUrl);
+    gotenbergEndpoint = '/forms/chromium/convert/url';
     
     // Configuration commune Gotenberg
     formData.append('waitDelay', '3s');
