@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { getDisplayMatricule } from '@/lib/vehicleUtils';
 
 interface Contract {
   id: string;
@@ -200,7 +201,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
                   <p className="font-semibold text-sm">
                     {contract.vehicles.marque} {contract.vehicles.modele}
                   </p>
-                  <p className="text-xs">Immatriculation : {contract.vehicles.immatriculation || contract.vehicles.immatriculation_provisoire || 'N/A'}</p>
+                  <p className="text-xs">Immatriculation : {getDisplayMatricule(contract.vehicles)}</p>
                   <p className="text-xs mt-1">
                     Période : {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })} 
                     {' au '} 
@@ -228,7 +229,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
               <td className="py-2 px-1">
                 <p className="font-semibold text-xs">Location véhicule</p>
                 <p className="text-[10px] text-gray-600">
-                  {contract.vehicles.marque} {contract.vehicles.modele} - {contract.vehicles.immatriculation || contract.vehicles.immatriculation_provisoire || 'N/A'}
+                  {contract.vehicles.marque} {contract.vehicles.modele} - {getDisplayMatricule(contract.vehicles)}
                 </p>
                 <p className="text-[10px] text-gray-600">
                   Période : {format(new Date(contract.date_debut), 'dd/MM/yyyy', { locale: fr })} 
