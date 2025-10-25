@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import ContractPrintable from '@/components/assistance/ContractPrintable';
 import InvoicePrintable from '@/components/assistance/InvoicePrintable';
-import html2pdf from 'html2pdf.js';
+import { generatePDFFromElement } from '@/lib/pdfUtils';
 
 export default function AssistanceCompletTemplate() {
   const [searchParams] = useSearchParams();
@@ -99,39 +99,26 @@ export default function AssistanceCompletTemplate() {
   useEffect(() => {
     const downloadMode = searchParams.get('download') === 'true';
     if (!loading && data) {
-      setTimeout(() => {
-        if (downloadMode) {
-          const element = document.getElementById('dossier-content');
-          if (!element) return;
-          const opt = {
-            margin: 10,
-            filename: `Dossier_Complet_${data.num_dossier || id}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: {
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              logging: false,
-              backgroundColor: '#ffffff'
-            },
-            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-            pagebreak: { mode: ['css', 'legacy'] }
-          };
-          // Générer et sauvegarder puis fermer l'iframe parent si présent
-          // @ts-ignore
-          html2pdf().set(opt).from(element).save().then(() => {
+      if (downloadMode) {
+        const element = document.getElementById('dossier-content');
+        if (!element) return;
+        
+        generatePDFFromElement(element, `Dossier_Complet_${data.num_dossier || id}.pdf`)
+          .then(() => {
             setTimeout(() => {
               if (window.parent !== window) {
                 window.parent.document.querySelector('iframe')?.remove();
               }
             }, 1000);
+          })
+          .catch((error) => {
+            console.error('Erreur génération PDF:', error);
           });
-        } else {
-          window.print();
-        }
-      }, 500);
+      } else {
+        setTimeout(() => window.print(), 500);
+      }
     }
-  }, [loading, data, searchParams]);
+  }, [loading, data, searchParams, id]);
 
   if (loading || !data) {
     return <div className="p-8">Chargement...</div>;

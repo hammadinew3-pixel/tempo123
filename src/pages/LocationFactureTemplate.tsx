@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import InvoicePrintable from '@/components/locations/InvoicePrintable';
-import html2pdf from 'html2pdf.js';
+import { generatePDFFromElement } from '@/lib/pdfUtils';
 
 interface Contract {
   id: string;
@@ -120,27 +120,17 @@ export default function LocationFactureTemplate() {
       if (downloadMode) {
         const element = document.getElementById('invoice-content');
         if (element) {
-          const opt = {
-            margin: 10,
-            filename: `facture-${contract.numero_contrat}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-              scale: 2, 
-              useCORS: true,
-              allowTaint: true,
-              logging: false,
-              backgroundColor: '#ffffff'
-            },
-            jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-            pagebreak: { mode: ['css', 'legacy'] }
-          };
-          html2pdf().set(opt).from(element).save().then(() => {
-            setTimeout(() => {
-              if (window.parent !== window) {
-                window.parent.document.querySelector('iframe')?.remove();
-              }
-            }, 1000);
-          });
+          generatePDFFromElement(element, `facture-${contract.numero_contrat}.pdf`)
+            .then(() => {
+              setTimeout(() => {
+                if (window.parent !== window) {
+                  window.parent.document.querySelector('iframe')?.remove();
+                }
+              }, 1000);
+            })
+            .catch((error) => {
+              console.error('Erreur génération PDF:', error);
+            });
         }
       } else if (shouldPrint) {
         setTimeout(() => {
