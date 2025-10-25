@@ -95,12 +95,40 @@ export default function LocationFactureTemplate() {
           console.log('ICE:', tenantSettings.ice);
           console.log('======================');
           
+          // Générer une URL signée pour le logo si nécessaire
+          let logoUrl = tenantSettings.logo_url;
+          if (logoUrl && logoUrl.includes('supabase.co/storage/v1/object/public/')) {
+            try {
+              // Extraire le bucket et le chemin
+              const urlParts = logoUrl.split('/storage/v1/object/public/');
+              if (urlParts[1]) {
+                const [bucket, ...pathParts] = urlParts[1].split('/');
+                const path = pathParts.join('/');
+                
+                // Créer une URL signée valide pour 1 heure
+                const { data: signedData, error: signedError } = await supabaseClient
+                  .storage
+                  .from(bucket)
+                  .createSignedUrl(path, 3600);
+                
+                if (signedData?.signedUrl) {
+                  logoUrl = signedData.signedUrl;
+                  console.log('URL signée générée pour le logo:', logoUrl);
+                } else if (signedError) {
+                  console.error('Erreur génération URL signée:', signedError);
+                }
+              }
+            } catch (err) {
+              console.error('Erreur lors de la génération de l\'URL signée:', err);
+            }
+          }
+          
           setSettings({
             nom_agence: tenantSettings.nom,
             adresse: tenantSettings.adresse,
             telephone: tenantSettings.telephone,
             email: tenantSettings.email,
-            logo_url: tenantSettings.logo_url,
+            logo_url: logoUrl,
             tva_taux: tenantSettings.taux_tva,
             raison_sociale: tenantSettings.raison_sociale,
             ice: tenantSettings.ice,

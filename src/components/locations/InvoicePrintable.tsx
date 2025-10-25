@@ -154,7 +154,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
   const montantTTC = montantHT + montantTVA;
 
   return (
-    <div className="invoice-page">
+    <div className="invoice-page flex flex-col min-h-[297mm]">
       <div className="flex-1 px-3 pt-3">
 
         {/* Header */}
@@ -289,7 +289,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="mt-auto text-center text-[8pt] text-gray-600 pt-1 border-t border-gray-400 px-3">
+        <div className="text-center text-[8pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
           {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
           {settings?.ice && <> | ICE: {settings.ice}</>}
           {settings?.if_number && <> | IF: {settings.if_number}</>}
