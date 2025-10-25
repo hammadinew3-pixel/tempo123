@@ -182,8 +182,8 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       overflow: hidden;
     }
     .contract-page {
-      width: 210mm;
-      height: 297mm;
+      width: 190mm;
+      height: 277mm;
       overflow: hidden;
       padding: 10mm;
       background: white;
@@ -192,8 +192,8 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       position: relative;
     }
     .cgv-page {
-      width: 210mm;
-      min-height: 297mm;
+      width: 190mm;
+      min-height: 277mm;
       padding: 10mm;
     }
     .header {
