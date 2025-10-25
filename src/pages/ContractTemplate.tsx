@@ -197,24 +197,24 @@ export default function ContractTemplate() {
         .contract-page {
           width: 190mm;
           height: 297mm;
-          padding: 10mm 0 10mm 0;
+          padding: 0;
           overflow: hidden;
           background: white;
         }
         .cgv-page {
           width: 190mm;
           min-height: 297mm;
-          padding: 10mm 0 10mm 0;
+          padding: 0;
           background: white;
         }
       `}</style>
       
       <div id="contract-content" className="bg-white w-[190mm] mx-auto print:p-0"
-           style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+           style={{ fontFamily: 'Arial, Helvetica, sans-serif', background: 'white' }}>
         
         {/* Page 1 - Contrat */}
-        <div className="contract-page flex flex-col"
-             style={{ height: '297mm', overflow: 'hidden' }}>
+        <div className="contract-page flex flex-col bg-white"
+             style={{ height: '297mm', overflow: 'hidden', background: 'white' }}>
           <div className="flex-1 px-3 pt-3">
           {!agenceSettings?.masquer_entete && (
             <div className="mb-8 pb-4 border-b-2 border-black">
@@ -302,7 +302,7 @@ export default function ContractTemplate() {
 
           {/* Prolongations */}
           {!blankMode && contract?.prolongations && contract.prolongations.length > 0 && (
-            <div className="border-2 border-yellow-500 bg-yellow-50 mb-3">
+            <div className="border-2 border-yellow-500 bg-white mb-3">
               <div className="bg-white border-b-2 border-yellow-500 p-2 text-center">
                 <strong className="text-[10pt]">⚠️ PROLONGATION(S)</strong>
               </div>
@@ -332,7 +332,7 @@ export default function ContractTemplate() {
 
           {/* Changements de véhicule */}
           {!blankMode && vehicleChanges && vehicleChanges.length > 0 && (
-            <div className="border-2 border-orange-500 bg-orange-50 mb-3">
+            <div className="border-2 border-orange-500 bg-white mb-3">
               <div className="bg-white border-b-2 border-orange-500 p-2 text-center">
                 <strong className="text-[10pt]">CHANGEMENT(S) DE VÉHICULE</strong>
               </div>
