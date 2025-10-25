@@ -215,7 +215,7 @@ export default function ContractTemplate() {
         {/* Page 1 - Contrat */}
         <div className="contract-page flex flex-col bg-white"
              style={{ height: '297mm', overflow: 'hidden', background: 'white' }}>
-          <div className="flex-1 px-3 pt-3">
+          <div className="flex-1">
           {!agenceSettings?.masquer_entete && (
             <div className="mb-8 pb-4 border-b-2 border-black">
               <div className="flex justify-between items-end">
@@ -412,7 +412,7 @@ export default function ContractTemplate() {
           
           {/* Footer */}
           {!agenceSettings?.masquer_pied_page && (
-            <div className="text-center text-[9.5pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
+            <div className="text-center text-[9.5pt] text-gray-600 pt-1 border-t border-gray-400 pb-2">
               {agenceSettings?.raison_sociale && <><strong>{agenceSettings.raison_sociale}</strong></>}
               {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
               {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
@@ -431,7 +431,7 @@ export default function ContractTemplate() {
         {hasCgvPage && (
           <div className="page-break-before cgv-page"
                style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            <div className="px-3 pt-3">
+            <div className="">
               <div className="text-center mb-3">
                 <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
               </div>
