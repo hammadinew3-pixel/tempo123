@@ -277,7 +277,7 @@ export default function AssistanceFactureTemplate() {
         }
         @page { 
           size: A4 portrait; 
-          margin: 0; 
+          margin: 0.5cm 0;
         }
         #facture-content {
           width: 100%;

@@ -262,7 +262,7 @@ export default function LocationFactureTemplate() {
         }
         @page { 
           size: A4 portrait; 
-          margin: 0; 
+          margin: 0.5cm 0;
         }
         #invoice-content {
           width: 100%;

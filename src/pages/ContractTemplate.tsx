@@ -185,7 +185,7 @@ export default function ContractTemplate() {
         }
         @page { 
           size: A4 portrait;
-          margin: 0;
+          margin: 0.5cm 0;
         }
         @media print {
           body { margin: 0; padding: 0; }
@@ -230,8 +230,9 @@ export default function ContractTemplate() {
                     <img 
                       src={agenceSettings.logo_url} 
                       alt="Logo" 
-                      className="h-24 w-auto object-contain" 
+                      className="w-auto object-contain" 
                       crossOrigin="anonymous"
+                      style={{ height: '100px' }}
                     />
                   </div>
                 )}
