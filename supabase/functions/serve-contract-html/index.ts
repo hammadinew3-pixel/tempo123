@@ -189,6 +189,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       background: white;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
     .cgv-page {
       width: 190mm;
@@ -338,10 +339,12 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       text-align: center;
       font-size: 9pt;
       color: #666;
-      margin-top: auto;
-      padding-top: 60px;
-      padding-bottom: 20px;
+      position: absolute;
+      bottom: 3cm;
+      left: 2cm;
+      right: 2cm;
       border-top: 1px solid #999;
+      padding-top: 10px;
     }
     .cgv-title {
       text-align: center;
