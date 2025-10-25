@@ -143,39 +143,9 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     settings.cgv_texte.trim().length > 0
   );
 
-  // Schéma SVG d'inspection du véhicule
-  const inspectionDiagramSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" style="width: 100%; height: auto;">
-    <!-- Carrosserie principale -->
-    <rect x="100" y="80" width="200" height="120" fill="none" stroke="#000" stroke-width="2"/>
-    <!-- Toit -->
-    <rect x="120" y="60" width="160" height="20" fill="none" stroke="#000" stroke-width="2"/>
-    <text x="200" y="72" text-anchor="middle" font-size="10" font-family="Arial">Toit</text>
-    <!-- Avant -->
-    <rect x="50" y="120" width="50" height="40" fill="none" stroke="#000" stroke-width="2"/>
-    <text x="75" y="143" text-anchor="middle" font-size="10" font-family="Arial">Avant</text>
-    <!-- Arrière -->
-    <rect x="300" y="120" width="50" height="40" fill="none" stroke="#000" stroke-width="2"/>
-    <text x="325" y="143" text-anchor="middle" font-size="10" font-family="Arial">Arrière</text>
-    <!-- Côté gauche -->
-    <text x="200" y="95" text-anchor="middle" font-size="10" font-family="Arial">Côté gauche</text>
-    <!-- Côté droit -->
-    <text x="200" y="195" text-anchor="middle" font-size="10" font-family="Arial">Côté droit</text>
-    <!-- Roues -->
-    <circle cx="120" cy="210" r="15" fill="none" stroke="#000" stroke-width="2"/>
-    <circle cx="280" cy="210" r="15" fill="none" stroke="#000" stroke-width="2"/>
-    <text x="120" y="240" text-anchor="middle" font-size="9" font-family="Arial">Roue AV G</text>
-    <text x="280" y="240" text-anchor="middle" font-size="9" font-family="Arial">Roue AV D</text>
-    <circle cx="120" cy="250" r="15" fill="none" stroke="#000" stroke-width="2"/>
-    <circle cx="280" cy="250" r="15" fill="none" stroke="#000" stroke-width="2"/>
-    <text x="120" y="280" text-anchor="middle" font-size="9" font-family="Arial">Roue AR G</text>
-    <text x="280" y="280" text-anchor="middle" font-size="9" font-family="Arial">Roue AR D</text>
-    <!-- Pare-brise -->
-    <rect x="100" y="85" width="60" height="30" fill="none" stroke="#000" stroke-width="1" stroke-dasharray="3,3"/>
-    <text x="130" y="102" text-anchor="middle" font-size="8" font-family="Arial">PB AV</text>
-    <!-- Lunette arrière -->
-    <rect x="240" y="85" width="60" height="30" fill="none" stroke="#000" stroke-width="1" stroke-dasharray="3,3"/>
-    <text x="270" y="102" text-anchor="middle" font-size="8" font-family="Arial">Lunette AR</text>
-  </svg>`;
+  // URL du diagramme d'inspection (depuis le bucket public)
+  const inspectionDiagramUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/documents_vehicules/vehicle-inspection-diagram.png`;
+
 
   return `<!DOCTYPE html>
 <html>
@@ -500,7 +470,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
         <div class="box">
           <div class="box-header">ÉTAT DU VÉHICULE</div>
           <div class="box-content" style="padding: 8px; display: flex; align-items: center; justify-content: center;">
-            ${inspectionDiagramSVG}
+            <img src="${inspectionDiagramUrl}" alt="Schéma inspection" class="inspection-img" crossorigin="anonymous">
           </div>
         </div>
 
