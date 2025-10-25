@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import html2pdf from 'html2pdf.js';
+import { generatePDFFromElement } from "@/lib/pdfUtils";
 import ContractPrintable from "@/components/assistance/ContractPrintable";
 
 export default function AssistanceContractTemplate() {
@@ -137,36 +137,23 @@ export default function AssistanceContractTemplate() {
             return;
           }
 
-          const opt = {
-            margin: [10, 10, 10, 10] as [number, number, number, number],
-            filename: blankMode ? 'Contrat_Assistance_Vierge_CRSAPP.pdf' : `Contrat_${assistance?.num_dossier || assistanceId}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 1.5, useCORS: true, allowTaint: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          };
+          const filename = blankMode ? 'Contrat_Assistance_Vierge_CRSAPP.pdf' : `Contrat_${assistance?.num_dossier || assistanceId}.pdf`;
 
-          html2pdf()
-            .set(opt)
-            .from(element)
-            .toPdf()
-            .get('pdf')
-            .then((pdf: any) => {
-              const blob: Blob = pdf.output('blob');
-              const filename = blankMode ? 'Contrat_Assistance_Vierge_CRSAPP.pdf' : `Contrat_${assistance?.num_dossier || assistanceId}.pdf`;
-              
+          generatePDFFromElement(element, filename)
+            .then(() => {
+              // Notifier le parent si nécessaire, puis tenter de fermer l'iframe
               if (window.parent !== window) {
-                window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
-              } else {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                try {
+                  window.parent.postMessage({ type: 'pdf-ready', filename }, '*');
+                  setTimeout(() => {
+                    window.parent.document.querySelector('iframe')?.remove();
+                  }, 1000);
+                } catch (e) {
+                  console.warn('Parent notification failed:', e);
+                }
               }
             })
-            .catch((err: any) => {
+            .catch((err) => {
               const message = err?.message || 'Erreur génération PDF Assistance';
               if (window.parent !== window) {
                 window.parent.postMessage({ type: 'pdf-error', message }, '*');

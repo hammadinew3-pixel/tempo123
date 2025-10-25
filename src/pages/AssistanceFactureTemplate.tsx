@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import html2pdf from 'html2pdf.js';
+import { generatePDFFromElement } from "@/lib/pdfUtils";
 import InvoicePrintable from "@/components/assistance/InvoicePrintable";
 
 export default function AssistanceFactureTemplate() {
@@ -120,32 +120,18 @@ export default function AssistanceFactureTemplate() {
             ? `Facture_Groupee_${assistanceIds?.replace(/,/g, '_')}` 
             : `Facture_${assistances[0]?.num_dossier || assistanceId}`;
           
-          const opt = {
-            margin: 10,
-            filename: `${invoiceNumber}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-              scale: 2, 
-              useCORS: true,
-              allowTaint: true,
-              logging: false,
-              backgroundColor: '#ffffff'
-            },
-            jsPDF: { 
-              unit: 'mm' as const, 
-              format: 'a4' as const, 
-              orientation: 'portrait' as const
-            },
-            pagebreak: { mode: ['css', 'legacy'] }
-          };
-          
-          html2pdf().set(opt).from(element).save().then(() => {
-            setTimeout(() => {
-              if (window.parent !== window) {
-                window.parent.document.querySelector('iframe')?.remove();
-              }
-            }, 1000);
-          });
+          const filename = `${invoiceNumber}.pdf`;
+          generatePDFFromElement(element, filename)
+            .then(() => {
+              setTimeout(() => {
+                if (window.parent !== window) {
+                  window.parent.document.querySelector('iframe')?.remove();
+                }
+              }, 1000);
+            })
+            .catch((e) => {
+              console.error('PDF generation failed:', e);
+            });
         }, 500);
       } else if (shouldPrint) {
         setTimeout(() => window.print(), 500);
