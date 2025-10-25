@@ -195,7 +195,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       padding: 10mm;
     }
     .header {
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       padding-bottom: 8px;
       border-bottom: 2px solid #000;
     }
@@ -208,7 +208,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       width: 25%;
     }
     .logo {
-      height: 64px;
+      height: 80px;
       width: auto;
       object-fit: contain;
     }
@@ -329,7 +329,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       text-align: center;
       font-size: 10pt;
       color: #666;
-      margin-top: 0;
+      margin-top: auto;
       padding-top: 4px;
       border-top: 1px solid #999;
     }
@@ -343,7 +343,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .cgv-text {
       white-space: pre-wrap;
       text-align: justify;
-      font-size: 9.5pt;
+      font-size: 8pt;
       line-height: 1.4;
     }
   </style>
