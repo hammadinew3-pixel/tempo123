@@ -626,68 +626,17 @@ export default function AssistanceDetails() {
         description: "Veuillez patienter...",
       });
 
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = "position:fixed; left:-9999px; width:0; height:0; border:0; visibility:hidden;";
-      document.body.appendChild(iframe);
-
-      let messageReceived = false;
-
-      const handleMessage = (event: MessageEvent) => {
-        const data: any = (event as any).data;
-        
-        if (data?.type === 'pdf-started') {
-          messageReceived = true;
-          return;
-        }
-        
-        if (data?.type === 'pdf-ready' && data?.blob) {
-          messageReceived = true;
-          try {
-            const url = URL.createObjectURL(data.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = data.filename || `Contrat_${assistance?.num_dossier || id}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1500);
-          } finally {
-            window.removeEventListener('message', handleMessage);
-            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-          }
-        } else if (data?.type === 'pdf-error') {
-          messageReceived = true;
-          window.removeEventListener('message', handleMessage);
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-          toast({
-            variant: "destructive",
-            title: "Erreur PDF",
-            description: data.message || "Erreur lors de la génération du PDF",
-          });
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      iframe.src = `/assistance-contract-template?id=${id}&download=true`;
-
-      toast({
-        title: 'Contrat en cours de téléchargement',
-        description: 'Le PDF sera téléchargé automatiquement',
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'assistance-contract', id }
       });
-
-      // Fallback: nettoyer après 30s si aucun message reçu
-      setTimeout(() => {
-        window.removeEventListener('message', handleMessage);
-        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        
-        if (!messageReceived) {
-          window.open(`/assistance-contract-template?id=${id}&download=true`, '_blank', 'noopener');
-          toast({
-            title: 'Ouverture en nouvel onglet',
-            description: 'Le téléchargement sera déclenché dans la nouvelle fenêtre',
-          });
-        }
-      }, 30000);
+      
+      if (error) throw error;
+      
+      window.open(data.url, '_blank');
+      toast({
+        title: 'Succès',
+        description: 'Contrat généré avec succès',
+      });
     } catch (error: any) {
       console.error('Erreur génération contrat:', error);
       toast({
@@ -705,13 +654,16 @@ export default function AssistanceDetails() {
         description: "Veuillez patienter...",
       });
 
-      // Open dossier template in new tab
-      const dossierUrl = `/assistance-dossier-template?id=${id}`;
-      window.open(dossierUrl, '_blank');
-
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'dossier-complet-assistance', id }
+      });
+      
+      if (error) throw error;
+      
+      window.open(data.url, '_blank');
       toast({
-        title: 'Dossier généré',
-        description: 'Le dossier a été ouvert dans un nouvel onglet',
+        title: 'Succès',
+        description: 'Dossier complet généré',
       });
     } catch (error: any) {
       console.error('Erreur génération dossier:', error);
@@ -723,17 +675,32 @@ export default function AssistanceDetails() {
     }
   };
 
-  const handleGenerateFacturePDF = () => {
-    // Créer un iframe caché pour générer le PDF automatiquement
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `/assistance-facture-template?id=${id}&download=true`;
-    document.body.appendChild(iframe);
-    
-    toast({
-      title: 'Facture générée',
-      description: 'Le téléchargement du PDF va démarrer automatiquement.',
-    });
+  const handleGenerateFacturePDF = async () => {
+    try {
+      toast({
+        title: 'Génération de la facture',
+        description: 'Veuillez patienter...',
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'facture-assistance', id }
+      });
+      
+      if (error) throw error;
+      
+      window.open(data.url, '_blank');
+      toast({
+        title: 'Succès',
+        description: 'Facture générée avec succès',
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de générer la facture',
+      });
+    }
   };
 
   const handleUpdateClient = async () => {

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
-import html2pdf from 'html2pdf.js';
+
 
 export default function ContractTemplate() {
   const [searchParams] = useSearchParams();
@@ -41,59 +41,10 @@ export default function ContractTemplate() {
   }, [contractId, blankMode]);
 
   useEffect(() => {
-    if (!loading && (contract || blankMode)) {
-      if (downloadMode) {
-        setTimeout(() => {
-          const element = document.getElementById('contract-content');
-          if (!element) return;
-          
-          const opt = {
-            margin: 10,
-            filename: blankMode ? 'Contrat_Vierge_CRSAPP.pdf' : `Contrat_${contract.numero_contrat || contractId}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-              scale: 2, 
-              useCORS: true,
-              allowTaint: true,
-              logging: false,
-              backgroundColor: '#ffffff'
-            },
-            jsPDF: { 
-              unit: 'mm' as const, 
-              format: 'a4' as const, 
-              orientation: 'portrait' as const
-            },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          };
-          
-          html2pdf()
-            .set(opt)
-            .from(element)
-            .toPdf()
-            .get('pdf')
-            .then((pdf: any) => {
-              const blob: Blob = pdf.output('blob');
-              const filename = blankMode ? 'Contrat_Vierge_CRSAPP.pdf' : `Contrat_${contract.numero_contrat || contractId}.pdf`;
-
-              if (window.parent !== window) {
-                // Envoyer le blob au parent pour déclencher le téléchargement côté top window
-                window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
-              } else {
-                // Fallback: déclencher le téléchargement ici si pas d'iframe
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              }
-            });
-        }, 500);
-      } else if (!blankMode) {
-        setTimeout(() => window.print(), 500);
-      }
+    if (!loading && (contract || blankMode) && !downloadMode && !blankMode) {
+      setTimeout(() => window.print(), 500);
     }
-  }, [loading, contract, downloadMode, contractId, blankMode]);
+  }, [loading, contract, downloadMode, blankMode]);
 
   const loadContractData = async () => {
     try {

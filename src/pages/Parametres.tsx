@@ -13,7 +13,7 @@ import { useTenantInsert } from '@/hooks/use-tenant-insert';
 import { useTenant } from '@/contexts/TenantContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Settings, Building2, Bell, Printer, Upload, Loader2, X, ImageIcon, Tag, Plus, Trash2, CheckCircle2, KeyRound, FileDown } from "lucide-react";
-import html2pdf from 'html2pdf.js';
+
 import vehicleInspectionDiagram from '@/assets/vehicle-inspection-diagram.png';
 import { format } from 'date-fns';
 import { useTenantPlan } from "@/hooks/useTenantPlan";
@@ -80,26 +80,6 @@ export default function Parametres() {
     }
   }, [isAdmin, roleLoading, navigate, toast]);
 
-  useEffect(() => {
-    const handlePdfMessage = (event: MessageEvent) => {
-      if (event.data.type === 'pdf-ready') {
-        const { filename, blob } = event.data;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        
-        // Réinitialiser les deux states possibles
-        setGeneratingBlankContract(false);
-        setGeneratingBlankAssistanceContract(false);
-      }
-    };
-    
-    window.addEventListener('message', handlePdfMessage);
-    return () => window.removeEventListener('message', handlePdfMessage);
-  }, []);
 
   useEffect(() => {
     if (isAdmin) {
@@ -544,40 +524,52 @@ export default function Parametres() {
     }
   };
 
-  const handleDownloadBlankContract = () => {
+  const handleDownloadBlankContract = async () => {
     setGeneratingBlankContract(true);
-    
-    // Créer un iframe caché
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = '/contract-template?blank=true&download=true';
-    document.body.appendChild(iframe);
-    
-    // Nettoyer l'iframe après 10 secondes
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'contract-blank' }
+      });
+      if (error) throw error;
+      window.open(data.url, '_blank');
+      toast({
+        title: 'Succès',
+        description: 'Contrat vierge généré',
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de générer le contrat vierge',
+      });
+    } finally {
       setGeneratingBlankContract(false);
-    }, 10000);
+    }
   };
 
-  const handleDownloadBlankAssistanceContract = () => {
+  const handleDownloadBlankAssistanceContract = async () => {
     setGeneratingBlankAssistanceContract(true);
-    
-    // Créer un iframe caché
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = '/assistance-contract-template?blank=true&download=true';
-    document.body.appendChild(iframe);
-    
-    // Nettoyer l'iframe après 10 secondes
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'assistance-contract-blank' }
+      });
+      if (error) throw error;
+      window.open(data.url, '_blank');
+      toast({
+        title: 'Succès',
+        description: 'Contrat assistance vierge généré',
+      });
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de générer le contrat vierge',
+      });
+    } finally {
       setGeneratingBlankAssistanceContract(false);
-    }, 10000);
+    }
   };
 
   if (roleLoading || planLoading || !isAdmin || loading) {

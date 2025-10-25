@@ -797,35 +797,16 @@ export default function LocationDetails() {
         description: "Veuillez patienter...",
       });
 
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-
-      const handleMessage = (event: MessageEvent) => {
-        const data: any = (event as any).data;
-        if (data?.type === 'pdf-ready' && data?.blob) {
-          try {
-            const url = URL.createObjectURL(data.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = data.filename || `Contrat_${contract?.numero_contrat || id}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1500);
-          } finally {
-            window.removeEventListener('message', handleMessage);
-            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-          }
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      iframe.src = `/contract-template?id=${id}&download=true`;
-
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'contract', id }
+      });
+      
+      if (error) throw error;
+      
+      window.open(data.url, '_blank');
       toast({
-        title: 'Contrat en cours de téléchargement',
-        description: 'Le PDF sera téléchargé automatiquement',
+        title: 'Succès',
+        description: 'Contrat généré avec succès',
       });
     } catch (error: any) {
       console.error('Erreur génération PDF:', error);

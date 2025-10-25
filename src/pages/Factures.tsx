@@ -143,15 +143,19 @@ export default function FacturesAssurance() {
     window.open(`/assistance-facture-template?id=${assistanceId}&print=true`, '_blank');
   };
 
-  const handleGroupInvoice = () => {
+  const handleGroupInvoice = async () => {
     if (selectedForInvoice.length === 0) return;
     const ids = selectedForInvoice.join(',');
     
-    // Créer un iframe caché pour générer le PDF
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `/assistance-facture-template?ids=${ids}&download=true`;
-    document.body.appendChild(iframe);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'facture-assistance', ids }
+      });
+      if (error) throw error;
+      window.open(data.url, '_blank');
+    } catch (err) {
+      console.error(err);
+    }
     
     setShowGroupDialog(false);
     setSelectedForInvoice([]);
@@ -253,12 +257,16 @@ export default function FacturesAssurance() {
     return (assistance.montant_facture || assistance.montant_total || 0).toFixed(2);
   };
 
-  const handleDownloadInvoice = (assistanceId: string) => {
-    // Créer un iframe caché pour générer le PDF
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `/assistance-facture-template?id=${assistanceId}&download=true`;
-    document.body.appendChild(iframe);
+  const handleDownloadInvoice = async (assistanceId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'facture-assistance', id: assistanceId }
+      });
+      if (error) throw error;
+      window.open(data.url, '_blank');
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleEditInvoice = (assistanceId: string) => {

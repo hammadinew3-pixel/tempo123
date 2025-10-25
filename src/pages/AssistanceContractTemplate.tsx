@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import html2pdf from 'html2pdf.js';
+
 import ContractPrintable from "@/components/assistance/ContractPrintable";
 
 export default function AssistanceContractTemplate() {
@@ -120,67 +120,10 @@ export default function AssistanceContractTemplate() {
   };
 
   useEffect(() => {
-    if ((assistance || blankMode) && !loading) {
-      if (downloadMode) {
-        // Signaler au parent que la génération démarre
-        if (window.parent !== window) {
-          window.parent.postMessage({ type: 'pdf-started' }, '*');
-        }
-
-        // Mode téléchargement PDF - attendre que les images soient chargées
-        setTimeout(() => {
-          const element = document.getElementById('contract-content');
-          if (!element) {
-            if (window.parent !== window) {
-              window.parent.postMessage({ type: 'pdf-error', message: 'Contenu introuvable' }, '*');
-            }
-            return;
-          }
-
-          const opt = {
-            margin: [10, 10, 10, 10] as [number, number, number, number],
-            filename: blankMode ? 'Contrat_Assistance_Vierge_CRSAPP.pdf' : `Contrat_${assistance?.num_dossier || assistanceId}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { scale: 1.5, useCORS: true, allowTaint: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-          };
-
-          html2pdf()
-            .set(opt)
-            .from(element)
-            .toPdf()
-            .get('pdf')
-            .then((pdf: any) => {
-              const blob: Blob = pdf.output('blob');
-              const filename = blankMode ? 'Contrat_Assistance_Vierge_CRSAPP.pdf' : `Contrat_${assistance?.num_dossier || assistanceId}.pdf`;
-              
-              if (window.parent !== window) {
-                window.parent.postMessage({ type: 'pdf-ready', filename, blob }, '*');
-              } else {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              }
-            })
-            .catch((err: any) => {
-              const message = err?.message || 'Erreur génération PDF Assistance';
-              if (window.parent !== window) {
-                window.parent.postMessage({ type: 'pdf-error', message }, '*');
-              } else {
-                console.error(message, err);
-              }
-            });
-        }, 1500);
-      } else if (!blankMode) {
-        // Mode impression classique (seulement si pas en mode vierge)
-        setTimeout(() => window.print(), 500);
-      }
+    if ((assistance || blankMode) && !loading && !downloadMode && !blankMode) {
+      setTimeout(() => window.print(), 500);
     }
-  }, [assistance, loading, downloadMode, blankMode, assistanceId]);
+  }, [assistance, loading, downloadMode, blankMode]);
 
   if (loading) {
     return (

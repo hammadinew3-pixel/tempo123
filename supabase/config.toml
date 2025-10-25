@@ -17,20 +17,8 @@ verify_jwt = true
 [functions.delete-user]
 verify_jwt = true
 
-[functions.generate-contract-pdf]
-verify_jwt = true
-
-[functions.generate-assistance-pdf]
-verify_jwt = true
-
-[functions.generate-assistance-dossier-complet]
-verify_jwt = true
-
-[functions.generate-assistance-facture-pdf]
-verify_jwt = true
-
-[functions.generate-location-facture-pdf]
-verify_jwt = true
+[functions.generate-pdf]
+verify_jwt = false
 
 [functions.reset-user-password]
 verify_jwt = true
