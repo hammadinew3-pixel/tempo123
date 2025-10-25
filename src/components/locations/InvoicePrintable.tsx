@@ -290,7 +290,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="text-center text-[8pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
+        <div className="text-center text-[8.5pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
           {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
           {settings?.ice && <> | ICE: {settings.ice}</>}
           {settings?.if_number && <> | IF: {settings.if_number}</>}
