@@ -253,6 +253,11 @@ export default function LocationFactureTemplate() {
       <InvoicePrintable contract={contract} settings={settings} />
       <style>{`
         * { box-sizing: border-box; }
+        body, html {
+          background: white !important;
+          margin: 0;
+          padding: 0;
+        }
         @page { 
           size: A4 portrait; 
           margin: 0; 
@@ -272,10 +277,11 @@ export default function LocationFactureTemplate() {
           overflow: visible;
           padding: 0;
           background: white;
+          background-color: white !important;
           box-sizing: border-box;
         }
         .invoice-page > .flex-1 {
-          padding-bottom: 12mm;
+          padding-bottom: 20mm;
         }
         table {
           table-layout: fixed;
