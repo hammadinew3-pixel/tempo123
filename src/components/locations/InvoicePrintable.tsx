@@ -166,11 +166,6 @@ export default function InvoicePrintable({ contract, settings }: Props) {
                   src={settings.logo_url} 
                   alt="Logo" 
                   className="h-10 w-auto object-contain max-w-[150px]"
-                  crossOrigin="anonymous"
-                  onError={(e) => {
-                    console.error('Erreur chargement logo:', settings.logo_url);
-                    e.currentTarget.style.display = 'none';
-                  }}
                 />
               </div>
             )}

@@ -171,23 +171,35 @@ export default function LocationFactureTemplate() {
         * { box-sizing: border-box; }
         @page { 
           size: A4 portrait; 
-          margin: 8mm; 
+          margin: 0; 
         }
         #invoice-content {
           width: 100%;
-          max-width: 210mm;
+          max-width: 190mm;
           margin: auto;
           overflow: hidden;
           background: #ffffff;
         }
         .invoice-page {
-          width: 210mm;
+          width: 190mm;
           height: 297mm;
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          padding: 0 0 3mm 0;
+          padding: 0;
           background: white;
+          box-sizing: border-box;
+        }
+        table {
+          table-layout: fixed;
+          width: 100%;
+        }
+        th, td {
+          word-break: break-word;
+        }
+        img, svg {
+          max-width: 100%;
+          height: auto;
         }
         @media print { 
           body { 
