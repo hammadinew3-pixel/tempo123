@@ -340,7 +340,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       font-size: 9pt;
       color: #666;
       position: absolute;
-      bottom: 1cm;
+      bottom: 0.5cm;
       left: 2cm;
       right: 2cm;
       border-top: 1px solid #999;
