@@ -25,6 +25,7 @@ interface Contract {
   };
   vehicles: {
     immatriculation: string;
+    immatriculation_provisoire?: string | null;
     marque: string;
     modele: string;
   };
@@ -186,6 +187,7 @@ export default function LocationFactureTemplate() {
             ),
             vehicles (
               immatriculation,
+              immatriculation_provisoire,
               marque,
               modele,
               tarif_journalier
