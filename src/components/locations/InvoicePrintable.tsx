@@ -159,20 +159,20 @@ export default function InvoicePrintable({ contract, settings }: Props) {
 
         {/* Header */}
         {!settings?.masquer_entete && (
-          <div className="mb-6">
+          <div className="mb-4">
             {!settings?.masquer_logo && settings?.logo_url && (
               <div className="flex justify-center mb-4">
                 <img 
                   src={settings.logo_url} 
                   alt="Logo" 
-                  className="h-16 w-auto object-contain"
+                  className="h-12 w-auto object-contain"
                   crossOrigin="anonymous"
                 />
               </div>
             )}
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
+                <h1 className="text-2xl font-bold mb-2">FACTURE</h1>
                 <p className="text-sm text-gray-600">N° {contract.numero_contrat}</p>
                 <p className="text-sm text-gray-600">
                   Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
@@ -181,7 +181,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
             </div>
 
             <div className="border-t-2 border-gray-300 pt-4">
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <h3 className="font-bold mb-2">FACTURÉ À :</h3>
                   <p className="font-semibold">{contract.clients.nom} {contract.clients.prenom}</p>
@@ -225,7 +225,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
           </thead>
           <tbody>
             <tr className="border-b border-gray-200">
-              <td className="py-4 px-2">
+              <td className="py-3 px-2">
                 <p className="font-semibold">Location véhicule</p>
                 <p className="text-sm text-gray-600">
                   {contract.vehicles.marque} {contract.vehicles.modele} - {contract.vehicles.immatriculation || contract.vehicles.immatriculation_provisoire || 'N/A'}
@@ -236,15 +236,15 @@ export default function InvoicePrintable({ contract, settings }: Props) {
                   {format(new Date(contract.date_fin), 'dd/MM/yyyy', { locale: fr })}
                 </p>
               </td>
-              <td className="text-center py-4 px-2">{duration}</td>
-              <td className="text-right py-4 px-2">{(tj / tvaMultiplier).toFixed(2)} DH</td>
-              <td className="text-right py-4 px-2 font-semibold">{montantHT.toFixed(2)} DH</td>
+              <td className="text-center py-3 px-2">{duration}</td>
+              <td className="text-right py-3 px-2">{(tj / tvaMultiplier).toFixed(2)} DH</td>
+              <td className="text-right py-3 px-2 font-semibold">{montantHT.toFixed(2)} DH</td>
             </tr>
           </tbody>
         </table>
 
         {/* Totals */}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-3">
           <div className="w-80">
             <div className="flex justify-between py-2 border-b">
               <span className="font-semibold">Sous-total HT :</span>
@@ -290,7 +290,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="mt-auto text-center text-[10pt] text-gray-600 pt-2 border-t border-gray-400 px-4">
+        <div className="mt-auto text-center text-[9pt] text-gray-600 pt-1 border-t border-gray-400 px-4">
           {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
           {settings?.ice && <> | ICE: {settings.ice}</>}
           {settings?.if_number && <> | IF: {settings.if_number}</>}
