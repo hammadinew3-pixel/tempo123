@@ -287,7 +287,7 @@ export default function AssistanceFactureTemplate() {
         }
         .invoice-page {
           width: 190mm;
-          height: 277mm;
+          height: 287mm;
           display: flex;
           flex-direction: column;
           overflow: hidden;

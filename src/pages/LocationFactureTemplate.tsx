@@ -273,10 +273,10 @@ export default function LocationFactureTemplate() {
         }
         .invoice-page {
           width: 190mm;
-          height: 297mm;
+          height: 287mm;
           display: flex;
           flex-direction: column;
-          overflow: visible;
+          overflow: hidden;
           padding: 0;
           background: white;
           background-color: white !important;
