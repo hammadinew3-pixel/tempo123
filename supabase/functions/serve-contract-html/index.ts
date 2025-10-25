@@ -207,7 +207,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .logo-container {
       width: 25%;
-      margin-top: -15px;
+      margin-top: -30px;
     }
     .logo {
       height: 80px;
@@ -346,7 +346,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .cgv-text {
       white-space: pre-wrap;
       text-align: justify;
-      font-size: 8pt;
+      font-size: 9pt;
       line-height: 1.4;
     }
   </style>
