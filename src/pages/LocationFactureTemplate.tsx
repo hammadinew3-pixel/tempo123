@@ -271,7 +271,7 @@ export default function LocationFactureTemplate() {
         }
         .invoice-page {
           width: 190mm;
-          min-height: 277mm;
+          height: 297mm;
           display: flex;
           flex-direction: column;
           overflow: visible;
@@ -281,7 +281,7 @@ export default function LocationFactureTemplate() {
           box-sizing: border-box;
         }
         .invoice-page > .flex-1 {
-          flex: 1;
+          flex: 1 1 auto;
         }
         table {
           table-layout: fixed;
