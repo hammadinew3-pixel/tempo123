@@ -198,6 +198,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       margin-bottom: 5px;
       padding-bottom: 8px;
       border-bottom: 2px solid #000;
+      margin-top: -20px;
     }
     .header-flex {
       display: flex;
@@ -206,6 +207,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .logo-container {
       width: 25%;
+      margin-top: -15px;
     }
     .logo {
       height: 80px;
@@ -215,6 +217,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .header-center {
       flex: 1;
       text-align: center;
+      margin-top: 30px;
     }
     .header-right {
       width: 25%;
@@ -330,7 +333,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       font-size: 10pt;
       color: #666;
       margin-top: auto;
-      padding-top: 4px;
+      padding-top: 30px;
       border-top: 1px solid #999;
     }
     .cgv-title {
@@ -466,7 +469,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
         <div class="box">
           <div class="box-header">ÉTAT DU VÉHICULE</div>
           <div class="box-content" style="padding: 8px; display: flex; align-items: center; justify-content: center;">
-            <img src="${inspectionDiagramUrl}" alt="Schéma inspection" class="inspection-img">
+            <img src="${inspectionDiagramUrl}" alt="Schéma inspection" class="inspection-img" crossorigin="anonymous">
           </div>
         </div>
 
