@@ -275,13 +275,13 @@ export default function LocationFactureTemplate() {
           display: flex;
           flex-direction: column;
           overflow: visible;
-          padding: 0;
+          padding: 0 0 10mm 0;
           background: white;
           background-color: white !important;
           box-sizing: border-box;
         }
         .invoice-page > .flex-1 {
-          padding-bottom: 20mm;
+          flex: 1;
         }
         table {
           table-layout: fixed;
