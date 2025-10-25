@@ -1646,6 +1646,7 @@ export type Database = {
           id: string
           if_number: string | null
           inclure_cgv: boolean | null
+          inspection_diagram_url: string | null
           logo_url: string | null
           masquer_entete: boolean | null
           masquer_logo: boolean | null
@@ -1675,6 +1676,7 @@ export type Database = {
           id?: string
           if_number?: string | null
           inclure_cgv?: boolean | null
+          inspection_diagram_url?: string | null
           logo_url?: string | null
           masquer_entete?: boolean | null
           masquer_logo?: boolean | null
@@ -1704,6 +1706,7 @@ export type Database = {
           id?: string
           if_number?: string | null
           inclure_cgv?: boolean | null
+          inspection_diagram_url?: string | null
           logo_url?: string | null
           masquer_entete?: boolean | null
           masquer_logo?: boolean | null
