@@ -627,7 +627,7 @@ export default function AssistanceDetails() {
       });
 
       const iframe = document.createElement('iframe');
-      iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
+      iframe.style.cssText = "position:fixed; left:-9999px; width:0; height:0; border:0; visibility:hidden;";
       document.body.appendChild(iframe);
 
       let messageReceived = false;
@@ -724,9 +724,9 @@ export default function AssistanceDetails() {
   };
 
   const handleGenerateFacturePDF = () => {
-    // Créer un iframe hors écran pour générer le PDF automatiquement
+    // Créer un iframe caché pour générer le PDF automatiquement
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
+    iframe.style.display = 'none';
     iframe.src = `/assistance-facture-template?id=${id}&download=true`;
     document.body.appendChild(iframe);
     

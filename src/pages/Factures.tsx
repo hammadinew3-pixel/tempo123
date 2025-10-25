@@ -147,9 +147,9 @@ export default function FacturesAssurance() {
     if (selectedForInvoice.length === 0) return;
     const ids = selectedForInvoice.join(',');
     
-    // Créer un iframe hors écran pour générer le PDF
+    // Créer un iframe caché pour générer le PDF
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
+    iframe.style.display = 'none';
     iframe.src = `/assistance-facture-template?ids=${ids}&download=true`;
     document.body.appendChild(iframe);
     
@@ -254,9 +254,9 @@ export default function FacturesAssurance() {
   };
 
   const handleDownloadInvoice = (assistanceId: string) => {
-    // Créer un iframe hors écran pour générer le PDF
+    // Créer un iframe caché pour générer le PDF
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = "position:fixed; left:-9999px; width:210mm; height:297mm; border:0; visibility:hidden;";
+    iframe.style.display = 'none';
     iframe.src = `/assistance-facture-template?id=${assistanceId}&download=true`;
     document.body.appendChild(iframe);
   };
