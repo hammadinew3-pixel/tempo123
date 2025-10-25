@@ -143,9 +143,8 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     settings.cgv_texte.trim().length > 0
   );
 
-  // URL du diagramme d'inspection (depuis les settings ou fallback)
-  const defaultInspectionUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/documents_vehicules/default-inspection-diagram.png`;
-  const inspectionDiagramUrl = settings?.inspection_diagram_url || defaultInspectionUrl;
+  // URL du diagramme d'inspection (image statique)
+  const inspectionDiagramUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/documents_vehicules/default-inspection-diagram.png`;
 
 
   return `<!DOCTYPE html>
