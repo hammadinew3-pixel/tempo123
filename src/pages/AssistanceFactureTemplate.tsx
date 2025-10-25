@@ -62,14 +62,66 @@ export default function AssistanceFactureTemplate() {
         // Récupérer tenant_id depuis la première assistance
         const tenantId = data?.[0]?.tenant_id;
         
-        // Charger les settings depuis agence_settings
-        const { data: settingsData } = await supabaseClient
-          .from("agence_settings")
-          .select("*")
-          .eq('id', tenantId)
-          .single();
+      // Charger les settings depuis agence_settings
+      const { data: settingsData } = await supabaseClient
+        .from("agence_settings")
+        .select("*")
+        .eq('id', tenantId)
+        .single();
+      
+      if (settingsData) {
+        console.log('=== DEBUG SETTINGS ASSISTANCE (GROUPED) ===');
+        console.log('Logo URL:', settingsData.logo_url);
+        console.log('Masquer logo?', settingsData.masquer_logo);
+        console.log('Masquer pied de page?', settingsData.masquer_pied_page);
         
-        setSettings(settingsData);
+        // Générer une URL signée pour le logo si nécessaire
+        let logoUrl = settingsData.logo_url;
+        if (logoUrl && logoUrl.includes('supabase.co/storage/v1/object/public/')) {
+          try {
+            const urlParts = logoUrl.split('/storage/v1/object/public/');
+            if (urlParts[1]) {
+              const [bucket, ...pathParts] = urlParts[1].split('/');
+              const path = pathParts.join('/');
+              
+              const { data: signedData, error: signedError } = await supabaseClient
+                .storage
+                .from(bucket)
+                .createSignedUrl(path, 3600);
+              
+              if (signedData?.signedUrl) {
+                logoUrl = signedData.signedUrl;
+                console.log('URL signée générée pour le logo');
+              } else if (signedError) {
+                console.error('Erreur génération URL signée:', signedError);
+              }
+            }
+          } catch (err) {
+            console.error('Erreur lors de la génération de l\'URL signée:', err);
+          }
+        }
+        
+        // Convertir en Base64 pour l'impression/téléchargement
+        if (logoUrl && (shouldPrint || downloadMode)) {
+          try {
+            const response = await fetch(logoUrl);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            logoUrl = await new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+            console.log('Logo converti en Base64 pour impression');
+          } catch (e) {
+            console.warn('Échec conversion Base64, utilisation URL:', e);
+          }
+        }
+        
+        setSettings({
+          ...settingsData,
+          logo_url: logoUrl
+        });
+      }
 
         // Charger les assurances pour chaque assistance
         const assistancesWithAssurance = await Promise.all(
@@ -106,14 +158,66 @@ export default function AssistanceFactureTemplate() {
 
         if (error) throw error;
 
-        // Charger les settings depuis agence_settings
-        const { data: settingsData } = await supabaseClient
-          .from("agence_settings")
-          .select("*")
-          .eq('id', data.tenant_id)
-          .single();
+      // Charger les settings depuis agence_settings
+      const { data: settingsData } = await supabaseClient
+        .from("agence_settings")
+        .select("*")
+        .eq('id', data.tenant_id)
+        .single();
+      
+      if (settingsData) {
+        console.log('=== DEBUG SETTINGS ASSISTANCE (SINGLE) ===');
+        console.log('Logo URL:', settingsData.logo_url);
+        console.log('Masquer logo?', settingsData.masquer_logo);
+        console.log('Masquer pied de page?', settingsData.masquer_pied_page);
         
-        setSettings(settingsData);
+        // Générer une URL signée pour le logo si nécessaire
+        let logoUrl = settingsData.logo_url;
+        if (logoUrl && logoUrl.includes('supabase.co/storage/v1/object/public/')) {
+          try {
+            const urlParts = logoUrl.split('/storage/v1/object/public/');
+            if (urlParts[1]) {
+              const [bucket, ...pathParts] = urlParts[1].split('/');
+              const path = pathParts.join('/');
+              
+              const { data: signedData, error: signedError } = await supabaseClient
+                .storage
+                .from(bucket)
+                .createSignedUrl(path, 3600);
+              
+              if (signedData?.signedUrl) {
+                logoUrl = signedData.signedUrl;
+                console.log('URL signée générée pour le logo');
+              } else if (signedError) {
+                console.error('Erreur génération URL signée:', signedError);
+              }
+            }
+          } catch (err) {
+            console.error('Erreur lors de la génération de l\'URL signée:', err);
+          }
+        }
+        
+        // Convertir en Base64 pour l'impression/téléchargement
+        if (logoUrl && (shouldPrint || downloadMode)) {
+          try {
+            const response = await fetch(logoUrl);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            logoUrl = await new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+            });
+            console.log('Logo converti en Base64 pour impression');
+          } catch (e) {
+            console.warn('Échec conversion Base64, utilisation URL:', e);
+          }
+        }
+        
+        setSettings({
+          ...settingsData,
+          logo_url: logoUrl
+        });
+      }
 
         let assistanceData: any = data;
         
