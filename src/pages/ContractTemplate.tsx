@@ -177,6 +177,12 @@ export default function ContractTemplate() {
   return (
     <>
       <style>{`
+        html, body {
+          background: white !important;
+          background-color: white !important;
+          margin: 0;
+          padding: 0;
+        }
         @page { 
           size: A4 portrait;
           margin: 0;
