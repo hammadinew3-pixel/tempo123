@@ -21,15 +21,38 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Pour les contrats, utiliser l'edge function qui génère le HTML côté serveur
-    let templateUrl: string;
+    // Appel à Gotenberg sur Railway
+    const gotenbergUrl = Deno.env.get('GOTENBERG_URL');
+    if (!gotenbergUrl) {
+      throw new Error('GOTENBERG_URL not configured');
+    }
     
-    if (type === 'contract') {
-      templateUrl = `${supabaseUrl}/functions/v1/serve-contract-html?id=${id}`;
-    } else if (type === 'contract-blank') {
-      templateUrl = `${supabaseUrl}/functions/v1/serve-contract-html?blank=true`;
+    const formData = new FormData();
+    let gotenbergEndpoint: string;
+    
+    // Pour les contrats, récupérer le HTML et l'envoyer directement
+    if (type === 'contract' || type === 'contract-blank') {
+      console.log('🔧 Fetching HTML from serve-contract-html...');
+      
+      const htmlUrl = type === 'contract' 
+        ? `${supabaseUrl}/functions/v1/serve-contract-html?id=${id}`
+        : `${supabaseUrl}/functions/v1/serve-contract-html?blank=true`;
+      
+      const htmlResponse = await fetch(htmlUrl);
+      if (!htmlResponse.ok) {
+        throw new Error(`Failed to fetch HTML: ${htmlResponse.statusText}`);
+      }
+      
+      const htmlContent = await htmlResponse.text();
+      console.log('✅ HTML fetched, size:', htmlContent.length, 'bytes');
+      
+      // Créer un fichier HTML pour Gotenberg
+      const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+      formData.append('files', htmlBlob, 'index.html');
+      gotenbergEndpoint = '/forms/chromium/convert/html';
+      
     } else {
-      // Pour les autres types, utiliser les templates React (à migrer progressivement)
+      // Pour les autres types, utiliser les templates React via URL
       const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://app.crsapp.ma';
       const templates: Record<string, string> = {
         'facture-location': `/location-facture-template?id=${id}&print=true`,
@@ -45,20 +68,15 @@ serve(async (req) => {
         throw new Error(`Type de PDF invalide: ${type}`);
       }
       
-      templateUrl = `${origin}${templates[type]}`;
+      const templateUrl = `${origin}${templates[type]}`;
+      console.log('🌐 Template URL:', templateUrl);
+      
+      formData.append('url', templateUrl);
+      gotenbergEndpoint = '/forms/chromium/convert/url';
     }
     
-    console.log('🌐 Template URL:', templateUrl);
-    
-    // Appel à Gotenberg sur Railway
-    const gotenbergUrl = Deno.env.get('GOTENBERG_URL');
-    if (!gotenbergUrl) {
-      throw new Error('GOTENBERG_URL not configured');
-    }
-    
-    const formData = new FormData();
-    formData.append('url', templateUrl);
-    formData.append('waitDelay', '3s'); // Augmenter le délai pour le chargement des données
+    // Configuration commune Gotenberg
+    formData.append('waitDelay', '3s');
     formData.append('emulatedMediaType', 'print');
     formData.append('paperWidth', '8.27'); // A4 width in inches
     formData.append('paperHeight', '11.7'); // A4 height in inches
@@ -68,9 +86,9 @@ serve(async (req) => {
     formData.append('marginRight', '0.39');
     formData.append('printBackground', 'true');
     
-    console.log('🖨️ Calling Gotenberg...');
+    console.log('🖨️ Calling Gotenberg endpoint:', gotenbergEndpoint);
     
-    const pdfResponse = await fetch(`${gotenbergUrl}/forms/chromium/convert/url`, {
+    const pdfResponse = await fetch(`${gotenbergUrl}${gotenbergEndpoint}`, {
       method: 'POST',
       body: formData
     });
