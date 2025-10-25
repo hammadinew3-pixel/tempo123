@@ -179,7 +179,7 @@ export default function ContractTemplate() {
       <style>{`
         @page { 
           size: A4 portrait;
-          margin: 10mm;
+          margin: 0;
         }
         @media print {
           body { margin: 0; padding: 0; }
@@ -196,12 +196,14 @@ export default function ContractTemplate() {
         }
         .contract-page {
           width: 190mm;
-          height: 277mm;
+          height: 297mm;
+          padding: 0 0 10mm 0;
           overflow: hidden;
         }
         .cgv-page {
           width: 190mm;
-          min-height: 277mm;
+          min-height: 297mm;
+          padding: 0 0 10mm 0;
         }
       `}</style>
       
@@ -209,8 +211,9 @@ export default function ContractTemplate() {
            style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {/* Page 1 - Contrat */}
-        <div className="contract-page flex flex-col p-6"
-             style={{ height: '277mm', overflow: 'hidden' }}>
+        <div className="contract-page flex flex-col"
+             style={{ height: '297mm', overflow: 'hidden' }}>
+          <div className="flex-1 px-3 pt-3">
           {!agenceSettings?.masquer_entete && (
             <div className="mb-4 pb-2 border-b-2 border-black">
               <div className="flex justify-between items-start">
@@ -418,18 +421,21 @@ export default function ContractTemplate() {
               {agenceSettings?.email && <> | Email: {agenceSettings.email}</>}
             </div>
           )}
+          </div>
         </div>
 
         {/* Page 2 - CGV */}
         {hasCgvPage && (
-          <div className="page-break-before cgv-page p-4"
+          <div className="page-break-before cgv-page"
                style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-            <div className="text-center mb-3">
-              <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
-            </div>
-            <div className="whitespace-pre-wrap text-justify"
-                 style={{ fontSize: '9.5pt', lineHeight: '1.4' }}>
-              {agenceSettings.cgv_texte}
+            <div className="px-3 pt-3">
+              <div className="text-center mb-3">
+                <h2 className="text-[13pt] font-bold uppercase">CONDITIONS GÉNÉRALES DE LOCATION</h2>
+              </div>
+              <div className="whitespace-pre-wrap text-justify"
+                   style={{ fontSize: '9.5pt', lineHeight: '1.4' }}>
+                {agenceSettings.cgv_texte}
+              </div>
             </div>
           </div>
         )}
