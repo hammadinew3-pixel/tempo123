@@ -200,7 +200,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       margin-bottom: 5px;
       padding-bottom: 8px;
       border-bottom: 2px solid #000;
-      margin-top: -20px;
+      margin-top: 0;
     }
     .header-flex {
       display: flex;
@@ -209,7 +209,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .logo-container {
       width: 25%;
-      margin-top: -15px;
+      margin-top: 0;
     }
     .logo {
       height: 30px;
@@ -219,7 +219,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .header-center {
       flex: 1;
       text-align: center;
-      margin-top: 30px;
+      margin-top: 0;
     }
     .header-right {
       width: 25%;
