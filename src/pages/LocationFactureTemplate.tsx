@@ -79,10 +79,22 @@ export default function LocationFactureTemplate() {
             })
           : (await import('@/integrations/supabase/client')).supabase;
 
+        // Charger le contrat pour récupérer le tenant_id
+        const { data: contractTemp } = await supabaseClient
+          .from('contracts')
+          .select('tenant_id')
+          .eq('id', contractId)
+          .single();
+
+        if (!contractTemp) {
+          throw new Error('Contract not found');
+        }
+
         // Charger les paramètres du tenant
         const { data: tenantSettings } = await supabaseClient
-          .from('agence_settings')
+          .from('tenant_settings')
           .select('*')
+          .eq('tenant_id', contractTemp.tenant_id)
           .single();
 
         if (tenantSettings) {
@@ -120,6 +132,22 @@ export default function LocationFactureTemplate() {
               }
             } catch (err) {
               console.error('Erreur lors de la génération de l\'URL signée:', err);
+            }
+          }
+          
+          // Convertir en Base64 pour l'impression/téléchargement
+          if (logoUrl && (shouldPrint || downloadMode)) {
+            try {
+              const response = await fetch(logoUrl);
+              const blob = await response.blob();
+              const reader = new FileReader();
+              logoUrl = await new Promise((resolve) => {
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+              });
+              console.log('Logo converti en Base64 pour impression');
+            } catch (e) {
+              console.warn('Échec conversion Base64, utilisation URL:', e);
             }
           }
           

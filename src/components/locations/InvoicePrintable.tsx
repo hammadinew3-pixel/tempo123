@@ -154,7 +154,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
   const montantTTC = montantHT + montantTVA;
 
   return (
-    <div className="invoice-page flex flex-col min-h-[297mm]">
+    <div className="invoice-page flex flex-col">
       <div className="flex-1 px-3 pt-3">
 
         {/* Header */}
@@ -165,6 +165,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
                 <img 
                   src={settings.logo_url} 
                   alt="Logo" 
+                  crossOrigin="anonymous"
                   className="h-10 w-auto object-contain max-w-[150px]"
                 />
               </div>
