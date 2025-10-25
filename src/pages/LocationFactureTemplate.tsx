@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 import InvoicePrintable from '@/components/locations/InvoicePrintable';
 
 
@@ -53,18 +54,41 @@ export default function LocationFactureTemplate() {
       if (!contractId) return;
 
       try {
+        // Créer un client Supabase avec service_role_key pour bypasser RLS
+        // Ce client est uniquement utilisé côté serveur (Gotenberg) lors du rendu
+        const supabaseUrl = 'https://vqlusbhqoalhbfiotdhi.supabase.co';
+        const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+        
+        // Si la clé n'est pas disponible, fallback sur le client standard
+        // (utile en dev local où on est authentifié)
+        const supabaseClient = serviceRoleKey 
+          ? createClient<Database>(supabaseUrl, serviceRoleKey, {
+              auth: {
+                autoRefreshToken: false,
+                persistSession: false
+              }
+            })
+          : (await import('@/integrations/supabase/client')).supabase;
+
         // Charger les paramètres du tenant
-        const { data: tenantSettings } = await supabase
-          .from('tenant_settings')
+        const { data: tenantSettings } = await supabaseClient
+          .from('agence_settings')
           .select('*')
           .single();
 
         if (tenantSettings) {
-          setSettings(tenantSettings);
+          setSettings({
+            nom_agence: tenantSettings.nom,
+            adresse: tenantSettings.adresse,
+            telephone: tenantSettings.telephone,
+            email: tenantSettings.email,
+            logo_url: tenantSettings.logo_url,
+            tva_taux: tenantSettings.taux_tva
+          });
         }
 
         // Charger le contrat avec toutes les relations
-        const { data: contractData, error } = await supabase
+        const { data: contractData, error } = await supabaseClient
           .from('contracts')
           .select(`
             *,
@@ -86,7 +110,10 @@ export default function LocationFactureTemplate() {
           .eq('id', contractId)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error loading contract:', error);
+          throw error;
+        }
 
         if (contractData) {
           // Mapper les champs de la base de données vers l'interface Contract avec fallbacks
@@ -148,14 +175,14 @@ export default function LocationFactureTemplate() {
         }
         #invoice-content {
           width: 100%;
-          max-width: 190mm;
+          max-width: 210mm;
           margin: auto;
           overflow: hidden;
           background: #ffffff;
         }
         .invoice-page {
-          width: 190mm;
-          height: 277mm;
+          width: 210mm;
+          height: 297mm;
           display: flex;
           flex-direction: column;
           overflow: hidden;
