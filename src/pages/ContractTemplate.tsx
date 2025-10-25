@@ -197,13 +197,15 @@ export default function ContractTemplate() {
         .contract-page {
           width: 190mm;
           height: 297mm;
-          padding: 0 0 10mm 0;
+          padding: 30mm 0 10mm 0;
           overflow: hidden;
+          background: white;
         }
         .cgv-page {
           width: 190mm;
           min-height: 297mm;
-          padding: 0 0 10mm 0;
+          padding: 30mm 0 10mm 0;
+          background: white;
         }
       `}</style>
       
