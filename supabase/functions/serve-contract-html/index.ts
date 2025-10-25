@@ -196,41 +196,46 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       padding: 10mm;
     }
     .header {
-      margin-bottom: 5px;
-      padding-bottom: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
       border-bottom: 2px solid #000;
-      margin-top: -20px;
+      margin-top: -15px;
     }
     .header-flex {
       display: flex;
       justify-content: space-between;
-      align-items: start;
+      align-items: flex-start;
+    }
+    .header-left {
+      width: 30%;
+      font-size: 10pt;
+      font-weight: bold;
     }
     .logo-container {
-      width: 25%;
-      margin-top: -20px;
+      width: 100%;
+      margin-top: -10px;
     }
     .logo {
-      height: 80px;
+      height: 70px;
       width: auto;
       object-fit: contain;
     }
     .header-center {
       flex: 1;
       text-align: center;
-      margin-top: 30px;
+      padding-top: 5px;
     }
     .header-right {
-      width: 25%;
+      width: 20%;
       text-align: right;
-      font-size: 8pt;
-      color: #666;
+      font-size: 9pt;
+      padding-top: 5px;
     }
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 8px;
     }
     .box {
       border: 2px solid #000;
@@ -238,13 +243,13 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .box-header {
       background: #e0e0e0;
       border-bottom: 2px solid #000;
-      padding: 6px;
+      padding: 5px;
       text-align: center;
       font-weight: bold;
       font-size: 11pt;
     }
     .box-content {
-      padding: 10px;
+      padding: 8px;
     }
     .info-line {
       font-size: 9pt;
@@ -301,8 +306,8 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       margin: 8px 0;
     }
     .signatures {
-      margin-top: 12px;
-      margin-bottom: 10px;
+      margin-top: 10px;
+      margin-bottom: 8px;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 16px;
@@ -331,10 +336,10 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .footer {
       text-align: center;
-      font-size: 10pt;
+      font-size: 9pt;
       color: #666;
       margin-top: auto;
-      padding-top: 40px;
+      padding-top: 60px;
       padding-bottom: 20px;
       border-top: 1px solid #999;
     }
@@ -361,20 +366,20 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       ${!settings?.masquer_entete ? `
       <div class="header">
         <div class="header-flex">
-          ${!settings?.masquer_logo && settings?.logo_url ? `
-          <div class="logo-container">
-            <img src="${settings.logo_url}" alt="Logo" class="logo" crossorigin="anonymous">
+          <div class="header-left">
+            ${!settings?.masquer_logo && settings?.logo_url ? `
+            <div class="logo-container">
+              <img src="${settings.logo_url}" alt="Logo" class="logo" crossorigin="anonymous">
+            </div>
+            ` : settings?.raison_sociale ? `${settings.raison_sociale}` : ''}
           </div>
-          ` : ''}
           <div class="header-center">
-            <h1 style="font-size: 14pt; font-weight: bold; margin-bottom: 4px;">CONTRAT DE LOCATION</h1>
-            <p style="font-size: 11pt; font-weight: 600;">N° ${ph(contract?.numero_contrat || '')}</p>
+            <h1 style="font-size: 14pt; font-weight: bold; margin: 0;">CONTRAT DE LOCATION</h1>
+            <p style="font-size: 10pt; font-weight: 600; margin: 2px 0 0 0;">N° ${ph(contract?.numero_contrat || '')}</p>
           </div>
-          ${!settings?.masquer_logo && settings?.logo_url ? `
           <div class="header-right">
-            ${new Date().toLocaleDateString('fr-FR')}
+            Date: ${new Date().toLocaleDateString('fr-FR')}
           </div>
-          ` : ''}
         </div>
       </div>
       ` : ''}
