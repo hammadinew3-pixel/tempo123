@@ -201,36 +201,32 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       padding-bottom: 5px;
       border-bottom: 2px solid #000;
       margin-top: 0;
+      text-align: center;
     }
     .header-flex {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .header-left {
-      width: 30%;
-      font-size: 10pt;
-      font-weight: bold;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
     }
     .logo-container {
       width: 100%;
-      margin-top: 0;
+      text-align: center;
+      margin-bottom: 5px;
     }
     .logo {
-      height: 70px;
+      height: 80px;
       width: auto;
       object-fit: contain;
     }
-    .header-center {
-      flex: 1;
+    .header-title {
       text-align: center;
-      padding-top: 5px;
     }
-    .header-right {
-      width: 20%;
-      text-align: right;
+    .header-date {
+      position: absolute;
+      top: 1cm;
+      right: 2cm;
       font-size: 9pt;
-      padding-top: 5px;
     }
     .grid-2 {
       display: grid;
@@ -369,20 +365,18 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       ${!settings?.masquer_entete ? `
       <div class="header">
         <div class="header-flex">
-          <div class="header-left">
-            ${!settings?.masquer_logo && settings?.logo_url ? `
-            <div class="logo-container">
-              <img src="${settings.logo_url}" alt="Logo" class="logo" crossorigin="anonymous">
-            </div>
-            ` : settings?.raison_sociale ? `${settings.raison_sociale}` : ''}
+          ${!settings?.masquer_logo && settings?.logo_url ? `
+          <div class="logo-container">
+            <img src="${settings.logo_url}" alt="Logo" class="logo" crossorigin="anonymous">
           </div>
-          <div class="header-center">
+          ` : ''}
+          <div class="header-title">
             <h1 style="font-size: 14pt; font-weight: bold; margin: 0;">CONTRAT DE LOCATION</h1>
             <p style="font-size: 10pt; font-weight: 600; margin: 2px 0 0 0;">N° ${ph(contract?.numero_contrat || '')}</p>
           </div>
-          <div class="header-right">
-            Date: ${new Date().toLocaleDateString('fr-FR')}
-          </div>
+        </div>
+        <div class="header-date">
+          Date: ${new Date().toLocaleDateString('fr-FR')}
         </div>
       </div>
       ` : ''}
