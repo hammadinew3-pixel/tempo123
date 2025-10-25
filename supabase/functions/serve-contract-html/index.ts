@@ -356,7 +356,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .cgv-text {
       white-space: pre-wrap;
       text-align: justify;
-      font-size: 8.7pt;
+      font-size: 9pt;
       line-height: 1.4;
     }
   </style>
