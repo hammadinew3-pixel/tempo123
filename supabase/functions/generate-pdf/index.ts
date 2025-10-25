@@ -33,8 +33,8 @@ serve(async (req) => {
       throw new Error(`Type de PDF invalide: ${type}`);
     }
     
-    // Construire l'URL du template
-    const origin = req.headers.get('origin') || 'https://32923ba1-bb0f-4cee-9b16-6c46841649d6.lovableproject.com';
+    // Construire l'URL du template en utilisant le domaine public de l'app
+    const origin = Deno.env.get('PUBLIC_APP_URL') || 'https://app.crsapp.ma';
     const templateUrl = `${origin}${templates[type]}`;
     
     console.log('🌐 Template URL:', templateUrl);
