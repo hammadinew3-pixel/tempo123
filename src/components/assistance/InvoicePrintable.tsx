@@ -127,43 +127,43 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
             )}
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
-                <p className="text-sm text-gray-600">N° {invoiceNumber}</p>
-                <p className="text-sm text-gray-600">
+                <h1 className="text-xl font-bold mb-1">FACTURE</h1>
+                <p className="text-xs text-gray-600">N° {invoiceNumber}</p>
+                <p className="text-xs text-gray-600">
                   Date : {format(new Date(), 'dd/MM/yyyy', { locale: fr })}
                 </p>
               </div>
             </div>
 
-            <div className="border-t-2 border-gray-300 pt-4">
+            <div className="border-t-2 border-gray-300 pt-3">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-bold mb-2">FACTURÉ À :</h3>
-                  <p className="font-semibold">{assuranceInfo.nom}</p>
+                  <h3 className="font-bold mb-1 text-sm">FACTURÉ À :</h3>
+                  <p className="font-semibold text-sm">{assuranceInfo.nom}</p>
                   {assuranceInfo.adresse && (
-                    <p className="text-sm">{assuranceInfo.adresse}</p>
+                    <p className="text-xs">{assuranceInfo.adresse}</p>
                   )}
                   {assuranceInfo.contact_telephone && (
-                    <p className="text-sm">Tél : {assuranceInfo.contact_telephone}</p>
+                    <p className="text-xs">Tél : {assuranceInfo.contact_telephone}</p>
                   )}
                   {!isGrouped && firstAssistance.ordre_mission && (
-                    <p className="text-sm mt-2"><strong>N° Ordre de mission :</strong> {firstAssistance.ordre_mission}</p>
+                    <p className="text-xs mt-1"><strong>N° Ordre de mission :</strong> {firstAssistance.ordre_mission}</p>
                   )}
                 </div>
                 <div>
-                  <h3 className="font-bold mb-2">{isGrouped ? 'FACTURE GROUPÉE' : 'CLIENT BÉNÉFICIAIRE'} :</h3>
+                  <h3 className="font-bold mb-1 text-sm">{isGrouped ? 'FACTURE GROUPÉE' : 'CLIENT BÉNÉFICIAIRE'} :</h3>
                   {isGrouped ? (
-                    <p className="text-sm">{assistances.length} dossier(s) d'assistance</p>
+                    <p className="text-xs">{assistances.length} dossier(s) d'assistance</p>
                   ) : (
                     <>
-                      <p className="font-semibold">
+                      <p className="font-semibold text-sm">
                         {firstAssistance.clients?.nom} {firstAssistance.clients?.prenom}
                       </p>
                       {firstAssistance.clients?.cin && (
-                        <p className="text-sm">CIN : {firstAssistance.clients.cin}</p>
+                        <p className="text-xs">CIN : {firstAssistance.clients.cin}</p>
                       )}
                       {firstAssistance.clients?.telephone && (
-                        <p className="text-sm">Tél : {firstAssistance.clients.telephone}</p>
+                        <p className="text-xs">Tél : {firstAssistance.clients.telephone}</p>
                       )}
                     </>
                   )}
@@ -177,10 +177,10 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
         <table className="w-full mb-4 text-xs">
           <thead>
             <tr className="border-b-2 border-gray-400">
-              <th className="text-left py-3 px-2 text-xs">DÉSIGNATION</th>
-              <th className="text-center py-3 px-2 text-xs">QTÉ</th>
-              <th className="text-right py-3 px-2 text-xs">PRIX UNIT. HT</th>
-              <th className="text-right py-3 px-2 text-xs">TOTAL HT</th>
+              <th className="text-left py-2 px-1">DÉSIGNATION</th>
+              <th className="text-center py-2 px-1 w-12">QTÉ</th>
+              <th className="text-right py-2 px-1 w-20">P.U. HT</th>
+              <th className="text-right py-2 px-1 w-24">TOTAL HT</th>
             </tr>
           </thead>
           <tbody>
@@ -195,22 +195,22 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
               
               return (
                 <tr key={index} className="border-b border-gray-200">
-                  <td className="py-4 px-2">
+                  <td className="py-2 px-1">
                     <p className="font-semibold text-xs">
-                      {isGrouped ? `Dossier ${assistance.num_dossier}` : `Dossier ${assistance.num_dossier}`}
+                      Dossier {assistance.num_dossier}
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-[10px] text-gray-600">
                       Période : {format(startDate, 'dd/MM/yyyy', { locale: fr })} au {format(endDate, 'dd/MM/yyyy', { locale: fr })}
                     </p>
                     {isGrouped && (
-                      <p className="text-xs text-gray-600">
+                      <p className="text-[10px] text-gray-600">
                         Client : {assistance.clients?.nom} {assistance.clients?.prenom}
                       </p>
                     )}
                   </td>
-                  <td className="text-center py-4 px-2 text-xs">{duration}</td>
-                  <td className="text-right py-4 px-2 text-xs">{(tarifJournalier / tvaMultiplier).toFixed(2)} DH</td>
-                  <td className="text-right py-4 px-2 font-semibold text-xs">{montantHT.toFixed(2)} DH</td>
+                  <td className="text-center py-2 px-1 text-xs">{duration}</td>
+                  <td className="text-right py-2 px-1 text-xs">{(tarifJournalier / tvaMultiplier).toFixed(2)} DH</td>
+                  <td className="text-right py-2 px-1 font-semibold text-xs">{montantHT.toFixed(2)} DH</td>
                 </tr>
               );
             })}
@@ -218,25 +218,25 @@ export default function InvoicePrintable({ assistances, settings, isGrouped = fa
         </table>
 
         {/* Totals */}
-        <div className="flex justify-end mb-4">
-          <div className="w-80">
-            <div className="flex justify-between py-2 border-b">
+        <div className="flex justify-end mb-2">
+          <div className="w-72">
+            <div className="flex justify-between py-1.5 border-b text-sm">
               <span className="font-semibold">Sous-total HT :</span>
               <span>{totalHT.toFixed(2)} DH</span>
             </div>
-            <div className="flex justify-between py-2 border-b">
+            <div className="flex justify-between py-1.5 border-b text-sm">
               <span className="font-semibold">TVA ({tvaTaux}%) :</span>
               <span>{totalTVA.toFixed(2)} DH</span>
             </div>
-            <div className="flex justify-between py-3 border-t-2 border-gray-400">
-              <span className="font-bold text-lg">TOTAL TTC :</span>
-              <span className="font-bold text-lg">{totalTTC.toFixed(2)} DH</span>
+            <div className="flex justify-between py-2 border-t-2 border-gray-400 text-sm">
+              <span className="font-bold">TOTAL TTC :</span>
+              <span className="font-bold">{totalTTC.toFixed(2)} DH</span>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-300">
-              <p className="text-sm italic">
+            <div className="mt-2 pt-2 border-t border-gray-300">
+              <p className="text-xs italic">
                 Arrêtée la présente facture à la somme de :
               </p>
-              <p className="text-sm font-semibold italic mt-1">
+              <p className="text-xs font-semibold italic mt-0.5">
                 {numberToFrench(totalTTC)}
               </p>
             </div>
