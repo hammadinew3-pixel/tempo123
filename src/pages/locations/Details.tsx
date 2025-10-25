@@ -721,16 +721,36 @@ export default function LocationDetails() {
     }
   };
 
-  const handleGenerateInvoice = () => {
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `/location-facture-template?id=${id}&download=true`;
-    document.body.appendChild(iframe);
-    
-    toast({
-      title: "Facture générée",
-      description: "Le téléchargement du PDF va démarrer automatiquement.",
-    });
+  const handleGenerateInvoice = async () => {
+    try {
+      toast({
+        title: "Génération en cours",
+        description: "Veuillez patienter...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { type: 'facture-location', id: id }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast({
+          title: "Facture générée",
+          description: "La facture PDF va s'ouvrir dans un nouvel onglet",
+        });
+      } else {
+        throw new Error('Aucune URL de PDF reçue');
+      }
+    } catch (error: any) {
+      console.error('Erreur génération facture:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message || "Impossible de générer la facture",
+      });
+    }
   };
 
   const toggleSection = (section: keyof typeof openSections) => {
