@@ -156,7 +156,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
   <style>
     @page { 
       size: A4 portrait;
-      margin: 10mm;
+      margin: 10mm 10mm 5mm 10mm;
     }
     @media print {
       body { margin: 0; padding: 0; }
@@ -185,7 +185,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       width: 190mm;
       min-height: 277mm;
       overflow: visible;
-      padding: 1cm 2cm 0.7cm 2cm;
+      padding: 1cm 2cm 0cm 2cm;
       background: white;
       display: flex;
       flex-direction: column;
