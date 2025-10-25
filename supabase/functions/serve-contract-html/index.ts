@@ -184,7 +184,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     .contract-page {
       width: 190mm;
       min-height: 277mm;
-      overflow: hidden;
+      overflow: visible;
       padding: 1.5cm 2cm 0.7cm 2cm;
       background: white;
       display: flex;
