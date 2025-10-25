@@ -143,8 +143,9 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     settings.cgv_texte.trim().length > 0
   );
 
-  // URL du diagramme d'inspection (depuis le bucket public)
-  const inspectionDiagramUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/documents_vehicules/vehicle-inspection-diagram.png`;
+  // URL du diagramme d'inspection (depuis les settings ou fallback)
+  const defaultInspectionUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/documents_vehicules/default-inspection-diagram.png`;
+  const inspectionDiagramUrl = settings?.inspection_diagram_url || defaultInspectionUrl;
 
 
   return `<!DOCTYPE html>
@@ -208,7 +209,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
     }
     .logo-container {
       width: 25%;
-      margin-top: -45px;
+      margin-top: -60px;
     }
     .logo {
       height: 80px;
@@ -301,7 +302,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       margin: 8px 0;
     }
     .signatures {
-      margin-top: auto;
+      margin-top: 12px;
       margin-bottom: 10px;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -334,7 +335,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       font-size: 10pt;
       color: #666;
       margin-top: auto;
-      padding-top: 50px;
+      padding-top: 12px;
       border-top: 1px solid #999;
     }
     .cgv-title {

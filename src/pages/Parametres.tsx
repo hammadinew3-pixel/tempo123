@@ -32,6 +32,7 @@ interface AgenceSettings {
   telephone?: string;
   logo_url?: string;
   signature_agence_url?: string;
+  inspection_diagram_url?: string;
   taux_tva?: number;
   alerte_cheque_jours?: number;
   alerte_visite_jours?: number;
@@ -58,6 +59,7 @@ export default function Parametres() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingSignature, setUploadingSignature] = useState(false);
+  const [uploadingInspectionDiagram, setUploadingInspectionDiagram] = useState(false);
   const [assistanceCategories, setAssistanceCategories] = useState<any[]>([]);
   const [newCategoryCode, setNewCategoryCode] = useState("");
   const [onboardingCompleted, setOnboardingCompleted] = useState(true);
@@ -350,6 +352,104 @@ export default function Parametres() {
       });
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const handleInspectionDiagramUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une image (PNG, JPG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Erreur",
+        description: "L'image ne doit pas dépasser 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploadingInspectionDiagram(true);
+
+      if (settings?.inspection_diagram_url) {
+        const oldPath = settings.inspection_diagram_url.split('/').pop();
+        if (oldPath) {
+          await supabase.storage
+            .from('documents_vehicules')
+            .remove([oldPath]);
+        }
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `inspection-diagram-${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('documents_vehicules')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents_vehicules')
+        .getPublicUrl(fileName);
+
+      await updateSettings({ inspection_diagram_url: publicUrl });
+
+      toast({
+        title: "Schéma d'inspection mis à jour",
+        description: "Le schéma a été enregistré avec succès.",
+      });
+    } catch (error: any) {
+      console.error('Error uploading inspection diagram:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger le schéma.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingInspectionDiagram(false);
+    }
+  };
+
+  const handleRemoveInspectionDiagram = async () => {
+    if (!settings?.inspection_diagram_url) return;
+
+    try {
+      setUploadingInspectionDiagram(true);
+
+      const oldPath = settings.inspection_diagram_url.split('/').pop();
+      if (oldPath) {
+        await supabase.storage
+          .from('documents_vehicules')
+          .remove([oldPath]);
+      }
+
+      await updateSettings({ inspection_diagram_url: null });
+
+      toast({
+        title: "Schéma supprimé",
+        description: "Le schéma d'inspection a été retiré.",
+      });
+    } catch (error: any) {
+      console.error('Error removing inspection diagram:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le schéma.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingInspectionDiagram(false);
     }
   };
 
@@ -711,6 +811,51 @@ export default function Parametres() {
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     PNG, JPG ou WEBP (max 2MB) - Sera affichée automatiquement sur les contrats
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Schéma d'inspection Upload */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Schéma d&apos;inspection du véhicule
+              </Label>
+              <div className="flex items-center gap-4">
+                {settings?.inspection_diagram_url ? (
+                  <div className="relative">
+                    <img 
+                      src={settings.inspection_diagram_url} 
+                      alt="Schéma inspection" 
+                      className="h-20 w-auto object-contain border rounded p-2"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={handleRemoveInspectionDiagram}
+                      disabled={uploadingInspectionDiagram}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="h-20 w-20 border-2 border-dashed rounded flex items-center justify-center text-muted-foreground">
+                    <ImageIcon className="w-8 h-8" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleInspectionDiagramUpload}
+                    disabled={uploadingInspectionDiagram}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PNG, JPG ou WEBP (max 2MB) - Sera affiché sur les contrats de location
                   </p>
                 </div>
               </div>
