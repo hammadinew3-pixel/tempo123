@@ -228,11 +228,11 @@ export default function ContractTemplate() {
                   </div>
                 )}
                 <div className={`flex-1 text-center ${!agenceSettings?.masquer_logo && agenceSettings?.logo_url ? '' : 'w-full'}`}>
-                  <h1 className="text-[14pt] font-bold mb-3 mt-2">CONTRAT DE LOCATION</h1>
+                  <h1 className="text-[14pt] font-bold mb-3">CONTRAT DE LOCATION</h1>
                   <p className="text-[11pt] font-semibold">N° {blankMode ? ph() : contract.numero_contrat}</p>
                 </div>
                 {!agenceSettings?.masquer_logo && agenceSettings?.logo_url && (
-                  <div className="w-1/4 text-right text-[8pt] text-gray-600">
+                  <div className="w-1/4 text-right text-[8pt] text-gray-600 self-start">
                     {format(new Date(), 'dd/MM/yyyy')}
                   </div>
                 )}
