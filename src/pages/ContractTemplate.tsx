@@ -405,7 +405,7 @@ export default function ContractTemplate() {
 
           {/* Footer */}
           {!agenceSettings?.masquer_pied_page && (
-            <div className="text-center text-[10pt] text-gray-600 mt-0 pt-1 border-t border-gray-400">
+            <div className="text-center text-[9.5pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
               {agenceSettings?.raison_sociale && <><strong>{agenceSettings.raison_sociale}</strong></>}
               {agenceSettings?.ice && <> | ICE: {agenceSettings.ice}</>}
               {agenceSettings?.if_number && <> | IF: {agenceSettings.if_number}</>}
