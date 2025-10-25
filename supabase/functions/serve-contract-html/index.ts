@@ -307,7 +307,7 @@ function generateContractHTML(contract: any, settings: any, blankMode: boolean):
       margin: 8px 0;
     }
     .signatures {
-      margin-top: 25px;
+      margin-top: 50px;
       margin-bottom: 8px;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
