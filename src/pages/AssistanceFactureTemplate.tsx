@@ -62,11 +62,11 @@ export default function AssistanceFactureTemplate() {
         // Récupérer tenant_id depuis la première assistance
         const tenantId = data?.[0]?.tenant_id;
         
-      // Charger les settings depuis agence_settings
+      // Charger les settings depuis tenant_settings
       const { data: settingsData } = await supabaseClient
-        .from("agence_settings")
+        .from("tenant_settings")
         .select("*")
-        .eq('id', tenantId)
+        .eq('tenant_id', tenantId)
         .single();
       
       if (settingsData) {
@@ -158,11 +158,11 @@ export default function AssistanceFactureTemplate() {
 
         if (error) throw error;
 
-      // Charger les settings depuis agence_settings
+      // Charger les settings depuis tenant_settings
       const { data: settingsData } = await supabaseClient
-        .from("agence_settings")
+        .from("tenant_settings")
         .select("*")
-        .eq('id', data.tenant_id)
+        .eq('tenant_id', data.tenant_id)
         .single();
       
       if (settingsData) {
