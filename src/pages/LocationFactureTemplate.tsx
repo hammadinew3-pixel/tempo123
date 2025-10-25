@@ -170,19 +170,19 @@ export default function LocationFactureTemplate() {
       <style>{`
         * { box-sizing: border-box; }
         @page { 
-          size: A4 portrait; 
+          size: 219mm 277mm; 
           margin: 10mm; 
         }
         #invoice-content {
           width: 100%;
-          max-width: 210mm;
+          max-width: 219mm;
           margin: auto;
           overflow: hidden;
           background: #ffffff;
         }
         .invoice-page {
-          width: 210mm;
-          height: 297mm;
+          width: 219mm;
+          height: 277mm;
           display: flex;
           flex-direction: column;
           overflow: hidden;
