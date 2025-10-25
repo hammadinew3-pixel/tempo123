@@ -25,3 +25,6 @@ verify_jwt = true
 
 [functions.reset-super-admin-password]
 verify_jwt = false
+
+[functions.serve-contract-html]
+verify_jwt = false
