@@ -156,7 +156,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
 
   return (
     <div className="invoice-page flex flex-col">
-      <div className="flex-1 px-3 pt-3">
+      <div className="flex-1">
 
         {/* Header */}
         {!settings?.masquer_entete && (
@@ -295,7 +295,7 @@ export default function InvoicePrintable({ contract, settings }: Props) {
 
       {/* Footer */}
       {!settings?.masquer_pied_page && (
-        <div className="text-center text-[9.5pt] text-gray-600 pt-1 border-t border-gray-400 px-3 pb-2">
+        <div className="text-center text-[9.5pt] text-gray-600 pt-1 border-t border-gray-400 pb-2">
           {settings?.raison_sociale && <><strong>{settings.raison_sociale}</strong></>}
           {settings?.ice && <> | ICE: {settings.ice}</>}
           {settings?.if_number && <> | IF: {settings.if_number}</>}

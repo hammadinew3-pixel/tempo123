@@ -277,7 +277,7 @@ export default function AssistanceFactureTemplate() {
         }
         @page { 
           size: A4 portrait; 
-          margin: 10mm; 
+          margin: 0; 
         }
         #facture-content {
           width: 100%;
@@ -291,7 +291,7 @@ export default function AssistanceFactureTemplate() {
           display: flex;
           flex-direction: column;
           overflow: hidden;
-          padding: 0 0 5mm 0;
+          padding: 0;
           background: white;
         }
         @media print {

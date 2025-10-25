@@ -277,7 +277,7 @@ export default function LocationFactureTemplate() {
           display: flex;
           flex-direction: column;
           overflow: visible;
-          padding: 0 0 10mm 0;
+          padding: 0;
           background: white;
           background-color: white !important;
           box-sizing: border-box;
